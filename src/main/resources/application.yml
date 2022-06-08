@@ -1,0 +1,54 @@
+spring:
+  r2dbc:
+    url: ${REWARD_TRX_CONNECTION_DB_URL:}
+    username: ${REWARD_TRX_CONNECTION_DB_USERNAME:}
+    password: ${REWARD_TRX_CONNECTION_DB_PASSWORD:}
+  application:
+    name: idpay-reward-calculator
+  config:
+    activate:
+      on-profile: default
+  cloud:
+    stream:
+      function:
+        definition: trxConsumer;trxProducer
+      bindings:
+        trxConsumer-in-0: # name must match [handler name]-in-0
+          destination: transactions
+          group: idpay-reward-calculator
+          content-type: application/json
+          binder: kafka
+        trxProducer-out-0: # name must match [handler name]-out-0
+          destination: transactions
+          content-type: application/json
+          binder: kafka
+      kafka:
+        binder:
+          auto-create-topics: false
+          #brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
+          brokers: localhost:29092
+          configuration:
+            heartbeat.interval.ms: 30000
+            session.timeout.ms: 60000
+#            sasl:
+#              jaas:
+#                config: ${KAFKA_REWARD_SASL_JAAS_CONFIG:}
+#              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:}
+#            security:
+#              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:}
+          consumerProperties:
+            key:
+              deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value:
+              deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            socket:
+              connection:
+                setup:
+                  timeout:
+                    max:
+                      ms: 200000
+                    ms: 100000
+            connections:
+              max:
+                idle:
+                  ms: 300000

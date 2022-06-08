@@ -1,0 +1,13 @@
+import it.gov.pagopa.model.TransactionPrize
+import java.math.BigDecimal;
+
+function BigDecimal calculator (BigDecimal amount, int percent){
+    return  amount.multiply(new BigDecimal(percent)).divide(new BigDecimal(100));
+}
+
+rule "Calculate prize for transaction"
+    when
+        trx : TransactionPrize(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
+    then
+        trx.setPrize(calculator(trx.getAmount(),30));
+end
