@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>it.gov.pagopa</groupId>
-    <artifactId>poc-scs</artifactId>
+    <artifactId>idpay-reward-calculator</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>idpay-reward-calculator</name>
     <properties>

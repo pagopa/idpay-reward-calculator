@@ -25,17 +25,16 @@ spring:
       kafka:
         binder:
           auto-create-topics: false
-          #brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
-          brokers: localhost:29092
+          brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
           configuration:
             heartbeat.interval.ms: 30000
             session.timeout.ms: 60000
-#            sasl:
-#              jaas:
-#                config: ${KAFKA_REWARD_SASL_JAAS_CONFIG:}
-#              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:}
-#            security:
-#              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:}
+            sasl:
+              jaas:
+                config: ${KAFKA_REWARD_SASL_JAAS_CONFIG:}
+              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:}
+            security:
+              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:}
           consumerProperties:
             key:
               deserializer: org.apache.kafka.common.serialization.StringDeserializer
