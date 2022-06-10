@@ -42,19 +42,18 @@ public class TrxConsumer implements Consumer<Flux<TransactionDTO>> {
     @Override
     public void accept(Flux<TransactionDTO> valueFlux) {
 
-        Instant beforeTransform;
-        Instant afterTransform;
+        valueFlux.subscribe(trx ->  {
+                Instant before=Instant.now();
+                //ritrovamento delle inizitive dipendendo dal suo hpan // da un DB oppure da un altro microservizio (restTesplate)
 
-        beforeTransform = Instant.now();
-
-        valueFlux.subscribe(trx ->
                 applyRules()
                 .apply(trxMapper.map(trx))
                 .flatMap(this.trxService::save)
-                .subscribe(t -> log.info("Save transaction into DB: {}",t)));
+                .subscribe(t -> log.info("Save transaction into DB: {}",t));
+                Instant after = Instant.now();
+                log.info("Total Time to consume & ApplyRules: {} ms", Duration.between(before, after).toMillis());
+        });
 
-        afterTransform = Instant.now();
-        log.info("Total Time to consume & ApplyRules: {} ms", Duration.between(beforeTransform, afterTransform).toMillis());
     }
     private Function<TransactionPrize,Mono<TransactionPrize>> applyRules() {
         return t -> {

@@ -21,7 +21,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Mono<TransactionPrizeDTO> getById(String idTrxAcquirer, String acquirerCode, String trxDate) {
-        Mono<TransactionPrize> trxRetrieved = trxDAO.findById(idTrxAcquirer, acquirerCode,trxDate);
+        Mono<TransactionPrize> trxRetrieved = trxDAO.findByIdTrxAcquirerAndAcquirerCodeAndTrxDate(idTrxAcquirer, acquirerCode, trxDate);
         return trxRetrieved.map(trxPrizeMapper::toDTO);
     }
 
