@@ -1,7 +1,7 @@
 package it.gov.pagopa;
 
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.dto.TransactionPrizeDTO;
+import it.gov.pagopa.dto.RewardTransactionDTO;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -69,15 +69,15 @@ class TransactionTest {
                 uriVariables.put("trxDate", resultsField[2]);
 
                 //read attended results
-                ResponseEntity<TransactionPrizeDTO> resp = restTemplate
+                ResponseEntity<RewardTransactionDTO> resp = restTemplate
                         .getForEntity("http://localhost:8080/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}",
-                                TransactionPrizeDTO.class,
+                                RewardTransactionDTO.class,
                                 uriVariables);
 
                 String expected = resultsField[3].equals(STRING_NULL) ? STRING_NULL : resultsField[3];
                 String actual;
                 if (resp.getBody() != null) {
-                    actual = resp.getBody().getPrize() == null ? STRING_NULL : resp.getBody().getPrize().toString();
+                    actual = resp.getBody().getReward() == null ? STRING_NULL : resp.getBody().getReward().toString();
                     Assertions.assertEquals(expected, actual);
                     LOG.info("Expected value: " + expected + ", actual Value: " + actual);
                 }
