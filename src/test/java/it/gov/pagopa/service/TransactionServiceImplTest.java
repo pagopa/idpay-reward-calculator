@@ -1,8 +1,8 @@
 package it.gov.pagopa.service;
 
 import it.gov.pagopa.dto.TransactionDTO;
+import it.gov.pagopa.dto.mapper.RewardsTransactionDTO;
 import it.gov.pagopa.dto.mapper.TransactionMapper;
-import it.gov.pagopa.event.processor.TransactionProcessor;
 import it.gov.pagopa.model.RewardTransaction;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +12,6 @@ import org.kie.api.runtime.StatelessKieSession;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -65,8 +64,9 @@ class TransactionServiceImplTest {
     @Test
     void applyRules() {
         Mockito.when(trxMapper.map(any(TransactionDTO.class))).thenReturn(expected);
-        RewardTransaction actual = transactionService.applyRules(ingestedTrx);
+        RewardsTransactionDTO actual = transactionService.applyRules(ingestedTrx);
 
-        assertEquals(expected.getReward(),actual.getReward());
+        assertEquals(actual.getRewards().get("ini002"),new BigDecimal("60.00"));
+        assertEquals(actual.getRewards().get("ini003"),new BigDecimal("60.00"));
     }
 }

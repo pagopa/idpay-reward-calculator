@@ -29,8 +29,8 @@ class TransactionSequentialTest {
     private static final String EXCLUDED_HPAN = "81669ab87391d6fb8c8d53f6ad802523737ff0ce0062a7edcb6cc73f5c88be15";
     private static final Logger LOG = LoggerFactory.getLogger(TransactionSequentialTest.class);
     private static final String STRING_NULL = "Null";
-    private static final String BASE_URL = "http://localhost:8080/transactions";
-    private static final String BASE_URL_GET = "http://localhost:8080/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}";
+    private static final String BASE_URL = "http://localhost:8080/idpay/transactions";
+    private static final String BASE_URL_GET = "http://localhost:8080/idpay/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}";
 
     @SneakyThrows
     @Test

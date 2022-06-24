@@ -28,7 +28,7 @@ class TransactionTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactionTest.class);
     private static final String STRING_NULL = "Null";
-    private static final String BASE_URL = "http://localhost:8080/transactions";
+    private static final String BASE_URL = "http://localhost:8080/idpay/transactions";
 
     @SneakyThrows
     @Test
@@ -70,7 +70,7 @@ class TransactionTest {
 
                 //read attended results
                 ResponseEntity<RewardTransactionDTO> resp = restTemplate
-                        .getForEntity("http://localhost:8080/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}",
+                        .getForEntity("http://localhost:8080/idpay/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}",
                                 RewardTransactionDTO.class,
                                 uriVariables);
 

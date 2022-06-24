@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 /**
  * Interfaccia dedicata al Producer
  */
-@RequestMapping("/transactions")
+@RequestMapping("/idpay/transactions")
 public interface ProducerController {
 
     /**

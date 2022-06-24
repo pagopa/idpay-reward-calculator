@@ -5,7 +5,31 @@ function BigDecimal calculator (BigDecimal amount, int percent){
     return  amount.multiply(new BigDecimal(percent)).divide(new BigDecimal(100));
 }
 
-rule "Calculate prize for transaction"
+rule "ini001 - Calculate prize for transaction"
+    agenda-group "ini001"
+    when
+        trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
+    then
+        trx.setReward(calculator(trx.getAmount(),30));
+end
+
+rule "ini002 - Calculate prize for transaction"
+    agenda-group "ini002"
+    when
+        trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
+    then
+        trx.setReward(calculator(trx.getAmount(),30));
+end
+rule "ini003 - Calculate prize for transaction"
+    agenda-group "ini003"
+    when
+        trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
+    then
+        trx.setReward(calculator(trx.getAmount(),30));
+end
+
+rule "ini004 - Calculate prize for transaction"
+    agenda-group "ini004"
     when
         trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
     then
