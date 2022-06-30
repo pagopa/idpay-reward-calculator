@@ -1,7 +1,7 @@
 package it.gov.pagopa;
 
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.dto.TransactionPrizeDTO;
+import it.gov.pagopa.dto.RewardTransactionDTO;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,8 +29,8 @@ class TransactionSequentialTest {
     private static final String EXCLUDED_HPAN = "81669ab87391d6fb8c8d53f6ad802523737ff0ce0062a7edcb6cc73f5c88be15";
     private static final Logger LOG = LoggerFactory.getLogger(TransactionSequentialTest.class);
     private static final String STRING_NULL = "Null";
-    private static final String BASE_URL = "http://localhost:8080/transactions";
-    private static final String BASE_URL_GET = "http://localhost:8080/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}";
+    private static final String BASE_URL = "http://localhost:8080/idpay/transactions";
+    private static final String BASE_URL_GET = "http://localhost:8080/idpay/transactions?idTrxAcquirer={idTrxAcquirer}&acquirerCode={acquirerCode}&trxDate={trxDate}";
 
     @SneakyThrows
     @Test
@@ -60,13 +60,13 @@ class TransactionSequentialTest {
                 uriVariables.put("trxDate", dto.getTrxDate());
                 Thread.sleep(5L);
                 //read attended results
-                ResponseEntity<TransactionPrizeDTO> resp = restTemplate
-                        .getForEntity(BASE_URL_GET, TransactionPrizeDTO.class, uriVariables);
+                ResponseEntity<RewardTransactionDTO> resp = restTemplate
+                        .getForEntity(BASE_URL_GET, RewardTransactionDTO.class, uriVariables);
 
                 String actual;
                 String expected;
                 if (resp.getBody() != null) {
-                    actual = resp.getBody().getPrize() == null ? STRING_NULL : resp.getBody().getPrize().toString();
+                    actual = resp.getBody().getReward() == null ? STRING_NULL : resp.getBody().getReward().toString();
                     if (EXCLUDED_HPAN.equals(dto.getHpan())) {
                         expected = STRING_NULL;
                     } else {

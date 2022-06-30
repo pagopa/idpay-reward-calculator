@@ -1,35 +1,35 @@
 package it.gov.pagopa.dto.mapper;
 
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.model.TransactionPrize;
+import it.gov.pagopa.model.RewardTransaction;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionMapper {
-    public TransactionPrize map(TransactionDTO transaction) {
+    public RewardTransaction map(TransactionDTO transaction) {
 
-        TransactionPrize trxPrize = null;
+        RewardTransaction rewardTrx = null;
 
         if (transaction != null) {
-            trxPrize = TransactionPrize.builder().build();
-            trxPrize.setIdTrxAcquirer(transaction.getIdTrxAcquirer());
-            trxPrize.setAcquirerCode(transaction.getAcquirerCode());
-            trxPrize.setTrxDate(transaction.getTrxDate());
-            trxPrize.setHpan(transaction.getHpan());
-            trxPrize.setOperationType(transaction.getOperationType());
-            trxPrize.setCircuitType(transaction.getCircuitType());
-            trxPrize.setIdTrxIssuer(transaction.getIdTrxIssuer());
-            trxPrize.setCorrelationId(transaction.getCorrelationId());
-            trxPrize.setAmount(transaction.getAmount());
-            trxPrize.setAmountCurrency(transaction.getAmountCurrency());
-            trxPrize.setMcc(transaction.getMcc());
-            trxPrize.setAcquirerId(transaction.getAcquirerId());
-            trxPrize.setMerchantId(transaction.getMerchantId());
-            trxPrize.setTerminalId(transaction.getTerminalId());
-            trxPrize.setBin(transaction.getBin());
+            rewardTrx = RewardTransaction.builder().build();
+            rewardTrx.setIdTrxAcquirer(transaction.getIdTrxAcquirer());
+            rewardTrx.setAcquirerCode(transaction.getAcquirerCode());
+            rewardTrx.setTrxDate(transaction.getTrxDate());
+            rewardTrx.setHpan(transaction.getHpan());
+            rewardTrx.setOperationType(transaction.getOperationType());
+            rewardTrx.setCircuitType(transaction.getCircuitType());
+            rewardTrx.setIdTrxIssuer(transaction.getIdTrxIssuer());
+            rewardTrx.setCorrelationId(transaction.getCorrelationId());
+            rewardTrx.setAmount(transaction.getAmount());
+            rewardTrx.setAmountCurrency(transaction.getAmountCurrency());
+            rewardTrx.setMcc(transaction.getMcc());
+            rewardTrx.setAcquirerId(transaction.getAcquirerId());
+            rewardTrx.setMerchantId(transaction.getMerchantId());
+            rewardTrx.setTerminalId(transaction.getTerminalId());
+            rewardTrx.setBin(transaction.getBin());
         }
 
-        return trxPrize;
+        return rewardTrx;
 
     }
 }

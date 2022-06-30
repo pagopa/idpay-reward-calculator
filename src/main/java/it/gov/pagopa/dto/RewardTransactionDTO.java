@@ -1,9 +1,6 @@
 package it.gov.pagopa.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -11,7 +8,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionPrizeDTO {
+@EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
+public class RewardTransactionDTO {
 
     String idTrxAcquirer;
 
@@ -43,6 +41,16 @@ public class TransactionPrizeDTO {
 
     String bin;
 
-    BigDecimal prize;
+    BigDecimal reward;
+
+    String senderCode;
+
+    String fiscalCode;
+
+    String vat;
+
+    String posType;
+
+    String par;
 
 }
