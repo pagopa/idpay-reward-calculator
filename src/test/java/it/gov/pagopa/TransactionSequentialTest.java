@@ -1,4 +1,6 @@
+/*
 package it.gov.pagopa;
+
 
 import it.gov.pagopa.dto.TransactionDTO;
 import it.gov.pagopa.dto.RewardTransactionDTO;
@@ -114,3 +116,4 @@ class TransactionSequentialTest {
         }
     }
 }
+*/
