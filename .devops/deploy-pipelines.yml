@@ -25,7 +25,8 @@ resources:
 
 variables:
 
-  vmImageNameDefault: 'ubuntu-latest'
+  #  vmImageNameDefault: 'ubuntu-latest'
+  vmImageNameDefault: ubuntu-22.04
 
   imageRepository: '$(K8S_IMAGE_REPOSITORY_NAME)'
   deployNamespace: '$(DEPLOY_NAMESPACE)'
@@ -176,40 +177,4 @@ stages:
                     valueFile: "$(Pipeline.Workspace)/helm/values-${{ lower(variables.environment) }}.yaml"
                     install: true
                     waitForExecution: true
-                    arguments: "--timeout 2m0s"
-                # - task: DownloadPipelineArtifact@2
-                #   inputs:
-                #     buildType: 'current'
-                #     artifactName: 'manifests'
-                #     targetPath: '$(Pipeline.Workspace)/manifests'
-
-  #               - task: Bash@3
-  #                 displayName: Generate Kustomization
-  #                 name: generateKustomization
-  #                 inputs:
-  #                   targetType: 'inline'
-  #                   script: |
-  #                     cd $(Pipeline.Workspace)/manifests
-  #                     rm -rf kustomization.*
-  #                     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-  #                     ./kustomize create --autodetect
-  #                     ./kustomize edit set image rtdmsdecrypter=$(containerRegistry)/$(imageRepository):latest
-  #                     rm -rf kustomize
-  #                     cd $(Pipeline.Workspace)
-  #                   failOnStderr: true
-  #               - task: KubernetesManifest@0
-  #                 displayName: Customize Manifest
-  #                 name: customizeManifest
-  #                 inputs:
-  #                   action: bake
-  #                   renderType: kustomize
-  #                   kustomizationPath: $(Pipeline.Workspace)/manifests
-  #               - task: KubernetesManifest@0
-  #                 displayName: Deploy to Kubernetes Cluster
-  #                 inputs:
-  #                   action: deploy
-  #                   rolloutStatusTimeout: 180
-  #                   kubernetesServiceConnection: ${{ variables.kubernetesServiceConnection }}
-  #                   namespace: '$(variables.deployNamespace)'
-  #                   manifests:  $(customizeManifest.manifestsBundle)
-  #                   containers: '$(containerRegistry)/$(imageRepository):$(pomversion)'
+                    arguments: "--timeout 3m0s --debug"

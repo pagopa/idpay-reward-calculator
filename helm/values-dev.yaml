@@ -81,10 +81,15 @@ microservice-chart:
 
   envConfig:
     APP: idpay-reward-calculator
+    KAFKA_REWARD_SASL_MECHANISM: PLAIN
+    KAFKA_REWARD_SECURITY_PROTOCOL: SASL_SSL
 
   envSecret:
     aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
-#    MONGODB_URI: mongodb-connection-string
+    MONGODB_URI: mongodb-connection-string
+    EVH-CONNECTION-RTD-TRX: evh-rtd-trx-rtd-trx-consumer-key
+    EVH-CONNECTION-REWARD-RESPONSE: evh-idpay-reward-response-producer-key
+
 
   keyvault:
     name: "cstar-d-idpay-kv"

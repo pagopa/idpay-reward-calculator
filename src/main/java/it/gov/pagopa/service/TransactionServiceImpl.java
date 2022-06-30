@@ -1,7 +1,7 @@
 package it.gov.pagopa.service;
 
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.dto.mapper.RewardsTransactionDTO;
+import it.gov.pagopa.dto.RewardsTransactionDTO;
 import it.gov.pagopa.dto.mapper.TransactionMapper;
 import it.gov.pagopa.model.RewardTransaction;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +48,7 @@ public class TransactionServiceImpl implements TransactionService {
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
             after=Instant.now();
             log.info("Time between before and after fireAllRules: {} ms", Duration.between(before, after).toMillis());
+
             if(trxTemporal.getReward()!=null){
                 rewards.put(initiativeChoose,trxTemporal.getReward());
             }

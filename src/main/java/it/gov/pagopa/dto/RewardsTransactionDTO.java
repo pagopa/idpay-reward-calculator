@@ -1,6 +1,5 @@
-package it.gov.pagopa.dto.mapper;
+package it.gov.pagopa.dto;
 
-import it.gov.pagopa.dto.TransactionDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

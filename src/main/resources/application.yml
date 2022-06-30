@@ -7,36 +7,54 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProducer;trxProcessor;trxConsumerReward
+        definition: trxProcessor
       bindings:
         trxProcessor-in-0:
-          destination: ${KAFKA_REWARD_TOPIC_RTD_TRX:}
+          destination: ${KAFKA_TOPIC_RTD_TRX:}
           group: ${KAFKA_IDPAY_GROUP:}
           content-type: ${KAFKA_CONTENT_TYPE:}
-          binder: ${KAFKA_BINDER:}
+          binder: kafka-rtd
         trxProcessor-out-0:
-          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
+          destination: ${KAFKA_TOPIC_REWARD_TRX:}
           content-type: ${KAFKA_CONTENT_TYPE:}
-          binder: ${KAFKA_BINDER:}
-        trxConsumerReward-in-0:
-          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
-          group: ${KAFKA_IDPAY_GROUP:}
-          content-type: ${KAFKA_CONTENT_TYPE:}
-          binder: ${KAFKA_BINDER:}
-        trxProducer-out-0:
-          destination: ${KAFKA_REWARD_TOPIC_RTD_TRX:}
-          content-type: ${KAFKA_CONTENT_TYPE:}
-          binder: ${KAFKA_BINDER:}
+          binder: kafka-idpay
+#        trxConsumerReward-in-0:
+#          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
+#          group: ${KAFKA_IDPAY_GROUP:}
+#          content-type: ${KAFKA_CONTENT_TYPE:}
+#          binder: ${KAFKA_BINDER:}
+#        trxProducer-out-0:
+#          destination: ${KAFKA_REWARD_TOPIC_RTD_TRX:}
+#          content-type: ${KAFKA_CONTENT_TYPE:}
+#          binder: ${KAFKA_BINDER:}
+      binders:
+        kafka-rtd:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_RTD:}
+                      configuration.sasl.jaas.config: ${EVH_CONNECTION_RTD_TRX:}
+        kafka-idpay:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_CALCULATOR_RESPONSE:}
+                      configuration.sasl.jaas.config: ${EVH_CONNECTION_REWARD_CALCULATOR_RESPONSE:}
       kafka:
         binder:
           auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC}
-          brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
           configuration:
             heartbeat.interval.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_HEARTBEAT_INTERVAL_MS:}
             session.timeout.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_SESSION_TIMEOUT_MS:}
             sasl:
-              jaas:
-                config: ${KAFKA_REWARD_SASL_JAAS_CONFIG:}
               mechanism: ${KAFKA_REWARD_SASL_MECHANISM:}
             security:
               protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:}
