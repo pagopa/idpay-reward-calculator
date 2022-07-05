@@ -1,4 +1,5 @@
 import it.gov.pagopa.model.RewardTransaction
+import java.util.Map
 import java.math.BigDecimal;
 
 function BigDecimal calculator (BigDecimal amount, int percent){
@@ -10,7 +11,7 @@ rule "ini001 - Calculate prize for transaction"
     when
         trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
     then
-        trx.setReward(calculator(trx.getAmount(),30));
+        System.out.println(trx.getRewards());
 end
 
 rule "ini002 - Calculate prize for transaction"
@@ -18,14 +19,14 @@ rule "ini002 - Calculate prize for transaction"
     when
         trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
     then
-        trx.setReward(calculator(trx.getAmount(),40));
+        trx.getRewards().put("ini0002",calculator(trx.getAmount(),40));
 end
 rule "ini003 - Calculate prize for transaction"
     agenda-group "ini003"
     when
         trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
     then
-        trx.setReward(calculator(trx.getAmount(),50));
+        trx.getRewards().put("ini0003",calculator(trx.getAmount(),50));
 end
 
 rule "ini004 - Calculate prize for transaction"
@@ -33,5 +34,5 @@ rule "ini004 - Calculate prize for transaction"
     when
         trx : RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
     then
-        trx.setReward(calculator(trx.getAmount(),60));
+        trx.getRewards().put("ini0004",calculator(trx.getAmount(),60));
 end

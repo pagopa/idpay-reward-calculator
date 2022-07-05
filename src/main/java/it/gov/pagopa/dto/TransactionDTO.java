@@ -1,8 +1,10 @@
 package it.gov.pagopa.dto;
 
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -14,7 +16,8 @@ public class TransactionDTO {
 
     String acquirerCode;
 
-    String trxDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    OffsetDateTime trxDate;
 
     String hpan;
 

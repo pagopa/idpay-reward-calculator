@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RewardTransactionMapper {
-    public RewardTransactionDTO toDTO (RewardTransaction rewardTrx) {
+    public RewardTransactionDTO map (RewardTransaction rewardTrx) {
         RewardTransactionDTO trxDto = null;
 
         if (rewardTrx != null){
@@ -25,10 +25,18 @@ public class RewardTransactionMapper {
             trxDto.setMerchantId(rewardTrx.getMerchantId());
             trxDto.setTerminalId(rewardTrx.getTerminalId());
             trxDto.setBin(rewardTrx.getBin());
-            trxDto.setReward(rewardTrx.getReward());
+            trxDto.setRewards(rewardTrx.getRewards());
+            trxDto.setSenderCode(rewardTrx.getSenderCode());
+            trxDto.setFiscalCode(rewardTrx.getFiscalCode());
+            trxDto.setVat(rewardTrx.getVat());
+            trxDto.setPosType(rewardTrx.getPosType());
+            trxDto.setPar(rewardTrx.getPar());
+            trxDto.setStatus(rewardTrx.getStatus());
+            trxDto.setRejectionReason(rewardTrx.getRejectionReason());
+            trxDto.setInitiatives(rewardTrx.getInitiatives());
+            trxDto.setRewards(rewardTrx.getRewards());
         }
 
         return trxDto;
-
     }
 }
