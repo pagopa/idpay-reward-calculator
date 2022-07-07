@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 @Configuration
@@ -26,9 +25,7 @@ public class TransactionProcessor {
      * */
     @Bean
     public Function<Flux<TransactionDTO>,Flux<RewardTransactionDTO>> trxProcessor(){
-        return transactionsFlux -> transactionsFlux
-                .map(this.rewardCalculatorMediatorService::execute)
-                .filter(Objects::nonNull);
+        return rewardCalculatorMediatorService::execute;
         //TODO - implement error handling
     }
 

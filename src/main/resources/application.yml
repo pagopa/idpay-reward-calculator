@@ -7,7 +7,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;trxProducer;trxConsumerReward
+        definition: trxProcessor;trxProducer
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TOPIC_RTD_TRX:}
@@ -88,3 +88,9 @@ spring:
 app:
   filter:
     mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
+  rules:
+    cache:
+      refresh-ms-rate: ${CACHE_REFRESH_MS_RATE:10000}
+  threads:
+    schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
+
