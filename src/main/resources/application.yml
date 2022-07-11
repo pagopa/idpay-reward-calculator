@@ -15,7 +15,7 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:}
           binder: kafka-rtd
         trxProcessor-out-0:
-          destination: ${KAFKA_TOPIC_REWARD_TRX:}
+          destination: ${KAFKA_TOPIC_TRANSACTION:}
           content-type: ${KAFKA_CONTENT_TYPE:}
           binder: kafka-idpay
 #        trxConsumerReward-in-0:
@@ -60,7 +60,7 @@ spring:
                       configuration.sasl.jaas.config: ${EVH_CONNECTION_RTD_TRX_PRODUCER:}
       kafka:
         binder:
-          auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC}
+          auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC:false}
           configuration:
             heartbeat.interval.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_HEARTBEAT_INTERVAL_MS:}
             session.timeout.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_SESSION_TIMEOUT_MS:}
