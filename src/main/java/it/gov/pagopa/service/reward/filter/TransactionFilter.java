@@ -1,4 +1,4 @@
-package it.gov.pagopa.service.filter;
+package it.gov.pagopa.service.reward.filter;
 
 import it.gov.pagopa.dto.TransactionDTO;
 

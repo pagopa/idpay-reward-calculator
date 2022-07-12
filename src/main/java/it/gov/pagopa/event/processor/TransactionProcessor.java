@@ -2,7 +2,7 @@ package it.gov.pagopa.event.processor;
 
 import it.gov.pagopa.dto.RewardTransactionDTO;
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.service.RewardCalculatorMediatorService;
+import it.gov.pagopa.service.reward.RewardCalculatorMediatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package it.gov.pagopa.service;
+package it.gov.pagopa.service.reward;
 
 import org.kie.api.runtime.KieContainer;
 

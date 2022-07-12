@@ -1,4 +1,4 @@
-package it.gov.pagopa.service;
+package it.gov.pagopa.service.reward;
 
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.KieServices;

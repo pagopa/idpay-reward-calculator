@@ -14,8 +14,6 @@ import java.util.Map;
 @Builder
 @EqualsAndHashCode(of = {"idTrxAcquirer","acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
 public class RewardTransaction {
-
-
     String idTrxAcquirer;
 
     String acquirerCode;

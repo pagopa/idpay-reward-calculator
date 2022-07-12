@@ -1,4 +1,4 @@
-package it.gov.pagopa.service;
+package it.gov.pagopa.service.reward;
 
 import org.springframework.stereotype.Service;
 

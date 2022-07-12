@@ -1,7 +1,7 @@
-package it.gov.pagopa.service;
+package it.gov.pagopa.service.reward;
 
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.service.filter.TransactionFilter;
+import it.gov.pagopa.service.reward.filter.TransactionFilter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

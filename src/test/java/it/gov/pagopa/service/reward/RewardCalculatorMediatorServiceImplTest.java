@@ -1,4 +1,4 @@
-package it.gov.pagopa.service;
+package it.gov.pagopa.service.reward;
 
 import it.gov.pagopa.dto.RewardTransactionDTO;
 import it.gov.pagopa.dto.TransactionDTO;
