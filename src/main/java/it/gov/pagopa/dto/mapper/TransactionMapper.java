@@ -27,9 +27,12 @@ public class TransactionMapper {
             rewardTrx.setMerchantId(transaction.getMerchantId());
             rewardTrx.setTerminalId(transaction.getTerminalId());
             rewardTrx.setBin(transaction.getBin());
+            rewardTrx.setSenderCode(transaction.getSenderCode());
+            rewardTrx.setFiscalCode(transaction.getFiscalCode());
+            rewardTrx.setVat(transaction.getVat());
+            rewardTrx.setPosType(transaction.getPosType());
+            rewardTrx.setPar(transaction.getPar());
         }
-
         return rewardTrx;
-
     }
 }

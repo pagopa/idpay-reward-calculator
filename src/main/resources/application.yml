@@ -7,26 +7,26 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor
+        definition: trxProcessor;trxProducer
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TOPIC_RTD_TRX:}
           group: ${KAFKA_IDPAY_GROUP:}
-          content-type: ${KAFKA_CONTENT_TYPE:}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-rtd
         trxProcessor-out-0:
-          destination: ${KAFKA_TOPIC_REWARD_TRX:}
-          content-type: ${KAFKA_CONTENT_TYPE:}
+          destination: ${KAFKA_TOPIC_TRANSACTION:}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay
 #        trxConsumerReward-in-0:
 #          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
 #          group: ${KAFKA_IDPAY_GROUP:}
 #          content-type: ${KAFKA_CONTENT_TYPE:}
-#          binder: ${KAFKA_BINDER:}
-#        trxProducer-out-0:
-#          destination: ${KAFKA_REWARD_TOPIC_RTD_TRX:}
-#          content-type: ${KAFKA_CONTENT_TYPE:}
-#          binder: ${KAFKA_BINDER:}
+#          binder: kafka-idpay
+        trxProducer-out-0:
+          destination: ${KAFKA_TOPIC_RTD_TRX:}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-rtd-producer
       binders:
         kafka-rtd:
           type: kafka
@@ -48,29 +48,49 @@ spring:
                     binder:
                       brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_CALCULATOR_RESPONSE:}
                       configuration.sasl.jaas.config: ${EVH_CONNECTION_REWARD_CALCULATOR_RESPONSE:}
+        kafka-rtd-producer:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_RTD:}
+                      configuration.sasl.jaas.config: ${EVH_CONNECTION_RTD_TRX_PRODUCER:}
       kafka:
         binder:
-          auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC}
+          auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC:false}
           configuration:
-            heartbeat.interval.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_HEARTBEAT_INTERVAL_MS:}
-            session.timeout.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_SESSION_TIMEOUT_MS:}
+            heartbeat.interval.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_HEARTBEAT_INTERVAL_MS:30000}
+            session.timeout.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_SESSION_TIMEOUT_MS:60000}
             sasl:
-              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:}
+              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:PLAIN}
             security:
-              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:}
+              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:SASL_SSL}
           consumerProperties:
-            key:
-              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
-            value:
-              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
+#            key:
+#              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
+#            value:
+#              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
             socket:
               connection:
                 setup:
                   timeout:
                     max:
-                      ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MAX_MS:}
-                    ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MS:}
+                      ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MAX_MS:200000}
+                    ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MS:100000}
             connections:
               max:
                 idle:
-                  ms: ${KAFKA_REWARD_CONNECTIONS_MAX_IDLE_MS:}
+                  ms: ${KAFKA_REWARD_CONNECTIONS_MAX_IDLE_MS:300000}
+
+app:
+  filter:
+    mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
+  rules:
+    cache:
+      refresh-ms-rate: ${CACHE_REFRESH_MS_RATE:10000}
+  threads:
+    schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
+

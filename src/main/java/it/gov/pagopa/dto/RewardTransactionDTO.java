@@ -1,8 +1,12 @@
 package it.gov.pagopa.dto;
 
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -15,7 +19,8 @@ public class RewardTransactionDTO {
 
     String acquirerCode;
 
-    String trxDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    OffsetDateTime trxDate;
 
     String hpan;
 
@@ -41,8 +46,6 @@ public class RewardTransactionDTO {
 
     String bin;
 
-    BigDecimal reward;
-
     String senderCode;
 
     String fiscalCode;
@@ -52,5 +55,13 @@ public class RewardTransactionDTO {
     String posType;
 
     String par;
+
+    String status;
+
+    String rejectionReason;
+
+    List<String> initiatives;
+
+    Map<String, BigDecimal> rewards;
 
 }

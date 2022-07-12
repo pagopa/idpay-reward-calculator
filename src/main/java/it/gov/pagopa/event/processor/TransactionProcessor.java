@@ -1,8 +1,8 @@
 package it.gov.pagopa.event.processor;
 
+import it.gov.pagopa.dto.RewardTransactionDTO;
 import it.gov.pagopa.dto.TransactionDTO;
-import it.gov.pagopa.dto.RewardsTransactionDTO;
-import it.gov.pagopa.service.TransactionService;
+import it.gov.pagopa.service.reward.RewardCalculatorMediatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,17 +14,19 @@ import java.util.function.Function;
 @Slf4j
 public class TransactionProcessor {
 
-    private final TransactionService trxService;
+    private final RewardCalculatorMediatorService rewardCalculatorMediatorService;
 
-    public TransactionProcessor(TransactionService trxService){
-        this.trxService = trxService;
+    public TransactionProcessor(RewardCalculatorMediatorService rewardCalculatorMediatorService){
+        this.rewardCalculatorMediatorService = rewardCalculatorMediatorService;
     }
 
+    /**
+     * Read from the topic ${KAFKA_TOPIC_RTD_TRX} and publish to topic ${KAFKA_TOPIC_REWARD_TRX}
+     * */
     @Bean
-    public Function<Flux<TransactionDTO>,Flux<RewardsTransactionDTO>> trxProcessor(){
-        return transactionsFlux -> transactionsFlux
-                .map(this.trxService::applyRules);
-
+    public Function<Flux<TransactionDTO>,Flux<RewardTransactionDTO>> trxProcessor(){
+        return rewardCalculatorMediatorService::execute;
+        //TODO - implement error handling
     }
 
 
