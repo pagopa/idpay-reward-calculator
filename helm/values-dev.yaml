@@ -5,7 +5,7 @@ microservice-chart:
 
   image:
     repository: cstardcommonacr.azurecr.io/idpayrewardcalculator
-    tag: 0.0.1
+    tag: latest
     pullPolicy: Always
 
   livenessProbe:
