@@ -1,4 +1,4 @@
-import it.gov.pagopa.model.RewardTransaction
+import it.gov.pagopa.reward.model.RewardTransaction
 import java.util.Map
 import java.math.BigDecimal;
 
