@@ -30,16 +30,24 @@ public class InitiativesServiceImpl implements InitiativesService{
         if(initiativesForHpan!=null && initiativesForHpan.getOnboardedInitiatives()!=null){
             List<OnboardedInitiative> onboardedInitiatives = initiativesForHpan.getOnboardedInitiatives();
             for (OnboardedInitiative i : onboardedInitiatives) {
-                List<ActiveTimeInterval> timeActiveInitiative = i.getActiveTimeIntervals();
-                for (ActiveTimeInterval p : timeActiveInitiative) {
-                    LocalDateTime start = p.getStartInterval();
-                    LocalDateTime end = p.getEndInterval();
-                    if ((trxDateTime.isAfter(start) || trxDateTime.isEqual(start)) && (end == null || trxDateTime.isBefore(end))) {
-                        initiatives.add(i.getInitiativeId());
-                    }
+                if(checkDate(trxDateTime, i.getActiveTimeIntervals())){
+                    initiatives.add(i.getInitiativeId());
                 }
             }
         }
         return initiatives;
     }
+
+    boolean checkDate(LocalDateTime trxDate, List<ActiveTimeInterval> timeIntervals){
+        for (ActiveTimeInterval p : timeIntervals) {
+            LocalDateTime start = p.getStartInterval();
+            LocalDateTime end = p.getEndInterval();
+            if ((trxDate.isAfter(start) || trxDate.isEqual(start)) && (end == null || trxDate.isBefore(end))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 }
