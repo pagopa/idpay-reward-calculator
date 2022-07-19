@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,12 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Initiative {
+public class OnboardedInitiative {
     private String initiativeId;
     private LocalDate acceptanceDate;
-    private Long budget;
-    private BigDecimal accrued;
-    private Long trxCount;
     private String status;
-    private List<String> hpanActive;
+    private List<ActiveTimeInterval> activeTimeIntervals;
 }

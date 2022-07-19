@@ -19,12 +19,12 @@ public class UserWallet {
     private String initiativeId;
     private LocalDate acceptanceDate;
     private Long budget;
-    private List<Initiative> accrued;
+    private List<OnboardedInitiative> accrued;
     private Long trxCount;
     private String status;
     private List<String> hpanActive;
 
-    public UserWallet(String userId, String initiativeId, LocalDate acceptanceDate, Long budget, List<Initiative> accrued, Long trxCount, String status, List<String> hpanActive) {
+    public UserWallet(String userId, String initiativeId, LocalDate acceptanceDate, Long budget, List<OnboardedInitiative> accrued, Long trxCount, String status, List<String> hpanActive) {
         this.id=userId.concat(initiativeId);
         this.userId = userId;
         this.initiativeId = initiativeId;

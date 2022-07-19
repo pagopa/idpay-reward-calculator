@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
@@ -11,8 +13,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class HpanLookup {
+@Document(collection = "citizen_hpan")
+public class CitizenHpan {
+    @Id
     private String hpan;
     private String userId;
-    private List<Initiative> initiatives;
+    private List<OnboardedInitiative> onboardedInitiatives;
 }
