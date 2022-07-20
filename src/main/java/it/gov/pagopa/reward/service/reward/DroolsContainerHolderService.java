@@ -7,4 +7,6 @@ import org.kie.api.runtime.KieContainer;
  * */
 public interface DroolsContainerHolderService {
     KieContainer getKieContainer();
+
+    void setKieContainer(KieContainer kieContainer);
 }
