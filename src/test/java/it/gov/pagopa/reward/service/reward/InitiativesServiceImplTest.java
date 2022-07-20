@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.model.CitizenHpan;
+import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.CitizenHpanRepository;
 import it.gov.pagopa.reward.test.fakers.CitizenHpanFaker;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +28,9 @@ class InitiativesServiceImplTest {
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
 
         Integer bias = 1;
-        CitizenHpan citizenHpan = CitizenHpanFaker.mockInstance(bias);
+        HpanInitiatives hpanInitiatives = CitizenHpanFaker.mockInstance(bias);
 
-        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(citizenHpan));
+        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
         List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
@@ -71,9 +71,9 @@ class InitiativesServiceImplTest {
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
 
         Integer bias = 1;
-        CitizenHpan citizenHpan = CitizenHpanFaker.mockInstanceWithoutInitiative(bias);
+        HpanInitiatives hpanInitiatives = CitizenHpanFaker.mockInstanceWithoutInitiative(bias);
 
-        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(citizenHpan));
+        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
         List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);

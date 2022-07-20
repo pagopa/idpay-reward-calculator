@@ -13,8 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collection = "citizen_hpan")
-public class CitizenHpan {
+@Document(collection = "hpan_initiatives_lookup")
+public class HpanInitiatives {
     @Id
     private String hpan;
     private String userId;

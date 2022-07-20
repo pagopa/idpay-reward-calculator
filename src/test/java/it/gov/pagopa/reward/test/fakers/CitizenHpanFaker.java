@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.model.CitizenHpan;
+import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 
@@ -18,8 +18,8 @@ public final class CitizenHpanFaker {
 
     private static final FakeValuesService fakeValuesServiceGlobal = new FakeValuesService(new Locale("it"), new RandomService());
 
-    public static CitizenHpan mockInstance(Integer bias){
-        CitizenHpan out = new CitizenHpan();
+    public static HpanInitiatives mockInstance(Integer bias){
+        HpanInitiatives out = new HpanInitiatives();
 
         FakeValuesService fakeValuesService = getFakeValuesService(bias);
 
@@ -43,8 +43,8 @@ public final class CitizenHpanFaker {
         return out;
     }
 
-    public static CitizenHpan mockInstanceWithoutInitiative(Integer bias){
-        CitizenHpan out = new CitizenHpan();
+    public static HpanInitiatives mockInstanceWithoutInitiative(Integer bias){
+        HpanInitiatives out = new HpanInitiatives();
 
         FakeValuesService fakeValuesService = getFakeValuesService(bias);
 
