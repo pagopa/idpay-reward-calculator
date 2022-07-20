@@ -7,7 +7,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;trxProducer
+        definition: trxProcessor;rewardRuleConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TOPIC_RTD_TRX:}
@@ -18,11 +18,11 @@ spring:
           destination: ${KAFKA_TOPIC_TRANSACTION:}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay
-#        trxConsumerReward-in-0:
-#          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
-#          group: ${KAFKA_IDPAY_GROUP:}
-#          content-type: ${KAFKA_CONTENT_TYPE:}
-#          binder: kafka-idpay
+        rewardRuleConsumer-in-0:
+          destination: ${KAFKA_TOPIC_REWARD_RULE:}
+          group: ${KAFKA_IDPAY_GROUP:}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-rule
         trxProducer-out-0:
           destination: ${KAFKA_TOPIC_RTD_TRX:}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -48,6 +48,16 @@ spring:
                     binder:
                       brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_CALCULATOR_RESPONSE:}
                       configuration.sasl.jaas.config: ${EVH_CONNECTION_REWARD_CALCULATOR_RESPONSE:}
+        kafka-idpay-rule:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_RULE:}
+                      configuration.sasl.jaas.config: ${EVH_CONNECTION_REWARD_RULE:}
         kafka-rtd-producer:
           type: kafka
           environment:
