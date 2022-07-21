@@ -79,10 +79,6 @@ spring:
             security:
               protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:SASL_SSL}
           consumerProperties:
-#            key:
-#              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
-#            value:
-#              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
             socket:
               connection:
                 setup:

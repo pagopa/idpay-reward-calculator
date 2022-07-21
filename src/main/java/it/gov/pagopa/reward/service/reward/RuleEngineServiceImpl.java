@@ -33,6 +33,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
     @Override
     public RewardTransactionDTO applyRules(TransactionDTO transaction, List<String> initiatives) {
+        RewardTransaction trx = transactionMapper.map(transaction);
 
         if(!initiatives.isEmpty()){
             Instant before;
@@ -40,7 +41,6 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             StatelessKieSession statelessKieSession = droolsContainerHolderService.getKieContainer().newStatelessKieSession();
 
-            RewardTransaction trx = transactionMapper.map(transaction);
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
 
@@ -56,9 +56,9 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             log.info("Time between before and after fireAllRules: {} ms", Duration.between(before, after).toMillis());
 
             log.info("Send message prepared: {}", trx);
-            return rewardTransactionMapper.map(trx);
         }else {
-            return null;
+            trx.setRejectionReason("The date of transaction is not in an active range for the hpan");
         }
+        return rewardTransactionMapper.map(trx);
     }
 }
