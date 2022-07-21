@@ -5,14 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class HpanLookup {
-    private String hpan;
-    private String userId;
-    private List<Initiative> initiatives;
+public class OnboardedInitiative {
+    private String initiativeId;
+    private LocalDate acceptanceDate;
+    private String status;
+    private List<ActiveTimeInterval> activeTimeIntervals;
 }
