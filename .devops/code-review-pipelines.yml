@@ -42,12 +42,12 @@ steps:
   #      secureFile: '$(SETTINGS_XML_RO_SECURE_FILE_NAME)'
   #      retryCount: '2'
 
-  # options: '-B -s $(settingsxml.secureFilePath) -Dmaven.test.failure.ignore=true'
+  # options: '-B -s $(settingsxml.secureFilePath)'
   - task: Maven@3
     inputs:
       mavenPomFile: 'pom.xml'
-      goals: 'clean org.jacoco:jacoco-maven-plugin:prepare-agent verify org.jacoco:jacoco-maven-plugin:report org.jacoco:jacoco-maven-plugin:report-aggregate '
-      options: ' -Dmaven.test.failure.ignore=true'
+      goals: 'clean org.jacoco:jacoco-maven-plugin:0.8.8:prepare-agent verify org.jacoco:jacoco-maven-plugin:0.8.8:report org.jacoco:jacoco-maven-plugin:0.8.8:report-aggregate '
+      options: '-B'
       publishJUnitResults: true
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
       javaHomeOption: 'JDKVersion'
@@ -65,7 +65,7 @@ steps:
     inputs:
       mavenPomFile: 'pom.xml'
       goals: 'sonar:sonar'
-      options: '-Dsonar.coverage.jacoco.xmlReportPaths=$(xmlReportPaths)'
+      options: '-B -Dsonar.coverage.jacoco.xmlReportPaths=$(xmlReportPaths)'
       publishJUnitResults: false
       javaHomeOption: 'JDKVersion'
       jdkVersionOption: '1.17'

@@ -38,7 +38,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             Instant before;
             Instant after;
 
-            StatelessKieSession statelessKieSession = droolsContainerHolderService.getKieContainer().newStatelessKieSession();
+            StatelessKieSession statelessKieSession = droolsContainerHolderService.getRewardRulesKieContainer().newStatelessKieSession();
 
             RewardTransaction trx = transactionMapper.map(transaction);
             trx.setInitiatives(initiatives);

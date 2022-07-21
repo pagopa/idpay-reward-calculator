@@ -15,7 +15,7 @@ class DroolsContainerHolderServiceImplTest {
         DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService);
 
         // When
-        KieContainer result = droolsContainerHolderService.getKieContainer();
+        KieContainer result = droolsContainerHolderService.getRewardRulesKieContainer();
 
         //Then
         Assertions.assertNotNull(result);

@@ -19,12 +19,12 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
     }
 
     @Override
-    public KieContainer getKieContainer() {
+    public KieContainer getRewardRulesKieContainer() {
         return kieContainer;
     }
 
     @Override
-    public void setKieContainer(KieContainer kieContainer) {
+    public void setRewardRulesKieContainer(KieContainer kieContainer) {
         this.kieContainer=kieContainer;
     }
 
@@ -32,6 +32,6 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
     @Scheduled(fixedRateString = "${app.rules.cache.refresh-ms-rate}")
     public void refreshKieContainer(){
         log.trace("Refreshing KieContainer");
-        kieContainerBuilderService.buildAll().subscribe(this::setKieContainer);
+        kieContainerBuilderService.buildAll().subscribe(this::setRewardRulesKieContainer);
     }
 }
