@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.test.fakers;
+package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.FieldEnumRewardDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardLimitDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
-import it.gov.pagopa.reward.service.utils.TestUtils;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 
 import java.util.ArrayList;
 import java.util.Locale;

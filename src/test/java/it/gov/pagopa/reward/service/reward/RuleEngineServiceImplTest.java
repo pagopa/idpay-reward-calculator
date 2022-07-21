@@ -31,7 +31,7 @@ class RuleEngineServiceImplTest {
         RuleEngineService ruleEngineService = new RuleEngineServiceImpl(droolsContainerHolderService,transactionMapper,rewardTransactionMapper);
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
-        List<String> initiatives = new InitiativesServiceImpl().getInitiatives(trx.getHpan(), trx.getTrxDate());
+        List<String> initiatives =  List.of("Initiative1");
 
         RewardTransaction rewardTrx = Mockito.mock(RewardTransaction.class);
         Mockito.when(transactionMapper.map(Mockito.same(trx))).thenReturn(rewardTrx);
@@ -66,12 +66,17 @@ class RuleEngineServiceImplTest {
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives = new ArrayList<>();
 
+        RewardTransaction rewardTrx = Mockito.mock(RewardTransaction.class);
+        Mockito.when(transactionMapper.map(Mockito.same(trx))).thenReturn(rewardTrx);
+
         // When
         ruleEngineService.applyRules(trx, initiatives);
 
         // Then
         Mockito.verify(droolsContainerHolderService,Mockito.never()).getRewardRulesKieContainer();
-        Mockito.verify(transactionMapper,Mockito.never()).map(Mockito.same(trx));
-        Mockito.verify(rewardTransactionMapper,Mockito.never()).map(Mockito.any());
+
+        Mockito.verify(transactionMapper).map(Mockito.same(trx));
+        Mockito.verify(droolsContainerHolderService, Mockito.never()).getRewardRulesKieContainer();
+        Mockito.verify(rewardTransactionMapper).map(Mockito.same(rewardTrx));
     }
 }
