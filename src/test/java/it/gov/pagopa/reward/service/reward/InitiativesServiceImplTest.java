@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.repository.CitizenHpanRepository;
-import it.gov.pagopa.reward.test.fakers.CitizenHpanFaker;
+import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,22 +22,24 @@ class InitiativesServiceImplTest {
     @Test
     void getInitiatives() {
         // Given
-        CitizenHpanRepository citizenHpanRepository = Mockito.mock(CitizenHpanRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(citizenHpanRepository);
+        HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
+        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
-        OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
+        OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(10L);
 
         Integer bias = 1;
-        HpanInitiatives hpanInitiatives = CitizenHpanFaker.mockInstance(bias);
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
+        log.info(trxDateMock.atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime().toString());
+        log.info(hpanInitiatives.toString());
 
-        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
+        Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
         List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
-        Mockito.verify(citizenHpanRepository).findById(Mockito.same(hpanMock));
+        Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
         Assertions.assertEquals(1,result.size());
         Assertions.assertTrue(result.contains(String.format("INITIATIVE_%d",bias)));
     }
@@ -44,42 +47,42 @@ class InitiativesServiceImplTest {
     @Test
     void getInitiativesHpanNotValid() {
         // Given
-        CitizenHpanRepository citizenHpanRepository = Mockito.mock(CitizenHpanRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(citizenHpanRepository);
+        HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
+        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
 
 
-        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.empty());
+        Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.empty());
 
         // When
         List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
-        Mockito.verify(citizenHpanRepository).findById(Mockito.same(hpanMock));
+        Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
         Assertions.assertTrue(result.isEmpty());
     }
 
     @Test
     void getNotOnboardedInitiatives() {
         // Given
-        CitizenHpanRepository citizenHpanRepository = Mockito.mock(CitizenHpanRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(citizenHpanRepository);
+        HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
+        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
 
         Integer bias = 1;
-        HpanInitiatives hpanInitiatives = CitizenHpanFaker.mockInstanceWithoutInitiative(bias);
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
 
-        Mockito.when(citizenHpanRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
+        Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
         List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
-        Mockito.verify(citizenHpanRepository).findById(Mockito.same(hpanMock));
+        Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
         Assertions.assertTrue(result.isEmpty());
     }
 }
