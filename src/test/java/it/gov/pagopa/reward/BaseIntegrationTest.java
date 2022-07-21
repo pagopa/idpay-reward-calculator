@@ -6,6 +6,8 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -72,6 +74,12 @@ public abstract class BaseIntegrationTest {
 
     @Autowired
     private MongodExecutable embeddedMongoServer;
+
+    @Autowired
+    protected HpanInitiativesRepository hpanInitiativesRepository;
+
+    @Autowired
+    protected DroolsRuleRepository droolsRuleRepository;
 
     @Autowired
     protected ObjectMapper objectMapper;
