@@ -8,13 +8,10 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
+import java.util.*;
 
-public final class CitizenHpanFaker {
-    private CitizenHpanFaker (){}
+public final class HpanInitiativesFaker {
+    private HpanInitiativesFaker(){}
 
     private static final FakeValuesService fakeValuesServiceGlobal = new FakeValuesService(new Locale("it"), new RandomService());
 
@@ -26,16 +23,18 @@ public final class CitizenHpanFaker {
         out.setHpan(fakeValuesService.bothify("?????"));
         out.setUserId(fakeValuesService.bothify("?????"));
 
-        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder().build();
-        onboardedInitiative.setInitiativeId(String.format("INITIATIVE_%d",bias));
+        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .status("ACCEPTED")
+                .activeTimeIntervals(new ArrayList<>()).build();
 
         LocalDateTime onboardedTime = LocalDateTime.now();
-        ActiveTimeInterval interval1 = ActiveTimeInterval.builder().build();
-        interval1.setStartInterval(onboardedTime);
-        interval1.setEndInterval(onboardedTime.plusDays(2L));
-        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().build();
-        interval2.setStartInterval(onboardedTime.plusDays(5L));
-        onboardedInitiative.setActiveTimeIntervals(Arrays.asList(interval1,interval2));
+        ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(onboardedTime)
+                .endInterval(onboardedTime.plusDays(2L)).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval1);
+
+        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.plusDays(5L)).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval2);
 
         out.setOnboardedInitiatives(List.of(onboardedInitiative));
 
