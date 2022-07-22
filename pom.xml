@@ -53,9 +53,14 @@
         </dependency>
         <dependency>
             <groupId>org.drools</groupId>
-            <artifactId>drools-decisiontables</artifactId>
+            <artifactId>drools-templates</artifactId>
             <version>7.68.0.Final</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.drools</groupId>-->
+<!--            <artifactId>drools-decisiontables</artifactId>-->
+<!--            <version>7.68.0.Final</version>-->
+<!--        </dependency>-->
 
         <!--3rd party library-->
         <dependency>

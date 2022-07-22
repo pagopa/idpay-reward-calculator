@@ -42,6 +42,7 @@ import java.util.function.Supplier;
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.trxProcessor-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
+        "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -56,6 +57,7 @@ import java.util.function.Supplier;
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-rtd.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
@@ -94,6 +96,8 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardProcessorRequest;
     @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}")
     protected String topicRewardProcessorOutcome;
+    @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}")
+    protected String topicRewardRuleConsumer;
     @Value("${spring.cloud.stream.bindings.trxProducer-out-0.destination}")
     protected String topicRewardTransactionProducer;
 

@@ -49,6 +49,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
             }
+            log.info(cmds.toString());
 
             before=Instant.now();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));

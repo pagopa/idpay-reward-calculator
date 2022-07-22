@@ -26,6 +26,7 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
     @Override
     public void setRewardRulesKieContainer(KieContainer kieContainer) {
         this.kieContainer=kieContainer;
+        //TODO store in cache
     }
 
     //TODO use cache

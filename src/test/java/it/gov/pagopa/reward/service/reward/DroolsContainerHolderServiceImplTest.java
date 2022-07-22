@@ -14,11 +14,15 @@ class DroolsContainerHolderServiceImplTest {
         KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
         DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService);
 
+        KieContainer kieContainer = Mockito.mock(KieContainer.class);
+        droolsContainerHolderService.setRewardRulesKieContainer(kieContainer);
+
         // When
         KieContainer result = droolsContainerHolderService.getRewardRulesKieContainer();
 
         //Then
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(kieContainer, result);
 
 
     }

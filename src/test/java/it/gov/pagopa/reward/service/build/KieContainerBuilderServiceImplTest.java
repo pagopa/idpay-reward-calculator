@@ -3,7 +3,9 @@ package it.gov.pagopa.reward.service.build;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.model.DroolsRule;
+import it.gov.pagopa.reward.model.RewardTransaction;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import reactor.core.publisher.Flux;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 class KieContainerBuilderServiceImplTest {
 
     @BeforeAll
@@ -45,21 +48,15 @@ class KieContainerBuilderServiceImplTest {
         DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
         KieContainerBuilderService kieContainerBuilderService = new KieContainerBuilderServiceImpl(droolsRuleRepository);
 
-        DroolsRule dr = new DroolsRule();
-        dr.setId("InitiativeID");
-        dr.setName("name");
-        String ruleCondition = "eval(true)";
-        String ruleConsequence = "System.out.println(\"EXECUTED\");";
-        //TODO implement field
-        //dr.setRule(ExtraFilter2DroolsTransformerImplTest.applyRuleTemplate(dr.getId(), dr.getName(), ruleCondition, ruleConsequence));
+        DroolsRule droolsRule1 = Mockito.mock(DroolsRule.class);
 
-        Flux<DroolsRule> rulesFlux = Flux.just(dr);
-        Mockito.when(droolsRuleRepository.findAll()).thenReturn(rulesFlux);
+        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.just(droolsRule1));
+
         // When
-        KieContainer result = kieContainerBuilderService.buildAll().block();
+        kieContainerBuilderService.buildAll().subscribe(k -> {
+            Assertions.assertNotNull(k);
+            Mockito.verify(droolsRuleRepository).findAll();
+        });
 
-        // Then
-        Assertions.assertNotNull(result);
-        Mockito.verify(droolsRuleRepository).findAll();
     }
 }

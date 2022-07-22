@@ -5,11 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.*;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.service.reward.DroolsContainerHolderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.*;
 import org.junit.jupiter.api.Assertions;
@@ -30,8 +28,11 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     @Autowired
     protected ObjectMapper objectMapper;
 
+    @Autowired
+    protected DroolsContainerHolderService droolsContainerHolderService;
+
     @Test
-    void testTrxProcessor() throws JsonProcessingException {
+    void testTrxProcessor() throws JsonProcessingException, InterruptedException {
         // Given
         Mono<HpanInitiatives> hpanInitiativesMono = hpanInitiativesRepository.findById("5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0");
         log.info(hpanInitiativesMono.toString());
@@ -43,7 +44,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .startInterval(LocalDateTime.now().plusDays(2L)).build();
 
         OnboardedInitiative onboardedInitiative1 = OnboardedInitiative.builder()
-                .initiativeId("INITIATIVE_1")
+                .initiativeId("initiativeId1")
                 .acceptanceDate(LocalDate.now())
                 .status("ACCEPTED")
                 .activeTimeIntervals(new ArrayList<>()).build();
@@ -60,22 +61,22 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
         //region Save rule in DB
         DroolsRule droolsRule = DroolsRule.builder()
-                .id("INITIATIVE_1")
-                .name("INITIATIVE_1-INITIATIVE_NAME")
+                .id("initiativeId1")
+                .name("initiativeId1")
                 .rule("""
-                       package it.gov.pagopa.admissibility.drools.buildrules;
-
-                       rule "%s"
-                       agenda-group "%s"
-                       when $trx : %s(%s)
-                       then $trx.getRewards().put(%s,$trx.getAmount()));
-                       end
-                        """.formatted("INITIATIVE_1","INITIATIVE_1","INITIATIVE_1-INITIATIVE_NAME",
-                        RewardTransactionDTO.class.getName(),"hpan==\"5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0\"",
-                        "INITIATIVE_1",40))
+                        package it.gov.pagopa.reward.drools.buildrules;
+                        import it.gov.pagopa.reward.model.RewardTransaction;
+                        rule "initiativeId1"
+                        agenda-group "initiativeId1"
+                        when $trx: RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
+                        then System.out.println($trx.getRewards());
+                        end
+                        """)
                 .build();
-        droolsRuleRepository.save(droolsRule).subscribe(i->log.info(i.toString()));
+
         //endregion
+        droolsRuleRepository.save(droolsRule).subscribe(dr -> log.info(dr.toString()));
+
 
         //region TransactionDTO initializer
         TransactionDTO trx = TransactionDTO.builder()
@@ -89,6 +90,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .mcc("4040")
                 .build();
         //endregion
+        Thread.sleep(20000);
         publishIntoEmbeddedKafka(topicRewardProcessorRequest,null,null,trx);
 
         //Then
@@ -101,7 +103,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 Assertions.assertNotNull(trxOut.getRewards());
                 Assertions.assertTrue(trxOut.getRewards().isEmpty());
                 Assertions.assertNotNull(trxOut.getInitiatives());
-                Assertions.assertTrue(trxOut.getInitiatives().contains("INITIATIVE_1"));
+                Assertions.assertTrue(trxOut.getInitiatives().contains("initiativeId1"));
             }
         }
     }
