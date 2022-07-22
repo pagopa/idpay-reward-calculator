@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.service.build;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.RewardTransaction;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -13,8 +12,6 @@ import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 class KieContainerBuilderServiceImplTest {

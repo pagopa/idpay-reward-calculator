@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
+import reactor.core.publisher.Mono;
 
 class DroolsContainerHolderServiceImplTest {
 
@@ -12,10 +13,11 @@ class DroolsContainerHolderServiceImplTest {
     void getKieContainer() {
         // Given
         KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
-        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService);
 
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        droolsContainerHolderService.setRewardRulesKieContainer(kieContainer);
+        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+
+        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService);
 
         // When
         KieContainer result = droolsContainerHolderService.getRewardRulesKieContainer();

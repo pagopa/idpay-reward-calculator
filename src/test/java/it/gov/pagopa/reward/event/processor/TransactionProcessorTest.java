@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.model.*;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.service.reward.DroolsContainerHolderService;
+import it.gov.pagopa.reward.model.ActiveTimeInterval;
+import it.gov.pagopa.reward.model.DroolsRule;
+import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +31,8 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    @Autowired
-    protected DroolsContainerHolderService droolsContainerHolderService;
-
     @Test
-    void testTrxProcessor() throws JsonProcessingException, InterruptedException {
+    void testTrxProcessor() throws JsonProcessingException {
         // Given
         Mono<HpanInitiatives> hpanInitiativesMono = hpanInitiativesRepository.findById("5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0");
         log.info(hpanInitiativesMono.toString());
@@ -90,7 +90,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .mcc("4040")
                 .build();
         //endregion
-        Thread.sleep(20000);
+        wait(20000);
         publishIntoEmbeddedKafka(topicRewardProcessorRequest,null,null,trx);
 
         //Then

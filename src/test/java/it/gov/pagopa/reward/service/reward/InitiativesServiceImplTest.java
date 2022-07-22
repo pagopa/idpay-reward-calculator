@@ -85,4 +85,26 @@ class InitiativesServiceImplTest {
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
         Assertions.assertTrue(result.isEmpty());
     }
+
+    @Test
+    void getNotIntitiaveTrxNotInActiveInterval() {
+        // Given
+        HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
+        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
+
+        String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
+        OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
+
+        Integer bias = 1;
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceNotInActiveInterval(bias);
+
+        Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
+
+        // When
+        List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
+
+        // Then
+        Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
+        Assertions.assertTrue(result.isEmpty());
+    }
 }
