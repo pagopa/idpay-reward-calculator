@@ -9,7 +9,6 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class InitiativeCounters extends Counters {
     @Id
     private String initiativeId;

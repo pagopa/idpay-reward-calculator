@@ -44,7 +44,8 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
             }
 
             out.setInitiativeConfig(InitiativeConfig.builder()
-                    .initiativeId(initiative.getInitiativeId()).build());
+                    .initiativeId(initiative.getInitiativeId())
+                    .build()); //TODO retrieve day, month and year threshold from InitiativeReward2BuildDTO
             log.debug("Conversion into drools rule completed; storing it. id: %s".formatted(initiative.getInitiativeId()));
             return out;
         } catch (RuntimeException e){
