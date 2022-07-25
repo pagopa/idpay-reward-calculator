@@ -11,12 +11,16 @@ import org.kie.internal.io.ResourceFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @Slf4j
 public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderService{
 
     private final KieServices kieServices = KieServices.Factory.get();
     private KieContainer kieContainer;
+    private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
 
     public DroolsContainerHolderServiceImpl() {
         refreshKieContainer();
@@ -25,11 +29,6 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
     @Override
     public KieContainer getKieContainer() {
         return kieContainer;
-    }
-
-    @Override
-    public InitiativeConfig getInitiativeConfig(String initiativeId) {
-        return null; // TODO
     }
 
     //TODO use cache
@@ -43,5 +42,20 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
         kieBuilder.buildAll();
         KieModule kieModule = kieBuilder.getKieModule();
         kieContainer = kieServices.newKieContainer(kieModule.getReleaseId());
+    }
+
+    @Override
+    public InitiativeConfig getInitiativeConfig(String initiativeId) {
+        return initiativeId2Config.computeIfAbsent(initiativeId, this::retrieveInitiativeConfig);
+    }
+
+    @Override
+    public void setInitiativeConfig(InitiativeConfig initiativeConfig) {
+        initiativeId2Config.put(initiativeConfig.getInitiativeId(),initiativeConfig);
+    }
+
+    private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
+        //TODO retrieve initiativeConfig from DroolsRule entity
+        return new InitiativeConfig();
     }
 }

@@ -10,4 +10,5 @@ public interface DroolsContainerHolderService {
     KieContainer getKieContainer();
 
     InitiativeConfig getInitiativeConfig(String initiativeId);
+    void setInitiativeConfig(InitiativeConfig initiativeConfig);
 }
