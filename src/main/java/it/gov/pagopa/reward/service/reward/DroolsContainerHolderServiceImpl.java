@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
@@ -24,6 +25,11 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
     @Override
     public KieContainer getKieContainer() {
         return kieContainer;
+    }
+
+    @Override
+    public InitiativeConfig getInitiativeConfig(String initiativeId) {
+        return null; // TODO
     }
 
     //TODO use cache
