@@ -1,14 +1,11 @@
 package it.gov.pagopa.reward.service.build;
 
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
-import it.gov.pagopa.reward.dto.rule.reward.AnyOfInitiativeRewardRule;
 import it.gov.pagopa.reward.model.DroolsRule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -53,7 +50,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
         }
     }
 
-    /*private String initiativeRewardRuleBuild(String initiativeId, String ruleName, AnyOfInitiativeRewardRule rewardRule){
+    /*private String initiativeRewardRuleBuild(String initiativeId, String ruleName, InitiativeTrxCondition rewardRule){
         return """
                 rule "%s"
                 agenda-group "%s"

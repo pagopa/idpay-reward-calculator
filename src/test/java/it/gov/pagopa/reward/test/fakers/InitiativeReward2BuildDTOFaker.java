@@ -3,12 +3,13 @@ package it.gov.pagopa.reward.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
-import it.gov.pagopa.reward.dto.rule.reward.FieldEnumRewardDTO;
-import it.gov.pagopa.reward.dto.rule.reward.RewardLimitDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
+import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
+import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
@@ -26,9 +27,9 @@ public final class InitiativeReward2BuildDTOFaker {
         out.setInitiativeId(fakeValuesService.bothify("?????"));
         out.setInitiativeName(fakeValuesService.bothify("?????"));
 
-        out.setRewardRule(new ArrayList<>());
-        out.getRewardRule().add(new RewardLimitDTO(FieldEnumRewardDTO.REWARD_LIMIT,"daily","700.00"));
-        out.getRewardRule().add(new RewardValueDTO(FieldEnumRewardDTO.REWARD_VALUE,200));
+        out.setTrxRule(new InitiativeTrxConditions());
+        out.getTrxRule().setRewardLimits(List.of(new RewardLimitsDTO(RewardLimitsDTO.RewardLimitFrequency.DAILY,BigDecimal.valueOf(700.00))));
+        out.setRewardRule(new RewardValueDTO(BigDecimal.valueOf(bias*0.23)));
 
 
         TestUtils.checkNotNullFields(out);
