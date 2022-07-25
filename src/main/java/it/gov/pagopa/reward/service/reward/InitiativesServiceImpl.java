@@ -40,10 +40,11 @@ public class InitiativesServiceImpl implements InitiativesService{
         return initiatives;
     }
 
+    //scroll the ActiveTimeInterval list from the end to facilitate the exit of the for-cycle
     boolean checkDate(LocalDateTime trxDate, List<ActiveTimeInterval> timeIntervals){
-        for (ActiveTimeInterval p : timeIntervals) {
-            LocalDateTime start = p.getStartInterval();
-            LocalDateTime end = p.getEndInterval();
+        for (int i = timeIntervals.size()-1; i>=0;i--) {
+            LocalDateTime start = timeIntervals.get(i).getStartInterval();
+            LocalDateTime end = timeIntervals.get(i).getEndInterval();
             if ((trxDate.isAfter(start) || trxDate.isEqual(start)) && (end == null || trxDate.isBefore(end))) {
                 return true;
             }

@@ -55,6 +55,35 @@ public final class HpanInitiativesFaker {
         return out;
     }
 
+    public static HpanInitiatives mockInstanceNotInActiveInterval(Integer bias){
+        HpanInitiatives out = new HpanInitiatives();
+
+        FakeValuesService fakeValuesService = getFakeValuesService(bias);
+
+        out.setHpan(fakeValuesService.bothify("?????"));
+        out.setUserId(fakeValuesService.bothify("?????"));
+
+        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .status("ACCEPTED")
+                .activeTimeIntervals(new ArrayList<>()).build();
+
+        LocalDateTime onboardedTime = LocalDateTime.now();
+        ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(3L))
+                .endInterval(onboardedTime.minusYears(2L)).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval1);
+
+        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(4L))
+                .endInterval(onboardedTime.minusYears(1L)).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval2);
+
+        out.setOnboardedInitiatives(List.of(onboardedInitiative));
+
+
+        TestUtils.checkNotNullFields(out,"onboardedInitiatives");
+        return out;
+    }
+
     private static FakeValuesService getFakeValuesService(Integer bias) {
         return bias == null ? fakeValuesServiceGlobal : new FakeValuesService(new Locale("it"), new RandomService(new Random(bias)));
     }
