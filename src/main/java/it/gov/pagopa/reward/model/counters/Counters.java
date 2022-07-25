@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Counters {
-    private String trxNumber;
-    private Long totalReward;
-    private Long totalAmount;
+    private Long trxNumber;
+    private BigDecimal totalReward;
+    private BigDecimal totalAmount;
 }
