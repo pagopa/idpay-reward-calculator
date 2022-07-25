@@ -7,7 +7,9 @@ import org.kie.api.runtime.KieContainer;
  * This component will retrieve the KieContainer configured with all the initiatives
  * */
 public interface DroolsContainerHolderService {
-    KieContainer getKieContainer();
-
+    KieContainer getRewardRulesKieContainer();
+    void setRewardRulesKieContainer(KieContainer kieContainer);
     InitiativeConfig getInitiativeConfig(String initiativeId);
+    void setInitiativeConfig(InitiativeConfig initiativeConfig);
+
 }

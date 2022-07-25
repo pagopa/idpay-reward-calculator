@@ -39,7 +39,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             Instant before;
             Instant after;
 
-            StatelessKieSession statelessKieSession = droolsContainerHolderService.getKieContainer().newStatelessKieSession();
+            StatelessKieSession statelessKieSession = droolsContainerHolderService.getRewardRulesKieContainer().newStatelessKieSession();
 
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
@@ -49,6 +49,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
             }
+            log.info(cmds.toString());
 
             before=Instant.now();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));

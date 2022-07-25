@@ -1,15 +1,19 @@
 package it.gov.pagopa.reward.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDate;
-import java.util.List;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class InitiativeConfig {
 
     private String initiativeId;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private List<String> automatedCriteriaCodes;
+    private boolean hasDailyThreshold;
+    private boolean hasMonthlyThreshold;
+    private boolean hasYearlyThreshold;
+
 }
