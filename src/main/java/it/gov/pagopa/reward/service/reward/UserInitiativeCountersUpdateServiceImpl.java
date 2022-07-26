@@ -18,7 +18,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     @Override
-    public void update(RewardTransactionDTO ruleEngineResult, UserInitiativeCounters userInitiativeCounters) {
+    public UserInitiativeCounters update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) {
         UserInitiativeCounters out = new UserInitiativeCounters();
         out.setUserId(userInitiativeCounters.getUserId());
         out.setInitiatives(userInitiativeCounters.getInitiatives());
@@ -27,6 +27,8 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
             updateCounters(o, ruleEngineResult, o.getInitiativeId());
             updateThresholdCounters(o, ruleEngineResult, droolsContainerHolderService.getInitiativeConfig(o.getInitiativeId()));
         });
+
+        return out;
     }
 
     private void updateThresholdCounters(InitiativeCounters initiativeCounters, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
@@ -49,6 +51,6 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     private void updateCounters(Counters counters, RewardTransactionDTO ruleEngineResult, String initiativeId){
         counters.setTrxNumber(counters.getTrxNumber() + 1);
         counters.setTotalReward(counters.getTotalReward().add(ruleEngineResult.getRewards().get(initiativeId)));
-        counters.setTotalAmount(ruleEngineResult.getAmount());
+        counters.setTotalAmount(counters.getTotalAmount().add(ruleEngineResult.getAmount()));
     }
 }
