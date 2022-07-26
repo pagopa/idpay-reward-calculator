@@ -10,7 +10,7 @@ import java.util.List;
 @EqualsAndHashCode
 @Builder
 public class InitiativeTrxConditions {
-    private DayOfWeekDTO daysAllowed;
+    private DayOfWeekDTO daysOfWeek;
     private ThresholdDTO threshold;
     private MccFilterDTO mccFilter;
     private TrxCountDTO trxCount;

@@ -31,9 +31,12 @@ public class InitiativeTrxConditionsTest {
     @Test
     public void test() throws JsonProcessingException {
         String content = """
-                {"daysAllowed":%s,"threshold":%s,"mccFilter":%s,"trxCount":%s,"rewardLimits":%s}
+                {"daysOfWeek":%s,"threshold":%s,"mccFilter":%s,"trxCount":%s,"rewardLimits":%s}
                 """.formatted(
-                "{\"dayOfWeeks\":[\"MONDAY\",\"THURSDAY\"],\"interval\":{\"startTime\":[6,0],\"endTime\":[22,0,59,999000000]}}",
+                "{\"daysAllowed\":[" +
+                        "{\"daysOfWeek\":[\"MONDAY\",\"SUNDAY\"],\"intervals\":[{\"startTime\":\"06:00:00.000\",\"endTime\":\"22:00:59.999\"}]}," +
+                        "{\"daysOfWeek\":[\"THURSDAY\"],\"intervals\":[{\"startTime\":\"05:00:00.000\",\"endTime\":\"12:59:59.999\"},{\"startTime\":\"18:00:00.000\",\"endTime\":\"23:59:59.999\"}]}" +
+                        "]}",
                 "{\"from\":10.00,\"fromIncluded\":true,\"to\":12.32,\"toIncluded\":false}",
                 "{\"allowedList\":true,\"values\":[\"1200\",\"2223\",\"4455\"]}",
                 "{\"from\":2,\"fromIncluded\":true,\"to\":5,\"toIncluded\":false}",
@@ -41,12 +44,29 @@ public class InitiativeTrxConditionsTest {
         );
 
         InitiativeTrxConditions expected = InitiativeTrxConditions.builder()
-                .daysAllowed(DayOfWeekDTO.builder() // TODO more flexible
-                        .dayOfWeeks(new TreeSet<>(Set.of(DayOfWeek.MONDAY, DayOfWeek.THURSDAY)))
-                        .interval(DayOfWeekDTO.IntervalDTO.builder()
-                                .startTime(LocalTime.of(6, 0))
-                                .endTime(LocalTime.of(22, 0, 59, 999000000))
-                                .build())
+                .daysOfWeek(DayOfWeekDTO.builder()
+                        .daysAllowed(List.of(
+                                DayOfWeekDTO.DayConfig.builder()
+                                        .daysOfWeek(new TreeSet<>(Set.of(DayOfWeek.SUNDAY, DayOfWeek.MONDAY)))
+                                        .intervals(List.of(
+                                                DayOfWeekDTO.Interval.builder()
+                                                        .startTime(LocalTime.of(6, 0))
+                                                        .endTime(LocalTime.of(22, 0, 59, 999000000))
+                                                        .build()))
+                                        .build(),
+                                DayOfWeekDTO.DayConfig.builder()
+                                        .daysOfWeek(new TreeSet<>(Set.of(DayOfWeek.THURSDAY)))
+                                        .intervals(List.of(
+                                                DayOfWeekDTO.Interval.builder()
+                                                        .startTime(LocalTime.of(5, 0))
+                                                        .endTime(LocalTime.of(12, 59, 59, 999000000))
+                                                        .build(),
+                                                DayOfWeekDTO.Interval.builder()
+                                                        .startTime(LocalTime.of(18, 0))
+                                                        .endTime(LocalTime.of(23, 59, 59, 999000000))
+                                                        .build()))
+                                        .build()
+                        ))
                         .build()
                 )
                 .threshold(ThresholdDTO.builder()
