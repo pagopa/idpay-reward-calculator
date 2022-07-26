@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools;
+package it.gov.pagopa.reward.drools.transformer;
 
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 

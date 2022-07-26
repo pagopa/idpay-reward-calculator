@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 @Slf4j
-class KieContainerBuilderServiceImplTest {
+public class KieContainerBuilderServiceImplTest {
 
     @BeforeAll
     public static void configDroolsLogs() {

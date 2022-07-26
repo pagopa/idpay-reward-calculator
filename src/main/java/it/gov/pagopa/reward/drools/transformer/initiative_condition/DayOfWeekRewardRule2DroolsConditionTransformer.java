@@ -1,0 +1,44 @@
+package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+
+import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
+import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
+import org.springframework.util.CollectionUtils;
+
+import java.util.stream.Collectors;
+
+public class DayOfWeekRewardRule2DroolsConditionTransformer implements InitiativeRewardRule2DroolsConditionTransformer<DayOfWeekDTO> {
+
+    @Override
+    public String apply(DayOfWeekDTO dayOfWeekRewardRule) {
+        if (!CollectionUtils.isEmpty(dayOfWeekRewardRule.getDaysAllowed())) {
+            return "(%s)".formatted(
+                    dayOfWeekRewardRule.getDaysAllowed().stream()
+                            .map(this::dayConfig2DroolsCondition)
+                            .collect(Collectors.joining(" || "))
+            );
+        } else {
+            // no day configured
+            return "false";
+        }
+    }
+
+    private String dayConfig2DroolsCondition(DayOfWeekDTO.DayConfig dayConfig) {
+        return "(trxDate.dayOfWeek in (%s)%s)"
+                .formatted(
+                        dayConfig.getDaysOfWeek().stream().map(d -> DroolsTemplateRuleUtils.toTemplateParam(d).getParam()).collect(Collectors.joining(",")),
+                        CollectionUtils.isEmpty(dayConfig.getIntervals())
+                                ? "" // no interval configured
+                                : " && (%s)"
+                                .formatted(dayConfig.getIntervals().stream()
+                                        .map(this::dayInterval2DroolsCondition)
+                                        .collect(Collectors.joining(" || ")))
+                );
+    }
+
+    private String dayInterval2DroolsCondition(DayOfWeekDTO.Interval interval) {
+        return "(trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= %s && trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= %s)".formatted(
+                DroolsTemplateRuleUtils.toTemplateParam(interval.getStartTime()).getParam()
+                , DroolsTemplateRuleUtils.toTemplateParam(interval.getEndTime()).getParam()
+        );
+    }
+}
