@@ -37,7 +37,7 @@ class RuleEngineServiceImplTest {
         Mockito.when(transactionMapper.map(Mockito.same(trx))).thenReturn(rewardTrx);
 
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(droolsContainerHolderService.getKieContainer()).thenReturn(kieContainer);
+        Mockito.when(droolsContainerHolderService.getRewardRulesKieContainer()).thenReturn(kieContainer);
         StatelessKieSession statelessKieSession = Mockito.mock(StatelessKieSession.class);
         Mockito.when(kieContainer.newStatelessKieSession()).thenReturn(statelessKieSession);
 
@@ -49,7 +49,7 @@ class RuleEngineServiceImplTest {
 
         // Then
         Mockito.verify(transactionMapper).map(Mockito.same(trx));
-        Mockito.verify(droolsContainerHolderService).getKieContainer();
+        Mockito.verify(droolsContainerHolderService).getRewardRulesKieContainer();
         Mockito.verify(statelessKieSession).execute(Mockito.any(Command.class));
         Mockito.verify(rewardTransactionMapper).map(Mockito.same(rewardTrx));
     }
@@ -73,10 +73,10 @@ class RuleEngineServiceImplTest {
         ruleEngineService.applyRules(trx, initiatives);
 
         // Then
-        Mockito.verify(droolsContainerHolderService,Mockito.never()).getKieContainer();
+        Mockito.verify(droolsContainerHolderService,Mockito.never()).getRewardRulesKieContainer();
 
         Mockito.verify(transactionMapper).map(Mockito.same(trx));
-        Mockito.verify(droolsContainerHolderService, Mockito.never()).getKieContainer();
+        Mockito.verify(droolsContainerHolderService, Mockito.never()).getRewardRulesKieContainer();
         Mockito.verify(rewardTransactionMapper).map(Mockito.same(rewardTrx));
     }
 }

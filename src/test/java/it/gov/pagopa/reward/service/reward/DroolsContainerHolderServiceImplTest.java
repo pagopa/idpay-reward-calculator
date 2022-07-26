@@ -1,22 +1,104 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.model.DroolsRule;
+import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieContainer;
+import org.mockito.Mockito;
+import reactor.core.publisher.Mono;
 
 class DroolsContainerHolderServiceImplTest {
 
     @Test
     void getKieContainer() {
         // Given
-        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl();
+        KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
+        DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
+
+        KieContainer kieContainer = Mockito.mock(KieContainer.class);
+        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+
+        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         // When
-        KieContainer result = droolsContainerHolderService.getKieContainer();
+        KieContainer result = droolsContainerHolderService.getRewardRulesKieContainer();
 
         //Then
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(kieContainer, result);
 
 
+    }
+
+    @Test
+    void testNotRetrieveInitiativeConfig(){
+        KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
+        DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
+
+        KieContainer kieContainer = Mockito.mock(KieContainer.class);
+        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+
+        String initiativeId="INITIATIVE-ID";
+        Mockito.when(droolsRuleRepository.findById(Mockito.same(initiativeId))).thenReturn(Mono.empty());
+
+        // When
+        InitiativeConfig result = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+
+        //Then
+        Assertions.assertNull(result);
+        Mockito.verify(droolsRuleRepository).findById(Mockito.same(initiativeId));
+    }
+
+    @Test
+    void testRetrieveInitiativeConfig(){
+        KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
+        DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
+
+        KieContainer kieContainer = Mockito.mock(KieContainer.class);
+        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+
+        String initiativeId="INITIATIVE-ID";
+        InitiativeConfig initiativeConfig = Mockito.mock(InitiativeConfig.class);
+        DroolsRule droolsRule = DroolsRule.builder().initiativeConfig(initiativeConfig).build();
+        Mockito.when(droolsRuleRepository.findById(Mockito.same(initiativeId))).thenReturn(Mono.just(droolsRule));
+
+        // When
+        InitiativeConfig result = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Mockito.verify(droolsRuleRepository).findById(Mockito.same(initiativeId));
+    }
+
+    @Test
+    void testSetInitiativeConfig(){
+        KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
+        DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
+
+        KieContainer kieContainer = Mockito.mock(KieContainer.class);
+        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+
+        String initiativeId="INITIATIVE-ID";
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .hasDailyThreshold(true)
+                .hasMonthlyThreshold(false)
+                .hasYearlyThreshold(false).build();
+
+
+        // When
+        droolsContainerHolderService.setInitiativeConfig(initiativeConfig);
+        InitiativeConfig result = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+
+        //Then
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(result);
     }
 }

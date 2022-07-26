@@ -1,3 +1,6 @@
+server:
+  port: ${REWARD_CALCULATOR_PORT:8080}
+
 spring:
   application:
     name: idpay-reward-calculator
@@ -7,24 +10,24 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;trxProducer
+        definition: trxProcessor;rewardRuleConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
-          destination: ${KAFKA_TOPIC_RTD_TRX:}
-          group: ${KAFKA_IDPAY_GROUP:}
+          destination: ${KAFKA_RTD_TOPIC:rtd-trx}
+          group: ${KAFKA_RTD_GROUP_ID:idpay-trx-processor}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-rtd
         trxProcessor-out-0:
-          destination: ${KAFKA_TOPIC_TRANSACTION:}
+          destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay
-#        trxConsumerReward-in-0:
-#          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
-#          group: ${KAFKA_IDPAY_GROUP:}
-#          content-type: ${KAFKA_CONTENT_TYPE:}
-#          binder: kafka-idpay
+        rewardRuleConsumer-in-0:
+          destination: ${KAFKA_REWARD_RULE_REQUEST_TOPIC:idpay-rule-update}
+          group: ${KAFKA_RTD_GROUP_ID:idpay-reward-rule-consumer}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-rule
         trxProducer-out-0:
-          destination: ${KAFKA_TOPIC_RTD_TRX:}
+          destination: ${KAFKA_RTD_TOPIC:rtd-trx}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-rtd-producer
       binders:
@@ -36,8 +39,8 @@ spring:
                 stream:
                   kafka:
                     binder:
-                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_RTD:}
-                      configuration.sasl.jaas.config: ${EVH_CONNECTION_RTD_TRX:}
+                      brokers: ${KAFKA_RTD_BROKER:${KAFKA_BROKER:}}
+                      configuration.sasl.jaas.config: ${KAFKA_RTD_SASL_JAAJ_CONFIG:}
         kafka-idpay:
           type: kafka
           environment:
@@ -46,8 +49,18 @@ spring:
                 stream:
                   kafka:
                     binder:
-                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_CALCULATOR_RESPONSE:}
-                      configuration.sasl.jaas.config: ${EVH_CONNECTION_REWARD_CALCULATOR_RESPONSE:}
+                      brokers: ${KAFKA_REWARD_RESPONSE_BROKER:${KAFKA_BROKER:}}
+                      configuration.sasl.jaas.config: ${KAFKA_REWARD_RESPONSE_SASL_JAAJ_CONFIG:}
+        kafka-idpay-rule:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      brokers: ${KAFKA_REWARD_RULE_REQUEST_BROKER:${KAFKA_BROKER:}}
+                      configuration.sasl.jaas.config: ${KAFKA_REWARD_RULE_REQUEST_SASL_JAAJ_CONFIG:}
         kafka-rtd-producer:
           type: kafka
           environment:
@@ -56,35 +69,64 @@ spring:
                 stream:
                   kafka:
                     binder:
-                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_RTD:}
-                      configuration.sasl.jaas.config: ${EVH_CONNECTION_RTD_TRX_PRODUCER:}
+                      brokers: ${KAFKA_RTD_BROKER:${KAFKA_BROKER:}}
+                      configuration.sasl.jaas.config: ${KAFKA_RTD_PROD_SASL_JAAJ_CONFIG:}
       kafka:
         binder:
-          auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC:false}
+          auto-create-topics: false
           configuration:
-            heartbeat.interval.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_HEARTBEAT_INTERVAL_MS:30000}
-            session.timeout.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_SESSION_TIMEOUT_MS:60000}
-            sasl:
-              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:PLAIN}
-            security:
-              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:SASL_SSL}
+            heartbeat.interval.ms: ${KAFKA_CONFIG_HEARTBEAT_INTERVAL_MS:30000}
+            session.timeout.ms: ${KAFKA_CONFIG_SESSION_TIMEOUT_MS:60000}
+            request.timeout.ms: ${KAFKA_CONFIG_REQUEST_TIMEOUT_MS:60000}
+            sasl.mechanism: ${KAFKA_CONFIG_SASL_MECHANISM:PLAIN}
+            security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
           consumerProperties:
-            socket:
-              connection:
-                setup:
-                  timeout:
-                    max:
-                      ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MAX_MS:200000}
-                    ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MS:100000}
-            connections:
-              max:
-                idle:
-                  ms: ${KAFKA_REWARD_CONNECTIONS_MAX_IDLE_MS:300000}
+            startOffset: ${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}
+            autoCommitOffset: ${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}
+            enableDlq: ${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}
+            dlqName: ${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}
+            standardHeaders: ${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}
+            configuration:
+              max.poll:
+                records: ${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:}
+                interval.ms: ${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}
+            socket.connection.setup.timeout:
+              max.ms: ${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}
+              ms: ${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}
+            connections.max.idle.ms: ${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}
+            # TODO producerProperties to handle "linter" (buffering) and buffer size
   data:
     mongodb:
       uri: ${MONGODB_URI}
-      database: ${MONGODB_DBNAME}
+      database: ${MONGODB_DBNAME:idpay}
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
+    it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
+    org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
+    org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}
+    org.springframework.cloud: ${LOG_LEVEL_SPRING_CLOUD:WARN}
+    org.springframework.data: ${LOG_LEVEL_SPRING_DATA:INFO}
+    org.springframework.hateoas: ${LOG_LEVEL_SPRING_HATEOAS:INFO}
+    org.springframework.boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
+    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:INFO}
+    org.springframework.batch: ${LOG_LEVEL_SPRING_BATCH:INFO}
+    io.swagger: ${LOG_LEVEL_IO_SWAGGER:WARN}
+    javax.persistence: ${LOG_LEVEL_JAVAX_PERSISTENCE:INFO}
+    org.hibernate: ${LOG_LEVEL_ORG_HIBERNATE:INFO}
+    org.kie: ${LOG_LEVEL_ORG_KIE:WARN}
+    org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
+    org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
+
 app:
+  reward-rule:
+    # if true, it will try to build each rule singularly, but this will take more time
+    online-syntax-check: ${REWARD_RULE_BUILD_ONLINE_SYNTAX_CHECK:false}
+    # the delay after which it will fetch all the rules and compile them
+    build-delay-duration: ${REWARD_RULE_BUILD_DELAY_DURATION:PT1S} # each second
   filter:
     mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
   rules:
