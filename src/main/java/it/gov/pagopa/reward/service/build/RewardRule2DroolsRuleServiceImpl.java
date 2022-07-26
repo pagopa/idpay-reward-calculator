@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.build;
 
-import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
+import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.model.DroolsRule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +16,12 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
 
     private final KieContainerBuilderService builderService;
 
-    public RewardRule2DroolsRuleServiceImpl(@Value("${app.reward-rule.online-syntax-check}") boolean onlineSyntaxCheck, KieContainerBuilderService builderService) {
+    private final InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper;
+
+    public RewardRule2DroolsRuleServiceImpl(@Value("${app.reward-rule.online-syntax-check}") boolean onlineSyntaxCheck, KieContainerBuilderService builderService, InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper) {
         this.onlineSyntaxCheck = onlineSyntaxCheck;
         this.builderService = builderService;
+        this.initiativeReward2BuildDTO2ConfigMapper = initiativeReward2BuildDTO2ConfigMapper;
     }
     @Override
     public DroolsRule apply(InitiativeReward2BuildDTO initiative) {
@@ -43,9 +46,8 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
                 builderService.build(Flux.just(out)).block(); // TODO handle if it goes to exception due to error
             }
 
-            out.setInitiativeConfig(InitiativeConfig.builder()
-                    .initiativeId(initiative.getInitiativeId())
-                    .build()); //TODO retrieve day, month and year threshold from InitiativeReward2BuildDTO
+            out.setInitiativeConfig(initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
+
             log.debug("Conversion into drools rule completed; storing it. id: %s".formatted(initiative.getInitiativeId()));
             return out;
         } catch (RuntimeException e){
@@ -54,7 +56,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
         }
     }
 
-    /*private String initiativeRewardRuleBuild(String initiativeId, String ruleName, AnyOfInitiativeRewardRule rewardRule){
+    /*private String initiativeRewardRuleBuild(String initiativeId, String ruleName, InitiativeTrxCondition rewardRule){
         return """
                 rule "%s"
                 agenda-group "%s"
