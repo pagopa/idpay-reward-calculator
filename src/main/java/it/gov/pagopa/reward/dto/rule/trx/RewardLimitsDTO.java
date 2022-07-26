@@ -17,6 +17,7 @@ public class RewardLimitsDTO implements InitiativeTrxCondition {
     public enum RewardLimitFrequency {
         DAILY,
         MONTHLY,
+        WEEKLY,
         YEARLY
     }
 }
