@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.rule.trx;
 
-import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
+import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @EqualsAndHashCode
 @Builder
-public class RewardLimitsDTO implements InitiativeTrxCondition, InitiativeRewardRule {
+public class RewardLimitsDTO implements InitiativeTrxCondition, InitiativeTrxConsequence {
     private RewardLimitFrequency frequency;
 
     private BigDecimal rewardLimit;

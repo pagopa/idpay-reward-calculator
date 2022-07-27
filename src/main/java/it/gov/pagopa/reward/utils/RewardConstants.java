@@ -4,6 +4,7 @@ public final class RewardConstants {
     private RewardConstants(){}
 
     //region rules' order
+    /** The order of execution of the trx condition */
     public enum InitiativeTrxConditionOrder {
         MCCFILTER,
         THRESHOLD,

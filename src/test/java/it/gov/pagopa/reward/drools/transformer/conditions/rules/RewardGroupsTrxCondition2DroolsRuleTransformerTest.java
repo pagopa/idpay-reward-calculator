@@ -28,7 +28,7 @@ public class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends Initiati
         return """
                                 
                 rule "ruleName-REWARDGROUP"
-                salience 2
+                salience 4
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()

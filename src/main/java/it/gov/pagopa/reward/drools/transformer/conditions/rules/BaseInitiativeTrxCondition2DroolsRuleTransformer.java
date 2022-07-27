@@ -43,7 +43,7 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 """.formatted(
                 ruleName,
                 getTrxConditionOrder().name(),
-                getTrxConditionOrder().ordinal(),
+                RewardConstants.InitiativeTrxConditionOrder.values().length-getTrxConditionOrder().ordinal(),
                 initiativeId,
                 RuleEngineConfig.class.getName(),
                 RewardTransaction.class.getName(),

@@ -4,6 +4,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRuleTransformerFacadeImpl;
+import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
+import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
@@ -30,7 +32,12 @@ public class RewardRule2DroolsRuleServiceTest {
     }
 
     private RewardRule2DroolsRuleService buildRewardRule2DroolsRule(boolean executeOnlineBuildCheck) {
-        return new RewardRule2DroolsRuleServiceImpl(executeOnlineBuildCheck, new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)), new TrxCondition2DroolsRuleTransformerFacadeImpl(new TrxCondition2DroolsConditionTransformerFacadeImpl()));
+        return new RewardRule2DroolsRuleServiceImpl(
+                executeOnlineBuildCheck,
+                new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)),
+                new TrxCondition2DroolsRuleTransformerFacadeImpl(new TrxCondition2DroolsConditionTransformerFacadeImpl()),
+                new TrxConsequence2DroolsRuleTransformerFacadeImpl(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl())
+        );
     }
 
     @Test
@@ -74,7 +81,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-MCCFILTER"
-                salience 0
+                salience 6
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -83,7 +90,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-DAILY-REWARDLIMITS"
-                salience 4
+                salience 2
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -92,7 +99,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-WEEKLY-REWARDLIMITS"
-                salience 4
+                salience 2
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -101,7 +108,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-MONTHLY-REWARDLIMITS"
-                salience 4
+                salience 2
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -110,7 +117,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-YEARLY-REWARDLIMITS"
-                salience 4
+                salience 2
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -119,7 +126,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-THRESHOLD"
-                salience 1
+                salience 5
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -128,7 +135,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-TRXCOUNT"
-                salience 5
+                salience 1
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -137,12 +144,47 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDGROUP"
-                salience 2
+                salience 4
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
                 then $trx.getRejectionReason().add("TRX_RULE_REWARDGROUP_FAIL");
+                end
+                                
+                rule "ID_0_ssx-NAME_0_vnj-REWARDGROUPS"
+                salience -1
+                agenda-group "ID_0_ssx"
+                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                then $trx.getRewards().put("ID_0_ssx", $trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.0000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                end
+                                
+                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-DAILY-"
+                salience -2
+                agenda-group "ID_0_ssx"
+                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
+                end
+                                
+                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-WEEKLY-"
+                salience -2
+                agenda-group "ID_0_ssx"
+                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
+                end
+                                
+                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-MONTHLY-"
+                salience -2
+                agenda-group "ID_0_ssx"
+                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
+                end
+                                
+                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-YEARLY-"
+                salience -2
+                agenda-group "ID_0_ssx"
+                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
                 end
                                 
                 """);

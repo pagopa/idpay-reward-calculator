@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.build;
 
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRuleTransformerFacade;
+import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacade;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
@@ -22,14 +23,16 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
 
     private final KieContainerBuilderService builderService;
     private final TrxCondition2DroolsRuleTransformerFacade trxCondition2DroolsRuleTransformerFacade;
+    private final TrxConsequence2DroolsRuleTransformerFacade trxConsequence2DroolsRuleTransformerFacade;
 
     public RewardRule2DroolsRuleServiceImpl(
             @Value("${app.reward-rule.online-syntax-check}") boolean onlineSyntaxCheck,
             KieContainerBuilderService builderService,
-            TrxCondition2DroolsRuleTransformerFacade trxCondition2DroolsRuleTransformerFacade) {
+            TrxCondition2DroolsRuleTransformerFacade trxCondition2DroolsRuleTransformerFacade, TrxConsequence2DroolsRuleTransformerFacade trxConsequence2DroolsRuleTransformerFacade) {
         this.onlineSyntaxCheck = onlineSyntaxCheck;
         this.builderService = builderService;
         this.trxCondition2DroolsRuleTransformerFacade = trxCondition2DroolsRuleTransformerFacade;
+        this.trxConsequence2DroolsRuleTransformerFacade = trxConsequence2DroolsRuleTransformerFacade;
     }
 
     @Override
@@ -94,7 +97,12 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
     }
 
     private void buildRuleConsequences(String agendaGroup, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
-//        initiative.getRewardRule() TODO
+        initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, initiative.getRewardRule()));
+        if(!CollectionUtils.isEmpty(initiative.getTrxRule().getRewardLimits())){
+            initiative.getTrxRule().getRewardLimits().forEach(rl->
+                    initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, rl))
+            );
+        }
     }
 
 }

@@ -26,7 +26,7 @@ public class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeT
         return """
                                 
                 rule "ruleName-MCCFILTER"
-                salience 0
+                salience 6
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
