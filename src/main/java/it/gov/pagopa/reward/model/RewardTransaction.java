@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.model;
 
+import it.gov.pagopa.reward.dto.Reward;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -57,10 +58,10 @@ public class RewardTransaction {
 
     String status;
 
-    String rejectionReason;
+    List<String> rejectionReason;
 
     List<String> initiatives;
 
-    Map<String,BigDecimal> rewards;
+    Map<String, Reward> rewards;
 }
 

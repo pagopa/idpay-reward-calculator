@@ -58,7 +58,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             log.info("Send message prepared: {}", trx);
         }else {
-            trx.setRejectionReason("The date of transaction is not in an active range for the hpan");
+            trx.setRejectionReason(List.of("The date of transaction is not in an active range for the hpan"));
         }
         return rewardTransactionMapper.map(trx);
     }
