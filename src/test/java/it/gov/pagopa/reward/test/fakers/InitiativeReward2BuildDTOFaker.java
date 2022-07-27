@@ -36,6 +36,23 @@ public final class InitiativeReward2BuildDTOFaker {
         return out;
     }
 
+    public static InitiativeReward2BuildDTO mockInstanceWithFrequencyType(Integer bias, RewardLimitsDTO.RewardLimitFrequency frequency){
+        InitiativeReward2BuildDTO out = new InitiativeReward2BuildDTO();
+
+        FakeValuesService fakeValuesService = getFakeValuesService(bias);
+
+        out.setInitiativeId(fakeValuesService.bothify("?????"));
+        out.setInitiativeName(fakeValuesService.bothify("?????"));
+
+        out.setTrxRule(new InitiativeTrxConditions());
+        out.getTrxRule().setRewardLimits(List.of(new RewardLimitsDTO(frequency,BigDecimal.valueOf(700.00))));
+        out.setRewardRule(new RewardValueDTO(BigDecimal.valueOf(bias*0.23)));
+
+
+        TestUtils.checkNotNullFields(out);
+        return out;
+    }
+
     private static FakeValuesService getFakeValuesService(Integer bias) {
         return bias == null ? fakeValuesServiceGlobal : new FakeValuesService(new Locale("it"), new RandomService(new Random(bias)));
     }

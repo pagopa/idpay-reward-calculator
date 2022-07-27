@@ -9,14 +9,17 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 class InitiativeReward2BuildDTO2ConfigMapperTest {
 
     @Test
-    void apply() {
+    void mapperDailyFrequencyType() {
         // Given
-        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstance(1);
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
 
         InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
 
@@ -34,7 +37,72 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
     }
 
     @Test
-    void applyAllFrequencyTrue() {
+    void mapperWeeklyFrequencyType() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(result);
+        Assertions.assertFalse(result.isHasDailyThreshold());
+        Assertions.assertTrue(result.isHasWeeklyThreshold());
+        Assertions.assertFalse(result.isHasMonthlyThreshold());
+        Assertions.assertFalse(result.isHasYearlyThreshold());
+
+    }
+
+    @Test
+    void mapperMonthlyFrequencyType() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(result);
+        Assertions.assertFalse(result.isHasDailyThreshold());
+        Assertions.assertFalse(result.isHasWeeklyThreshold());
+        Assertions.assertTrue(result.isHasMonthlyThreshold());
+        Assertions.assertFalse(result.isHasYearlyThreshold());
+
+    }
+
+    @Test
+    void mapperYearlyFrequencyType() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.YEARLY);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(result);
+        Assertions.assertFalse(result.isHasDailyThreshold());
+        Assertions.assertFalse(result.isHasWeeklyThreshold());
+        Assertions.assertFalse(result.isHasMonthlyThreshold());
+        Assertions.assertTrue(result.isHasYearlyThreshold());
+
+    }
+    @Test
+    void mapperAllFrequencyType() {
         // Given
         InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
         initiative.setInitiativeId("INITIATIVE_ID");
@@ -60,5 +128,27 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertTrue(result.isHasMonthlyThreshold());
         Assertions.assertTrue(result.isHasYearlyThreshold());
 
+    }
+
+    @Test
+    void mapperIllegalFrequencyTypeNull() {
+        // Given
+        InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
+        initiative.setInitiativeId("INITIATIVE_ID");
+        initiative.setTrxRule(new InitiativeTrxConditions());
+
+        initiative.getTrxRule().setRewardLimits(List.of(
+                RewardLimitsDTO.builder().frequency(null)
+                        .rewardLimit(new BigDecimal("100.00")).build()
+        ));
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        try {
+            InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+        }catch (IllegalArgumentException actualException){
+            Assertions.assertEquals("Frequency cannot be null",actualException.getMessage());
+        }
     }
 }
