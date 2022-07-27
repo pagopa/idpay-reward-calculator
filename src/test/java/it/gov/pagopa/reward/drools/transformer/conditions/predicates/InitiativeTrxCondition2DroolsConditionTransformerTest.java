@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class InitiativeRewardRule2DroolsConditionTransformerTest {
+public abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     @BeforeAll
     public static void configDroolsLogLevel() {

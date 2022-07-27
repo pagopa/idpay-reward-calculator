@@ -6,6 +6,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +20,10 @@ public class RewardTransaction extends TransactionDTO {
 
     String status;
 
-    String rejectionReason;
+    List<String> rejectionReason = new ArrayList<>();
 
     List<String> initiatives;
 
-    Map<String,BigDecimal> rewards;
+    Map<String,BigDecimal> rewards = new HashMap<>();
 }
 

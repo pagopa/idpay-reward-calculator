@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
@@ -6,13 +6,13 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.stream.Collectors;
 
-public class DayOfWeekRewardRule2DroolsConditionTransformer implements InitiativeRewardRule2DroolsConditionTransformer<DayOfWeekDTO> {
+public class DayOfWeekTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<DayOfWeekDTO> {
 
     @Override
-    public String apply(DayOfWeekDTO dayOfWeekRewardRule) {
-        if (!CollectionUtils.isEmpty(dayOfWeekRewardRule.getDaysAllowed())) {
+    public String apply(DayOfWeekDTO dayOfWeekTrxCondition) {
+        if (!CollectionUtils.isEmpty(dayOfWeekTrxCondition)) {
             return "(%s)".formatted(
-                    dayOfWeekRewardRule.getDaysAllowed().stream()
+                    dayOfWeekTrxCondition.stream()
                             .map(this::dayConfig2DroolsCondition)
                             .collect(Collectors.joining(" || "))
             );

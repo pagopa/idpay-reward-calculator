@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
 import it.gov.pagopa.reward.model.RewardTransaction;
@@ -6,14 +6,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class DayOfWeekRewardRule2DroolsConditionTransformerTest extends InitiativeRewardRule2DroolsConditionTransformerTest {
+public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
-    private final DayOfWeekRewardRule2DroolsConditionTransformer transformer = new DayOfWeekRewardRule2DroolsConditionTransformer();
+    private final DayOfWeekTrxCondition2DroolsConditionTransformer transformer = new DayOfWeekTrxCondition2DroolsConditionTransformer();
 
     @Test
     public void testNoDayConfigured() {
@@ -27,7 +26,7 @@ public class DayOfWeekRewardRule2DroolsConditionTransformerTest extends Initiati
         trx.setTrxDate(OffsetDateTime.now());
         testRule("DayOfWeek", dayOfWeekCondition, trx, false);
 
-        dayOfWeekDTO.setDaysAllowed(Collections.emptyList());
+        dayOfWeekDTO= new DayOfWeekDTO();
         String dayOfWeekConditionEmptyCollection = transformer.apply(dayOfWeekDTO);
 
         Assertions.assertEquals("false", dayOfWeekConditionEmptyCollection);
@@ -37,8 +36,7 @@ public class DayOfWeekRewardRule2DroolsConditionTransformerTest extends Initiati
 
     //region no interval
     private String buildNoIntervalDto() {
-        DayOfWeekDTO dayOfWeekDTO = new DayOfWeekDTO();
-        dayOfWeekDTO.setDaysAllowed(List.of(
+        DayOfWeekDTO dayOfWeekDTO = new DayOfWeekDTO(List.of(
                 DayOfWeekDTO.DayConfig.builder()
                         .daysOfWeek(new TreeSet<>(Set.of(
                                 DayOfWeek.SATURDAY,
@@ -88,8 +86,7 @@ public class DayOfWeekRewardRule2DroolsConditionTransformerTest extends Initiati
 
     //region complete setting
     private String buildCompleteDto() {
-        DayOfWeekDTO dayOfWeekDTO = new DayOfWeekDTO();
-        dayOfWeekDTO.setDaysAllowed(List.of(
+        DayOfWeekDTO dayOfWeekDTO = new DayOfWeekDTO(List.of(
                 DayOfWeekDTO.DayConfig.builder()
                         .daysOfWeek(new TreeSet<>(Set.of(
                                 DayOfWeek.SATURDAY,

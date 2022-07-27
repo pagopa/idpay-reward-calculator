@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
 import it.gov.pagopa.reward.model.RewardTransaction;
@@ -8,17 +8,17 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class MccFilterRewardRule2DroolsConditionTransformerTest extends InitiativeRewardRule2DroolsConditionTransformerTest {
+public class MccFilterTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
-    private final MccFilterRewardRule2DroolsConditionTransformer transformer = new MccFilterRewardRule2DroolsConditionTransformer();
+    private final MccFilterTrxCondition2DroolsConditionTransformer transformer = new MccFilterTrxCondition2DroolsConditionTransformer();
 
     @Test
     public void testMccFilter(){
         // testing allowed list
-        MccFilterDTO initiativeRewardRule = new MccFilterDTO();
-        initiativeRewardRule.setAllowedList(true);
-        initiativeRewardRule.setValues(new TreeSet<>(Set.of("MCC", "MCC2")));
-        String mccCondition = transformer.apply(initiativeRewardRule);
+        MccFilterDTO initiativeTrxCondition = new MccFilterDTO();
+        initiativeTrxCondition.setAllowedList(true);
+        initiativeTrxCondition.setValues(new TreeSet<>(Set.of("MCC", "MCC2")));
+        String mccCondition = transformer.apply(initiativeTrxCondition);
 
         Assertions.assertEquals("mcc in (\"MCC\",\"MCC2\")", mccCondition);
 
@@ -27,8 +27,8 @@ public class MccFilterRewardRule2DroolsConditionTransformerTest extends Initiati
         testRule("MccFilter", mccCondition, transaction, true);
 
         // testing not allowed list
-        initiativeRewardRule.setAllowedList(false);
-        String mccNotCondition = transformer.apply(initiativeRewardRule);
+        initiativeTrxCondition.setAllowedList(false);
+        String mccNotCondition = transformer.apply(initiativeTrxCondition);
 
         Assertions.assertEquals("mcc not in (\"MCC\",\"MCC2\")", mccNotCondition);
         testRule("MccFilter", mccNotCondition, transaction, false);

@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.model.RewardTransaction;
@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class ThresholdRewardRule2DroolsConditionTransformerTest extends InitiativeRewardRule2DroolsConditionTransformerTest{
+public class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
-    private final ThresholdRewardRule2DroolsConditionTransformer transformer = new ThresholdRewardRule2DroolsConditionTransformer();
+    private final ThresholdTrxCondition2DroolsConditionTransformer transformer = new ThresholdTrxCondition2DroolsConditionTransformer();
 
     private final BigDecimal lowerBound = BigDecimal.ZERO;
     private final BigDecimal upperBound = BigDecimal.valueOf(10.37);
@@ -40,10 +40,10 @@ public class ThresholdRewardRule2DroolsConditionTransformerTest extends Initiati
 
     @Test
     public void testThresholdGreaterThan(){
-        ThresholdDTO initiativeRewardRule = new ThresholdDTO();
-        initiativeRewardRule.setFrom(lowerBound);
-        initiativeRewardRule.setFromIncluded(false);
-        String thresholdCondition = transformer.apply(initiativeRewardRule);
+        ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
+        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromIncluded(false);
+        String thresholdCondition = transformer.apply(initiativeTrxCondition);
 
         Assertions.assertEquals("amount > new java.math.BigDecimal(\"0\")", thresholdCondition);
 
@@ -55,10 +55,10 @@ public class ThresholdRewardRule2DroolsConditionTransformerTest extends Initiati
 
     @Test
     public void testThresholdGreaterOrEqual(){
-        ThresholdDTO initiativeRewardRule = new ThresholdDTO();
-        initiativeRewardRule.setFrom(lowerBound);
-        initiativeRewardRule.setFromIncluded(true);
-        String thresholdCondition = transformer.apply(initiativeRewardRule);
+        ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
+        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromIncluded(true);
+        String thresholdCondition = transformer.apply(initiativeTrxCondition);
 
         Assertions.assertEquals("amount >= new java.math.BigDecimal(\"0\")", thresholdCondition);
 
@@ -70,10 +70,10 @@ public class ThresholdRewardRule2DroolsConditionTransformerTest extends Initiati
 
     @Test
     public void testThresholdLowerThan(){
-        ThresholdDTO initiativeRewardRule = new ThresholdDTO();
-        initiativeRewardRule.setTo(upperBound);
-        initiativeRewardRule.setToIncluded(false);
-        String thresholdCondition = transformer.apply(initiativeRewardRule);
+        ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
+        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToIncluded(false);
+        String thresholdCondition = transformer.apply(initiativeTrxCondition);
 
         Assertions.assertEquals("amount < new java.math.BigDecimal(\"10.37\")", thresholdCondition);
 
@@ -85,10 +85,10 @@ public class ThresholdRewardRule2DroolsConditionTransformerTest extends Initiati
 
     @Test
     public void testThresholdLowerOrEqual(){
-        ThresholdDTO initiativeRewardRule = new ThresholdDTO();
-        initiativeRewardRule.setTo(upperBound);
-        initiativeRewardRule.setToIncluded(true);
-        String thresholdCondition = transformer.apply(initiativeRewardRule);
+        ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
+        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToIncluded(true);
+        String thresholdCondition = transformer.apply(initiativeTrxCondition);
 
         Assertions.assertEquals("amount <= new java.math.BigDecimal(\"10.37\")", thresholdCondition);
 

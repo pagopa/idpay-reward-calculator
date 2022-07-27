@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.transformer.initiative_condition;
+package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ThresholdRewardRule2DroolsConditionTransformer implements InitiativeRewardRule2DroolsConditionTransformer<ThresholdDTO> {
+public class ThresholdTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<ThresholdDTO> {
     @Override
     public String apply(ThresholdDTO thresholdDTO) {
         return Stream.of(
@@ -21,7 +21,7 @@ public class ThresholdRewardRule2DroolsConditionTransformer implements Initiativ
                                 op.getFirst(),
                                 DroolsTemplateRuleUtils.toTemplateParam(op.getSecond())
                         )
-                ).collect(Collectors.joining(" and "));
+                ).collect(Collectors.joining(" && "));
     }
 
     private Pair<String, BigDecimal> checkDefinedThreshold(BigDecimal threshold, boolean inclusive, String operator) {

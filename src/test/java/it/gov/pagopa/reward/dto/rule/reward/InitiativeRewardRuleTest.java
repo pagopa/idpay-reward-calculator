@@ -25,7 +25,7 @@ public class InitiativeRewardRuleTest {
                 """;
 
         RewardGroupsDTO expected = RewardGroupsDTO.builder()
-                .rewardGroupDTOS(List.of(
+                .rewardGroups(List.of(
                         RewardGroupsDTO.RewardGroupDTO.builder()
                                 .from(BigDecimal.valueOf(0).setScale(2, RoundingMode.UNNECESSARY))
                                 .to(BigDecimal.valueOf(2).setScale(2, RoundingMode.UNNECESSARY))
@@ -49,7 +49,7 @@ public class InitiativeRewardRuleTest {
                 """;
 
         RewardValueDTO expected = RewardValueDTO.builder()
-                .rewardValue(BigDecimal.valueOf(10))
+                .rewardValue(BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))
                 .build();
 
         testDeserialization(content, expected);
