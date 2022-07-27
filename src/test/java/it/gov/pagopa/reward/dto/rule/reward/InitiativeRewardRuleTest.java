@@ -49,7 +49,7 @@ public class InitiativeRewardRuleTest {
                 """;
 
         RewardValueDTO expected = RewardValueDTO.builder()
-                .rewardValue(BigDecimal.valueOf(10))
+                .rewardValue(BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))
                 .build();
 
         testDeserialization(content, expected);

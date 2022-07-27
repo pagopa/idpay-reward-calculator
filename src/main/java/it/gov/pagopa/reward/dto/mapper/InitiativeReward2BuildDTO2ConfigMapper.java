@@ -19,7 +19,7 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
         return out;
     }
 
-    void setLimitFrequency(RewardLimitsDTO.RewardLimitFrequency limitFrequency, InitiativeConfig initiativeConfig){
+    private void setLimitFrequency(RewardLimitsDTO.RewardLimitFrequency limitFrequency, InitiativeConfig initiativeConfig){
         if(limitFrequency!=null) {
             switch (limitFrequency) {
                 case DAILY -> initiativeConfig.setHasDailyThreshold(true);
