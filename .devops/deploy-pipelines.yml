@@ -178,3 +178,14 @@ stages:
                     install: true
                     waitForExecution: true
                     arguments: "--timeout 3m0s --debug"
+                - task: KubernetesManifest@0
+                  displayName: Patch
+                  inputs:
+                    kubernetesServiceConnection: ${{ variables.kubernetesServiceConnection }}
+                    namespace: '$(deployNamespace)'
+                    action: patch
+                    kind: deployment
+                    name: '$(helmReleaseName)-microservice-chart'
+                    mergeStrategy: strategic
+                    patch: '{"spec":{"template":{"metadata":{"annotations":{"buildNumber":"$(Build.BuildNumber)"}}}}}'
+                    
