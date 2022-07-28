@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -17,5 +18,5 @@ import java.util.List;
 public class UserInitiativeCounters {
     @Id
     private String userId;
-    private List<InitiativeCounters> initiatives;
+    private Map<String, InitiativeCounters> initiatives;
 }

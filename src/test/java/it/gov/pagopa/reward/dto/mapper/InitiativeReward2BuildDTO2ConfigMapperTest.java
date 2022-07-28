@@ -34,6 +34,8 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertFalse(result.isHasMonthlyThreshold());
         Assertions.assertFalse(result.isHasYearlyThreshold());
 
+
+        TestUtils.checkNotNullFields(result);
     }
 
     @Test

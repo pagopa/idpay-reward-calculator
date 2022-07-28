@@ -2,9 +2,9 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.dto.mapper.RewardTransactionMapper;
-import it.gov.pagopa.reward.dto.mapper.TransactionMapper;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.kie.api.command.Command;
@@ -22,18 +22,18 @@ import java.util.List;
 @Slf4j
 public class RuleEngineServiceImpl implements RuleEngineService {
     private final DroolsContainerHolderService droolsContainerHolderService;
-    private final TransactionMapper transactionMapper;
-    private final RewardTransactionMapper rewardTransactionMapper;
+    private final Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper;
+    private final TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper;
 
-    public RuleEngineServiceImpl(DroolsContainerHolderService droolsContainerHolderService, TransactionMapper transactionMapper, RewardTransactionMapper rewardTransactionMapper) {
+    public RuleEngineServiceImpl(DroolsContainerHolderService droolsContainerHolderService, Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper, TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper) {
         this.droolsContainerHolderService = droolsContainerHolderService;
-        this.transactionMapper = transactionMapper;
-        this.rewardTransactionMapper = rewardTransactionMapper;
+        this.transaction2TransactionDroolsMapper = transaction2TransactionDroolsMapper;
+        this.transactionDroolsDTO2RewardTransactionMapper = transactionDroolsDTO2RewardTransactionMapper;
     }
 
     @Override
     public RewardTransactionDTO applyRules(TransactionDTO transaction, List<String> initiatives) {
-        RewardTransaction trx = transactionMapper.map(transaction);
+        TransactionDroolsDTO trx = transaction2TransactionDroolsMapper.apply(transaction);
 
         if(!initiatives.isEmpty()){
             Instant before;
@@ -59,8 +59,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             log.info("Send message prepared: {}", trx);
         }else {
             // The date of transaction is not in an active range for the hpan
-            trx.setRejectionReason(List.of("HPAN_NOT_ACTIVE"));
+            trx.setRejectionReasons(List.of("HPAN_NOT_ACTIVE"));
         }
-        return rewardTransactionMapper.map(trx);
+        return transactionDroolsDTO2RewardTransactionMapper.apply(trx);
     }
 }

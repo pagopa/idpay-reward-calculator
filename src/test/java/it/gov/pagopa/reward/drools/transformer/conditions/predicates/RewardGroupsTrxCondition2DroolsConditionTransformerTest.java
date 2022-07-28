@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,13 +37,13 @@ class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Initiative
 
         Assertions.assertEquals("((amount >= new java.math.BigDecimal(\"-10\") && amount <= new java.math.BigDecimal(\"-1\")) || (amount >= new java.math.BigDecimal(\"0\") && amount <= new java.math.BigDecimal(\"10.37\")) || (amount >= new java.math.BigDecimal(\"11.37\") && amount <= new java.math.BigDecimal(\"20.37\")))", RewardGroupsCondition);
 
-        RewardTransaction transaction = new RewardTransaction();
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
         testLowerBound(RewardGroupsCondition, transaction);
         testUpperBound(RewardGroupsCondition, transaction);
     }
 
-    private void testLowerBound(String RewardGroupsCondition, RewardTransaction transaction) {
+    private void testLowerBound(String RewardGroupsCondition, TransactionDroolsDTO transaction) {
         transaction.setAmount(bigDecimalValue(-0.01));
         testRule("RewardGroups", RewardGroupsCondition, transaction, false);
 
@@ -54,7 +54,7 @@ class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Initiative
         testRule("RewardGroups", RewardGroupsCondition, transaction, true);
     }
 
-    private void testUpperBound(String RewardGroupsCondition, RewardTransaction transaction) {
+    private void testUpperBound(String RewardGroupsCondition, TransactionDroolsDTO transaction) {
         transaction.setAmount(bigDecimalValue(7.8));
         testRule("RewardGroups", RewardGroupsCondition, transaction, true);
 

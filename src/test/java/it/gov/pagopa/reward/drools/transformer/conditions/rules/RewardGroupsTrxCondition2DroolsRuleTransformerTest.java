@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTOFaker;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
@@ -32,22 +32,22 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
-                then $trx.getRejectionReason().add("TRX_RULE_REWARDGROUP_FAIL");
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
+                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).getRejectionReason().add("TRX_RULE_REWARDGROUP_FAIL");
                 end
                 """;
     }
 
     @Override
-    protected RewardTransaction getSuccessfulUseCase() {
-        RewardTransaction trx = new RewardTransaction();
+    protected TransactionDroolsDTO getSuccessfulUseCase() {
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(5));
         return trx;
     }
 
     @Override
-    protected RewardTransaction getFailingUseCase() {
-        RewardTransaction trx = new RewardTransaction();
+    protected TransactionDroolsDTO getFailingUseCase() {
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(-0.01));
         return trx;
     }

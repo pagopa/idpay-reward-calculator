@@ -93,7 +93,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(((trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf("TUESDAY")) && ((trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(0,16,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(2,0,0,0)))))))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(((trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf("TUESDAY")) && ((trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(0,16,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(2,0,0,0)))))))
                 then $trx.getRejectionReason().add("TRX_RULE_DAYOFWEEK_FAIL");
                 end
                                 
@@ -102,7 +102,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(mcc not in ("0897","MCC_0")))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(mcc not in ("0897","MCC_0")))
                 then $trx.getRejectionReason().add("TRX_RULE_MCCFILTER_FAIL");
                 end
                                 
@@ -111,7 +111,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
                 then $trx.getRejectionReason().add("TRX_RULE_REWARDLIMITS_DAILY_FAIL");
                 end
                                 
@@ -120,7 +120,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
                 then $trx.getRejectionReason().add("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL");
                 end
                                 
@@ -129,7 +129,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
                 then $trx.getRejectionReason().add("TRX_RULE_REWARDLIMITS_MONTHLY_FAIL");
                 end
                                 
@@ -138,7 +138,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
                 then $trx.getRejectionReason().add("TRX_RULE_REWARDLIMITS_YEARLY_FAIL");
                 end
                                 
@@ -147,7 +147,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("10")))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("10")))
                 then $trx.getRejectionReason().add("TRX_RULE_THRESHOLD_FAIL");
                 end
                                 
@@ -156,7 +156,7 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(true))
                 then $trx.getRejectionReason().add("TRX_RULE_TRXCOUNT_FAIL");
                 end
                                 
@@ -165,42 +165,42 @@ class RewardRule2DroolsRuleServiceTest {
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $trx: it.gov.pagopa.reward.model.RewardTransaction(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
                 then $trx.getRejectionReason().add("TRX_RULE_REWARDGROUP_FAIL");
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDGROUPS"
                 salience -1
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(rejectionReason.size() == 0)
                 then $trx.getRewards().put("ID_0_ssx", $trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.0000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN));
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-DAILY-"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(rejectionReason.size() == 0)
                 then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-WEEKLY-"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(rejectionReason.size() == 0)
                 then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-MONTHLY-"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(rejectionReason.size() == 0)
                 then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-YEARLY-"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(rejectionReason.size() == 0)
                 then $trx.getRewards().put("ID_0_ssx", java.math.BigDecimal.ZERO);
                 end
                                 

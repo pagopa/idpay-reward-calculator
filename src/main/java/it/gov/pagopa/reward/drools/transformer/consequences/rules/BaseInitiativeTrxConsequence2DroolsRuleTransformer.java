@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacade;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
 public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T extends InitiativeTrxConsequence> implements InitiativeTrxConsequence2DroolsRuleTransformer<T> {
 
@@ -41,7 +41,7 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 getTrxConsequenceRuleName(),
                 getTrxConsequenceRuleOrder(),
                 initiativeId,
-                RewardTransaction.class.getName(),
+                TransactionDroolsDTO.class.getName(),
                 initiativeId,
                 trxConsequence2DroolsRewardExpressionTransformerFacade.apply(trxConsequence)
         );

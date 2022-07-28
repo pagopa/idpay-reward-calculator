@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("false", dayOfWeekCondition);
 
-        RewardTransaction trx = new RewardTransaction();
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setTrxDate(OffsetDateTime.now());
         testRule("DayOfWeek", dayOfWeekCondition, trx, false);
 
@@ -67,7 +67,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     void testNoIntervalExpectingTrue() {
         String dayOfWeekCondition = buildNoIntervalDto();
 
-        RewardTransaction trx = new RewardTransaction();
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
         testRule("DayOfWeek", dayOfWeekCondition, trx, true);
@@ -77,7 +77,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     void testNoIntervalExpectingFalse() {
         String dayOfWeekCondition = buildNoIntervalDto();
 
-        RewardTransaction trx = new RewardTransaction();
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 7), LocalTime.of(0, 0));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
         testRule("DayOfWeek", dayOfWeekCondition, trx, false);
@@ -144,7 +144,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     void testCompleteSettingExpectingTrue() {
         String dayOfWeekCondition = buildCompleteDto();
 
-        RewardTransaction trx = new RewardTransaction();
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(12, 0));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
         testRule("DayOfWeek", dayOfWeekCondition, trx, true);
@@ -154,7 +154,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     void testCompleteSettingExpectingFalse() {
         String dayOfWeekCondition = buildCompleteDto();
 
-        RewardTransaction trx = new RewardTransaction();
+        TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(11, 59));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
         testRule("DayOfWeek", dayOfWeekCondition, trx, false);

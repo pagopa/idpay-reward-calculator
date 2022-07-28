@@ -1,11 +1,10 @@
-package it.gov.pagopa.reward.dto;
+package it.gov.pagopa.reward.model;
 
+import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.TransactionDTO;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class RewardTransactionDTO extends TransactionDTO {
-
-    String status;
+public class TransactionDroolsDTO extends TransactionDTO {
 
     @Builder.Default
     List<String> rejectionReasons = new ArrayList<>();
@@ -30,3 +27,4 @@ public class RewardTransactionDTO extends TransactionDTO {
 
     Map<String, Reward> rewards;
 }
+

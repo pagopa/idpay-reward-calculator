@@ -6,20 +6,24 @@ import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
 
     private static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter weeklyDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W");
     private static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     private static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
 
     private final DroolsContainerHolderService droolsContainerHolderService;
 
+    private final List<String> justTrxCountRejectionReason = List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason());
 
     public UserInitiativeCountersUpdateServiceImpl(DroolsContainerHolderService droolsContainerHolderService) {
         this.droolsContainerHolderService = droolsContainerHolderService;
@@ -27,40 +31,61 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
 
     @Override
-    public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) {
-        userInitiativeCounters.setUserId(userInitiativeCounters.getUserId());
-        userInitiativeCounters.setInitiatives(userInitiativeCounters.getInitiatives());
+    public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) { // TODO operation of storno
+        ruleEngineResult.getRewards().forEach((initiativeId, reward) -> {
+            if (isRewardedInitiative(reward) || isJustTrxCountRejection(ruleEngineResult, initiativeId)) {
+                InitiativeConfig initiativeConfig = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+                InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
+                        .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
 
-        userInitiativeCounters.getInitiatives().forEach(o -> {
-            // TODO use Constants
-            if ((ruleEngineResult.getRewards().get(o.getInitiativeId()) != null && ruleEngineResult.getRewards().get(o.getInitiativeId()).getProvidedReward().compareTo(BigDecimal.ZERO) != 0) || List.of("TRX_RULE_TRXCOUNT_FAIL").equals(ruleEngineResult.getRejectionReason())) {
-                updateCounters(o, ruleEngineResult.getRewards().get(o.getInitiativeId()), ruleEngineResult.getAmount());
-                updateTemporalCounters(o, ruleEngineResult, droolsContainerHolderService.getInitiativeConfig(o.getInitiativeId()));
+                updateCounters(initiativeCounter, reward, ruleEngineResult.getAmount());
+                updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, initiativeConfig);
             }
         });
-
-        // TODO operation of storno
     }
 
-    private void updateTemporalCounters(InitiativeCounters initiativeCounters, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
+    private boolean isRewardedInitiative(Reward initiativeReward) {
+        return initiativeReward != null && initiativeReward.getAccruedReward().compareTo(BigDecimal.ZERO) != 0;
+    }
 
-        if (initiativeConfig.isHasDailyThreshold()) {
-            String dailyCountersKey = LocalDate.now().format(dayDateFormatter);
-            updateCounters(initiativeCounters.getDailyCounters().get(dailyCountersKey), ruleEngineResult.getRewards().get(initiativeCounters.getInitiativeId()), ruleEngineResult.getAmount());
-        }
-        if (initiativeConfig.isHasMonthlyThreshold()) {
-            String monthlyCountersKey = LocalDate.now().format(monthDateFormatter);
-            updateCounters(initiativeCounters.getMonthlyCounters().get(monthlyCountersKey), ruleEngineResult.getRewards().get(initiativeCounters.getInitiativeId()), ruleEngineResult.getAmount());
-        }
-        if (initiativeConfig.isHasYearlyThreshold()) {
-            String yearlyCountersKey = LocalDate.now().format(yearDateFormatter);
-            updateCounters(initiativeCounters.getYearlyCounters().get(yearlyCountersKey), ruleEngineResult.getRewards().get(initiativeCounters.getInitiativeId()), ruleEngineResult.getAmount());
-        }
+    private boolean isJustTrxCountRejection(RewardTransactionDTO ruleEngineResult, String initiativeId) {
+        return justTrxCountRejectionReason.equals(ruleEngineResult.getInitiativeRejectionReasons().get(initiativeId));
     }
 
     private void updateCounters(Counters counters, Reward reward, BigDecimal amount) {
         counters.setTrxNumber(counters.getTrxNumber() + 1);
-        counters.setTotalReward(counters.getTotalReward().add(reward.getProvidedReward()));
+        counters.setTotalReward(counters.getTotalReward().add(reward.getAccruedReward()));
         counters.setTotalAmount(counters.getTotalAmount().add(amount));
+    }
+
+    private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
+        if (initiativeConfig.isHasDailyThreshold()) {
+            if(initiativeCounters.getDailyCounters()==null){
+                initiativeCounters.setDailyCounters(new HashMap<>());
+            }
+            updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, initiativeReward);
+        }
+        if (initiativeConfig.isHasWeeklyThreshold()) {
+            if(initiativeCounters.getWeeklyCounters()==null){
+                initiativeCounters.setWeeklyCounters(new HashMap<>());
+            }
+            updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weeklyDateFormatter, ruleEngineResult, initiativeReward);
+        }
+        if (initiativeConfig.isHasMonthlyThreshold()) {
+            if(initiativeCounters.getMonthlyCounters()==null){
+                initiativeCounters.setMonthlyCounters(new HashMap<>());
+            }
+            updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, initiativeReward);
+        }
+        if (initiativeConfig.isHasYearlyThreshold()) {
+            if(initiativeCounters.getYearlyCounters()==null){
+                initiativeCounters.setYearlyCounters(new HashMap<>());
+            }
+            updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, initiativeReward);
+        }
+    }
+
+    private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, Reward initiativeReward) {
+        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxDate()), k->new Counters()), initiativeReward, ruleEngineResult.getAmount());
     }
 }

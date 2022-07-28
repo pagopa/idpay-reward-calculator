@@ -4,15 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 public class Counters {
-    private Long trxNumber;
-    private BigDecimal totalReward;
-    private BigDecimal totalAmount;
+    @Builder.Default
+    private Long trxNumber = 0L;
+    @Builder.Default
+    private BigDecimal totalReward = BigDecimal.ZERO;
+    @Builder.Default
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 }

@@ -1,18 +1,19 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class TransactionMapperTest {
+class Transaction2TransactionDroolsMapperTest {
 
-    TransactionMapper transactionMapper = new TransactionMapper();
+    Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = new Transaction2TransactionDroolsMapper();
 
     @Test
     void mapWithNullTransactionDTO() {
         // When
-        RewardTransaction result = transactionMapper.map(null);
+        TransactionDroolsDTO result = transaction2TransactionDroolsMapper.apply(null);
 
         // Then
         Assertions.assertNull(result);
@@ -24,9 +25,11 @@ class TransactionMapperTest {
         TransactionDTO trx = new TransactionDTO();
 
         // When
-        RewardTransaction result = transactionMapper.map(trx);
+        TransactionDroolsDTO result = transaction2TransactionDroolsMapper.apply(trx);
 
         //Then
         Assertions.assertNotNull(result);
+
+        TestUtils.checkNotNullFields(result);
     }
 }

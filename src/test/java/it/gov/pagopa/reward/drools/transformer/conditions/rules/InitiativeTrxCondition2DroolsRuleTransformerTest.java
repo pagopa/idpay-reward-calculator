@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -42,8 +42,8 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
     protected abstract InitiativeTrxCondition2DroolsRuleTransformer<T> getTransformer();
     protected abstract T getInitiativeTrxCondition();
     protected abstract String getExpectedRule();
-    protected abstract RewardTransaction getSuccessfulUseCase();
-    protected abstract RewardTransaction getFailingUseCase();
+    protected abstract TransactionDroolsDTO getSuccessfulUseCase();
+    protected abstract TransactionDroolsDTO getFailingUseCase();
     protected abstract String getExpectedRejectionReason();
 
     @Test
@@ -52,7 +52,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
-        RewardTransaction trx = getSuccessfulUseCase();
+        TransactionDroolsDTO trx = getSuccessfulUseCase();
 
         testRule(rule, trx, false, false);
 
@@ -66,7 +66,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
-        RewardTransaction trx = getFailingUseCase();
+        TransactionDroolsDTO trx = getFailingUseCase();
 
         testRule(rule, trx, true, false);
 
@@ -74,14 +74,14 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
         testRule(rule, trx, true, true);
     }
 
-    protected void testRule(String rule, RewardTransaction trx, boolean expectRejectionReason, boolean shortCircuited){
-        trx.setRejectionReason(new ArrayList<>());
-        trx.getRejectionReason().add("DUMMYREJECTION");
+    protected void testRule(String rule, TransactionDroolsDTO trx, boolean expectRejectionReason, boolean shortCircuited){
+        trx.setRejectionReasons(new ArrayList<>());
+        trx.getRejectionReasons().add("DUMMYREJECTION");
         KieContainer kieContainer = buildRule(rule);
         executeRule(trx, shortCircuited, kieContainer);
         Assertions.assertEquals(
                 expectRejectionReason && !shortCircuited ? List.of("DUMMYREJECTION", getExpectedRejectionReason()) : List.of("DUMMYREJECTION")
-                , trx.getRejectionReason());
+                , trx.getRejectionReasons());
     }
 
     protected KieContainer buildRule(String rule) {
@@ -102,7 +102,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
         }
     }
 
-    protected void executeRule(RewardTransaction trx, boolean shortCircuited, KieContainer kieContainer){
+    protected void executeRule(TransactionDroolsDTO trx, boolean shortCircuited, KieContainer kieContainer){
         RuleEngineConfig ruleEngineConfig = new RuleEngineConfig();
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
         @SuppressWarnings("unchecked")
