@@ -44,7 +44,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
 
-            List<Command> cmds = new ArrayList<>();
+            List<Command<?>> cmds = new ArrayList<>();
             cmds.add(CommandFactory.newInsert(trx));
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
@@ -58,7 +58,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             log.info("Send message prepared: {}", trx);
         }else {
-            trx.setRejectionReason("The date of transaction is not in an active range for the hpan");
+            // The date of transaction is not in an active range for the hpan
+            trx.setRejectionReason(List.of("HPAN_NOT_ACTIVE"));
         }
         return rewardTransactionMapper.map(trx);
     }

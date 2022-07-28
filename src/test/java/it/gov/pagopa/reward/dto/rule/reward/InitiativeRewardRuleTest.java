@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-public class InitiativeRewardRuleTest {
+class InitiativeRewardRuleTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -19,13 +19,13 @@ public class InitiativeRewardRuleTest {
     }
 
     @Test
-    public void testRewardGroups() throws JsonProcessingException {
+    void testRewardGroups() throws JsonProcessingException {
         String content = """
                 {"_type":"rewardGroups","rewardGroups":[{"from":0.00,"to":2.00,"rewardValue":10},{"from":3.00,"to":4.55,"rewardValue":12.5}]}
                 """;
 
         RewardGroupsDTO expected = RewardGroupsDTO.builder()
-                .rewardGroupDTOS(List.of(
+                .rewardGroups(List.of(
                         RewardGroupsDTO.RewardGroupDTO.builder()
                                 .from(BigDecimal.valueOf(0).setScale(2, RoundingMode.UNNECESSARY))
                                 .to(BigDecimal.valueOf(2).setScale(2, RoundingMode.UNNECESSARY))
@@ -43,7 +43,7 @@ public class InitiativeRewardRuleTest {
     }
 
     @Test
-    public void testRewardValue() throws JsonProcessingException {
+    void testRewardValue() throws JsonProcessingException {
         String content = """
                 {"_type":"rewardValue","rewardValue":10.00}
                 """;

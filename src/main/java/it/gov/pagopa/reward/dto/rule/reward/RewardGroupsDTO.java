@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.rule.reward;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,9 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RewardGroupsDTO implements InitiativeRewardRule {
-    @JsonProperty("rewardGroups")
-    private List<RewardGroupDTO> rewardGroupDTOS;
+public class RewardGroupsDTO implements InitiativeRewardRule, InitiativeTrxCondition {
+    private List<RewardGroupDTO> rewardGroups;
 
     @Data
     @AllArgsConstructor

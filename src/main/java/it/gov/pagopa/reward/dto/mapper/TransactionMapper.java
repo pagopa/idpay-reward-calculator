@@ -11,7 +11,7 @@ public class TransactionMapper {
         RewardTransaction rewardTrx = null;
 
         if (transaction != null) {
-            rewardTrx = RewardTransaction.builder().build();
+            rewardTrx = RewardTransaction.rewardTransactionBuilder().build();
             rewardTrx.setIdTrxAcquirer(transaction.getIdTrxAcquirer());
             rewardTrx.setAcquirerCode(transaction.getAcquirerCode());
             rewardTrx.setTrxDate(transaction.getTrxDate());

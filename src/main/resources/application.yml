@@ -127,6 +127,9 @@ app:
     online-syntax-check: ${REWARD_RULE_BUILD_ONLINE_SYNTAX_CHECK:false}
     # the delay after which it will fetch all the rules and compile them
     build-delay-duration: ${REWARD_RULE_BUILD_DELAY_DURATION:PT1S} # each second
+    rule-engine:
+      # if exit immediately at the first condition failed
+      short-circuit-conditions: ${REWARD_RULE_SHORT_CIRCUIT:false}
   filter:
     mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
   rules:

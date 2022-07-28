@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class InitiativeTrxConditionsTest {
+class InitiativeTrxConditionsTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -29,14 +29,14 @@ public class InitiativeTrxConditionsTest {
     }
 
     @Test
-    public void test() throws JsonProcessingException {
+    void test() throws JsonProcessingException {
         String content = """
                 {"daysOfWeek":%s,"threshold":%s,"mccFilter":%s,"trxCount":%s,"rewardLimits":%s}
                 """.formatted(
-                "{\"daysAllowed\":[" +
+                "[" +
                         "{\"daysOfWeek\":[\"MONDAY\",\"SUNDAY\"],\"intervals\":[{\"startTime\":\"06:00:00.000\",\"endTime\":\"22:00:59.999\"}]}," +
                         "{\"daysOfWeek\":[\"THURSDAY\"],\"intervals\":[{\"startTime\":\"05:00:00.000\",\"endTime\":\"12:59:59.999\"},{\"startTime\":\"18:00:00.000\",\"endTime\":\"23:59:59.999\"}]}" +
-                        "]}",
+                        "]",
                 "{\"from\":10.00,\"fromIncluded\":true,\"to\":12.32,\"toIncluded\":false}",
                 "{\"allowedList\":true,\"values\":[\"1200\",\"2223\",\"4455\"]}",
                 "{\"from\":2,\"fromIncluded\":true,\"to\":5,\"toIncluded\":false}",
@@ -44,8 +44,7 @@ public class InitiativeTrxConditionsTest {
         );
 
         InitiativeTrxConditions expected = InitiativeTrxConditions.builder()
-                .daysOfWeek(DayOfWeekDTO.builder()
-                        .daysAllowed(List.of(
+                .daysOfWeek(new DayOfWeekDTO(List.of(
                                 DayOfWeekDTO.DayConfig.builder()
                                         .daysOfWeek(new TreeSet<>(Set.of(DayOfWeek.SUNDAY, DayOfWeek.MONDAY)))
                                         .intervals(List.of(
@@ -67,7 +66,6 @@ public class InitiativeTrxConditionsTest {
                                                         .build()))
                                         .build()
                         ))
-                        .build()
                 )
                 .threshold(ThresholdDTO.builder()
                         .from(BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))

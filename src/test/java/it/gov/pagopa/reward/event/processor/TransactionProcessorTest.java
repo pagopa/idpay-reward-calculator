@@ -75,7 +75,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .build();
 
         //endregion
-        droolsRuleRepository.save(droolsRule).subscribe(dr -> log.info(dr.toString()));
+        droolsRuleRepository.save(droolsRule).block();
 
 
         //region TransactionDTO initializer
@@ -90,7 +90,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .mcc("4040")
                 .build();
         //endregion
-        wait(20000);
+
         publishIntoEmbeddedKafka(topicRewardProcessorRequest,null,null,trx);
 
         //Then

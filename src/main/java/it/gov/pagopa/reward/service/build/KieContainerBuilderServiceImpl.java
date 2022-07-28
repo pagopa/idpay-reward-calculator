@@ -15,14 +15,12 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.stream.Collectors;
-
 @Service
 @Slf4j
 public class KieContainerBuilderServiceImpl implements KieContainerBuilderService {
 
-    public static final String rulesBuiltPackage = "it.gov.pagopa.reward.drools.buildrules";
-    private static final String rulesBuiltDir = rulesBuiltPackage.replace(".", "/");
+    public static final String RULES_BUILT_PACKAGE = "it.gov.pagopa.reward.drools.buildrules";
+    private static final String RULES_BUILT_DIR = RULES_BUILT_PACKAGE.replace(".", "/");
 
     private final DroolsRuleRepository droolsRuleRepository;
 
@@ -41,7 +39,7 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
         KieServices kieServices = KieServices.Factory.get();
         KieFileSystem kieFileSystem = KieServices.get().newKieFileSystem();
 
-        return rules.map(r -> kieFileSystem.write(String.format("src/main/resources/%s/%s.drl", rulesBuiltDir, r.getName()), r.getRule()))
+        return rules.map(r -> kieFileSystem.write(String.format("src/main/resources/%s/%s.drl", RULES_BUILT_DIR, r.getName()), r.getRule()))
                 .then(Mono.fromSupplier(() -> {
                     KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
                     kieBuilder.buildAll();
@@ -54,11 +52,11 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
 
                     log.info("Build completed");
                     if (log.isDebugEnabled()) {
-                        KiePackage kiePackage = newKieContainer.getKieBase().getKiePackage(rulesBuiltPackage);
+                        KiePackage kiePackage = newKieContainer.getKieBase().getKiePackage(RULES_BUILT_PACKAGE);
                         log.debug("The container now will contain the following rules inside %s package: %s".formatted(
-                                rulesBuiltPackage,
+                                RULES_BUILT_PACKAGE,
                                 kiePackage != null
-                                        ? kiePackage.getRules().stream().map(Rule::getId).collect(Collectors.toList())
+                                        ? kiePackage.getRules().stream().map(Rule::getId).toList()
                                         : "0"));
                     }
                     return newKieContainer;

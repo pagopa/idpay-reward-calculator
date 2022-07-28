@@ -8,16 +8,19 @@ import lombok.NoArgsConstructor;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class DayOfWeekDTO implements InitiativeTrxCondition {
+public class DayOfWeekDTO extends ArrayList<DayOfWeekDTO.DayConfig> implements InitiativeTrxCondition {
 
-    private List<DayConfig> daysAllowed;
+    public DayOfWeekDTO(){
+        super();
+    }
+
+    public DayOfWeekDTO(List<DayOfWeekDTO.DayConfig> list){
+        super(list);
+    }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
     public static class DayConfig {

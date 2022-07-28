@@ -11,5 +11,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = RewardGroupsDTO.class, name = "rewardGroups"),
         @JsonSubTypes.Type(value = RewardValueDTO.class, name = "rewardValue"),
 })
-public interface InitiativeRewardRule {
+public interface InitiativeRewardRule extends InitiativeTrxConsequence {
 }
