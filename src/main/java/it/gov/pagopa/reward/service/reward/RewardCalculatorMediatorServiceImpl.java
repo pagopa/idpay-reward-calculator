@@ -11,12 +11,12 @@ import reactor.core.publisher.Flux;
 public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMediatorService{
 
     private final TransactionFilterService transactionFilterService;
-    private final InitiativesService initiativesService;
+    private final OnboardedInitiativesService onboardedInitiativesService;
     private final RuleEngineService ruleEngineService;
 
-    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, InitiativesService initiativesService, RuleEngineService ruleEngineService) {
+    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, RuleEngineService ruleEngineService) {
         this.transactionFilterService = transactionFilterService;
-        this.initiativesService = initiativesService;
+        this.onboardedInitiativesService = onboardedInitiativesService;
         this.ruleEngineService = ruleEngineService;
     }
 
@@ -25,7 +25,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
 
         return transactionDTOFlux
                 .filter(transactionFilterService::filter)
-                .mapNotNull(t -> ruleEngineService.applyRules(t, initiativesService.getInitiatives(t.getHpan(), t.getTrxDate())));
+                .mapNotNull(t -> ruleEngineService.applyRules(t, onboardedInitiativesService.getInitiatives(t.getHpan(), t.getTrxDate())));
     }
 
 }

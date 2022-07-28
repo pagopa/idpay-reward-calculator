@@ -12,12 +12,13 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
 
     private static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter weeklyDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W");
+    private static final DateTimeFormatter weeklyDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
     private static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     private static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
 

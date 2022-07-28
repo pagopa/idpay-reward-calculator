@@ -17,13 +17,13 @@ import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
-class InitiativesServiceImplTest {
+class OnboardedInitiativesServiceImplTest {
 
     @Test
     void getInitiatives() {
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
+        OnboardedInitiativesService onboardedInitiativesService = new OnboardedInitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(10L);
@@ -36,7 +36,7 @@ class InitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
@@ -48,7 +48,7 @@ class InitiativesServiceImplTest {
     void getInitiativesHpanNotValid() {
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
+        OnboardedInitiativesService onboardedInitiativesService = new OnboardedInitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
@@ -57,7 +57,7 @@ class InitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.empty());
 
         // When
-        List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
@@ -68,7 +68,7 @@ class InitiativesServiceImplTest {
     void getNotOnboardedInitiatives() {
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
+        OnboardedInitiativesService onboardedInitiativesService = new OnboardedInitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
@@ -79,7 +79,7 @@ class InitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
@@ -90,7 +90,7 @@ class InitiativesServiceImplTest {
     void getNotIntitiaveTrxNotInActiveInterval() {
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
-        InitiativesService initiativesService = new InitiativesServiceImpl(hpanInitiativesRepository);
+        OnboardedInitiativesService onboardedInitiativesService = new OnboardedInitiativesServiceImpl(hpanInitiativesRepository);
 
         String hpanMock = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
         OffsetDateTime trxDateMock = OffsetDateTime.now().plusDays(6L);
@@ -101,7 +101,7 @@ class InitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = initiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
