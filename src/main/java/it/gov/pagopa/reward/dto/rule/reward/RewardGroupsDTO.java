@@ -1,17 +1,28 @@
 package it.gov.pagopa.reward.dto.rule.reward;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 @Builder
-public class RewardGroupsDTO implements AnyOfInitiativeRewardRule{
-    @JsonProperty("_type")
-    private FieldEnumRewardDTO _type;
-    @JsonProperty("rewardGroups")
-    private List<RewardGroupDTO> rewardGroupDTOS;
+public class RewardGroupsDTO implements InitiativeRewardRule, InitiativeTrxCondition {
+    private List<RewardGroupDTO> rewardGroups;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class RewardGroupDTO {
+        private BigDecimal from;
+        private BigDecimal to;
+        private BigDecimal rewardValue;
+    }
 }

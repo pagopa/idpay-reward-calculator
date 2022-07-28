@@ -13,6 +13,7 @@ public class InitiativeConfig {
 
     private String initiativeId;
     private boolean hasDailyThreshold;
+    private boolean hasWeeklyThreshold;
     private boolean hasMonthlyThreshold;
     private boolean hasYearlyThreshold;
 
