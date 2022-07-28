@@ -128,25 +128,25 @@ class DroolsTemplateRuleUtilsTest {
     void testToTemplateParamFromCustomObject() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildNewObjectDroolsParam(null));
         TestModelSample newObjectObject = new TestModelSample();
-        DroolsRuleTemplateParam expectedNewObject = new DroolsRuleTemplateParam("((%s)(new java.util.function.Supplier<%s>(){public %s get(){%s varExtraFilterTestModelSample = new %s();SETTERS;return varExtraFilterTestModelSample;}}).get())".replace("%s", TestModelSample.class.getName().replace('$', '.')));
+        DroolsRuleTemplateParam expectedNewObject = new DroolsRuleTemplateParam("((%s)(new java.util.function.Supplier<%s>(){public %s get(){%s varTestModelSample = new %s();SETTERS;return varTestModelSample;}}).get())".replace("%s", TestModelSample.class.getName().replace('$', '.')));
         Set<String> expectedNewObjectSetters = new TreeSet<>(Set.of(
-                "varExtraFilterTestModelSample.setZonedDateTimeObject(null)",
-                "varExtraFilterTestModelSample.setZoneOffsetObject(null)",
-                "varExtraFilterTestModelSample.setLocalDateTimeObject(null)",
-                "varExtraFilterTestModelSample.setCollectionObject(null)",
-                "varExtraFilterTestModelSample.setOffsetDateTimeObject(null)",
-                "varExtraFilterTestModelSample.setLocalDateObject(null)",
-                "varExtraFilterTestModelSample.setLocalTimeObject(null)",
-                "varExtraFilterTestModelSample.setZoneIdObject(null)",
-                "varExtraFilterTestModelSample.setNumberObject(null)",
-                "varExtraFilterTestModelSample.setBooleanObject(null)",
-                "varExtraFilterTestModelSample.setStringObject(null)",
-                "varExtraFilterTestModelSample.setEnumObject(null)",
+                "varTestModelSample.setZonedDateTimeObject(null)",
+                "varTestModelSample.setZoneOffsetObject(null)",
+                "varTestModelSample.setLocalDateTimeObject(null)",
+                "varTestModelSample.setCollectionObject(null)",
+                "varTestModelSample.setOffsetDateTimeObject(null)",
+                "varTestModelSample.setLocalDateObject(null)",
+                "varTestModelSample.setLocalTimeObject(null)",
+                "varTestModelSample.setZoneIdObject(null)",
+                "varTestModelSample.setNumberObject(null)",
+                "varTestModelSample.setBooleanObject(null)",
+                "varTestModelSample.setStringObject(null)",
+                "varTestModelSample.setEnumObject(null)",
                 "return" // put for commodity
         ));
         String newObjectBuild = DroolsTemplateRuleUtils.buildNewObjectDroolsParam(newObjectObject).getParam();
         String newObjectToTemplateParam = DroolsTemplateRuleUtils.toTemplateParam(newObjectObject).getParam();
-        String setterRegexp = "varExtraFilterTestModelSample\\.set.*;return";
+        String setterRegexp = "varTestModelSample\\.set.*;return";
         String replaceString = "SETTERS;return";
         Assertions.assertEquals(expectedNewObject.getParam(), newObjectBuild.replaceAll(setterRegexp, replaceString));
         Assertions.assertEquals(expectedNewObject.getParam(), newObjectToTemplateParam.replaceAll(setterRegexp, replaceString));
