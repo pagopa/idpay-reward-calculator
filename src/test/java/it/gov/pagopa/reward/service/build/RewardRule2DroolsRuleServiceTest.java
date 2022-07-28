@@ -6,7 +6,9 @@ import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsCon
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRuleTransformerFacadeImpl;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacadeImpl;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
+import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
@@ -37,7 +39,8 @@ class RewardRule2DroolsRuleServiceTest {
                 executeOnlineBuildCheck,
                 new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)),
                 new TrxCondition2DroolsRuleTransformerFacadeImpl(new TrxCondition2DroolsConditionTransformerFacadeImpl()),
-                new TrxConsequence2DroolsRuleTransformerFacadeImpl(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl())
+                new TrxConsequence2DroolsRuleTransformerFacadeImpl(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl()),
+                new InitiativeReward2BuildDTO2ConfigMapper()
         );
     }
 
@@ -203,9 +206,13 @@ class RewardRule2DroolsRuleServiceTest {
                                 
                 """);
 
-        /*expected.setInitiativeConfig(new InitiativeConfig("ID", TODO to fix after merge with IRER-99
-                LocalDate.of(2021,1,1),LocalDate.of(2025,12,1),
-                "PDND_TOKEN", List.of("ISEE", "BIRTHDATE"), new BigDecimal(100000.00), new BigDecimal(1000.00)));*/
+        expected.setInitiativeConfig(InitiativeConfig.builder()
+                .initiativeId(expected.getId())
+                .hasDailyThreshold(true)
+                .hasWeeklyThreshold(true)
+                .hasMonthlyThreshold(true)
+                .hasYearlyThreshold(true)
+                .build());
 
         Assertions.assertEquals(expected, result);
     }
