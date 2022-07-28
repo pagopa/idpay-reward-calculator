@@ -1,17 +1,20 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.springframework.stereotype.Service;
 
-@Service
-public class TransactionMapper {
-    public RewardTransaction map(TransactionDTO transaction) {
+import java.util.function.Function;
 
-        RewardTransaction rewardTrx = null;
+@Service
+public class Transaction2TransactionDroolsMapper implements Function<TransactionDTO, TransactionDroolsDTO> {
+    @Override
+    public TransactionDroolsDTO apply(TransactionDTO transaction) {
+
+        TransactionDroolsDTO rewardTrx = null;
 
         if (transaction != null) {
-            rewardTrx = RewardTransaction.rewardTransactionBuilder().build();
+            rewardTrx = new TransactionDroolsDTO();
             rewardTrx.setIdTrxAcquirer(transaction.getIdTrxAcquirer());
             rewardTrx.setAcquirerCode(transaction.getAcquirerCode());
             rewardTrx.setTrxDate(transaction.getTrxDate());

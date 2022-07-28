@@ -1,20 +1,26 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.math.BigDecimal;
+import java.util.function.Function;
 
 @Service
-public class RewardTransactionMapper {
-    public RewardTransactionDTO map (RewardTransaction rewardTrx) {
+public class TransactionDroolsDTO2RewardTransactionMapper implements Function<TransactionDroolsDTO, RewardTransactionDTO> {
+    @Override
+    public RewardTransactionDTO apply(TransactionDroolsDTO rewardTrx) {
         RewardTransactionDTO trxDto = null;
 
-        if (rewardTrx != null){
-            trxDto = RewardTransactionDTO.builder().build();
+        if (rewardTrx != null) {
+            trxDto = new RewardTransactionDTO();
             trxDto.setIdTrxAcquirer(rewardTrx.getIdTrxAcquirer());
             trxDto.setAcquirerCode(rewardTrx.getAcquirerCode());
             trxDto.setTrxDate(rewardTrx.getTrxDate());
             trxDto.setHpan(rewardTrx.getHpan());
+            trxDto.setCircuitType(rewardTrx.getCircuitType());
             trxDto.setOperationType(rewardTrx.getOperationType());
             trxDto.setIdTrxIssuer(rewardTrx.getIdTrxIssuer());
             trxDto.setCorrelationId(rewardTrx.getCorrelationId());
@@ -25,16 +31,22 @@ public class RewardTransactionMapper {
             trxDto.setMerchantId(rewardTrx.getMerchantId());
             trxDto.setTerminalId(rewardTrx.getTerminalId());
             trxDto.setBin(rewardTrx.getBin());
-            trxDto.setRewards(rewardTrx.getRewards());
             trxDto.setSenderCode(rewardTrx.getSenderCode());
             trxDto.setFiscalCode(rewardTrx.getFiscalCode());
             trxDto.setVat(rewardTrx.getVat());
             trxDto.setPosType(rewardTrx.getPosType());
             trxDto.setPar(rewardTrx.getPar());
-            trxDto.setStatus(rewardTrx.getStatus());
-            trxDto.setRejectionReason(rewardTrx.getRejectionReason());
+            trxDto.setRejectionReasons(rewardTrx.getRejectionReasons());
+            trxDto.setInitiativeRejectionReasons(rewardTrx.getInitiativeRejectionReasons());
             trxDto.setInitiatives(rewardTrx.getInitiatives());
             trxDto.setRewards(rewardTrx.getRewards());
+
+            trxDto.setStatus(
+                    CollectionUtils.isEmpty(rewardTrx.getRejectionReasons()) &&
+                            rewardTrx.getRewards().values().stream().anyMatch(r->r.getAccruedReward().compareTo(BigDecimal.ZERO)!=0)
+                            ? "REWARDED"
+                            : "REJECTED"
+            );
         }
 
         return trxDto;

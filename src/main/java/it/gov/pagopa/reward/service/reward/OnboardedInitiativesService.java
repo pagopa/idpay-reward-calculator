@@ -6,6 +6,6 @@ import java.util.List;
 /**
  * This component will retrieve initiatives to which the input hpan has been enabled
  * */
-public interface InitiativesService {
+public interface OnboardedInitiativesService {
     List<String> getInitiatives(String hpan, OffsetDateTime trxDate);
 }

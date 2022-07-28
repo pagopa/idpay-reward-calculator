@@ -19,9 +19,9 @@ class RewardCalculatorMediatorServiceImplTest {
     void execute() {
         // Given
         TransactionFilterService transactionFilterService = Mockito.mock(TransactionFilterServiceImpl.class);
-        InitiativesService initiativesService = Mockito.mock(InitiativesServiceImpl.class);
+        OnboardedInitiativesService onboardedInitiativesService = Mockito.mock(OnboardedInitiativesServiceImpl.class);
         RuleEngineService ruleEngineService = Mockito.mock(RuleEngineServiceImpl.class);
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(transactionFilterService,initiativesService,ruleEngineService);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(transactionFilterService, onboardedInitiativesService,ruleEngineService);
 
         TransactionDTO trx1 = Mockito.mock(TransactionDTO.class);
         TransactionDTO trx2 = Mockito.mock(TransactionDTO.class);
@@ -31,7 +31,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(transactionFilterService.filter(Mockito.same(trx2))).thenReturn(false);
 
         List<String> initiatives1 = Mockito.mock(List.class);
-        Mockito.when(initiativesService.getInitiatives(Mockito.any(),Mockito.any()))
+        Mockito.when(onboardedInitiativesService.getInitiatives(Mockito.any(),Mockito.any()))
                 .thenReturn(initiatives1);
 
         RewardTransactionDTO rTrx1 = Mockito.mock(RewardTransactionDTO.class);

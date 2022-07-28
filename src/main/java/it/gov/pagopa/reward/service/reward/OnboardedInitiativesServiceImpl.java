@@ -15,11 +15,11 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class InitiativesServiceImpl implements InitiativesService{
+public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesService {
 
     private final HpanInitiativesRepository hpanInitiativesRepository;
 
-    public InitiativesServiceImpl(HpanInitiativesRepository hpanInitiativesRepository){
+    public OnboardedInitiativesServiceImpl(HpanInitiativesRepository hpanInitiativesRepository){
         this.hpanInitiativesRepository = hpanInitiativesRepository;
     }
 

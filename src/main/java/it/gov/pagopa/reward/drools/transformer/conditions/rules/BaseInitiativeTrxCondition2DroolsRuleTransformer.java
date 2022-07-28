@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacade;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends InitiativeTrxCondition> implements InitiativeTrxCondition2DroolsRuleTransformer<T> {
@@ -37,8 +37,8 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 agenda-group "%s"
                 when
                    $config: %s()
-                   $trx: %s(!$config.shortCircuitConditions || rejectionReason.size() == 0, !(%s))
-                then $trx.getRejectionReason().add("%s");
+                   $trx: %s(!$config.shortCircuitConditions || initiativeRejectionReasons.get("%s") == null, !(%s))
+                then $trx.getInitiativeRejectionReasons().computeIfAbsent("%s",k->new java.util.ArrayList<>()).add("%s");
                 end
                 """.formatted(
                 ruleName,
@@ -46,8 +46,10 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 RewardConstants.InitiativeTrxConditionOrder.values().length-getTrxConditionOrder().ordinal(),
                 initiativeId,
                 RuleEngineConfig.class.getName(),
-                RewardTransaction.class.getName(),
+                TransactionDroolsDTO.class.getName(),
+                initiativeId,
                 trxCondition2DroolsConditionTransformerFacade.apply(trxCondition),
+                initiativeId,
                 rejectionReason
         );
     }

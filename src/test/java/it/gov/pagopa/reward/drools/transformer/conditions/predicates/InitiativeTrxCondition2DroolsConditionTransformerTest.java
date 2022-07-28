@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -37,7 +37,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         return BigDecimal.valueOf(value).setScale(2, RoundingMode.UNNECESSARY);
     }
 
-    protected void testRule(String testName, String rewardCondition, RewardTransaction trx, boolean expectTrueCondition){
+    protected void testRule(String testName, String rewardCondition, TransactionDroolsDTO trx, boolean expectTrueCondition){
         trx.setInitiatives(new ArrayList<>());
         KieContainer kieContainer = buildRule(testName, rewardCondition);
         executeRule(trx, testName, kieContainer);
@@ -61,7 +61,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
                 """.formatted(
                 dr.getName(),
                 dr.getId(),
-                RewardTransaction.class.getName(),
+                TransactionDroolsDTO.class.getName(),
                 rewardCondition,
                 testName));
 
@@ -73,7 +73,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         }
     }
 
-    protected void executeRule(RewardTransaction trx, String agendaGroup, KieContainer kieContainer){
+    protected void executeRule(TransactionDroolsDTO trx, String agendaGroup, KieContainer kieContainer){
         @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(trx),

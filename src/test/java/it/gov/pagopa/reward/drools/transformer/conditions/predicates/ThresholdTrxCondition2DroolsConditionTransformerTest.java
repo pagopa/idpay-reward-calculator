@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     private final BigDecimal upperBound = BigDecimal.valueOf(10.37);
 
 
-    private void testLowerBound(String thresholdCondition, RewardTransaction transaction, boolean expectedBefore, boolean expectedEqual) {
+    private void testLowerBound(String thresholdCondition, TransactionDroolsDTO transaction, boolean expectedBefore, boolean expectedEqual) {
         transaction.setAmount(bigDecimalValue(-0.01));
         testRule("Threshold", thresholdCondition, transaction, expectedBefore);
 
@@ -27,7 +27,7 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         testRule("Threshold", thresholdCondition, transaction, true);
     }
 
-    private void testUpperBound(String thresholdCondition, RewardTransaction transaction, boolean expectedEqual, boolean expectedGreater) {
+    private void testUpperBound(String thresholdCondition, TransactionDroolsDTO transaction, boolean expectedEqual, boolean expectedGreater) {
         transaction.setAmount(bigDecimalValue(7.8));
         testRule("Threshold", thresholdCondition, transaction, true);
 
@@ -47,7 +47,7 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("amount > new java.math.BigDecimal(\"0\")", thresholdCondition);
 
-        RewardTransaction transaction = new RewardTransaction();
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
         testLowerBound(thresholdCondition, transaction, false, false);
         testUpperBound(thresholdCondition, transaction, true, true);
@@ -62,7 +62,7 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("amount >= new java.math.BigDecimal(\"0\")", thresholdCondition);
 
-        RewardTransaction transaction = new RewardTransaction();
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
         testLowerBound(thresholdCondition, transaction, false, true);
         testUpperBound(thresholdCondition, transaction, true, true);
@@ -77,7 +77,7 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("amount < new java.math.BigDecimal(\"10.37\")", thresholdCondition);
 
-        RewardTransaction transaction = new RewardTransaction();
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
         testLowerBound(thresholdCondition, transaction, true, true);
         testUpperBound(thresholdCondition, transaction, false, false);
@@ -92,7 +92,7 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("amount <= new java.math.BigDecimal(\"10.37\")", thresholdCondition);
 
-        RewardTransaction transaction = new RewardTransaction();
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
         testLowerBound(thresholdCondition, transaction, true, true);
         testUpperBound(thresholdCondition, transaction, true, false);

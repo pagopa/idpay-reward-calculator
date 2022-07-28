@@ -65,7 +65,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .name("initiativeId1")
                 .rule("""
                         package it.gov.pagopa.reward.drools.buildrules;
-                        import it.gov.pagopa.reward.model.RewardTransaction;
+                        import it.gov.pagopa.reward.model.TransactionDroolsDTO;
                         rule "initiativeId1"
                         agenda-group "initiativeId1"
                         when $trx: RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")

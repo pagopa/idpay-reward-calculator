@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,15 +29,15 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
                 rule "ruleName-REWARDVALUE"
                 salience -1
                 agenda-group "agendaGroup"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
-                then $trx.getRewards().put("agendaGroup", $trx.getAmount().multiply(new java.math.BigDecimal("0.1225")).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(initiativeRejectionReasons.get("agendaGroup") == null)
+                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(new java.math.BigDecimal("0.1225")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 """;
     }
 
     @Override
-    protected RewardTransaction getTransaction() {
-        RewardTransaction trx =new RewardTransaction();
+    protected TransactionDroolsDTO getTransaction() {
+        TransactionDroolsDTO trx =new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(11.25));
         return trx;
     }

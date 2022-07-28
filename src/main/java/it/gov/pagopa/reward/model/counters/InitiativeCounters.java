@@ -1,6 +1,10 @@
 package it.gov.pagopa.reward.model.counters;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 
 import java.util.Map;
@@ -9,10 +13,12 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@SuperBuilder
 public class InitiativeCounters extends Counters {
     @Id
     private String initiativeId;
     private Map<String, Counters> dailyCounters;
+    private Map<String, Counters> weeklyCounters;
     private Map<String, Counters> monthlyCounters;
     private Map<String, Counters> yearlyCounters;
 }
