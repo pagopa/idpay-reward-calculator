@@ -14,9 +14,15 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
     public InitiativeConfig apply(InitiativeReward2BuildDTO initiativeReward2BuildDTO) {
         InitiativeConfig out = new InitiativeConfig();
         out.setInitiativeId(initiativeReward2BuildDTO.getInitiativeId());
-        List<RewardLimitsDTO> rewardLimits = initiativeReward2BuildDTO.getTrxRule().getRewardLimits();
-        rewardLimits.forEach(l -> setLimitFrequency(l.getFrequency(),out));
+        setPeriodicalInfo(initiativeReward2BuildDTO, out);
         return out;
+    }
+
+    private void setPeriodicalInfo(InitiativeReward2BuildDTO initiativeReward2BuildDTO, InitiativeConfig out) {
+        List<RewardLimitsDTO> rewardLimits = initiativeReward2BuildDTO.getTrxRule().getRewardLimits();
+        if(rewardLimits!=null){
+            rewardLimits.forEach(l -> setLimitFrequency(l.getFrequency(), out));
+        }
     }
 
     private void setLimitFrequency(RewardLimitsDTO.RewardLimitFrequency limitFrequency, InitiativeConfig initiativeConfig){

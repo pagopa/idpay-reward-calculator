@@ -83,7 +83,4 @@ public final class InitiativeReward2BuildDTOFaker {
         return out;
     }
 
-    private static FakeValuesService getFakeValuesService(Integer bias) {
-        return bias == null ? fakeValuesServiceGlobal : new FakeValuesService(new Locale("it"), new RandomService(new Random(bias)));
-    }
 }
