@@ -45,6 +45,14 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
         // Then
         Assertions.assertNotNull(result);
 
+        assertCommonFieldsValues(trx, result);
+
+        Assertions.assertEquals("REWARDED", result.getStatus());
+
+        TestUtils.checkNotNullFields(result);
+    }
+
+    private void assertCommonFieldsValues(TransactionDroolsDTO trx, RewardTransactionDTO result) {
         Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());
         Assertions.assertSame(trx.getTrxDate(), result.getTrxDate());
@@ -69,14 +77,10 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
         Assertions.assertSame(trx.getInitiatives(), result.getInitiatives());
         Assertions.assertSame(trx.getRewards(), result.getRewards());
-
-        Assertions.assertEquals("REWARDED", result.getStatus());
-
-        TestUtils.checkNotNullFields(result);
     }
 
     @Test
-    public void testWithNoRewards() {
+    void testWithNoRewards() {
         // Given
         TransactionDroolsDTO trx = new Transaction2TransactionDroolsMapper().apply(TransactionDTOFaker.mockInstance(0));
         trx.setRewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ZERO, BigDecimal.ZERO, false)));
@@ -91,7 +95,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     }
 
     @Test
-    public void testWithRejectionReasons() {
+    void testWithRejectionReasons() {
         // Given
         TransactionDroolsDTO trx = new Transaction2TransactionDroolsMapper().apply(TransactionDTOFaker.mockInstance(0));
         trx.setRewards(Map.of("INITIATIVE", new Reward(BigDecimal.TEN, BigDecimal.ONE, true)));

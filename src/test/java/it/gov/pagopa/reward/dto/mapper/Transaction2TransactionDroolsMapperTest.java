@@ -34,6 +34,17 @@ class Transaction2TransactionDroolsMapperTest {
         //Then
         Assertions.assertNotNull(result);
 
+        assertCommonFieldValues(trx, result);
+
+        Assertions.assertEquals(new ArrayList<>(), result.getRejectionReasons());
+        Assertions.assertEquals(new HashMap<>(), result.getInitiativeRejectionReasons());
+        Assertions.assertNull(result.getInitiatives());
+        Assertions.assertEquals(new HashMap<>(), result.getRewards());
+
+        TestUtils.checkNotNullFields(result,"initiatives");
+    }
+
+    private void assertCommonFieldValues(TransactionDTO trx, TransactionDroolsDTO result) {
         Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());
         Assertions.assertSame(trx.getTrxDate(), result.getTrxDate());
@@ -54,12 +65,5 @@ class Transaction2TransactionDroolsMapperTest {
         Assertions.assertSame(trx.getVat(), result.getVat());
         Assertions.assertSame(trx.getPosType(), result.getPosType());
         Assertions.assertSame(trx.getPar(), result.getPar());
-
-        Assertions.assertEquals(new ArrayList<>(), result.getRejectionReasons());
-        Assertions.assertEquals(new HashMap<>(), result.getInitiativeRejectionReasons());
-        Assertions.assertNull(result.getInitiatives());
-        Assertions.assertEquals(new HashMap<>(), result.getRewards());
-
-        TestUtils.checkNotNullFields(result,"initiatives");
     }
 }

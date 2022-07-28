@@ -216,7 +216,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     }
 
     @Test
-    public void testRewardJustDailyInitiative(){
+    void testRewardJustDailyInitiative(){
         //Given
         initiativeConfig.setHasWeeklyThreshold(false);
         initiativeConfig.setHasMonthlyThreshold(false);
@@ -244,7 +244,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     }
 
     @Test
-    public void testRewardJustWeeklyInitiative(){
+    void testRewardJustWeeklyInitiative(){
         //Given
         initiativeConfig.setHasDailyThreshold(false);
         initiativeConfig.setHasMonthlyThreshold(false);
@@ -272,7 +272,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     }
 
     @Test
-    public void testRewardJustMonthlyInitiative(){
+    void testRewardJustMonthlyInitiative(){
         //Given
         initiativeConfig.setHasDailyThreshold(false);
         initiativeConfig.setHasWeeklyThreshold(false);
@@ -300,7 +300,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     }
 
     @Test
-    public void testRewardJustYearlyInitiative(){
+    void testRewardJustYearlyInitiative(){
         //Given
         initiativeConfig.setHasDailyThreshold(false);
         initiativeConfig.setHasWeeklyThreshold(false);
