@@ -43,7 +43,7 @@ class InitiativeRewardRuleTest {
     }
 
     @Test
-    public void testRewardValue() throws JsonProcessingException {
+    void testRewardValue() throws JsonProcessingException {
         String content = """
                 {"_type":"rewardValue","rewardValue":10.00}
                 """;

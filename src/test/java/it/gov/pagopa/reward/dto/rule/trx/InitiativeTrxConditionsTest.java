@@ -29,7 +29,7 @@ class InitiativeTrxConditionsTest {
     }
 
     @Test
-    public void test() throws JsonProcessingException {
+    void test() throws JsonProcessingException {
         String content = """
                 {"daysOfWeek":%s,"threshold":%s,"mccFilter":%s,"trxCount":%s,"rewardLimits":%s}
                 """.formatted(

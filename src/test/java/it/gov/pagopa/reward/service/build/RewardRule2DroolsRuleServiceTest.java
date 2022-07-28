@@ -53,7 +53,7 @@ class RewardRule2DroolsRuleServiceTest {
     }
 
     @Test
-    public void testBuildWithOnlineBuildCheck() {
+    void testBuildWithOnlineBuildCheck() {
         // given
         InitiativeReward2BuildDTO dto = InitiativeReward2BuildDTOFaker.mockInstance(0);
 

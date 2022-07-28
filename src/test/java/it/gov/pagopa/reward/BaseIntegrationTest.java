@@ -36,7 +36,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.with;
 
 @SpringBootTest
 @EmbeddedKafka(topics = {
@@ -175,21 +180,16 @@ public abstract class BaseIntegrationTest {
         template.send(record);
     }
 
-    protected void wait(int millis){
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    protected void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay){
+        try{
+            with()
+                    .pollInterval(millisAttemptDelay, TimeUnit.MILLISECONDS)
+                    .atMost((long) maxAttempts *millisAttemptDelay, TimeUnit.MILLISECONDS)
+                    .await()
+                    .until(test);
+        } catch (RuntimeException e){
+            Assertions.fail(buildTestFailureMessage.get(), e);
         }
-    }
-
-    protected void waitFor(Supplier<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay){
-        int i=0;
-        while(!test.get() && i<maxAttempts) {
-            i++;
-            wait(millisAttemptDelay);
-        }
-        Assertions.assertTrue(test.get(), buildTestFailureMessage.get());
     }
 
 }
