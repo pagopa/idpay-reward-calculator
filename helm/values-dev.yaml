@@ -90,7 +90,7 @@ microservice-chart:
     idpay-common:
       TZ: tz
     idpay-eventhub-01:
-      KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_CALCULATOR_RESPONSE: kafka_broker
+      KAFKA_BROKER: kafka_broker
       KAFKA_REWARD_SASL_MECHANISM: kafka_sasl_mechanism
       KAFKA_REWARD_SECURITY_PROTOCOL: kafka_security_protocol
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
