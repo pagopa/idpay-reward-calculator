@@ -25,6 +25,7 @@ public class TransactionDroolsDTO extends TransactionDTO {
 
     List<String> initiatives;
 
-    Map<String, Reward> rewards;
+    @Builder.Default
+    Map<String, Reward> rewards = new HashMap<>();
 }
 

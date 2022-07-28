@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.function.Function;
 
 @Service
@@ -19,6 +20,7 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
             trxDto.setAcquirerCode(rewardTrx.getAcquirerCode());
             trxDto.setTrxDate(rewardTrx.getTrxDate());
             trxDto.setHpan(rewardTrx.getHpan());
+            trxDto.setCircuitType(rewardTrx.getCircuitType());
             trxDto.setOperationType(rewardTrx.getOperationType());
             trxDto.setIdTrxIssuer(rewardTrx.getIdTrxIssuer());
             trxDto.setCorrelationId(rewardTrx.getCorrelationId());
@@ -29,7 +31,6 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
             trxDto.setMerchantId(rewardTrx.getMerchantId());
             trxDto.setTerminalId(rewardTrx.getTerminalId());
             trxDto.setBin(rewardTrx.getBin());
-            trxDto.setRewards(rewardTrx.getRewards());
             trxDto.setSenderCode(rewardTrx.getSenderCode());
             trxDto.setFiscalCode(rewardTrx.getFiscalCode());
             trxDto.setVat(rewardTrx.getVat());
@@ -42,7 +43,7 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
 
             trxDto.setStatus(
                     CollectionUtils.isEmpty(rewardTrx.getRejectionReasons()) &&
-                            CollectionUtils.isEmpty(rewardTrx.getInitiativeRejectionReasons())
+                            rewardTrx.getRewards().values().stream().anyMatch(r->r.getAccruedReward().compareTo(BigDecimal.ZERO)!=0)
                             ? "REWARDED"
                             : "REJECTED"
             );
