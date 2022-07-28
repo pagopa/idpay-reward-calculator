@@ -95,7 +95,7 @@ microservice-chart:
       KAFKA_REWARD_SECURITY_PROTOCOL: kafka_security_protocol
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
     rtd-eventhub:
-      KAFKA_RTD_BROKER: kafka_broker
+      KAFKA_RTD_BROKER: kafka_broker_rtd
 
   envSecret:
     aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
