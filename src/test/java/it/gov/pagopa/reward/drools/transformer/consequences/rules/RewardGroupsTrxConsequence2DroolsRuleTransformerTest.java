@@ -30,8 +30,8 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 rule "ruleName-REWARDGROUPS"
                 salience -1
                 agenda-group "agendaGroup"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(rejectionReason.size() == 0)
-                then $trx.getRewards().put("agendaGroup", $trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.0000"):($trx.getAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.1000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(initiativeRejectionReasons.get("agendaGroup") == null)
+                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.0000"):($trx.getAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.1000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 """;
     }

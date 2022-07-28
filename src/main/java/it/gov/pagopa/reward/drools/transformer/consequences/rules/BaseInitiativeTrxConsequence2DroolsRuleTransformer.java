@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacade;
+import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
@@ -33,8 +34,8 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 rule "%s-%s"
                 salience %d
                 agenda-group "%s"
-                when $trx: %s(rejectionReason.size() == 0)
-                then $trx.getRewards().put("%s", %s);
+                when $trx: %s(initiativeRejectionReasons.get("%s") == null)
+                then $trx.getRewards().put("%s", new %s(%s));
                 end
                 """.formatted(
                 ruleName,
@@ -43,6 +44,8 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 initiativeId,
                 TransactionDroolsDTO.class.getName(),
                 initiativeId,
+                initiativeId,
+                Reward.class.getName(),
                 trxConsequence2DroolsRewardExpressionTransformerFacade.apply(trxConsequence)
         );
     }

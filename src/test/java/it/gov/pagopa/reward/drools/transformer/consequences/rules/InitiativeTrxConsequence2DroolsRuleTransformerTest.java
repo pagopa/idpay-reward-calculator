@@ -22,10 +22,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T extends InitiativeTrxConsequence> {
 
@@ -53,6 +50,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         Assertions.assertEquals(getExpectedRule(), rule);
 
         TransactionDroolsDTO trx = getTransaction();
+        trx.setInitiativeRejectionReasons(Map.of("OTHERINITIATIVE", List.of("REJECTION")));
 
         testRule(rule, trx, getExpectedReward());
     }
@@ -64,7 +62,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         Assertions.assertEquals(getExpectedRule(), rule);
 
         TransactionDroolsDTO trx = getTransaction();
-        trx.setRejectionReasons(List.of("REJECTION"));
+        trx.setInitiativeRejectionReasons(Map.of("agendaGroup", List.of("REJECTION")));
 
         testRule(rule, trx, null);
     }
@@ -79,7 +77,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         Assertions.assertEquals(dummyReward.get("DUMMYINITIATIVE"), trx.getRewards().get("DUMMYINITIATIVE"));
         Assertions.assertEquals(
                 expectReward
-                , trx.getRewards().get("agendaGroup").getAccruedReward());
+                , Optional.ofNullable(trx.getRewards().get("agendaGroup")).map(Reward::getAccruedReward).orElse(null));
     }
 
     protected KieContainer buildRule(String rule) {

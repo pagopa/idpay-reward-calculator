@@ -31,7 +31,7 @@ class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(mcc not in ("0897","MCC_0")))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).getRejectionReason().add("TRX_RULE_MCCFILTER_FAIL");
+                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_MCCFILTER_FAIL");
                 end
                 """;
     }

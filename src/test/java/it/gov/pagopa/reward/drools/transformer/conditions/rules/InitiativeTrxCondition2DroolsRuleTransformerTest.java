@@ -22,9 +22,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends InitiativeTrxCondition> {
 
@@ -54,10 +52,12 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
         TransactionDroolsDTO trx = getSuccessfulUseCase();
 
-        testRule(rule, trx, false, false);
+        testRule(rule, trx, true, false, false);
+        testRule(rule, trx, false, false, false);
 
         // short-circuited
-        testRule(rule, trx, false, true);
+        testRule(rule, trx, true, false, true);
+        testRule(rule, trx, false, false, true);
     }
 
     @Test
@@ -68,20 +68,29 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
         TransactionDroolsDTO trx = getFailingUseCase();
 
-        testRule(rule, trx, true, false);
+        testRule(rule, trx, true, true, false);
+        testRule(rule, trx, false, true, false);
 
         // short-circuited
-        testRule(rule, trx, true, true);
+        testRule(rule, trx, true, true, true);
+        testRule(rule, trx, false, true, true);
     }
 
-    protected void testRule(String rule, TransactionDroolsDTO trx, boolean expectRejectionReason, boolean shortCircuited){
-        trx.setRejectionReasons(new ArrayList<>());
-        trx.getRejectionReasons().add("DUMMYREJECTION");
+    private final Map<String, List<String>> dummyRejection = Map.of("agendaGroup", new ArrayList<>(List.of("DUMMYREJECTION")));
+    protected void testRule(String rule, TransactionDroolsDTO trx, boolean simulateOtherRejection, boolean expectRejectionReason, boolean shortCircuited){
+        trx.setInitiativeRejectionReasons(new HashMap<>());
+        Map<String, List<String>> expectedInitiativeRejectionReasons = expectRejectionReason ? Map.of("agendaGroup", List.of(getExpectedRejectionReason())) : Collections.emptyMap();
+
+        if(simulateOtherRejection){
+            trx.getInitiativeRejectionReasons().putAll(dummyRejection);
+
+            expectedInitiativeRejectionReasons = expectRejectionReason && !shortCircuited ? Map.of("agendaGroup", List.of("DUMMYREJECTION", getExpectedRejectionReason())) : dummyRejection;
+        }
         KieContainer kieContainer = buildRule(rule);
         executeRule(trx, shortCircuited, kieContainer);
         Assertions.assertEquals(
-                expectRejectionReason && !shortCircuited ? List.of("DUMMYREJECTION", getExpectedRejectionReason()) : List.of("DUMMYREJECTION")
-                , trx.getRejectionReasons());
+                expectedInitiativeRejectionReasons
+                , trx.getInitiativeRejectionReasons());
     }
 
     protected KieContainer buildRule(String rule) {

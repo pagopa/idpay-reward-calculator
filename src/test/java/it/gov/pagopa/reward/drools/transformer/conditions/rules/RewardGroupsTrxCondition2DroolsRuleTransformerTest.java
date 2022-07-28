@@ -33,7 +33,7 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).getRejectionReason().add("TRX_RULE_REWARDGROUP_FAIL");
+                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDGROUP_FAIL");
                 end
                 """;
     }

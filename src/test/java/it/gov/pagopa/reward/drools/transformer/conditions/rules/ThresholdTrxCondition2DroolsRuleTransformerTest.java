@@ -33,7 +33,7 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("10")))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).getRejectionReason().add("TRX_RULE_THRESHOLD_FAIL");
+                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_THRESHOLD_FAIL");
                 end
                 """;
     }
