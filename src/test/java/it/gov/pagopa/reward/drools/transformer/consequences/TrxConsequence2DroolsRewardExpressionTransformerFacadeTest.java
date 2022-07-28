@@ -85,9 +85,13 @@ class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
             Assertions.fail("Exception expected");
         } catch (IllegalStateException e){
             // Do nothing
-        } catch (RuntimeException e){
-            Assertions.fail("Unexpected exception", e);
         }
+    }
+
+    @Test
+    void testNull() {
+        String result = transformer.apply(null);
+        Assertions.assertEquals("", result);
     }
 
 }

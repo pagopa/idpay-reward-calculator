@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRul
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
+import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
@@ -38,6 +39,19 @@ class RewardRule2DroolsRuleServiceTest {
                 new TrxCondition2DroolsRuleTransformerFacadeImpl(new TrxCondition2DroolsConditionTransformerFacadeImpl()),
                 new TrxConsequence2DroolsRuleTransformerFacadeImpl(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl())
         );
+    }
+
+    @Test
+    void testBuildEmpty() {
+        // given
+        InitiativeReward2BuildDTO dto = new InitiativeReward2BuildDTO();
+        dto.setTrxRule(new InitiativeTrxConditions());
+
+        // when
+        DroolsRule result = buildRewardRule2DroolsRule(true).apply(dto);
+
+        // then
+        Assertions.assertEquals("package it.gov.pagopa.reward.drools.buildrules;\n\n", result.getRule());
     }
 
     @Test

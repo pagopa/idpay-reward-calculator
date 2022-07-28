@@ -106,8 +106,6 @@ class TrxCondition2DroolsRuleTransformerFacadeTest {
             Assertions.fail("Exception expected");
         } catch (IllegalStateException e) {
             // Do nothing
-        } catch (RuntimeException e) {
-            Assertions.fail("Unexpected exception", e);
         }
     }
 

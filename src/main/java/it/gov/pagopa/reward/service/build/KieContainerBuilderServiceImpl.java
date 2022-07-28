@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.stream.Collectors;
-
 @Service
 @Slf4j
 public class KieContainerBuilderServiceImpl implements KieContainerBuilderService {

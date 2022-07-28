@@ -2,6 +2,8 @@ package it.gov.pagopa.reward.drools.utils;
 
 import it.gov.pagopa.reward.drools.model.DroolsRuleTemplateParam;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +30,17 @@ class DroolsTemplateRuleUtilsTest {
         DroolsRuleTemplateParam expectedString = new DroolsRuleTemplateParam("\"asd\"");
         Assertions.assertEquals(expectedString, DroolsTemplateRuleUtils.buildStringDroolsParam(stringObject));
         Assertions.assertEquals(expectedString, DroolsTemplateRuleUtils.toTemplateParam(stringObject));
+    }
+
+    @Test
+    void testToTemplateParamFromBoolean() {
+        DroolsRuleTemplateParam expectedBoolean = new DroolsRuleTemplateParam("true");
+        Assertions.assertEquals(expectedBoolean, DroolsTemplateRuleUtils.buildBooleanDroolsParam(true));
+        Assertions.assertEquals(expectedBoolean, DroolsTemplateRuleUtils.toTemplateParam(true));
+
+        expectedBoolean = new DroolsRuleTemplateParam("false");
+        Assertions.assertEquals(expectedBoolean, DroolsTemplateRuleUtils.buildBooleanDroolsParam(false));
+        Assertions.assertEquals(expectedBoolean, DroolsTemplateRuleUtils.toTemplateParam(false));
     }
 
     @Test
@@ -114,9 +127,9 @@ class DroolsTemplateRuleUtilsTest {
     @Test
     void testToTemplateParamFromCustomObject() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildNewObjectDroolsParam(null));
-        ExtraFilterTestModelSample newObjectObject = new ExtraFilterTestModelSample();
-        DroolsRuleTemplateParam expectedNewObject = new DroolsRuleTemplateParam("((%s)(new java.util.function.Supplier<%s>(){public %s get(){%s varExtraFilterTestModelSample = new %s();SETTERS;return varExtraFilterTestModelSample;}}).get())".replace("%s", ExtraFilterTestModelSample.class.getName().replace('$', '.')));
-        Set<String> expectedNewObjectSetters = Set.of(
+        TestModelSample newObjectObject = new TestModelSample();
+        DroolsRuleTemplateParam expectedNewObject = new DroolsRuleTemplateParam("((%s)(new java.util.function.Supplier<%s>(){public %s get(){%s varExtraFilterTestModelSample = new %s();SETTERS;return varExtraFilterTestModelSample;}}).get())".replace("%s", TestModelSample.class.getName().replace('$', '.')));
+        Set<String> expectedNewObjectSetters = new TreeSet<>(Set.of(
                 "varExtraFilterTestModelSample.setZonedDateTimeObject(null)",
                 "varExtraFilterTestModelSample.setZoneOffsetObject(null)",
                 "varExtraFilterTestModelSample.setLocalDateTimeObject(null)",
@@ -130,7 +143,7 @@ class DroolsTemplateRuleUtilsTest {
                 "varExtraFilterTestModelSample.setStringObject(null)",
                 "varExtraFilterTestModelSample.setEnumObject(null)",
                 "return" // put for commodity
-        );
+        ));
         String newObjectBuild = DroolsTemplateRuleUtils.buildNewObjectDroolsParam(newObjectObject).getParam();
         String newObjectToTemplateParam = DroolsTemplateRuleUtils.toTemplateParam(newObjectObject).getParam();
         String setterRegexp = "varExtraFilterTestModelSample\\.set.*;return";
@@ -138,12 +151,12 @@ class DroolsTemplateRuleUtilsTest {
         Assertions.assertEquals(expectedNewObject.getParam(), newObjectBuild.replaceAll(setterRegexp, replaceString));
         Assertions.assertEquals(expectedNewObject.getParam(), newObjectToTemplateParam.replaceAll(setterRegexp, replaceString));
         String setterMatchGroup = ".*\\(\\);(%s).*".formatted(setterRegexp);
-        Assertions.assertEquals(expectedNewObjectSetters, Set.of(newObjectBuild.replaceFirst(setterMatchGroup, "$1").split(";")));
-        Assertions.assertEquals(expectedNewObjectSetters, Set.of(newObjectToTemplateParam.replaceFirst(setterMatchGroup, "$1").split(";")));
+        Assertions.assertEquals(expectedNewObjectSetters, new TreeSet<>(Set.of(newObjectBuild.replaceFirst(setterMatchGroup, "$1").split(";"))));
+        Assertions.assertEquals(expectedNewObjectSetters, new TreeSet<>(Set.of(newObjectToTemplateParam.replaceFirst(setterMatchGroup, "$1").split(";"))));
     }
 
     @Data
-    public static class ExtraFilterTestModelSample {
+    static class TestModelSample {
         private String stringObject;
         private Number numberObject;
         private DayOfWeek enumObject;
@@ -156,5 +169,45 @@ class DroolsTemplateRuleUtilsTest {
         private ZonedDateTime zonedDateTimeObject;
         private OffsetDateTime offsetDateTimeObject;
         private Boolean booleanObject;
+
+        @SuppressWarnings("unused")
+        public void nonSetterMethod(){}
+
+        @SuppressWarnings("unused")
+        public void setStringObject(int x){
+            // non standard setter example
+            this.stringObject=x+"";
+        }
+        @SuppressWarnings("unused")
+        public void setStringObject(String x){
+            this.stringObject=x;
+        }
+    }
+
+    @Test
+    void testToTemplateParamFromCustomObjectWithNoSetters() {
+        Assertions.assertEquals("((it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters)(new java.util.function.Supplier<it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters>(){public it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters get(){it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters varTestModelSampleNoSetters = new it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters();return varTestModelSampleNoSetters;}}).get())"
+                , DroolsTemplateRuleUtils.buildNewObjectDroolsParam(new TestModelSampleNoSetters()).getParam());
+    }
+
+    static class TestModelSampleNoSetters {
+        @Getter
+        private String fieldNoSetter;
+    }
+
+    @Test
+    void testToTemplateParamFromCustomObjectWithNoGetters() {
+        TestModelSampleNoGetters object = new TestModelSampleNoGetters();
+        try{
+            DroolsTemplateRuleUtils.buildNewObjectDroolsParam(object);
+            Assertions.fail("Expected exception");
+        } catch (IllegalStateException e){
+            // Do nothing
+        }
+    }
+
+    static class TestModelSampleNoGetters {
+        @Setter
+        private String fieldNoGetter;
     }
 }

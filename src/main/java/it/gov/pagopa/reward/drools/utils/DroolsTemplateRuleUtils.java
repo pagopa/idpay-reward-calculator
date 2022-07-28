@@ -57,7 +57,7 @@ public final class DroolsTemplateRuleUtils {
         }
     }
 
-    private static DroolsRuleTemplateParam buildBooleanDroolsParam(Boolean o) {
+    public static DroolsRuleTemplateParam buildBooleanDroolsParam(Boolean o) {
         return new DroolsRuleTemplateParam(o.toString());
     }
 

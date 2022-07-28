@@ -19,7 +19,8 @@ public class KieContainerBuilderServiceImplTest {
     @BeforeAll
     public static void configDroolsLogs() {
         ((Logger) LoggerFactory.getLogger("org.kie.api.internal.utils")).setLevel(Level.INFO);
-        ((Logger)LoggerFactory.getLogger("org.drools")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("org.drools")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl")).setLevel(Level.DEBUG);
     }
 
     @Test
