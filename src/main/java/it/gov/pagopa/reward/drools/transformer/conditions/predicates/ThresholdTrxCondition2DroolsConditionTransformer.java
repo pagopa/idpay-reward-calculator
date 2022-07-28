@@ -25,8 +25,10 @@ public class ThresholdTrxCondition2DroolsConditionTransformer implements Initiat
     }
 
     private Pair<String, BigDecimal> checkDefinedThreshold(BigDecimal threshold, boolean inclusive, String operator) {
-        return threshold != null
-                ? Pair.of(inclusive ? "%s=".formatted(operator) : operator, threshold)
-                : null;
+        if(threshold==null){
+            return null;
+        } else{
+            return Pair.of(inclusive ? "%s=".formatted(operator) : operator, threshold);
+        }
     }
 }

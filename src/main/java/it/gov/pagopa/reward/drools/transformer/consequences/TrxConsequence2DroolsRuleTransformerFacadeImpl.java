@@ -16,10 +16,10 @@ public class TrxConsequence2DroolsRuleTransformerFacadeImpl implements TrxConseq
     private final RewardGroupsTrxConsequence2DroolsRuleTransformer rewardGroupsTrxConsequenceTransformer;
     private final RewardLimitsTrxConsequence2DroolsRuleTransformer rewardLimitsTrxConsequenceTransformer;
 
-    public TrxConsequence2DroolsRuleTransformerFacadeImpl(TrxConsequence2DroolsRewardExpressionTransformerFacade TrxConsequence2DroolsRewardExpressionTransformerFacade) {
-        this.rewardValueTrxConsequenceTransformer = new RewardValueTrxConsequence2DroolsRuleTransformer(TrxConsequence2DroolsRewardExpressionTransformerFacade);
-        this.rewardGroupsTrxConsequenceTransformer = new RewardGroupsTrxConsequence2DroolsRuleTransformer(TrxConsequence2DroolsRewardExpressionTransformerFacade);
-        this.rewardLimitsTrxConsequenceTransformer = new RewardLimitsTrxConsequence2DroolsRuleTransformer(TrxConsequence2DroolsRewardExpressionTransformerFacade);
+    public TrxConsequence2DroolsRuleTransformerFacadeImpl(TrxConsequence2DroolsRewardExpressionTransformerFacade trxConsequence2DroolsRewardExpressionTransformerFacade) {
+        this.rewardValueTrxConsequenceTransformer = new RewardValueTrxConsequence2DroolsRuleTransformer(trxConsequence2DroolsRewardExpressionTransformerFacade);
+        this.rewardGroupsTrxConsequenceTransformer = new RewardGroupsTrxConsequence2DroolsRuleTransformer(trxConsequence2DroolsRewardExpressionTransformerFacade);
+        this.rewardLimitsTrxConsequenceTransformer = new RewardLimitsTrxConsequence2DroolsRuleTransformer(trxConsequence2DroolsRewardExpressionTransformerFacade);
     }
 
     @Override

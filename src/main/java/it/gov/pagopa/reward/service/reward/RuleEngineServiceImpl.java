@@ -44,7 +44,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
 
-            List<Command> cmds = new ArrayList<>();
+            List<Command<?>> cmds = new ArrayList<>();
             cmds.add(CommandFactory.newInsert(trx));
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));

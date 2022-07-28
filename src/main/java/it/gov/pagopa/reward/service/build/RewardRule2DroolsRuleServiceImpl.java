@@ -48,7 +48,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
                     package %s;
                     %s
                     """.formatted(
-                    KieContainerBuilderServiceImpl.rulesBuiltPackage,
+                    KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                     buildRules(out.getId(), out.getName(), initiative))
             );
 
