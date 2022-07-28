@@ -53,14 +53,24 @@
         </dependency>
         <dependency>
             <groupId>org.drools</groupId>
-            <artifactId>drools-decisiontables</artifactId>
+            <artifactId>drools-templates</artifactId>
             <version>7.68.0.Final</version>
         </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.drools</groupId>-->
+        <!--            <artifactId>drools-decisiontables</artifactId>-->
+        <!--            <version>7.68.0.Final</version>-->
+        <!--        </dependency>-->
 
         <!--3rd party library-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.9</version>
         </dependency>
 
         <!--TEST-->
@@ -90,6 +100,12 @@
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
             <scope>test</scope>
             <version>3.4.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.0</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

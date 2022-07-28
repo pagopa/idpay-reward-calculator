@@ -58,7 +58,7 @@ public class RewardTransactionDTO {
 
     String status;
 
-    String rejectionReason;
+    List<String> rejectionReason;
 
     List<String> initiatives;
 

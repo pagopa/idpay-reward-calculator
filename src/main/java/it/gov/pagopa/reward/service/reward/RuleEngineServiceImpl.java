@@ -39,16 +39,17 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             Instant before;
             Instant after;
 
-            StatelessKieSession statelessKieSession = droolsContainerHolderService.getKieContainer().newStatelessKieSession();
+            StatelessKieSession statelessKieSession = droolsContainerHolderService.getRewardRulesKieContainer().newStatelessKieSession();
 
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
 
-            List<Command> cmds = new ArrayList<>();
+            List<Command<?>> cmds = new ArrayList<>();
             cmds.add(CommandFactory.newInsert(trx));
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
             }
+            log.info(cmds.toString());
 
             before=Instant.now();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
@@ -57,7 +58,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             log.info("Send message prepared: {}", trx);
         }else {
-            trx.setRejectionReason("The date of transaction is not in an active range for the hpan");
+            // The date of transaction is not in an active range for the hpan
+            trx.setRejectionReason(List.of("HPAN_NOT_ACTIVE"));
         }
         return rewardTransactionMapper.map(trx);
     }

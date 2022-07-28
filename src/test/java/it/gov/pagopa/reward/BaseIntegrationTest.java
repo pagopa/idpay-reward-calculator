@@ -6,6 +6,8 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -34,12 +36,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.with;
 
 @SpringBootTest
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.trxProcessor-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
+        "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}",
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -54,6 +62,7 @@ import java.util.function.Supplier;
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-rtd.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
@@ -74,6 +83,12 @@ public abstract class BaseIntegrationTest {
     private MongodExecutable embeddedMongoServer;
 
     @Autowired
+    protected HpanInitiativesRepository hpanInitiativesRepository;
+
+    @Autowired
+    protected DroolsRuleRepository droolsRuleRepository;
+
+    @Autowired
     protected ObjectMapper objectMapper;
 
     @Value("${spring.kafka.bootstrap-servers}")
@@ -86,6 +101,8 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardProcessorRequest;
     @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}")
     protected String topicRewardProcessorOutcome;
+    @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}")
+    protected String topicRewardRuleConsumer;
     @Value("${spring.cloud.stream.bindings.trxProducer-out-0.destination}")
     protected String topicRewardTransactionProducer;
 
@@ -163,21 +180,16 @@ public abstract class BaseIntegrationTest {
         template.send(record);
     }
 
-    protected void wait(int millis){
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    protected void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay){
+        try{
+            with()
+                    .pollInterval(millisAttemptDelay, TimeUnit.MILLISECONDS)
+                    .atMost((long) maxAttempts *millisAttemptDelay, TimeUnit.MILLISECONDS)
+                    .await()
+                    .until(test);
+        } catch (RuntimeException e){
+            Assertions.fail(buildTestFailureMessage.get(), e);
         }
-    }
-
-    protected void waitFor(Supplier<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay){
-        int i=0;
-        while(!test.get() && i<maxAttempts) {
-            i++;
-            wait(millisAttemptDelay);
-        }
-        Assertions.assertTrue(test.get(), buildTestFailureMessage.get());
     }
 
 }
