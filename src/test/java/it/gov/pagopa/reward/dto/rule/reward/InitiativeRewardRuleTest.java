@@ -19,7 +19,7 @@ public class InitiativeRewardRuleTest {
     }
 
     @Test
-    public void testRewardGroups() throws JsonProcessingException {
+    void testRewardGroups() throws JsonProcessingException {
         String content = """
                 {"_type":"rewardGroups","rewardGroups":[{"from":0.00,"to":2.00,"rewardValue":10},{"from":3.00,"to":4.55,"rewardValue":12.5}]}
                 """;

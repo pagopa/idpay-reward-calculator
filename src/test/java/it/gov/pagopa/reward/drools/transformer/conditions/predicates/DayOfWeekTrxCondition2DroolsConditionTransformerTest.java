@@ -15,7 +15,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends Initia
     private final DayOfWeekTrxCondition2DroolsConditionTransformer transformer = new DayOfWeekTrxCondition2DroolsConditionTransformer();
 
     @Test
-    public void testNoDayConfigured() {
+    void testNoDayConfigured() {
         DayOfWeekDTO dayOfWeekDTO = new DayOfWeekDTO();
 
         String dayOfWeekCondition = transformer.apply(dayOfWeekDTO);
@@ -64,7 +64,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testNoIntervalExpectingTrue() {
+    void testNoIntervalExpectingTrue() {
         String dayOfWeekCondition = buildNoIntervalDto();
 
         RewardTransaction trx = new RewardTransaction();
@@ -74,7 +74,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testNoIntervalExpectingFalse() {
+    void testNoIntervalExpectingFalse() {
         String dayOfWeekCondition = buildNoIntervalDto();
 
         RewardTransaction trx = new RewardTransaction();
@@ -141,7 +141,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testCompleteSettingExpectingTrue() {
+    void testCompleteSettingExpectingTrue() {
         String dayOfWeekCondition = buildCompleteDto();
 
         RewardTransaction trx = new RewardTransaction();
@@ -151,7 +151,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testCompleteSettingExpectingFalse() {
+    void testCompleteSettingExpectingFalse() {
         String dayOfWeekCondition = buildCompleteDto();
 
         RewardTransaction trx = new RewardTransaction();

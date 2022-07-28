@@ -46,7 +46,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     protected abstract BigDecimal getExpectedReward();
 
     @Test
-    public void testReward(){
+    void testReward(){
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxConsequence());
 
         Assertions.assertEquals(getExpectedRule(), rule);
@@ -57,7 +57,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     }
 
     @Test
-    public void testDiscardedIfRejected(){
+    void testDiscardedIfRejected(){
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxConsequence());
 
         Assertions.assertEquals(getExpectedRule(), rule);

@@ -17,7 +17,7 @@ public class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Ini
     private final BigDecimal upperBound = BigDecimal.valueOf(10.37);
 
     @Test
-    public void testRewardGroupsGreaterThan(){
+    void testRewardGroupsGreaterThan(){
         RewardGroupsDTO initiativeTrxCondition = new RewardGroupsDTO();
         initiativeTrxCondition.setRewardGroups(List.of(
                 RewardGroupsDTO.RewardGroupDTO.builder()

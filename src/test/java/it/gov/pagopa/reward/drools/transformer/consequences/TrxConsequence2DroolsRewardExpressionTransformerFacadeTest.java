@@ -63,22 +63,22 @@ public class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
     }
 
     @Test
-    public void testRewardValue() {
+    void testRewardValue() {
         test(new RewardValueDTO(), rewardValueTransformerMock);
     }
 
     @Test
-    public void testRewardGroups() {
+    void testRewardGroups() {
         test(new RewardGroupsDTO(), rewardGroupsTransformerMock);
     }
 
     @Test
-    public void testRewardLimits() {
+    void testRewardLimits() {
         test(new RewardLimitsDTO(), rewardLimitsTransformerMock);
     }
 
     @Test
-    public void testNotHandled() {
+    void testNotHandled() {
         try{
             transformer.apply(new InitiativeTrxConsequence() {});
             Assertions.fail("Exception expected");

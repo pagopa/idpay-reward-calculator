@@ -47,7 +47,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
     protected abstract String getExpectedRejectionReason();
 
     @Test
-    public void testNoRejectionReason(){
+    void testNoRejectionReason(){
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
 
         Assertions.assertEquals(getExpectedRule(), rule);
@@ -61,7 +61,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
     }
 
     @Test
-    public void testRejectionReason(){
+    void testRejectionReason(){
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
 
         Assertions.assertEquals(getExpectedRule(), rule);

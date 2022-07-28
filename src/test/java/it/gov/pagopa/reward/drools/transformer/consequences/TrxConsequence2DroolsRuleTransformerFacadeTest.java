@@ -64,22 +64,22 @@ public class TrxConsequence2DroolsRuleTransformerFacadeTest {
     }
 
     @Test
-    public void testRewardValue() {
+    void testRewardValue() {
         test(new RewardValueDTO(), rewardValueTransformerMock);
     }
 
     @Test
-    public void testRewardGroups() {
+    void testRewardGroups() {
         test(new RewardGroupsDTO(), rewardGroupsTransformerMock);
     }
 
     @Test
-    public void testRewardLimits() {
+    void testRewardLimits() {
         test(new RewardLimitsDTO(), rewardLimitsTransformerMock);
     }
 
     @Test
-    public void testNotHandled() {
+    void testNotHandled() {
         try {
             transformer.apply("AGENDAGROUP", "RULENAME", new InitiativeTrxConsequence() {
             });
@@ -92,7 +92,7 @@ public class TrxConsequence2DroolsRuleTransformerFacadeTest {
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         String result = transformer.apply("AGENDAGROUP", "RULENAME", null);
         Assertions.assertEquals("", result);
     }

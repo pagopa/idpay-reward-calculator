@@ -69,37 +69,37 @@ public class TrxCondition2DroolsRuleTransformerFacadeTest {
     }
 
     @Test
-    public void testDayOfWeek() {
+    void testDayOfWeek() {
         test(new DayOfWeekDTO(), dayOfWeekTrxConditionTransformerMock);
     }
 
     @Test
-    public void testMccFilter() {
+    void testMccFilter() {
         test(new MccFilterDTO(), mccTrxConditionTransformerMock);
     }
 
     @Test
-    public void testRewardLimits() {
+    void testRewardLimits() {
         test(new RewardLimitsDTO(), rewardLimitsTrxConditionTransformerMock);
     }
 
     @Test
-    public void testThreshold() {
+    void testThreshold() {
         test(new ThresholdDTO(), thresholdTrxConditionTransformerMock);
     }
 
     @Test
-    public void testTrxCount() {
+    void testTrxCount() {
         test(new TrxCountDTO(), trxCountTrxConditionTransformerMock);
     }
 
     @Test
-    public void testRewardGroups() {
+    void testRewardGroups() {
         test(new RewardGroupsDTO(), rewardGroupsTrxConditionTransformerMock);
     }
 
     @Test
-    public void testNotHandled() {
+    void testNotHandled() {
         try {
             transformer.apply("AGENDAGROUP", "RULENAME", new InitiativeTrxCondition() {
             });
@@ -112,7 +112,7 @@ public class TrxCondition2DroolsRuleTransformerFacadeTest {
     }
 
     @Test
-    public void testNull() {
+    void testNull() {
         String result = transformer.apply("AGENDAGROUP", "RULENAME", null);
         Assertions.assertEquals("", result);
     }

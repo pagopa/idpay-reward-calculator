@@ -39,7 +39,7 @@ public class ThresholdTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testThresholdGreaterThan(){
+    void testThresholdGreaterThan(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
         initiativeTrxCondition.setFrom(lowerBound);
         initiativeTrxCondition.setFromIncluded(false);
@@ -54,7 +54,7 @@ public class ThresholdTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testThresholdGreaterOrEqual(){
+    void testThresholdGreaterOrEqual(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
         initiativeTrxCondition.setFrom(lowerBound);
         initiativeTrxCondition.setFromIncluded(true);
@@ -69,7 +69,7 @@ public class ThresholdTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testThresholdLowerThan(){
+    void testThresholdLowerThan(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
         initiativeTrxCondition.setTo(upperBound);
         initiativeTrxCondition.setToIncluded(false);
@@ -84,7 +84,7 @@ public class ThresholdTrxCondition2DroolsConditionTransformerTest extends Initia
     }
 
     @Test
-    public void testThresholdLowerOrEqual(){
+    void testThresholdLowerOrEqual(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
         initiativeTrxCondition.setTo(upperBound);
         initiativeTrxCondition.setToIncluded(true);

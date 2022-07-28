@@ -13,7 +13,7 @@ public class MccFilterTrxCondition2DroolsConditionTransformerTest extends Initia
     private final MccFilterTrxCondition2DroolsConditionTransformer transformer = new MccFilterTrxCondition2DroolsConditionTransformer();
 
     @Test
-    public void testMccFilter(){
+    void testMccFilter(){
         // testing allowed list
         MccFilterDTO initiativeTrxCondition = new MccFilterDTO();
         initiativeTrxCondition.setAllowedList(true);

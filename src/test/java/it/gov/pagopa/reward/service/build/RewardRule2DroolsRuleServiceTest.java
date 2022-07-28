@@ -41,7 +41,7 @@ public class RewardRule2DroolsRuleServiceTest {
     }
 
     @Test
-    public void testBuild() {
+    void testBuild() {
         // given
         InitiativeReward2BuildDTO dto = InitiativeReward2BuildDTOFaker.mockInstance(0);
 

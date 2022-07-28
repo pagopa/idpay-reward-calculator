@@ -67,37 +67,37 @@ public class TrxCondition2DroolsConditionTransformerFacadeTest {
     }
 
     @Test
-    public void testDayOfWeek() {
+    void testDayOfWeek() {
         test(new DayOfWeekDTO(), dayOfWeekTrxConditionTransformerMock);
     }
 
     @Test
-    public void testMccFilter() {
+    void testMccFilter() {
         test(new MccFilterDTO(), mccTrxConditionTransformerMock);
     }
 
     @Test
-    public void testRewardLimits() {
+    void testRewardLimits() {
         test(new RewardLimitsDTO(), rewardLimitsTrxConditionTransformerMock);
     }
 
     @Test
-    public void testThreshold() {
+    void testThreshold() {
         test(new ThresholdDTO(), thresholdTrxConditionTransformerMock);
     }
 
     @Test
-    public void testTrxCount() {
+    void testTrxCount() {
         test(new TrxCountDTO(), trxCountTrxConditionTransformerMock);
     }
 
     @Test
-    public void testRewardGroups() {
+    void testRewardGroups() {
         test(new RewardGroupsDTO(), rewardGroupsTrxConditionTransformerMock);
     }
 
     @Test
-    public void testNotHandled() {
+    void testNotHandled() {
         try{
             transformer.apply(new InitiativeTrxCondition() {});
             Assertions.fail("Exception expected");
