@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
+class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     private final DayOfWeekTrxCondition2DroolsConditionTransformer transformer = new DayOfWeekTrxCondition2DroolsConditionTransformer();
 

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class InitiativeTrxConditionsTest {
+class InitiativeTrxConditionsTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

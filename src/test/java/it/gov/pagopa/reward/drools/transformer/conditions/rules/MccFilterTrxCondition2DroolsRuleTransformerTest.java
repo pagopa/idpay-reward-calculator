@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTOFaker;
 import it.gov.pagopa.reward.model.RewardTransaction;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
-public class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<MccFilterDTO> {
+class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<MccFilterDTO> {
 
     private final MccFilterTrxCondition2DroolsRuleTransformer transformer = new MccFilterTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
     public final MccFilterDTO mccFilterRule = MccFilterDTOFaker.mockInstance(0);

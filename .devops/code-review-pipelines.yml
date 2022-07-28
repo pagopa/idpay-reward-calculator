@@ -34,7 +34,6 @@ steps:
         sonar.projectKey=$(SONARCLOUD_PROJECT_KEY)
         sonar.projectName=$(SONARCLOUD_PROJECT_NAME)
         sonar.exclusions='**/enums/**, **/model/**, **/dto/**, **/*Constant*, **/*Config.java, **/*Scheduler.java, **/*Application.java, **/Dummy*.java'
-        sonar.test.exclusions='**/src/test/**'
 
   #  - task: DownloadSecureFile@1
   #    displayName: 'download settings.xml for Maven'

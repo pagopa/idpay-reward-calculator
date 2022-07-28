@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
 
-public class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<ThresholdDTO> {
+class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<ThresholdDTO> {
 
     private final ThresholdTrxCondition2DroolsRuleTransformer transformer = new ThresholdTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
     public final ThresholdDTO thresholdRule = ThresholdDTOFaker.mockInstance(0);

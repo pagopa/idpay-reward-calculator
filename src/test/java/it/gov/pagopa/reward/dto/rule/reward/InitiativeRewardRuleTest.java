@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-public class InitiativeRewardRuleTest {
+class InitiativeRewardRuleTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

@@ -8,75 +8,111 @@ import org.junit.jupiter.api.Test;
 import java.time.*;
 import java.util.*;
 
-public class DroolsTemplateRuleUtilsTest {
+class DroolsTemplateRuleUtilsTest {
 
     @Test
-    void testToTemplateParam() {
+    void testToTemplateParamFromNull() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.toTemplateParam(null));
+    }
 
+    @Test
+    void testToTemplateParamFromTemplateParam() {
         DroolsRuleTemplateParam templateParam = new DroolsRuleTemplateParam("asd");
-        Assertions.assertEquals(templateParam, DroolsTemplateRuleUtils.toTemplateParam(templateParam));
+        Assertions.assertSame(templateParam, DroolsTemplateRuleUtils.toTemplateParam(templateParam));
+    }
 
+    @Test
+    void testToTemplateParamFromString() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildStringDroolsParam(null));
         String stringObject = "asd";
         DroolsRuleTemplateParam expectedString = new DroolsRuleTemplateParam("\"asd\"");
         Assertions.assertEquals(expectedString, DroolsTemplateRuleUtils.buildStringDroolsParam(stringObject));
         Assertions.assertEquals(expectedString, DroolsTemplateRuleUtils.toTemplateParam(stringObject));
+    }
 
+    @Test
+    void testToTemplateParamFromCollectionSet() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildCollectionDroolsParam(null));
         Set<String> setObject = new HashSet<>();
         DroolsRuleTemplateParam expectedSet = new DroolsRuleTemplateParam("new java.util.HashSet(java.util.Arrays.asList())");
         Assertions.assertEquals(expectedSet, DroolsTemplateRuleUtils.buildCollectionDroolsParam(setObject));
         Assertions.assertEquals(expectedSet, DroolsTemplateRuleUtils.toTemplateParam(setObject));
+    }
 
+    @Test
+    void testToTemplateParamFromCollectionList() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildCollectionDroolsParam(null));
         List<String> listObject = new ArrayList<>();
         DroolsRuleTemplateParam expectedList = new DroolsRuleTemplateParam("new java.util.ArrayList(java.util.Arrays.asList())");
         Assertions.assertEquals(expectedList, DroolsTemplateRuleUtils.buildCollectionDroolsParam(listObject));
         Assertions.assertEquals(expectedList, DroolsTemplateRuleUtils.toTemplateParam(listObject));
+    }
 
+    private final LocalDate localDateObject = LocalDate.of(2000, 1, 2);
+    @Test
+    void testToTemplateParamFromLocalDate() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildLocalDateDroolsParam(null));
-        LocalDate localDateObject = LocalDate.of(2000, 1, 2);
         DroolsRuleTemplateParam expectedLocalDate = new DroolsRuleTemplateParam("java.time.LocalDate.of(2000,1,2)");
         Assertions.assertEquals(expectedLocalDate, DroolsTemplateRuleUtils.buildLocalDateDroolsParam(localDateObject));
         Assertions.assertEquals(expectedLocalDate, DroolsTemplateRuleUtils.toTemplateParam(localDateObject));
+    }
 
+    private final LocalTime localTimeObject = LocalTime.of(1, 5, 4);
+    @Test
+    void testToTemplateParamFromLocalTime() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildLocalTimeDroolsParam(null));
-        LocalTime localTimeObject = LocalTime.of(1, 5, 4);
         DroolsRuleTemplateParam expectedLocalTime = new DroolsRuleTemplateParam("java.time.LocalTime.of(1,5,4,0)");
         Assertions.assertEquals(expectedLocalTime, DroolsTemplateRuleUtils.buildLocalTimeDroolsParam(localTimeObject));
         Assertions.assertEquals(expectedLocalTime, DroolsTemplateRuleUtils.toTemplateParam(localTimeObject));
+    }
 
+    @Test
+    void testToTemplateParamFromLocalDateTime() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildLocalDateTimeDroolsParam(null));
         LocalDateTime localDateTimeObject = LocalDateTime.of(localDateObject, localTimeObject);
         DroolsRuleTemplateParam expectedLocalDateTime = new DroolsRuleTemplateParam("java.time.LocalDateTime.of(java.time.LocalDate.of(2000,1,2), java.time.LocalTime.of(1,5,4,0))");
         Assertions.assertEquals(expectedLocalDateTime, DroolsTemplateRuleUtils.buildLocalDateTimeDroolsParam(localDateTimeObject));
         Assertions.assertEquals(expectedLocalDateTime, DroolsTemplateRuleUtils.toTemplateParam(localDateTimeObject));
+    }
 
+    private final ZoneOffset zoneOffsetObject = ZoneOffset.ofHours(0);
+    private final DroolsRuleTemplateParam expectedZoneOffset = new DroolsRuleTemplateParam("java.time.ZoneOffset.of(\"Z\")");
+    @Test
+    void testToTemplateParamFromZoneOffset() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildZoneOffsetDroolsParam(null));
-        ZoneOffset zoneOffsetObject = ZoneOffset.ofHours(0);
-        DroolsRuleTemplateParam expectedZoneOffset = new DroolsRuleTemplateParam("java.time.ZoneOffset.of(\"Z\")");
         Assertions.assertEquals(expectedZoneOffset, DroolsTemplateRuleUtils.buildZoneOffsetDroolsParam(zoneOffsetObject));
         Assertions.assertEquals(expectedZoneOffset, DroolsTemplateRuleUtils.toTemplateParam(zoneOffsetObject));
+    }
 
+    private final ZoneId zoneIdObject = ZoneId.of(zoneOffsetObject.toString());
+    @Test
+    void testToTemplateParamFromZoneId() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildZoneIdDroolsParam(null));
-        ZoneId zoneIdObject = ZoneId.of(zoneOffsetObject.toString());
         DroolsRuleTemplateParam expectedZoneId = new DroolsRuleTemplateParam("java.time.ZoneId.of(\"Z\")");
         Assertions.assertEquals(expectedZoneId, DroolsTemplateRuleUtils.buildZoneIdDroolsParam(zoneIdObject));
         Assertions.assertEquals(expectedZoneOffset, DroolsTemplateRuleUtils.toTemplateParam(zoneIdObject));
+    }
 
+    @Test
+    void testToTemplateParamFromOffsetDateTime() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildOffsetDateTimeDroolsParam(null));
         OffsetDateTime offsetDateTimeObject = OffsetDateTime.of(localDateObject, localTimeObject, zoneOffsetObject);
         DroolsRuleTemplateParam expectedOffsetDateTime = new DroolsRuleTemplateParam("java.time.OffsetDateTime.of(java.time.LocalDate.of(2000,1,2), java.time.LocalTime.of(1,5,4,0), java.time.ZoneOffset.of(\"Z\"))");
         Assertions.assertEquals(expectedOffsetDateTime, DroolsTemplateRuleUtils.buildOffsetDateTimeDroolsParam(offsetDateTimeObject));
         Assertions.assertEquals(expectedOffsetDateTime, DroolsTemplateRuleUtils.toTemplateParam(offsetDateTimeObject));
+    }
 
+    @Test
+    void testToTemplateParamFromZonedDateTime() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildZonedDateTimeDroolsParam(null));
         ZonedDateTime zonedDateTimeObject = ZonedDateTime.of(localDateObject, localTimeObject, zoneIdObject);
         DroolsRuleTemplateParam expectedZonedDateTime = new DroolsRuleTemplateParam("java.time.ZonedDateTime.of(java.time.LocalDate.of(2000,1,2), java.time.LocalTime.of(1,5,4,0), java.time.ZoneId.of(\"Z\"))");
         Assertions.assertEquals(expectedZonedDateTime, DroolsTemplateRuleUtils.buildZonedDateTimeDroolsParam(zonedDateTimeObject));
         Assertions.assertEquals(expectedZonedDateTime, DroolsTemplateRuleUtils.toTemplateParam(zonedDateTimeObject));
+    }
 
+    @Test
+    void testToTemplateParamFromCustomObject() {
         Assertions.assertEquals(DroolsTemplateRuleUtils.NULL_TEMPLATE_PARAM, DroolsTemplateRuleUtils.buildNewObjectDroolsParam(null));
         ExtraFilterTestModelSample newObjectObject = new ExtraFilterTestModelSample();
         DroolsRuleTemplateParam expectedNewObject = new DroolsRuleTemplateParam("((%s)(new java.util.function.Supplier<%s>(){public %s get(){%s varExtraFilterTestModelSample = new %s();SETTERS;return varExtraFilterTestModelSample;}}).get())".replace("%s", ExtraFilterTestModelSample.class.getName().replace('$', '.')));

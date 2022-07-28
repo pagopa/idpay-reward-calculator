@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.time.*;
 
-public class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<DayOfWeekDTO> {
+class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<DayOfWeekDTO> {
 
     private final DayOfWeekTrxCondition2DroolsRuleTransformer transformer = new DayOfWeekTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
     public final DayOfWeekDTO dayOfWeekRule = DayOfWeekDTOFaker.mockInstance(1);

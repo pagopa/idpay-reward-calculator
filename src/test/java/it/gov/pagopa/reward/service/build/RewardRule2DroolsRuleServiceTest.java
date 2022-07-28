@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 
-public class RewardRule2DroolsRuleServiceTest {
+class RewardRule2DroolsRuleServiceTest {
 
     @BeforeAll
     public static void configDroolsLogLevel() {

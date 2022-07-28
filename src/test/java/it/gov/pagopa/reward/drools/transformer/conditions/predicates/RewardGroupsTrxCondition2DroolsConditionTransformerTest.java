@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-public class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
+class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     private final RewardGroupsTrxCondition2DroolsConditionTransformer transformer = new RewardGroupsTrxCondition2DroolsConditionTransformer();
 

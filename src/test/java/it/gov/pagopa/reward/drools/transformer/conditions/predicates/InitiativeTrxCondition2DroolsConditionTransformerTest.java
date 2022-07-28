@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
+abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     @BeforeAll
     public static void configDroolsLogLevel() {

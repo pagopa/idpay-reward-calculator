@@ -18,7 +18,7 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.util.List;
 
-public class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
+class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
 
     private static final RewardValueTrxConsequence2DroolsExpressionTransformer rewardValueTransformerMock = Mockito.mock(RewardValueTrxConsequence2DroolsExpressionTransformer.class);
     private static final RewardGroupsTrxConsequence2DroolsExpressionTransformer rewardGroupsTransformerMock = Mockito.mock(RewardGroupsTrxConsequence2DroolsExpressionTransformer.class);
@@ -79,12 +79,13 @@ public class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
 
     @Test
     void testNotHandled() {
+        InitiativeTrxConsequence notHandledTrxConsequence = new InitiativeTrxConsequence() {};
         try{
-            transformer.apply(new InitiativeTrxConsequence() {});
+            transformer.apply(notHandledTrxConsequence);
             Assertions.fail("Exception expected");
         } catch (IllegalStateException e){
             // Do nothing
-        } catch (Exception e){
+        } catch (RuntimeException e){
             Assertions.fail("Unexpected exception", e);
         }
     }

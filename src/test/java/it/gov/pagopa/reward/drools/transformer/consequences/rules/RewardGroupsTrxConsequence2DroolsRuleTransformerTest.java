@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.model.RewardTransaction;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardGroupsDTO> {
+class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardGroupsDTO> {
 
     private final RewardGroupsTrxConsequence2DroolsRuleTransformer transformer = new RewardGroupsTrxConsequence2DroolsRuleTransformer(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl());
     private final RewardGroupsDTO rewardGroupsDTO = RewardGroupsDTOFaker.mockInstance(1);
