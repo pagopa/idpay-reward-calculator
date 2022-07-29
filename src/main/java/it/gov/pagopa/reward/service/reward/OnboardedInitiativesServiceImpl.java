@@ -1,11 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -24,20 +24,22 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     }
 
     @Override
-    public List<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
-        HpanInitiatives initiativesForHpan = hpanInitiativesRepository.findById(hpan).block();
-        LocalDateTime trxDateTime = trxDate.atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();
-        List<String> initiatives = new ArrayList<>();
+    public Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
+        return hpanInitiativesRepository.findById(hpan)
+                .flatMapMany(initiativesForHpan -> {
+                    LocalDateTime trxDateTime = trxDate.atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();
+                    List<String> initiatives = new ArrayList<>();
 
-        if(initiativesForHpan!=null && initiativesForHpan.getOnboardedInitiatives()!=null){
-            List<OnboardedInitiative> onboardedInitiatives = initiativesForHpan.getOnboardedInitiatives();
-            for (OnboardedInitiative i : onboardedInitiatives) {
-                if(checkDate(trxDateTime, i.getActiveTimeIntervals())){
-                    initiatives.add(i.getInitiativeId());
-                }
-            }
-        }
-        return initiatives;
+                    if (initiativesForHpan != null && initiativesForHpan.getOnboardedInitiatives() != null) {
+                        List<OnboardedInitiative> onboardedInitiatives = initiativesForHpan.getOnboardedInitiatives();
+                        for (OnboardedInitiative i : onboardedInitiatives) {
+                            if (checkDate(trxDateTime, i.getActiveTimeIntervals())) {
+                                initiatives.add(i.getInitiativeId());
+                            }
+                        }
+                    }
+                    return Flux.fromIterable(initiatives);
+                });
     }
 
     //scroll the ActiveTimeInterval list from the end to facilitate the exit of the for-cycle

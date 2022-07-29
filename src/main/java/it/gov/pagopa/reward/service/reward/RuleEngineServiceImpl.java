@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.kie.api.command.Command;
@@ -32,7 +33,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     }
 
     @Override
-    public RewardTransactionDTO applyRules(TransactionDTO transaction, List<String> initiatives) {
+    public RewardTransactionDTO applyRules(TransactionDTO transaction, List<String> initiatives, UserInitiativeCounters userInitiativeCounters) {
         TransactionDroolsDTO trx = transaction2TransactionDroolsMapper.apply(transaction);
 
         if(!initiatives.isEmpty()){

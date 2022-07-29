@@ -3,12 +3,18 @@ package it.gov.pagopa.reward.event.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -24,12 +30,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 
 @Slf4j
 class TransactionProcessorTest extends BaseIntegrationTest {
 
     @Autowired
     protected ObjectMapper objectMapper;
+    @Autowired
+    protected HpanInitiativesRepository hpanInitiativesRepository;
+    @Autowired
+    protected DroolsRuleRepository droolsRuleRepository;
+    @Autowired
+    protected UserInitiativeCountersRepository userInitiativeCountersRepository;
 
     @Test
     void testTrxProcessor() throws JsonProcessingException {
@@ -72,6 +85,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                         then System.out.println($trx.getRewards());
                         end
                         """)
+                .initiativeConfig(new InitiativeConfig())
                 .build();
 
         //endregion
@@ -106,6 +120,20 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 Assertions.assertTrue(trxOut.getInitiatives().contains("initiativeId1"));
             }
         }
+/* TODO rewrite the entire test! it's not working
+        UserInitiativeCounters userCounters = userInitiativeCountersRepository.findById(trx.getHpan()).block(); // TODO use userId
+        Assertions.assertNotNull(userCounters);
+        Assertions.assertEquals(trx.getHpan(), userCounters.getUserId());
+        Assertions.assertEquals(
+                Map.of("initiativeId1",
+                        InitiativeCounters.builder()
+                                .initiativeId("initiativeId1")
+                                .trxNumber(1L)
+                                .totalReward(BigDecimal.ZERO) // TODO fix this test: it's not using real rules
+                                .totalAmount(trx.getAmount())
+                                .build()),
+                userCounters.getInitiatives()
+        );*/
     }
 
     int getExpectedPublishedMessagesCount() {

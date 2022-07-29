@@ -36,7 +36,8 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock).collectList().block();
+        Assertions.assertNotNull(result);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
@@ -57,7 +58,8 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.empty());
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock).collectList().block();
+        Assertions.assertNotNull(result);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
@@ -79,7 +81,8 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock).collectList().block();
+        Assertions.assertNotNull(result);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
@@ -101,7 +104,8 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(Mockito.same(hpanMock))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock);
+        List<String> result = onboardedInitiativesService.getInitiatives(hpanMock, trxDateMock).collectList().block();
+        Assertions.assertNotNull(result);
 
         // Then
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));

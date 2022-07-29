@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +34,7 @@ class RuleEngineServiceImplTest {
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives =  List.of("Initiative1");
+        UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
 
         TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
         Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
@@ -45,7 +48,7 @@ class RuleEngineServiceImplTest {
         Mockito.when(transactionDroolsDTO2RewardTransactionMapper.apply(Mockito.same(rewardTrx))).thenReturn(rewardTrxDto);
 
         // When
-        ruleEngineService.applyRules(trx, initiatives);
+        ruleEngineService.applyRules(trx, initiatives, counters);
 
         // Then
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
@@ -65,12 +68,13 @@ class RuleEngineServiceImplTest {
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives = new ArrayList<>();
+        UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
 
         TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
         Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
 
         // When
-        ruleEngineService.applyRules(trx, initiatives);
+        ruleEngineService.applyRules(trx, initiatives, counters);
 
         // Then
         Mockito.verify(droolsContainerHolderService,Mockito.never()).getRewardRulesKieContainer();
