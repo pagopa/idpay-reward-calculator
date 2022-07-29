@@ -18,14 +18,14 @@ import java.util.Map;
 public class TransactionDroolsDTO extends TransactionDTO {
 
     @Builder.Default
-    List<String> rejectionReasons = new ArrayList<>();
+    private List<String> rejectionReasons = new ArrayList<>();
 
     @Builder.Default
-    Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
+    private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 
-    List<String> initiatives;
+    private List<String> initiatives;
 
     @Builder.Default
-    Map<String, Reward> rewards = new HashMap<>();
+    private Map<String, Reward> rewards = new HashMap<>();
 }
 

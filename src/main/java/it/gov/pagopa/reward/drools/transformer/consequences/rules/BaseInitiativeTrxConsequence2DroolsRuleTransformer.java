@@ -34,7 +34,8 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 rule "%s-%s"
                 salience %d
                 agenda-group "%s"
-                when $trx: %s(initiativeRejectionReasons.get("%s") == null)
+                when $trx: %s()
+                   eval($trx.getInitiativeRejectionReasons().get("%s") == null)
                 then $trx.getRewards().put("%s", new %s(%s));
                 end
                 """.formatted(

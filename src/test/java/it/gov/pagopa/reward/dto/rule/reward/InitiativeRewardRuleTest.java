@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.rule.reward;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.reward.config.JsonConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ import java.util.List;
 
 class InitiativeRewardRuleTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new JsonConfig().objectMapper();
 
     private void testDeserialization(String content, InitiativeRewardRule expected) throws JsonProcessingException {
         Assertions.assertEquals(expected, objectMapper.readValue(content, InitiativeRewardRule.class));

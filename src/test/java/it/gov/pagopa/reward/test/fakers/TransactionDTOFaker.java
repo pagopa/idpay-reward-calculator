@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 
 import java.math.BigDecimal;
 import java.time.*;
@@ -35,7 +34,7 @@ public class TransactionDTOFaker {
     }
 
     /**
-     * It will return an example of {@link RewardGroupsDTO}. Providing a bias, it will return a pseudo-casual object
+     * It will return an example of {@link TransactionDTO}. Providing a bias, it will return a pseudo-casual object
      */
     public static TransactionDTO mockInstance(Integer bias) {
         return mockInstanceBuilder(bias).build();

@@ -18,15 +18,15 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 public class RewardTransactionDTO extends TransactionDTO {
 
-    String status;
+    private String status;
 
     @Builder.Default
-    List<String> rejectionReasons = new ArrayList<>();
+    private List<String> rejectionReasons = new ArrayList<>();
 
     @Builder.Default
-    Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
+    private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 
-    List<String> initiatives;
+    private List<String> initiatives;
 
-    Map<String, Reward> rewards;
+    private Map<String, Reward> rewards;
 }

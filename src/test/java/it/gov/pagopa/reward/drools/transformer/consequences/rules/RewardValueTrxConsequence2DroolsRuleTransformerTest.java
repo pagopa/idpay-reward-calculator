@@ -29,7 +29,8 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
                 rule "ruleName-REWARDVALUE"
                 salience -1
                 agenda-group "agendaGroup"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(initiativeRejectionReasons.get("agendaGroup") == null)
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                   eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
                 then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(new java.math.BigDecimal("0.1225")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 """;

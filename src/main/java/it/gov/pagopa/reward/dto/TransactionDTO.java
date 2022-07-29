@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,46 +18,47 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
 public class TransactionDTO {
-    String idTrxAcquirer;
+    private String idTrxAcquirer;
 
-    String acquirerCode;
+    private String acquirerCode;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    OffsetDateTime trxDate;
+    private OffsetDateTime trxDate;
 
-    String hpan;
+    private String hpan;
 
-    String operationType;
+    private String operationType;
 
-    String circuitType;
+    private String circuitType;
 
-    String idTrxIssuer;
+    private String idTrxIssuer;
 
-    String correlationId;
+    private String correlationId;
 
-    BigDecimal amount;
+    @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
+    private BigDecimal amount;
 
-    String amountCurrency;
+    private String amountCurrency;
 
-    String mcc;
+    private String mcc;
 
-    String acquirerId;
+    private String acquirerId;
 
-    String merchantId;
+    private String merchantId;
 
-    String terminalId;
+    private String terminalId;
 
-    String bin;
+    private String bin;
 
-    String senderCode;
+    private String senderCode;
 
-    String fiscalCode;
+    private String fiscalCode;
 
-    String vat;
+    private String vat;
 
-    String posType;
+    private String posType;
 
-    String par;
+    private String par;
 
 
 }

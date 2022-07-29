@@ -36,6 +36,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -106,12 +107,12 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
         // TODO probably to rewrite cause not strictly equals
         Assertions.assertEquals(
-                expectedCounters.values().stream()
+                objectMapper.writeValueAsString(expectedCounters.values().stream()
                         .sorted(Comparator.comparing(UserInitiativeCounters::getUserId))
-                    .toList(),
-                    Objects.requireNonNull(userInitiativeCountersRepository.findAll().collectList().block()).stream()
-                            .sorted(Comparator.comparing(UserInitiativeCounters::getUserId))
-                            .toList());
+                        .toList()),
+                objectMapper.writeValueAsString(Objects.requireNonNull(userInitiativeCountersRepository.findAll().collectList().block()).stream()
+                        .sorted(Comparator.comparing(UserInitiativeCounters::getUserId))
+                        .toList()));
 
         System.out.printf("""
                         ************************
@@ -269,7 +270,11 @@ class TransactionProcessorTest extends BaseIntegrationTest {
             ),*/
             // not rewarded hpan not onboarded
             Pair.of(
-                    TransactionDTOFaker::mockInstance,
+                    i -> {
+                        TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
+                        createUserCounter(trx);
+                        return trx;
+                    },
                     evaluation -> {
                         Assertions.assertFalse(evaluation.getRejectionReasons().isEmpty());
                         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
@@ -277,8 +282,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                         Assertions.assertEquals(List.of("HPAN_NOT_ACTIVE"), evaluation.getRejectionReasons());
                         Assertions.assertEquals("REJECTED", evaluation.getStatus());
                     }
-            )
-            /* TODO uncomment
+            ),
             // not rewarded
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
@@ -290,9 +294,9 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                             INITIATIVE_ID_THRESHOLD_BASED,
                             INITIATIVE_ID_DAYOFWEEK_BASED,
                             INITIATIVE_ID_MCC_BASED
-                            *//* TODO
+                            /* TODO
                             INITIATIVE_ID_REWARDLIMITS_BASED,
-                            INITIATIVE_ID_TRXCOUNT_BASED*//*
+                            INITIATIVE_ID_TRXCOUNT_BASED*/
                     ),
                     evaluation -> {
                         Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
@@ -303,13 +307,13 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                         INITIATIVE_ID_THRESHOLD_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.THRESHOLD.getRejectionReason()),
                                         INITIATIVE_ID_DAYOFWEEK_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.DAYOFWEEK.getRejectionReason()),
                                         INITIATIVE_ID_MCC_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.MCCFILTER.getRejectionReason())
-                                        *//* TODO
+                                        /* TODO
                                         INITIATIVE_ID_REWARDLIMITS_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason()),
-                                        INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())*//*
+                                        INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())*/
                                 ), evaluation.getInitiativeRejectionReasons());
                         Assertions.assertEquals("REJECTED", evaluation.getStatus());
                     }
-            )*/
+            )
     );
 
     private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId) {
@@ -334,62 +338,67 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                         .collect(Collectors.toList()))
                 .build()).block();
 
-        // TODO complete counter check
-        Arrays.stream(initiativeIds).forEach(id->{
+        //TODO use userId
+        UserInitiativeCounters userInitiativeCounters = createUserCounter(trx);
+        Arrays.stream(initiativeIds).forEach(id -> {
             InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
-            //TODO use userId
-            updateInitiativeCounters(expectedCounters.computeIfAbsent(trx.getHpan(), u->new UserInitiativeCounters(u, new HashMap<>()))
-                    .getInitiatives().computeIfAbsent(id, x-> InitiativeCounters.builder().initiativeId(id).build()),
+            updateInitiativeCounters(userInitiativeCounters
+                            .getInitiatives().computeIfAbsent(id, x -> InitiativeCounters.builder().initiativeId(id).build()),
                     trx, initiative2ExpectedReward.get(id), initiativeConfig);
         });
 
         return trx;
     }
 
+    private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
+        return expectedCounters.computeIfAbsent(trx.getHpan(), u -> new UserInitiativeCounters(u, new HashMap<>()));
+    }
+
     private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W");
     private final DateTimeFormatter monthlyFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     private final DateTimeFormatter yearFormatter = DateTimeFormatter.ofPattern("yyyy");
+
     private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
         updateCounters(counters, trx, expectedReward);
-        if(initiativeConfig.isHasDailyThreshold()){
-            if(counters.getDailyCounters()==null){
+        if (initiativeConfig.isHasDailyThreshold()) {
+            if (counters.getDailyCounters() == null) {
                 counters.setDailyCounters(new HashMap<>());
             }
             updateCounters(
-                    counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d->new Counters()),
+                    counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if(initiativeConfig.isHasWeeklyThreshold()){
-            if(counters.getWeeklyCounters()==null){
+        if (initiativeConfig.isHasWeeklyThreshold()) {
+            if (counters.getWeeklyCounters() == null) {
                 counters.setWeeklyCounters(new HashMap<>());
             }
             updateCounters(
-                    counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d->new Counters()),
+                    counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if(initiativeConfig.isHasMonthlyThreshold()){
-            if(counters.getMonthlyCounters()==null){
+        if (initiativeConfig.isHasMonthlyThreshold()) {
+            if (counters.getMonthlyCounters() == null) {
                 counters.setMonthlyCounters(new HashMap<>());
             }
             updateCounters(
-                    counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d->new Counters()),
+                    counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if(initiativeConfig.isHasYearlyThreshold()){
-            if(counters.getYearlyCounters()==null){
+        if (initiativeConfig.isHasYearlyThreshold()) {
+            if (counters.getYearlyCounters() == null) {
                 counters.setYearlyCounters(new HashMap<>());
             }
             updateCounters(
-                    counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d->new Counters()),
+                    counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
     }
 
     private void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
-        counters.setTrxNumber(counters.getTrxNumber()+1);
-        counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount()));
-        counters.setTotalReward(counters.getTotalReward().add(expectedReward));
+        counters.setTrxNumber(counters.getTrxNumber() + 1);
+        counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount()).setScale(2, RoundingMode.UNNECESSARY));
+        counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
     //endregion
 }

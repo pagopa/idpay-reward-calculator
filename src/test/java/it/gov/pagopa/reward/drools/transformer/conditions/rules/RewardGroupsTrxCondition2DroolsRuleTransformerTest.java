@@ -27,13 +27,13 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
     protected String getExpectedRule() {
         return """
                                 
-                rule "ruleName-REWARDGROUP"
+                rule "ruleName-REWARDGROUPS_CONDITION"
                 salience 4
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDGROUP_FAIL");
+                then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDGROUPS_CONDITION_FAIL");
                 end
                 """;
     }
@@ -54,6 +54,6 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
 
     @Override
     protected String getExpectedRejectionReason() {
-        return RewardConstants.InitiativeTrxConditionOrder.REWARDGROUP.getRejectionReason();
+        return RewardConstants.InitiativeTrxConditionOrder.REWARDGROUPS_CONDITION.getRejectionReason();
     }
 }

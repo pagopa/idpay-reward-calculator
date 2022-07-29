@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.dto.rule.trx;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import it.gov.pagopa.reward.config.JsonConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ import java.util.TreeSet;
 
 class InitiativeTrxConditionsTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new JsonConfig().objectMapper();
 
     public InitiativeTrxConditionsTest() {
         objectMapper.registerModule(new JavaTimeModule()); // TODO check if Spring add it

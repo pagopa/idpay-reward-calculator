@@ -88,7 +88,7 @@ public final class InitiativeReward2BuildDTOFaker {
 
 
         out.rewardRule(
-                bias%5==0 || (reward2configure == RewardGroupsDTO.class)
+                bias%5==3 || (reward2configure == RewardGroupsDTO.class)
                 ? RewardGroupsDTOFaker.mockInstance(bias)
                 : new RewardValueDTO(BigDecimal.valueOf((Math.abs(bias)+1)*0.23).setScale(2, RoundingMode.HALF_DOWN)));
 

@@ -12,7 +12,7 @@ public class RewardGroupsTrxCondition2DroolsRuleTransformer extends BaseInitiati
 
     @Override
     protected RewardConstants.InitiativeTrxConditionOrder getTrxConditionOrder() {
-        return RewardConstants.InitiativeTrxConditionOrder.REWARDGROUP;
+        return RewardConstants.InitiativeTrxConditionOrder.REWARDGROUPS_CONDITION;
     }
 
 }

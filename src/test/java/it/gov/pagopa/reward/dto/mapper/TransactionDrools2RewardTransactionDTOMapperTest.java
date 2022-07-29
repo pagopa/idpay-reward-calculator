@@ -2,8 +2,8 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.test.fakers.TransactionDroolsDtoFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -31,7 +31,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     @Test
     void mapWithNotNullRewardTransaction() {
         // Given
-        TransactionDroolsDTO trx = new Transaction2TransactionDroolsMapper().apply(TransactionDTOFaker.mockInstance(0));
+        TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
 
         trx.setRewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ZERO, BigDecimal.ZERO, false)));
         trx.setRewards(Map.of("INITIATIVE2", new Reward(BigDecimal.TEN, BigDecimal.ZERO, true)));
@@ -82,7 +82,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     @Test
     void testWithNoRewards() {
         // Given
-        TransactionDroolsDTO trx = new Transaction2TransactionDroolsMapper().apply(TransactionDTOFaker.mockInstance(0));
+        TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
         trx.setRewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ZERO, BigDecimal.ZERO, false)));
         trx.setRewards(Map.of("INITIATIVE2", new Reward(BigDecimal.TEN, BigDecimal.ZERO, true)));
 
@@ -97,7 +97,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     @Test
     void testWithRejectionReasons() {
         // Given
-        TransactionDroolsDTO trx = new Transaction2TransactionDroolsMapper().apply(TransactionDTOFaker.mockInstance(0));
+        TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
         trx.setRewards(Map.of("INITIATIVE", new Reward(BigDecimal.TEN, BigDecimal.ONE, true)));
         trx.setRejectionReasons(List.of("REJECTION"));
 
