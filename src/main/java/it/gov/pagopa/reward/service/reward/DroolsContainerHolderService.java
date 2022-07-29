@@ -4,7 +4,8 @@ import it.gov.pagopa.reward.dto.InitiativeConfig;
 import org.kie.api.runtime.KieContainer;
 
 /**
- * This component will retrieve the KieContainer configured with all the initiatives
+ * This component will retrieve the rewards' rules kieContainer
+ * It will also update the cached version when new rules arrives
  * */
 public interface DroolsContainerHolderService {
     KieContainer getRewardRulesKieContainer();

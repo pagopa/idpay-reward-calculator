@@ -14,7 +14,7 @@ spring:
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
-          group: ${KAFKA_RTD_GROUP_ID:idpay-trx-processor}
+          group: ${KAFKA_RTD_GROUP_ID:idpay-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-rtd
         trxProcessor-out-0:

@@ -83,6 +83,12 @@ public abstract class BaseIntegrationTest {
     private MongodExecutable embeddedMongoServer;
 
     @Autowired
+    protected HpanInitiativesRepository hpanInitiativesRepository;
+
+    @Autowired
+    protected DroolsRuleRepository droolsRuleRepository;
+
+    @Autowired
     protected ObjectMapper objectMapper;
 
     @Value("${spring.kafka.bootstrap-servers}")
