@@ -49,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
+        "app.rules.cache.refresh-ms-rate=60000",
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.reward.RuleEngineServiceImpl=WARN",
@@ -79,7 +80,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .mapToObj(this::mockInstance).toList();
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, null, i));
+        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getHpan(), i)); // TODO use userId
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topicRewardProcessorOutcome, "idpay-group");
@@ -90,7 +91,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         int counter = 0;
         while (counter < N) {
             if (System.currentTimeMillis() - timeConsumerResponse > maxWaitingMs) {
-                Assertions.fail("timeout of %d ms expired".formatted(maxWaitingMs));
+                Assertions.fail("timeout of %d ms expired. Read %d while expected %d messages".formatted(maxWaitingMs, counter, N));
             }
             ConsumerRecords<String, String> published = consumer.poll(Duration.ofMillis(7000));
             for (ConsumerRecord<String, String> record : published) {
@@ -285,19 +286,23 @@ class TransactionProcessorTest extends BaseIntegrationTest {
             ),
             // not rewarded
             Pair.of(
-                    i -> onboardTrxHpanAndIncreaseCounters(
-                            TransactionDTOFaker.mockInstanceBuilder(i)
-                                    .trxDate(trxDate.minusDays(1))
-                                    .amount(BigDecimal.ONE)
-                                    .mcc("NOTALLOWED")
-                                    .build(),
-                            INITIATIVE_ID_THRESHOLD_BASED,
-                            INITIATIVE_ID_DAYOFWEEK_BASED,
-                            INITIATIVE_ID_MCC_BASED
-                            /* TODO
-                            INITIATIVE_ID_REWARDLIMITS_BASED,
-                            INITIATIVE_ID_TRXCOUNT_BASED*/
-                    ),
+                    i -> {
+                        TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
+                                .trxDate(trxDate.minusDays(1))
+                                .amount(BigDecimal.ONE)
+                                .mcc("NOTALLOWED")
+                                .build();
+                        onboardTrxHPan(
+                                trx,
+                                INITIATIVE_ID_THRESHOLD_BASED,
+                                INITIATIVE_ID_DAYOFWEEK_BASED,
+                                INITIATIVE_ID_MCC_BASED
+                                /* TODO
+                                INITIATIVE_ID_REWARDLIMITS_BASED,
+                                INITIATIVE_ID_TRXCOUNT_BASED*/
+                        );
+                        return trx;
+                    },
                     evaluation -> {
                         Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
                         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
@@ -326,6 +331,18 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private TransactionDTO onboardTrxHpanAndIncreaseCounters(TransactionDTO trx, String... initiativeIds) {
+        UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(trx, initiativeIds);
+        Arrays.stream(initiativeIds).forEach(id -> {
+            InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
+            updateInitiativeCounters(userInitiativeCounters
+                            .getInitiatives().computeIfAbsent(id, x -> InitiativeCounters.builder().initiativeId(id).build()),
+                    trx, initiative2ExpectedReward.get(id), initiativeConfig);
+        });
+
+        return trx;
+    }
+
+    private UserInitiativeCounters onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
         hpanInitiativesRepository.save(HpanInitiatives.builder()
                 .hpan(trx.getHpan())
                 .onboardedInitiatives(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
@@ -339,15 +356,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .build()).block();
 
         //TODO use userId
-        UserInitiativeCounters userInitiativeCounters = createUserCounter(trx);
-        Arrays.stream(initiativeIds).forEach(id -> {
-            InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
-            updateInitiativeCounters(userInitiativeCounters
-                            .getInitiatives().computeIfAbsent(id, x -> InitiativeCounters.builder().initiativeId(id).build()),
-                    trx, initiative2ExpectedReward.get(id), initiativeConfig);
-        });
-
-        return trx;
+        return createUserCounter(trx);
     }
 
     private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
