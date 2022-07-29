@@ -56,9 +56,10 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                         return null;
                     }
                 })
-                .map(counters2rewardedTrx -> {
+                .flatMap(counters2rewardedTrx -> {
                     userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond());
-                    return counters2rewardedTrx.getSecond();
+                    return userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst())
+                            .then(Mono.just(counters2rewardedTrx.getSecond()));
                 });
     }
 

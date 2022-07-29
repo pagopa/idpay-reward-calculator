@@ -33,6 +33,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(transactionFilterService.filter(Mockito.same(trx1))).thenReturn(true);
         Mockito.when(transactionFilterService.filter(Mockito.same(trx2))).thenReturn(false);
         Mockito.when(userInitiativeCountersRepository.findById(Mockito.<String>any())).thenReturn(Mono.empty());
+        Mockito.when(userInitiativeCountersRepository.save(Mockito.any())).thenReturn(Mono.empty());
 
         List<String> initiatives1 = List.of("INITIATIVE1");
         Mockito.when(onboardedInitiativesService.getInitiatives(Mockito.any(),Mockito.any()))
@@ -48,6 +49,6 @@ class RewardCalculatorMediatorServiceImplTest {
         // Then
         Assertions.assertEquals(1L, result.count().block());
 
-
+        Mockito.verify(userInitiativeCountersRepository).save(Mockito.any());
     }
 }
