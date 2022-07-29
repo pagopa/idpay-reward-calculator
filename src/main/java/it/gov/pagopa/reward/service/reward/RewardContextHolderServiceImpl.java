@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderService{
+public class RewardContextHolderServiceImpl implements RewardContextHolderService {
 
     private final KieContainerBuilderService kieContainerBuilderService;
     private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
@@ -22,7 +22,7 @@ public class DroolsContainerHolderServiceImpl implements  DroolsContainerHolderS
     private KieContainer kieContainer;
 
 
-    public DroolsContainerHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository) {
+    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
         refreshKieContainer();

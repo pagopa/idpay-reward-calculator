@@ -26,11 +26,11 @@ class RuleEngineServiceImplTest {
     @Test
     void applyRules() {
         // Given
-        DroolsContainerHolderService droolsContainerHolderService = Mockito.mock(DroolsContainerHolderServiceImpl.class);
+        RewardContextHolderService rewardContextHolderService = Mockito.mock(RewardContextHolderServiceImpl.class);
         Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = Mockito.mock(Transaction2TransactionDroolsMapper.class);
         TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper = Mockito.mock(TransactionDroolsDTO2RewardTransactionMapper.class);
 
-        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(droolsContainerHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
+        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives =  List.of("Initiative1");
@@ -40,7 +40,7 @@ class RuleEngineServiceImplTest {
         Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
 
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(droolsContainerHolderService.getRewardRulesKieContainer()).thenReturn(kieContainer);
+        Mockito.when(rewardContextHolderService.getRewardRulesKieContainer()).thenReturn(kieContainer);
         StatelessKieSession statelessKieSession = Mockito.mock(StatelessKieSession.class);
         Mockito.when(kieContainer.newStatelessKieSession()).thenReturn(statelessKieSession);
 
@@ -52,7 +52,7 @@ class RuleEngineServiceImplTest {
 
         // Then
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
-        Mockito.verify(droolsContainerHolderService).getRewardRulesKieContainer();
+        Mockito.verify(rewardContextHolderService).getRewardRulesKieContainer();
         Mockito.verify(statelessKieSession).execute(Mockito.any(Command.class));
         Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));
     }
@@ -60,11 +60,11 @@ class RuleEngineServiceImplTest {
     @Test
     void applyRulesWithEmptyInitiatives() {
         // Given
-        DroolsContainerHolderService droolsContainerHolderService = Mockito.mock(DroolsContainerHolderServiceImpl.class);
+        RewardContextHolderService rewardContextHolderService = Mockito.mock(RewardContextHolderServiceImpl.class);
         Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = Mockito.mock(Transaction2TransactionDroolsMapper.class);
         TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper = Mockito.mock(TransactionDroolsDTO2RewardTransactionMapper.class);
 
-        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(droolsContainerHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
+        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives = new ArrayList<>();
@@ -77,10 +77,10 @@ class RuleEngineServiceImplTest {
         ruleEngineService.applyRules(trx, initiatives, counters);
 
         // Then
-        Mockito.verify(droolsContainerHolderService,Mockito.never()).getRewardRulesKieContainer();
+        Mockito.verify(rewardContextHolderService,Mockito.never()).getRewardRulesKieContainer();
 
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
-        Mockito.verify(droolsContainerHolderService, Mockito.never()).getRewardRulesKieContainer();
+        Mockito.verify(rewardContextHolderService, Mockito.never()).getRewardRulesKieContainer();
         Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));
     }
 }

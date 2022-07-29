@@ -1,20 +1,29 @@
 package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
+import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
+import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
+import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
+import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
+import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
+import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
+import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -22,130 +31,358 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Mono;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.util.Pair;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Map;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@TestPropertySource(properties = {
+        "app.reward-rule.build-delay-duration=PT1S",
+        "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.reward.service.reward.RuleEngineServiceImpl=WARN",
+})
 @Slf4j
 class TransactionProcessorTest extends BaseIntegrationTest {
 
+    @SpyBean
+    private RewardContextHolderService rewardContextHolderService;
+
     @Autowired
-    protected ObjectMapper objectMapper;
+    private HpanInitiativesRepository hpanInitiativesRepository;
+
     @Autowired
-    protected HpanInitiativesRepository hpanInitiativesRepository;
+    private DroolsRuleRepository droolsRuleRepository;
+
     @Autowired
-    protected DroolsRuleRepository droolsRuleRepository;
-    @Autowired
-    protected UserInitiativeCountersRepository userInitiativeCountersRepository;
+    private UserInitiativeCountersRepository userInitiativeCountersRepository;
 
     @Test
-    void testTrxProcessor() throws JsonProcessingException {
-        // Given
-        Mono<HpanInitiatives> hpanInitiativesMono = hpanInitiativesRepository.findById("5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0");
-        log.info(hpanInitiativesMono.toString());
-        //region Repository initializer
-        ActiveTimeInterval interval1 = ActiveTimeInterval.builder()
-                .startInterval(LocalDateTime.now()).endInterval(LocalDateTime.now().plusDays(1L)).build();
+    void testAdmissibilityOnboarding() throws JsonProcessingException {
+        int N = 1000;
+        long maxWaitingMs = 30000;
 
-        ActiveTimeInterval interval2 = ActiveTimeInterval.builder()
-                .startInterval(LocalDateTime.now().plusDays(2L)).build();
+        publishRewardRules();
 
-        OnboardedInitiative onboardedInitiative1 = OnboardedInitiative.builder()
-                .initiativeId("initiativeId1")
-                .acceptanceDate(LocalDate.now())
-                .status("ACCEPTED")
-                .activeTimeIntervals(new ArrayList<>()).build();
-        onboardedInitiative1.getActiveTimeIntervals().add(interval1);
-        onboardedInitiative1.getActiveTimeIntervals().add(interval2);
+        List<TransactionDTO> trxs = IntStream.range(0, N)
+                .mapToObj(this::mockInstance).toList();
 
-        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
-                .hpan("5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
-                .userId("5c6bda1b1f5f6238dcba")
-                .onboardedInitiatives(new ArrayList<>()).build();
-        hpanInitiatives.getOnboardedInitiatives().add(onboardedInitiative1);
-        hpanInitiativesRepository.save(hpanInitiatives).subscribe(i -> log.info(i.toString()));
-        //endregion
+        long timePublishOnboardingStart = System.currentTimeMillis();
+        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, null, i));
+        long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
-        //region Save rule in DB
-        DroolsRule droolsRule = DroolsRule.builder()
-                .id("initiativeId1")
-                .name("initiativeId1")
-                .rule("""
-                        package it.gov.pagopa.reward.drools.buildrules;
-                        import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-                        rule "initiativeId1"
-                        agenda-group "initiativeId1"
-                        when $trx: RewardTransaction(hpan=="5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
-                        then System.out.println($trx.getRewards());
-                        end
-                        """)
-                .initiativeConfig(new InitiativeConfig())
-                .build();
+        Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topicRewardProcessorOutcome, "idpay-group");
 
-        //endregion
-        droolsRuleRepository.save(droolsRule).block();
+        long timeConsumerResponse = System.currentTimeMillis();
 
-
-        //region TransactionDTO initializer
-        TransactionDTO trx = TransactionDTO.builder()
-                .idTrxAcquirer("98174002165501220007165503")
-                .acquirerCode("36081")
-                .trxDate(OffsetDateTime.parse("2022-09-07T15:58:42.000+00:00"))
-                .hpan("5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0")
-                .operationType("00")
-                .amount(new BigDecimal("200.00"))
-                .acquirerId("09509")
-                .mcc("4040")
-                .build();
-        //endregion
-
-        publishIntoEmbeddedKafka(topicRewardProcessorRequest,null,null,trx);
-
-        //Then
-        Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topicRewardProcessorOutcome, "test_groupid");
-
-        for(int i=0, j=0; i<=getExpectedPublishedMessagesCount() && j<=getExpectedPublishedMessagesCount(); j++){
-            ConsumerRecords<String,String> publish = consumer.poll(Duration.ofMillis(7000));
-            for (ConsumerRecord<String, String> record: publish) {
-                RewardTransactionDTO trxOut = objectMapper.readValue(record.value(),RewardTransactionDTO.class);
-                Assertions.assertNotNull(trxOut.getRewards());
-                Assertions.assertTrue(trxOut.getRewards().isEmpty());
-                Assertions.assertNotNull(trxOut.getInitiatives());
-                Assertions.assertTrue(trxOut.getInitiatives().contains("initiativeId1"));
+        List<String> payloadConsumed = new ArrayList<>(N);
+        int counter = 0;
+        while (counter < N) {
+            if (System.currentTimeMillis() - timeConsumerResponse > maxWaitingMs) {
+                Assertions.fail("timeout of %d ms expired".formatted(maxWaitingMs));
+            }
+            ConsumerRecords<String, String> published = consumer.poll(Duration.ofMillis(7000));
+            for (ConsumerRecord<String, String> record : published) {
+                payloadConsumed.add(record.value());
+                counter++;
             }
         }
-/* TODO rewrite the entire test! it's not working
-        UserInitiativeCounters userCounters = userInitiativeCountersRepository.findById(trx.getHpan()).block(); // TODO use userId
-        Assertions.assertNotNull(userCounters);
-        Assertions.assertEquals(trx.getHpan(), userCounters.getUserId());
-        Assertions.assertEquals(
-                Map.of("initiativeId1",
-                        InitiativeCounters.builder()
-                                .initiativeId("initiativeId1")
-                                .trxNumber(1L)
-                                .totalReward(BigDecimal.ZERO) // TODO fix this test: it's not using real rules
-                                .totalAmount(trx.getAmount())
-                                .build()),
-                userCounters.getInitiatives()
-        );*/
+        long timeEnd = System.currentTimeMillis();
+        long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;
+        Assertions.assertEquals(N, counter);
+        for (String p : payloadConsumed) {
+            checkResponse(objectMapper.readValue(p, RewardTransactionDTO.class));
+        }
+
+        // TODO probably to rewrite cause not strictly equals
+        Assertions.assertEquals(expectedCounters.values(), userInitiativeCountersRepository.findAll().collectList().block());
+
+        System.out.printf("""
+                        ************************
+                        Time spent to send %d trx messages: %d millis
+                        Time spent to consume reward responses: %d millis
+                        ************************
+                        Test Completed in %d millis
+                        ************************
+                        """,
+                N, timePublishingOnboardingRequest,
+                timeConsumerResponseEnd,
+                timeEnd - timePublishOnboardingStart
+        );
     }
 
-    int getExpectedPublishedMessagesCount() {
-        return 1;
+    // region initiative build
+    private static final String INITIATIVE_ID_THRESHOLD_BASED = "ID_0_THRESHOLD";
+    private static final String INITIATIVE_ID_DAYOFWEEK_BASED = "ID_1_DAYOFWEEK";
+    private static final String INITIATIVE_ID_MCC_BASED = "ID_2_MCC";
+    private static final String INITIATIVE_ID_REWARDLIMITS_BASED = "ID_3_REWARDLIMITS";
+    private static final String INITIATIVE_ID_TRXCOUNT_BASED = "ID_4_TRXCOUNT";
+
+    private void publishRewardRules() {
+        int[] expectedRules = {0};
+        Stream.of(
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(0, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_THRESHOLD_BASED)
+                                .trxRule(InitiativeTrxConditions.builder()
+                                        .threshold(ThresholdDTO.builder()
+                                                .from(BigDecimal.valueOf(5))
+                                                .fromIncluded(true)
+                                                .build())
+                                        .build())
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(1, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_DAYOFWEEK_BASED)
+                                .trxRule(InitiativeTrxConditions.builder()
+                                        .daysOfWeek(new DayOfWeekDTO(List.of(
+                                                DayOfWeekDTO.DayConfig.builder()
+                                                        .daysOfWeek(Set.of(trxDate.getDayOfWeek()))
+                                                        .build()
+                                        )))
+                                        .build())
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(2, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_MCC_BASED)
+                                .trxRule(InitiativeTrxConditions.builder()
+                                        .mccFilter(MccFilterDTO.builder()
+                                                .allowedList(true)
+                                                .values(Set.of("ACCEPTEDMCC"))
+                                                .build())
+                                        .build())
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .build()
+                        /* TODO
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(3, Set.of(RewardLimitsDTO.class), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(4, Set.of(TrxCountDTO.class), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                                .build()*/
+                )
+                .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
+                .forEach(i -> publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
+
+        RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
+    }
+    //endregion
+
+    private TransactionDTO mockInstance(int bias) {
+        return useCases.get(bias % useCases.size()).getFirst().apply(bias);
     }
 
+    private void checkResponse(RewardTransactionDTO rewardedTrx) {
+        String hpan = rewardedTrx.getHpan();
+        int biasRetrieve = Integer.parseInt(hpan.substring(4));
+        useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
 
+    }
 
+    private void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual) {
+        assertEquals(0, expected.compareTo(actual), "Expected: %s, Obtained: %s".formatted(expected, actual));
+    }
+
+    //region useCases
+    private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
+    private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime));
+
+    private final Map<String, UserInitiativeCounters> expectedCounters = new HashMap<>();
+    private final Map<String, BigDecimal> initiative2ExpectedReward = Map.of(
+            INITIATIVE_ID_THRESHOLD_BASED, BigDecimal.valueOf(0.5),
+            INITIATIVE_ID_DAYOFWEEK_BASED, BigDecimal.valueOf(5),
+            INITIATIVE_ID_MCC_BASED, BigDecimal.valueOf(6),
+            INITIATIVE_ID_REWARDLIMITS_BASED, BigDecimal.valueOf(0),
+            INITIATIVE_ID_TRXCOUNT_BASED, BigDecimal.valueOf(0)
+    );
+
+    private final List<Pair<Function<Integer, TransactionDTO>, java.util.function.Consumer<RewardTransactionDTO>>> useCases = List.of(
+            // rewarded by threshold based initiative
+            Pair.of(
+                    i -> onboardTrxHpanAndIncreaseCounters(
+                            TransactionDTOFaker.mockInstanceBuilder(i)
+                                    .amount(BigDecimal.valueOf(5))
+                                    .build(),
+                            INITIATIVE_ID_THRESHOLD_BASED),
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_THRESHOLD_BASED)
+            ),
+            // rewarded by dayOfWeek based initiative
+            Pair.of(
+                    i -> onboardTrxHpanAndIncreaseCounters(
+                            TransactionDTOFaker.mockInstanceBuilder(i)
+                                    .trxDate(trxDate)
+                                    .amount(BigDecimal.valueOf(50))
+                                    .build(),
+                            INITIATIVE_ID_DAYOFWEEK_BASED),
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_DAYOFWEEK_BASED)
+            ),
+            // rewarded by MccFilter based initiative
+            Pair.of(
+                    i -> onboardTrxHpanAndIncreaseCounters(
+                            TransactionDTOFaker.mockInstanceBuilder(i)
+                                    .mcc("ACCEPTEDMCC")
+                                    .amount(BigDecimal.valueOf(60))
+                                    .build(),
+                            INITIATIVE_ID_MCC_BASED),
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_MCC_BASED)
+            ),
+            /* TODO
+            // rewarded by RewardLimits based initiative
+            Pair.of(
+                    i -> onboardTrxHpan(
+                            TransactionDTOFaker.mockInstanceBuilder(i)
+                                    .amount(BigDecimal.valueOf(5))
+                                    .trxDate(trxDate)
+                                    .build(),
+                            INITIATIVE_ID_REWARDLIMITS_BASED),
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED)
+            ),
+            // rewarded by TrxCount based initiative
+            Pair.of(
+                    i -> onboardTrxHpan(
+                            TransactionDTOFaker.mockInstanceBuilder(i)
+                                    .trxDate(trxDate)
+                                    .build(),
+                            INITIATIVE_ID_TRXCOUNT_BASED),
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED)
+            ),*/
+            // not rewarded hpan not onboarded
+            Pair.of(
+                    TransactionDTOFaker::mockInstance,
+                    evaluation -> {
+                        Assertions.assertFalse(evaluation.getRejectionReasons().isEmpty());
+                        Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
+                        Assertions.assertTrue(evaluation.getRewards().isEmpty());
+                        Assertions.assertEquals(List.of("HPAN_NOT_ACTIVE"), evaluation.getRejectionReasons());
+                        Assertions.assertEquals("REJECTED", evaluation.getStatus());
+                    }
+            ),
+            // not rewarded
+            Pair.of(
+                    i -> onboardTrxHpanAndIncreaseCounters(
+                            TransactionDTOFaker.mockInstanceBuilder(i)
+                                    .trxDate(trxDate.minusDays(1))
+                                    .amount(BigDecimal.ONE)
+                                    .mcc("NOTALLOWED")
+                                    .build(),
+                            INITIATIVE_ID_THRESHOLD_BASED,
+                            INITIATIVE_ID_DAYOFWEEK_BASED,
+                            INITIATIVE_ID_MCC_BASED
+                            /* TODO
+                            INITIATIVE_ID_REWARDLIMITS_BASED,
+                            INITIATIVE_ID_TRXCOUNT_BASED*/
+                    ),
+                    evaluation -> {
+                        Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
+                        Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
+                        Assertions.assertFalse(evaluation.getInitiativeRejectionReasons().isEmpty());
+                        Assertions.assertEquals(
+                                Map.of(
+                                        INITIATIVE_ID_THRESHOLD_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.THRESHOLD.getRejectionReason()),
+                                        INITIATIVE_ID_DAYOFWEEK_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.DAYOFWEEK.getRejectionReason()),
+                                        INITIATIVE_ID_MCC_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.MCCFILTER.getRejectionReason())
+                                        /* TODO
+                                        INITIATIVE_ID_REWARDLIMITS_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason()),
+                                        INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())*/
+                                ), evaluation.getInitiativeRejectionReasons());
+                        Assertions.assertEquals("REJECTED", evaluation.getStatus());
+                    }
+            )
+    );
+
+    private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId) {
+        Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
+        Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
+        Assertions.assertFalse(evaluation.getRewards().isEmpty());
+        Assertions.assertEquals("REWARDED", evaluation.getStatus());
+        Assertions.assertNotNull(evaluation.getRewards().get(rewardedInitiativeId));
+        assertBigDecimalEquals(initiative2ExpectedReward.get(rewardedInitiativeId), evaluation.getRewards().get(rewardedInitiativeId).getProvidedReward());
+    }
+
+    private TransactionDTO onboardTrxHpanAndIncreaseCounters(TransactionDTO trx, String... initiativeIds) {
+        hpanInitiativesRepository.save(HpanInitiatives.builder()
+                .hpan(trx.getHpan())
+                .onboardedInitiatives(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
+                                .initiativeId(initiativeId)
+                                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                                        .startInterval(trx.getTrxDate().toLocalDateTime())
+                                        .endInterval(trx.getTrxDate().toLocalDateTime())
+                                        .build()))
+                                .build())
+                        .collect(Collectors.toList()))
+                .build()).block();
+
+        // TODO complete counter check
+        Arrays.stream(initiativeIds).forEach(id->{
+            InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
+            //TODO use userId
+            updateInitiativeCounters(expectedCounters.computeIfAbsent(trx.getHpan(), u->new UserInitiativeCounters(u, new HashMap<>()))
+                    .getInitiatives().computeIfAbsent(id, x-> InitiativeCounters.builder().initiativeId(id).build()),
+                    trx, initiative2ExpectedReward.get(id), initiativeConfig);
+        });
+
+        return trx;
+    }
+
+    private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W");
+    private final DateTimeFormatter monthlyFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    private final DateTimeFormatter yearFormatter = DateTimeFormatter.ofPattern("yyyy");
+    private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
+        updateCounters(counters, trx, expectedReward);
+        if(initiativeConfig.isHasDailyThreshold()){
+            if(counters.getDailyCounters()==null){
+                counters.setDailyCounters(new HashMap<>());
+            }
+            updateCounters(
+                    counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d->new Counters()),
+                    trx, expectedReward);
+        }
+        if(initiativeConfig.isHasWeeklyThreshold()){
+            if(counters.getWeeklyCounters()==null){
+                counters.setWeeklyCounters(new HashMap<>());
+            }
+            updateCounters(
+                    counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d->new Counters()),
+                    trx, expectedReward);
+        }
+        if(initiativeConfig.isHasMonthlyThreshold()){
+            if(counters.getMonthlyCounters()==null){
+                counters.setMonthlyCounters(new HashMap<>());
+            }
+            updateCounters(
+                    counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d->new Counters()),
+                    trx, expectedReward);
+        }
+        if(initiativeConfig.isHasYearlyThreshold()){
+            if(counters.getYearlyCounters()==null){
+                counters.setYearlyCounters(new HashMap<>());
+            }
+            updateCounters(
+                    counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d->new Counters()),
+                    trx, expectedReward);
+        }
+    }
+
+    private void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
+        counters.setTrxNumber(counters.getTrxNumber()+1);
+        counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount()));
+        counters.setTotalReward(counters.getTotalReward().add(expectedReward));
+    }
+    //endregion
 }
-
-
-
-
-
-

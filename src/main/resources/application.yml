@@ -26,6 +26,7 @@ spring:
           group: ${KAFKA_RTD_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
+        # TODO removeme
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}

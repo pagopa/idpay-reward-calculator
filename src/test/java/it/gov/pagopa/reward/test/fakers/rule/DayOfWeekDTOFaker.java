@@ -1,7 +1,8 @@
-package it.gov.pagopa.reward.dto.rule.trx;
+package it.gov.pagopa.reward.test.fakers.rule;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;

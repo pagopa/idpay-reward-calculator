@@ -11,7 +11,7 @@ import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
-class DroolsContainerHolderServiceImplTest {
+class RewardContextHolderServiceImplTest {
 
     @Test
     void getKieContainer() {
@@ -22,10 +22,10 @@ class DroolsContainerHolderServiceImplTest {
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
         Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
 
-        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+        RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         // When
-        KieContainer result = droolsContainerHolderService.getRewardRulesKieContainer();
+        KieContainer result = rewardContextHolderService.getRewardRulesKieContainer();
 
         //Then
         Assertions.assertNotNull(result);
@@ -41,13 +41,13 @@ class DroolsContainerHolderServiceImplTest {
 
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
         Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
-        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+        RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         String initiativeId="INITIATIVE-ID";
         Mockito.when(droolsRuleRepository.findById(Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
         // When
-        InitiativeConfig result = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
 
         //Then
         Assertions.assertNull(result);
@@ -61,7 +61,7 @@ class DroolsContainerHolderServiceImplTest {
 
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
         Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
-        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+        RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = Mockito.mock(InitiativeConfig.class);
@@ -69,7 +69,7 @@ class DroolsContainerHolderServiceImplTest {
         Mockito.when(droolsRuleRepository.findById(Mockito.same(initiativeId))).thenReturn(Mono.just(droolsRule));
 
         // When
-        InitiativeConfig result = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
 
         //Then
         Assertions.assertNotNull(result);
@@ -83,7 +83,7 @@ class DroolsContainerHolderServiceImplTest {
 
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
         Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
-        DroolsContainerHolderService droolsContainerHolderService = new DroolsContainerHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
+        RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
@@ -94,8 +94,8 @@ class DroolsContainerHolderServiceImplTest {
 
 
         // When
-        droolsContainerHolderService.setInitiativeConfig(initiativeConfig);
-        InitiativeConfig result = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+        rewardContextHolderService.setInitiativeConfig(initiativeConfig);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
 
         //Then
         Assertions.assertNotNull(result);

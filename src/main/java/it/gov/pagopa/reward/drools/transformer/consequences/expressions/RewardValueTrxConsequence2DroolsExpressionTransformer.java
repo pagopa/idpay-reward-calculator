@@ -17,7 +17,7 @@ public class RewardValueTrxConsequence2DroolsExpressionTransformer implements In
     }
 
     public static DroolsRuleTemplateParam rewardPercentValue2TemplateParam(BigDecimal rewardPercentValue) {
-        return DroolsTemplateRuleUtils.toTemplateParam(rewardPercentValue.setScale(4, RoundingMode.UNNECESSARY).divide(ONEHUNDRED, RoundingMode.HALF_DOWN));
+        return DroolsTemplateRuleUtils.toTemplateParam(rewardPercentValue.setScale(4, RoundingMode.HALF_DOWN).divide(ONEHUNDRED, RoundingMode.HALF_DOWN));
     }
 
     public static String applyPercentReward(DroolsRuleTemplateParam rewardPercentValueTemplateParam) {

@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
-import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTOFaker;
+import it.gov.pagopa.reward.test.fakers.rule.DayOfWeekDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 

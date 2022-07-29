@@ -24,12 +24,12 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     private static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     private static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
 
-    private final DroolsContainerHolderService droolsContainerHolderService;
+    private final RewardContextHolderService rewardContextHolderService;
 
     private final List<String> justTrxCountRejectionReason = List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason());
 
-    public UserInitiativeCountersUpdateServiceImpl(DroolsContainerHolderService droolsContainerHolderService) {
-        this.droolsContainerHolderService = droolsContainerHolderService;
+    public UserInitiativeCountersUpdateServiceImpl(RewardContextHolderService rewardContextHolderService) {
+        this.rewardContextHolderService = rewardContextHolderService;
     }
 
 
@@ -37,7 +37,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) { // TODO operation of storno
         ruleEngineResult.getRewards().forEach((initiativeId, reward) -> {
             if (isRewardedInitiative(reward) || isJustTrxCountRejection(ruleEngineResult, initiativeId)) {
-                InitiativeConfig initiativeConfig = droolsContainerHolderService.getInitiativeConfig(initiativeId);
+                InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
                 InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
 

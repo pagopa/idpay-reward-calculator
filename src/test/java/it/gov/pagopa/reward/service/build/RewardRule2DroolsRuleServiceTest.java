@@ -173,7 +173,7 @@ class RewardRule2DroolsRuleServiceTest {
                 salience -1
                 agenda-group "ID_0_ssx"
                 when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(initiativeRejectionReasons.get("ID_0_ssx") == null)
-                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.0000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
+                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.1000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 
                 rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-DAILY-"

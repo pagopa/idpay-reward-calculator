@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
-import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTOFaker;
+import it.gov.pagopa.reward.test.fakers.rule.RewardGroupsDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
 import java.math.BigDecimal;

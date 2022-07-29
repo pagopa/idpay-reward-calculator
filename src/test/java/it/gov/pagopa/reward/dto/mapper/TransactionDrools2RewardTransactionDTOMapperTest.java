@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;

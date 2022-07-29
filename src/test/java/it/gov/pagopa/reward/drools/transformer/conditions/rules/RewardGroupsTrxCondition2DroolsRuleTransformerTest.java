@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
-import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTOFaker;
+import it.gov.pagopa.reward.test.fakers.rule.RewardGroupsDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 

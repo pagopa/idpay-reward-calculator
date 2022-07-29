@@ -38,7 +38,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
 
     @Mock
-    private DroolsContainerHolderService droolsContainerHolderService;
+    private RewardContextHolderService rewardContextHolderService;
     @InjectMocks
     private UserInitiativeCountersUpdateServiceImpl userInitiativeCountersUpdateService;
 
@@ -53,7 +53,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .hasMonthlyThreshold(true)
                 .hasYearlyThreshold(true)
                 .build();
-        Mockito.when(droolsContainerHolderService.getInitiativeConfig(Mockito.any())).thenReturn(initiativeConfig);
+        Mockito.when(rewardContextHolderService.getInitiativeConfig(Mockito.any())).thenReturn(initiativeConfig);
     }
 
     @Test

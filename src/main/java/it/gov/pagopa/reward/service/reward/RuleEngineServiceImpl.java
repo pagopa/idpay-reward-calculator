@@ -22,12 +22,12 @@ import java.util.List;
 @Service
 @Slf4j
 public class RuleEngineServiceImpl implements RuleEngineService {
-    private final DroolsContainerHolderService droolsContainerHolderService;
+    private final RewardContextHolderService rewardContextHolderService;
     private final Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper;
     private final TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper;
 
-    public RuleEngineServiceImpl(DroolsContainerHolderService droolsContainerHolderService, Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper, TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper) {
-        this.droolsContainerHolderService = droolsContainerHolderService;
+    public RuleEngineServiceImpl(RewardContextHolderService rewardContextHolderService, Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper, TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper) {
+        this.rewardContextHolderService = rewardContextHolderService;
         this.transaction2TransactionDroolsMapper = transaction2TransactionDroolsMapper;
         this.transactionDroolsDTO2RewardTransactionMapper = transactionDroolsDTO2RewardTransactionMapper;
     }
@@ -37,10 +37,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         TransactionDroolsDTO trx = transaction2TransactionDroolsMapper.apply(transaction);
 
         if(!initiatives.isEmpty()){
-            Instant before;
-            Instant after;
-
-            StatelessKieSession statelessKieSession = droolsContainerHolderService.getRewardRulesKieContainer().newStatelessKieSession();
+            StatelessKieSession statelessKieSession = rewardContextHolderService.getRewardRulesKieContainer().newStatelessKieSession();
 
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
@@ -50,14 +47,17 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
             }
-            log.info(cmds.toString());
 
-            before=Instant.now();
+            long before=System.currentTimeMillis();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
-            after=Instant.now();
-            log.info("Time between before and after fireAllRules: {} ms", Duration.between(before, after).toMillis());
+            long after=System.currentTimeMillis();
 
-            log.info("Send message prepared: {}", trx);
+            if(log.isDebugEnabled()){
+                log.debug("Time between before and after fireAllRules: {} ms", after-before);
+            }
+
+            log.debug("Send message prepared: {}", trx);
+            log.info("Transaction evaluated  ({}) and resulted into rewards:({}), initiativeRejectionReason:{}", "%s-%s".formatted(trx.getHpan(), trx.getTrxDate()), trx.getRewards(), trx.getInitiativeRejectionReasons());
         }else {
             // The date of transaction is not in an active range for the hpan
             trx.setRejectionReasons(List.of("HPAN_NOT_ACTIVE"));
