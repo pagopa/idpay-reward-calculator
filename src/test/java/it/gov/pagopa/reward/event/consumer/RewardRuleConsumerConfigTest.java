@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.TestPropertySource;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -38,6 +39,8 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                 .mapToObj(InitiativeReward2BuildDTOFaker::mockInstance)
                 .peek(i-> expectedRules[0] += calcDroolsRuleGenerated(i))
                 .toList();
+
+        System.out.println(new HashSet<>(initiatives).size());//TODO removeme
 
         long timeStart=System.currentTimeMillis();
         initiatives.forEach(i->publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
@@ -90,7 +93,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private long waitForDroolsRulesStored(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 15, 1000);
+        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 18, 1000);
         return countSaved[0];
     }
 
