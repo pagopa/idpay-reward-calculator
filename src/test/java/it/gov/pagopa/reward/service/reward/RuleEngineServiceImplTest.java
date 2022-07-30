@@ -107,14 +107,14 @@ class RuleEngineServiceImplTest {
     }
 
     @Test
-    public void testComplete(){
+    void testComplete(){
         testComplete(false);
     }
     @Test
-    public void testCompleteShortCircuited(){
+    void testCompleteShortCircuited(){
         testComplete(true);
     }
-    public void testComplete(boolean shortCircuited){
+    void testComplete(boolean shortCircuited){
         // given
         RewardRule2DroolsRuleService droolsRuleService = RewardRule2DroolsRuleServiceTest.buildRewardRule2DroolsRule(false);
         KieContainerBuilderService kieContainerBuilder = new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class));
