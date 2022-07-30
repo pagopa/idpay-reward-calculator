@@ -31,7 +31,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private RewardContextHolderService rewardContextHolderService;
 
     @Test
-    void testBeneficiaryRuleBuilding(){
+    void testRewardRuleBuilding(){
         int N=100;
         int[] expectedRules ={0};
         List<InitiativeReward2BuildDTO> initiatives = IntStream.range(0,N)

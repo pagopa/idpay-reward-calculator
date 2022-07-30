@@ -70,7 +70,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
 
     @Test
-    void testAdmissibilityOnboarding() throws JsonProcessingException {
+    void testTransactionProcessor() throws JsonProcessingException {
         int N = 1000;
         long maxWaitingMs = 30000;
 
