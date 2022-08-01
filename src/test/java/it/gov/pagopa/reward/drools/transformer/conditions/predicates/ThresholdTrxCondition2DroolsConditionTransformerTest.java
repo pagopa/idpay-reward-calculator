@@ -98,4 +98,38 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         testUpperBound(thresholdCondition, transaction, true, false);
     }
 
+    @Test
+    void testThresholdBetweenClosed(){
+        ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
+        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromIncluded(true);
+        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToIncluded(true);
+        String thresholdCondition = transformer.apply(initiativeTrxCondition);
+
+        Assertions.assertEquals("amount >= new java.math.BigDecimal(\"0\") && amount <= new java.math.BigDecimal(\"10.37\")", thresholdCondition);
+
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
+
+        testLowerBound(thresholdCondition, transaction, false, true);
+        testUpperBound(thresholdCondition, transaction, true, false);
+    }
+
+    @Test
+    void testThresholdBetweenOpen(){
+        ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
+        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromIncluded(false);
+        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToIncluded(false);
+        String thresholdCondition = transformer.apply(initiativeTrxCondition);
+
+        Assertions.assertEquals("amount > new java.math.BigDecimal(\"0\") && amount < new java.math.BigDecimal(\"10.37\")", thresholdCondition);
+
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
+
+        testLowerBound(thresholdCondition, transaction, false, false);
+        testUpperBound(thresholdCondition, transaction, false, false);
+    }
+
 }

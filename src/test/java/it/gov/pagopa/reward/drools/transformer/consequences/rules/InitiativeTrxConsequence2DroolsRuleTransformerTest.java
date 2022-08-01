@@ -6,9 +6,11 @@ import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
+import it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceTest;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -105,11 +107,6 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     }
 
     protected void executeRule(TransactionDroolsDTO trx, KieContainer kieContainer) {
-        @SuppressWarnings("unchecked")
-        List<Command<?>> commands = Arrays.asList(
-                CommandFactory.newInsert(trx),
-                new AgendaGroupSetFocusCommand("agendaGroup")
-        );
-        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, false, null, kieContainer);
     }
 }

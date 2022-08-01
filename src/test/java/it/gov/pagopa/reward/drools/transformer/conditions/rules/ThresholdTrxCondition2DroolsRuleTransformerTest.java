@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<ThresholdDTO> {
 
@@ -32,6 +33,8 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("10")))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_THRESHOLD_FAIL");
                 end
@@ -39,17 +42,25 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     }
 
     @Override
-    protected TransactionDroolsDTO getSuccessfulUseCase() {
+    protected List<TransactionDroolsDTO>  getSuccessfulUseCases() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(10.00));
-        return trx;
+        return List.of(trx);
     }
 
     @Override
-    protected TransactionDroolsDTO getFailingUseCase() {
-        TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setAmount(BigDecimal.valueOf(10.01));
-        return trx;
+    protected List<TransactionDroolsDTO>  getFailingUseCases() {
+        TransactionDroolsDTO trx1 = new TransactionDroolsDTO();
+        trx1.setAmount(BigDecimal.valueOf(10.01));
+
+        TransactionDroolsDTO trx2 = new TransactionDroolsDTO();
+        trx2.setAmount(BigDecimal.valueOf(-0.01));
+        return List.of(trx1, trx2);
+    }
+
+    @Override
+    protected String toUseCase(TransactionDroolsDTO trx) {
+        return trx.getAmount().toString();
     }
 
     @Override

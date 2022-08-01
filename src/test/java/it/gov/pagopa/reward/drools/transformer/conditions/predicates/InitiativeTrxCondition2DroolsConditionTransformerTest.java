@@ -55,15 +55,14 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
                                 
                 rule "%s"
                 agenda-group "%s"
-                when $trx: %s(%s)
+                when %s
                 then $trx.getInitiatives().add("%s");
                 end
                 """.formatted(
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                 dr.getName(),
                 dr.getId(),
-                TransactionDroolsDTO.class.getName(),
-                rewardCondition,
+                buildCondition(rewardCondition),
                 testName));
 
         try{
@@ -74,12 +73,23 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         }
     }
 
+    protected String buildCondition(String rewardCondition) {
+        return "$trx: %s(%s)".formatted(
+                TransactionDroolsDTO.class.getName(),
+                rewardCondition);
+    }
+
     protected void executeRule(TransactionDroolsDTO trx, String agendaGroup, KieContainer kieContainer){
+        List<Command<?>> commands = buildKieContainerCommands(trx, agendaGroup);
+        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+    }
+
+    protected List<Command<?>> buildKieContainerCommands(TransactionDroolsDTO trx, String agendaGroup) {
         @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(trx),
                 new AgendaGroupSetFocusCommand(agendaGroup)
         );
-        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+        return commands;
     }
 }

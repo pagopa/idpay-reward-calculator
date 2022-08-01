@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<RewardGroupsDTO> {
 
@@ -32,6 +33,8 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(((amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("5")))))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDGROUPS_CONDITION_FAIL");
                 end
@@ -39,17 +42,17 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
     }
 
     @Override
-    protected TransactionDroolsDTO getSuccessfulUseCase() {
+    protected List<TransactionDroolsDTO>  getSuccessfulUseCases() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(5));
-        return trx;
+        return List.of(trx);
     }
 
     @Override
-    protected TransactionDroolsDTO getFailingUseCase() {
+    protected List<TransactionDroolsDTO>  getFailingUseCases() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(-0.01));
-        return trx;
+        return List.of(trx);
     }
 
     @Override

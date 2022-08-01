@@ -48,6 +48,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             List<Command<?>> cmds = new ArrayList<>();
             cmds.add(CommandFactory.newInsert(ruleEngineConfig));
+            cmds.add(CommandFactory.newInsert(userInitiativeCounters));
             cmds.add(CommandFactory.newInsert(trx));
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
