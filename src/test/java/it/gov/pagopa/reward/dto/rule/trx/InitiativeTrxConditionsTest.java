@@ -19,11 +19,6 @@ class InitiativeTrxConditionsTest {
 
     private final ObjectMapper objectMapper = new JsonConfig().objectMapper();
 
-    public InitiativeTrxConditionsTest() {
-        objectMapper.registerModule(new JavaTimeModule()); // TODO check if Spring add it
-    }
-
-
     private void testDeserialization(String content, InitiativeTrxConditions expected) throws JsonProcessingException {
         Assertions.assertEquals(expected, objectMapper.readValue(content, InitiativeTrxConditions.class));
         Assertions.assertEquals(content.trim(), objectMapper.writeValueAsString(expected));
