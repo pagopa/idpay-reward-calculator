@@ -17,6 +17,7 @@ import java.util.Map;
 public class InitiativeCounters extends Counters {
     @Id
     private String initiativeId;
+    private boolean exhaustedBudget;
     private Map<String, Counters> dailyCounters;
     private Map<String, Counters> weeklyCounters;
     private Map<String, Counters> monthlyCounters;

@@ -29,10 +29,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
-        Assertions.assertTrue(result.isHasDailyThreshold());
-        Assertions.assertFalse(result.isHasWeeklyThreshold());
-        Assertions.assertFalse(result.isHasMonthlyThreshold());
-        Assertions.assertFalse(result.isHasYearlyThreshold());
+        Assertions.assertTrue(result.isDailyThreshold());
+        Assertions.assertFalse(result.isWeeklyThreshold());
+        Assertions.assertFalse(result.isMonthlyThreshold());
+        Assertions.assertFalse(result.isYearlyThreshold());
 
 
         TestUtils.checkNotNullFields(result);
@@ -53,10 +53,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
-        Assertions.assertFalse(result.isHasDailyThreshold());
-        Assertions.assertTrue(result.isHasWeeklyThreshold());
-        Assertions.assertFalse(result.isHasMonthlyThreshold());
-        Assertions.assertFalse(result.isHasYearlyThreshold());
+        Assertions.assertFalse(result.isDailyThreshold());
+        Assertions.assertTrue(result.isWeeklyThreshold());
+        Assertions.assertFalse(result.isMonthlyThreshold());
+        Assertions.assertFalse(result.isYearlyThreshold());
 
     }
 
@@ -75,10 +75,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
-        Assertions.assertFalse(result.isHasDailyThreshold());
-        Assertions.assertFalse(result.isHasWeeklyThreshold());
-        Assertions.assertTrue(result.isHasMonthlyThreshold());
-        Assertions.assertFalse(result.isHasYearlyThreshold());
+        Assertions.assertFalse(result.isDailyThreshold());
+        Assertions.assertFalse(result.isWeeklyThreshold());
+        Assertions.assertTrue(result.isMonthlyThreshold());
+        Assertions.assertFalse(result.isYearlyThreshold());
 
     }
 
@@ -97,10 +97,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
-        Assertions.assertFalse(result.isHasDailyThreshold());
-        Assertions.assertFalse(result.isHasWeeklyThreshold());
-        Assertions.assertFalse(result.isHasMonthlyThreshold());
-        Assertions.assertTrue(result.isHasYearlyThreshold());
+        Assertions.assertFalse(result.isDailyThreshold());
+        Assertions.assertFalse(result.isWeeklyThreshold());
+        Assertions.assertFalse(result.isMonthlyThreshold());
+        Assertions.assertTrue(result.isYearlyThreshold());
 
     }
     @Test
@@ -125,10 +125,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
-        Assertions.assertTrue(result.isHasDailyThreshold());
-        Assertions.assertTrue(result.isHasWeeklyThreshold());
-        Assertions.assertTrue(result.isHasMonthlyThreshold());
-        Assertions.assertTrue(result.isHasYearlyThreshold());
+        Assertions.assertTrue(result.isDailyThreshold());
+        Assertions.assertTrue(result.isWeeklyThreshold());
+        Assertions.assertTrue(result.isMonthlyThreshold());
+        Assertions.assertTrue(result.isYearlyThreshold());
 
     }
 

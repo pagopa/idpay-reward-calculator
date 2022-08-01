@@ -40,7 +40,11 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                 InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
                 InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
-
+                if (initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1) {
+                    initiativeCounter.setExhaustedBudget(true);
+                } else {
+                    initiativeCounter.setExhaustedBudget(false);
+                }
                 updateCounters(initiativeCounter, reward, ruleEngineResult.getAmount());
                 updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, initiativeConfig);
             }
@@ -62,25 +66,25 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
-        if (initiativeConfig.isHasDailyThreshold()) {
+        if (initiativeConfig.isDailyThreshold()) {
             if(initiativeCounters.getDailyCounters()==null){
                 initiativeCounters.setDailyCounters(new HashMap<>());
             }
             updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, initiativeReward);
         }
-        if (initiativeConfig.isHasWeeklyThreshold()) {
+        if (initiativeConfig.isWeeklyThreshold()) {
             if(initiativeCounters.getWeeklyCounters()==null){
                 initiativeCounters.setWeeklyCounters(new HashMap<>());
             }
             updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weeklyDateFormatter, ruleEngineResult, initiativeReward);
         }
-        if (initiativeConfig.isHasMonthlyThreshold()) {
+        if (initiativeConfig.isMonthlyThreshold()) {
             if(initiativeCounters.getMonthlyCounters()==null){
                 initiativeCounters.setMonthlyCounters(new HashMap<>());
             }
             updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, initiativeReward);
         }
-        if (initiativeConfig.isHasYearlyThreshold()) {
+        if (initiativeConfig.isYearlyThreshold()) {
             if(initiativeCounters.getYearlyCounters()==null){
                 initiativeCounters.setYearlyCounters(new HashMap<>());
             }

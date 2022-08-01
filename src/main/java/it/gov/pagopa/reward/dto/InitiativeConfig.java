@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -12,9 +14,10 @@ import lombok.NoArgsConstructor;
 public class InitiativeConfig {
 
     private String initiativeId;
-    private boolean hasDailyThreshold;
-    private boolean hasWeeklyThreshold;
-    private boolean hasMonthlyThreshold;
-    private boolean hasYearlyThreshold;
+    private BigDecimal budget;
+    private boolean dailyThreshold;
+    private boolean weeklyThreshold;
+    private boolean monthlyThreshold;
+    private boolean yearlyThreshold;
 
 }

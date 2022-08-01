@@ -88,9 +88,9 @@ class RewardContextHolderServiceImplTest {
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
-                .hasDailyThreshold(true)
-                .hasMonthlyThreshold(false)
-                .hasYearlyThreshold(false).build();
+                .dailyThreshold(true)
+                .monthlyThreshold(false)
+                .yearlyThreshold(false).build();
 
 
         // When

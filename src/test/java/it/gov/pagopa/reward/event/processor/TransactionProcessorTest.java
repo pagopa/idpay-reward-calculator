@@ -370,7 +370,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
     private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
         updateCounters(counters, trx, expectedReward);
-        if (initiativeConfig.isHasDailyThreshold()) {
+        if (initiativeConfig.isDailyThreshold()) {
             if (counters.getDailyCounters() == null) {
                 counters.setDailyCounters(new HashMap<>());
             }
@@ -378,7 +378,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                     counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if (initiativeConfig.isHasWeeklyThreshold()) {
+        if (initiativeConfig.isWeeklyThreshold()) {
             if (counters.getWeeklyCounters() == null) {
                 counters.setWeeklyCounters(new HashMap<>());
             }
@@ -386,7 +386,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                     counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if (initiativeConfig.isHasMonthlyThreshold()) {
+        if (initiativeConfig.isMonthlyThreshold()) {
             if (counters.getMonthlyCounters() == null) {
                 counters.setMonthlyCounters(new HashMap<>());
             }
@@ -394,7 +394,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                     counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if (initiativeConfig.isHasYearlyThreshold()) {
+        if (initiativeConfig.isYearlyThreshold()) {
             if (counters.getYearlyCounters() == null) {
                 counters.setYearlyCounters(new HashMap<>());
             }

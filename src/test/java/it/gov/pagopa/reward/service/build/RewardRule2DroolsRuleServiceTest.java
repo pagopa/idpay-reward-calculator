@@ -216,10 +216,10 @@ public class RewardRule2DroolsRuleServiceTest {
 
         expected.setInitiativeConfig(InitiativeConfig.builder()
                 .initiativeId(expected.getId())
-                .hasDailyThreshold(true)
-                .hasWeeklyThreshold(true)
-                .hasMonthlyThreshold(true)
-                .hasYearlyThreshold(true)
+                .dailyThreshold(true)
+                .weeklyThreshold(true)
+                .monthlyThreshold(true)
+                .yearlyThreshold(true)
                 .build());
 
         Assertions.assertEquals(expected, result);

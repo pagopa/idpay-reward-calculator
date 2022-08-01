@@ -48,10 +48,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
     public void configureMocks(){
         initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID1")
-                .hasDailyThreshold(true)
-                .hasWeeklyThreshold(true)
-                .hasMonthlyThreshold(true)
-                .hasYearlyThreshold(true)
+                .dailyThreshold(true)
+                .weeklyThreshold(true)
+                .monthlyThreshold(true)
+                .yearlyThreshold(true)
                 .build();
         Mockito.when(rewardContextHolderService.getInitiativeConfig(Mockito.any())).thenReturn(initiativeConfig);
     }
@@ -218,9 +218,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testRewardJustDailyInitiative(){
         //Given
-        initiativeConfig.setHasWeeklyThreshold(false);
-        initiativeConfig.setHasMonthlyThreshold(false);
-        initiativeConfig.setHasYearlyThreshold(false);
+        initiativeConfig.setWeeklyThreshold(false);
+        initiativeConfig.setMonthlyThreshold(false);
+        initiativeConfig.setYearlyThreshold(false);
 
         UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
                 .userId("USERID")
@@ -246,9 +246,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testRewardJustWeeklyInitiative(){
         //Given
-        initiativeConfig.setHasDailyThreshold(false);
-        initiativeConfig.setHasMonthlyThreshold(false);
-        initiativeConfig.setHasYearlyThreshold(false);
+        initiativeConfig.setDailyThreshold(false);
+        initiativeConfig.setMonthlyThreshold(false);
+        initiativeConfig.setYearlyThreshold(false);
 
         UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
                 .userId("USERID")
@@ -274,9 +274,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testRewardJustMonthlyInitiative(){
         //Given
-        initiativeConfig.setHasDailyThreshold(false);
-        initiativeConfig.setHasWeeklyThreshold(false);
-        initiativeConfig.setHasYearlyThreshold(false);
+        initiativeConfig.setDailyThreshold(false);
+        initiativeConfig.setWeeklyThreshold(false);
+        initiativeConfig.setYearlyThreshold(false);
 
         UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
                 .userId("USERID")
@@ -302,9 +302,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testRewardJustYearlyInitiative(){
         //Given
-        initiativeConfig.setHasDailyThreshold(false);
-        initiativeConfig.setHasWeeklyThreshold(false);
-        initiativeConfig.setHasMonthlyThreshold(false);
+        initiativeConfig.setDailyThreshold(false);
+        initiativeConfig.setWeeklyThreshold(false);
+        initiativeConfig.setMonthlyThreshold(false);
 
         UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
                 .userId("USERID")
