@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.kie.api.definition.KiePackage;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
@@ -39,22 +40,38 @@ public class KieContainerBuilderServiceImplTest {
     }
 
 
-    //TODO
     @Test
     void buildAllFindRules() {
         // Given
         DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
         KieContainerBuilderService kieContainerBuilderService = new KieContainerBuilderServiceImpl(droolsRuleRepository);
 
-        DroolsRule droolsRule1 = Mockito.mock(DroolsRule.class);
+        DroolsRule dr1 = new DroolsRule();
+        dr1.setId("ID");
+        dr1.setName("NAME");
+        dr1.setRule("""
+                package %s;
+                                
+                rule "NAME"
+                when eval(true)
+                then System.out.println("OK");
+                end
+                """.formatted(KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE));
 
-        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.just(droolsRule1));
+        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.just(dr1));
 
         // When
-        kieContainerBuilderService.buildAll().subscribe(k -> {
-            Assertions.assertNotNull(k);
-            Mockito.verify(droolsRuleRepository).findAll();
-        });
+        KieContainer kieContainer = kieContainerBuilderService.buildAll().block();
+        Assertions.assertNotNull(kieContainer);
+        Mockito.verify(droolsRuleRepository).findAll();
 
+        Assertions.assertEquals(1, getRuleBuiltSize(kieContainer));
+    }
+
+    public static int getRuleBuiltSize(KieContainer kieContainer) {
+        KiePackage kiePackage = kieContainer.getKieBase().getKiePackage(KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE);
+        return kiePackage != null
+                ? kiePackage.getRules().size()
+                : 0;
     }
 }

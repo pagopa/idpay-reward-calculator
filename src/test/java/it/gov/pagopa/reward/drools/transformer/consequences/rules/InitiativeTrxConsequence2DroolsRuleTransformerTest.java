@@ -38,13 +38,17 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     }
 
     protected abstract InitiativeTrxConsequence2DroolsRuleTransformer<T> getTransformer();
+
     protected abstract T getInitiativeTrxConsequence();
+
     protected abstract String getExpectedRule();
+
     protected abstract TransactionDroolsDTO getTransaction();
+
     protected abstract BigDecimal getExpectedReward();
 
     @Test
-    void testReward(){
+    void testReward() {
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxConsequence());
 
         Assertions.assertEquals(getExpectedRule(), rule);
@@ -56,7 +60,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     }
 
     @Test
-    void testDiscardedIfRejected(){
+    void testDiscardedIfRejected() {
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxConsequence());
 
         Assertions.assertEquals(getExpectedRule(), rule);
@@ -69,7 +73,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
 
     private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward(BigDecimal.TEN, BigDecimal.TEN, false));
 
-    protected void testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward){
+    protected void testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
         trx.setRewards(new HashMap<>());
         trx.getRewards().putAll(dummyReward);
         KieContainer kieContainer = buildRule(rule);
@@ -85,20 +89,22 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         dr.setId("agendaGroup");
         dr.setName("ruleName");
         dr.setRule("""
-                package dummy;
+                package %s;
                                 
                 %s
-                """.formatted(rule));
+                """.formatted(
+                KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
+                rule));
 
-        try{
+        try {
             return new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.out.printf("Something gone wrong building the rule: %s%n", dr.getRule());
             throw e;
         }
     }
 
-    protected void executeRule(TransactionDroolsDTO trx, KieContainer kieContainer){
+    protected void executeRule(TransactionDroolsDTO trx, KieContainer kieContainer) {
         @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(trx),

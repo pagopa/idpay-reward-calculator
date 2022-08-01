@@ -51,7 +51,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         dr.setId(testName);
         dr.setName("RULE");
         dr.setRule("""
-                package dummy;
+                package %s;
                                 
                 rule "%s"
                 agenda-group "%s"
@@ -59,6 +59,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
                 then $trx.getInitiatives().add("%s");
                 end
                 """.formatted(
+                KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                 dr.getName(),
                 dr.getId(),
                 TransactionDroolsDTO.class.getName(),

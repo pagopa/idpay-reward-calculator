@@ -4,12 +4,11 @@ import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
-import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
+import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.kie.api.definition.KiePackage;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -20,6 +19,7 @@ import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
+        "app.rules.cache.refresh-ms-rate=60000",
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
 })
@@ -90,7 +90,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private long waitForDroolsRulesStored(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 18, 1000);
+        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 25, 1000);
         return countSaved[0];
     }
 
@@ -106,10 +106,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         if (kieContainer == null) {
             return 0;
         } else {
-            KiePackage kiePackage = kieContainer.getKieBase().getKiePackage(KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE);
-            return kiePackage != null
-                    ? kiePackage.getRules().size()
-                    : 0;
+            return KieContainerBuilderServiceImplTest.getRuleBuiltSize(kieContainer);
         }
     }
 
