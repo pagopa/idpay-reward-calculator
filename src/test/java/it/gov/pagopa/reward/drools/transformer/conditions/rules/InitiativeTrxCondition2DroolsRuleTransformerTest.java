@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -22,9 +22,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends InitiativeTrxCondition> {
 
@@ -40,48 +38,65 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
     }
 
     protected abstract InitiativeTrxCondition2DroolsRuleTransformer<T> getTransformer();
+
     protected abstract T getInitiativeTrxCondition();
+
     protected abstract String getExpectedRule();
-    protected abstract RewardTransaction getSuccessfulUseCase();
-    protected abstract RewardTransaction getFailingUseCase();
+
+    protected abstract TransactionDroolsDTO getSuccessfulUseCase();
+
+    protected abstract TransactionDroolsDTO getFailingUseCase();
+
     protected abstract String getExpectedRejectionReason();
 
     @Test
-    void testNoRejectionReason(){
+    void testNoRejectionReason() {
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
-        RewardTransaction trx = getSuccessfulUseCase();
+        TransactionDroolsDTO trx = getSuccessfulUseCase();
 
-        testRule(rule, trx, false, false);
+        testRule(rule, trx, true, false, false);
+        testRule(rule, trx, false, false, false);
 
         // short-circuited
-        testRule(rule, trx, false, true);
+        testRule(rule, trx, true, false, true);
+        testRule(rule, trx, false, false, true);
     }
 
     @Test
-    void testRejectionReason(){
+    void testRejectionReason() {
         String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
-        RewardTransaction trx = getFailingUseCase();
+        TransactionDroolsDTO trx = getFailingUseCase();
 
-        testRule(rule, trx, true, false);
+        testRule(rule, trx, true, true, false);
+        testRule(rule, trx, false, true, false);
 
         // short-circuited
-        testRule(rule, trx, true, true);
+        testRule(rule, trx, true, true, true);
+        testRule(rule, trx, false, true, true);
     }
 
-    protected void testRule(String rule, RewardTransaction trx, boolean expectRejectionReason, boolean shortCircuited){
-        trx.setRejectionReason(new ArrayList<>());
-        trx.getRejectionReason().add("DUMMYREJECTION");
+    private final Map<String, List<String>> dummyRejection = Map.of("agendaGroup", new ArrayList<>(List.of("DUMMYREJECTION")));
+
+    protected void testRule(String rule, TransactionDroolsDTO trx, boolean simulateOtherRejection, boolean expectRejectionReason, boolean shortCircuited) {
+        trx.setInitiativeRejectionReasons(new HashMap<>());
+        Map<String, List<String>> expectedInitiativeRejectionReasons = expectRejectionReason ? Map.of("agendaGroup", List.of(getExpectedRejectionReason())) : Collections.emptyMap();
+
+        if (simulateOtherRejection) {
+            trx.getInitiativeRejectionReasons().putAll(dummyRejection);
+
+            expectedInitiativeRejectionReasons = expectRejectionReason && !shortCircuited ? Map.of("agendaGroup", List.of("DUMMYREJECTION", getExpectedRejectionReason())) : dummyRejection;
+        }
         KieContainer kieContainer = buildRule(rule);
         executeRule(trx, shortCircuited, kieContainer);
         Assertions.assertEquals(
-                expectRejectionReason && !shortCircuited ? List.of("DUMMYREJECTION", getExpectedRejectionReason()) : List.of("DUMMYREJECTION")
-                , trx.getRejectionReason());
+                expectedInitiativeRejectionReasons
+                , trx.getInitiativeRejectionReasons());
     }
 
     protected KieContainer buildRule(String rule) {
@@ -89,20 +104,22 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
         dr.setId("agendaGroup");
         dr.setName("ruleName");
         dr.setRule("""
-                package dummy;
+                package %s;
                                 
                 %s
-                """.formatted(rule));
+                """.formatted(
+                KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
+                rule));
 
-        try{
+        try {
             return new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.out.printf("Something gone wrong building the rule: %s%n", dr.getRule());
             throw e;
         }
     }
 
-    protected void executeRule(RewardTransaction trx, boolean shortCircuited, KieContainer kieContainer){
+    protected void executeRule(TransactionDroolsDTO trx, boolean shortCircuited, KieContainer kieContainer) {
         RuleEngineConfig ruleEngineConfig = new RuleEngineConfig();
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
         @SuppressWarnings("unchecked")

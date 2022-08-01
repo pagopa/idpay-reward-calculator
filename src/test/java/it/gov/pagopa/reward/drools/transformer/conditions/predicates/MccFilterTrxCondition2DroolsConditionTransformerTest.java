@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,7 @@ class MccFilterTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("mcc in (\"MCC\",\"MCC2\")", mccCondition);
 
-        RewardTransaction transaction = new RewardTransaction();
+        TransactionDroolsDTO transaction = new TransactionDroolsDTO();
         transaction.setMcc("MCC");
         testRule("MccFilter", mccCondition, transaction, true);
 

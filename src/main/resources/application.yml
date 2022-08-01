@@ -23,9 +23,10 @@ spring:
           binder: kafka-idpay
         rewardRuleConsumer-in-0:
           destination: ${KAFKA_REWARD_RULE_REQUEST_TOPIC:idpay-rule-update}
-          group: ${KAFKA_RTD_GROUP_ID:idpay-reward-rule-consumer}
+          group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
+        # TODO removeme
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -103,8 +104,8 @@ spring:
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
-    it.gov.pagopa: ${LOG_LEVEL_PAGOPA:DEBUG}
-    it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:DEBUG}
+    it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
+    it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
     org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
     org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
     org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}
@@ -112,7 +113,7 @@ logging:
     org.springframework.data: ${LOG_LEVEL_SPRING_DATA:INFO}
     org.springframework.hateoas: ${LOG_LEVEL_SPRING_HATEOAS:INFO}
     org.springframework.boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
-    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:DEBUG}
+    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:INFO}
     org.springframework.batch: ${LOG_LEVEL_SPRING_BATCH:INFO}
     io.swagger: ${LOG_LEVEL_IO_SWAGGER:WARN}
     javax.persistence: ${LOG_LEVEL_JAVAX_PERSISTENCE:INFO}

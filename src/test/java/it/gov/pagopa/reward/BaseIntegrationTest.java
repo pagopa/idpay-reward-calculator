@@ -7,7 +7,6 @@ import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -34,21 +33,22 @@ import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Awaitility.with;
 
 @SpringBootTest
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.trxProcessor-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
-        "${spring.cloud.stream.bindings.trxProducer-out-0.destination}",
+        "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO removeme
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -63,7 +63,7 @@ import static org.awaitility.Awaitility.with;
                 "spring.cloud.stream.binders.kafka-rtd.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
-                "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO removeme
                 //endregion
 
                 //region mongodb
@@ -83,9 +83,6 @@ public abstract class BaseIntegrationTest {
     private MongodExecutable embeddedMongoServer;
 
     @Autowired
-    protected HpanInitiativesRepository hpanInitiativesRepository;
-
-    @Autowired
     protected DroolsRuleRepository droolsRuleRepository;
 
     @Autowired
@@ -103,11 +100,11 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardProcessorOutcome;
     @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}")
     protected String topicRewardRuleConsumer;
-    @Value("${spring.cloud.stream.bindings.trxProducer-out-0.destination}")
-    protected String topicRewardTransactionProducer;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
+        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+
         ObjectName kafkaServerMbeanName = new ObjectName("kafka.server:type=app-info,id=0");
         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
         if (mBeanServer.isRegistered(kafkaServerMbeanName)) {
@@ -123,11 +120,11 @@ public abstract class BaseIntegrationTest {
         Net mongodNet = Objects.requireNonNull(mongodConfig).net();
 
         System.out.printf("""
-                ************************
-                Embedded mongo: %s
-                Embedded kafka: %s
-                ************************
-                """,
+                        ************************
+                        Embedded mongo: %s
+                        Embedded kafka: %s
+                        ************************
+                        """,
                 "mongo://%s:%s".formatted(mongodNet.getServerAddress().getHostAddress(), mongodNet.getPort()),
                 "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes));
     }
@@ -149,7 +146,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected void readFromEmbeddedKafka(Consumer<String, String> consumer, java.util.function.Consumer<ConsumerRecord<String, String>> consumeMessage, boolean consumeFromBeginning, Integer expectedMessagesCount, Duration timeout) {
-        if(consumeFromBeginning){
+        if (consumeFromBeginning) {
             consumeFromBeginning(consumer);
         }
         int i = 0;
@@ -176,18 +173,17 @@ public abstract class BaseIntegrationTest {
     }
 
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
-        ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, key==null? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
+        ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
         template.send(record);
     }
 
-    protected void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay){
-        try{
-            with()
+    protected static void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay) {
+        try {
+            await()
                     .pollInterval(millisAttemptDelay, TimeUnit.MILLISECONDS)
-                    .atMost((long) maxAttempts *millisAttemptDelay, TimeUnit.MILLISECONDS)
-                    .await()
+                    .atMost((long) maxAttempts * millisAttemptDelay, TimeUnit.MILLISECONDS)
                     .until(test);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             Assertions.fail(buildTestFailureMessage.get(), e);
         }
     }

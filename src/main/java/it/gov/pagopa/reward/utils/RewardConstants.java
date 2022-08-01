@@ -8,7 +8,7 @@ public final class RewardConstants {
     public enum InitiativeTrxConditionOrder {
         MCCFILTER,
         THRESHOLD,
-        REWARDGROUP,
+        REWARDGROUPS_CONDITION,
         DAYOFWEEK,
         REWARDLIMITS,
         TRXCOUNT;

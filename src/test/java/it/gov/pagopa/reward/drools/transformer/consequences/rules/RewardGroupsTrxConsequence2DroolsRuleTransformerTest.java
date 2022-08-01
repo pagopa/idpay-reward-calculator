@@ -2,8 +2,8 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
-import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTOFaker;
-import it.gov.pagopa.reward.model.RewardTransaction;
+import it.gov.pagopa.reward.test.fakers.rule.RewardGroupsDTOFaker;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -30,21 +30,22 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 rule "ruleName-REWARDGROUPS"
                 salience -1
                 agenda-group "agendaGroup"
-                when $trx: it.gov.pagopa.reward.model.RewardTransaction(rejectionReason.size() == 0)
-                then $trx.getRewards().put("agendaGroup", $trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.0000"):($trx.getAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.1000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                   eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
+                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.1000"):($trx.getAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.2000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 """;
     }
 
     @Override
-    protected RewardTransaction getTransaction() {
-        RewardTransaction trx =new RewardTransaction();
+    protected TransactionDroolsDTO getTransaction() {
+        TransactionDroolsDTO trx =new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(11.25));
         return trx;
     }
 
     @Override
     protected BigDecimal getExpectedReward() {
-        return BigDecimal.valueOf(1.12).setScale(2, RoundingMode.UNNECESSARY);
+        return BigDecimal.valueOf(2.25).setScale(2, RoundingMode.UNNECESSARY);
     }
 }

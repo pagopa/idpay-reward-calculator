@@ -22,7 +22,7 @@ public class MccTransactionFilter implements TransactionFilter{
     @Override
     public boolean test(TransactionDTO transactionDTO) {
         boolean excluded = !mccExcluded.contains(transactionDTO.getMcc());
-        log.info(String.format("Transaction mcc: %s - Is accepted: %b",transactionDTO.getMcc(),excluded));
+        log.debug(String.format("Transaction mcc: %s - Is accepted: %b",transactionDTO.getMcc(),excluded));
         return excluded;
     }
 }

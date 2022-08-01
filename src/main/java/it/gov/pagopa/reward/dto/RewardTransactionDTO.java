@@ -1,67 +1,32 @@
 package it.gov.pagopa.reward.dto;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-@EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
-public class RewardTransactionDTO {
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+public class RewardTransactionDTO extends TransactionDTO {
 
-    String idTrxAcquirer;
+    private String status;
 
-    String acquirerCode;
+    @Builder.Default
+    private List<String> rejectionReasons = new ArrayList<>();
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    OffsetDateTime trxDate;
+    @Builder.Default
+    private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 
-    String hpan;
+    private List<String> initiatives;
 
-    String operationType;
-
-    String circuitType;
-
-    String idTrxIssuer;
-
-    String correlationId;
-
-    BigDecimal amount;
-
-    String amountCurrency;
-
-    String mcc;
-
-    String acquirerId;
-
-    String merchantId;
-
-    String terminalId;
-
-    String bin;
-
-    String senderCode;
-
-    String fiscalCode;
-
-    String vat;
-
-    String posType;
-
-    String par;
-
-    String status;
-
-    List<String> rejectionReason;
-
-    List<String> initiatives;
-
-    Map<String, BigDecimal> rewards;
-
+    private Map<String, Reward> rewards;
 }
