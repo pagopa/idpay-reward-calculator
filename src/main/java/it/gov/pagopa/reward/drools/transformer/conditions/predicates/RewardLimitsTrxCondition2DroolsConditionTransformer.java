@@ -27,16 +27,16 @@ public class RewardLimitsTrxCondition2DroolsConditionTransformer implements Init
 
     @Override
     public String apply(String initiativeId, RewardLimitsDTO rewardLimitsDTO) {
-        return "%s.totalReward + rewards.get(\"%s\").accruedReward) < %s".formatted(
-                buildFrequencyCounterExpression(rewardLimitsDTO.getFrequency()),
+        return "(rewards.get(\"%s\") == null || %s.totalReward.compareTo(%s) < 0)".formatted(
                 initiativeId,
+                buildFrequencyCounterExpression(rewardLimitsDTO.getFrequency()),
                 DroolsTemplateRuleUtils.toTemplateParam(rewardLimitsDTO.getRewardLimit())
         );
     }
 
     public static String buildFrequencyCounterExpression(RewardLimitsDTO.RewardLimitFrequency frequency) {
         final Pair<String, String> frequencyConfig = getRewardLimitFrequencyConfig(frequency);
-        return "($initiativeCounters.%s.getOrDefault(%s.%s.format($trx.trxDate), new %s())".formatted(
+        return "$initiativeCounters.%s.getOrDefault(%s.%s.format(trxDate), new %s())".formatted(
                 frequencyConfig.getFirst(),
                 UserInitiativeCountersUpdateServiceImpl.class.getName(),
                 frequencyConfig.getSecond(),

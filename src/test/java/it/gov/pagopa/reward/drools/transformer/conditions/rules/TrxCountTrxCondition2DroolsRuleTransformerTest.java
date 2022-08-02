@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<TrxCountDTO> {
 
     private final TrxCountTrxCondition2DroolsRuleTransformer transformer = new TrxCountTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
-    public final TrxCountDTO thresholdRule = TrxCountDTOFaker.mockInstance(0);
+    private final TrxCountDTO thresholdRule = TrxCountDTOFaker.mockInstance(0);
 
     @Override
     protected TrxCountTrxCondition2DroolsRuleTransformer getTransformer() {

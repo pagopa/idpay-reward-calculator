@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<MccFilterDTO> {
 
     private final MccFilterTrxCondition2DroolsRuleTransformer transformer = new MccFilterTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
-    public final MccFilterDTO mccFilterRule = MccFilterDTOFaker.mockInstance(0);
+    private final MccFilterDTO mccFilterRule = MccFilterDTOFaker.mockInstance(0);
 
     @Override
     protected MccFilterTrxCondition2DroolsRuleTransformer getTransformer() {

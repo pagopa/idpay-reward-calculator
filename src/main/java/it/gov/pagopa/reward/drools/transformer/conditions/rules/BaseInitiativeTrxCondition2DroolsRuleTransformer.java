@@ -42,7 +42,7 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                    $userCounters: %s()
                    $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s())
                    $trx: %s(!$config.shortCircuitConditions || initiativeRejectionReasons.get("%s") == null, !(%s))
-                then %s;
+                then %s
                 end
                 """.formatted(
                 ruleName,
@@ -62,7 +62,7 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
     }
 
     protected String buildConditionNotMetConsequence(String initiativeId, String rejectionReason) {
-        return "$trx.getInitiativeRejectionReasons().computeIfAbsent(\"%s\",k->new java.util.ArrayList<>()).add(\"%s\")".formatted(
+        return "$trx.getInitiativeRejectionReasons().computeIfAbsent(\"%s\",k->new java.util.ArrayList<>()).add(\"%s\");".formatted(
                 initiativeId, rejectionReason
         );
     }

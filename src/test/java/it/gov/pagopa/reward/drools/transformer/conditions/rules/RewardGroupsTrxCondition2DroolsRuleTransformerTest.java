@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<RewardGroupsDTO> {
 
     private final RewardGroupsTrxCondition2DroolsRuleTransformer transformer = new RewardGroupsTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
-    public final RewardGroupsDTO RewardGroupsRule = RewardGroupsDTOFaker.mockInstance(0);
+    private final RewardGroupsDTO RewardGroupsRule = RewardGroupsDTOFaker.mockInstance(0);
 
     @Override
     protected RewardGroupsTrxCondition2DroolsRuleTransformer getTransformer() {

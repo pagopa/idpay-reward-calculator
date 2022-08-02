@@ -85,27 +85,15 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
         if (initiativeConfig.isHasDailyThreshold()) {
-            if (initiativeCounters.getDailyCounters() == null) {
-                initiativeCounters.setDailyCounters(new HashMap<>());
-            }
             updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, initiativeReward);
         }
         if (initiativeConfig.isHasWeeklyThreshold()) {
-            if (initiativeCounters.getWeeklyCounters() == null) {
-                initiativeCounters.setWeeklyCounters(new HashMap<>());
-            }
             updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, initiativeReward);
         }
         if (initiativeConfig.isHasMonthlyThreshold()) {
-            if (initiativeCounters.getMonthlyCounters() == null) {
-                initiativeCounters.setMonthlyCounters(new HashMap<>());
-            }
             updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, initiativeReward);
         }
         if (initiativeConfig.isHasYearlyThreshold()) {
-            if (initiativeCounters.getYearlyCounters() == null) {
-                initiativeCounters.setYearlyCounters(new HashMap<>());
-            }
             updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, initiativeReward);
         }
     }

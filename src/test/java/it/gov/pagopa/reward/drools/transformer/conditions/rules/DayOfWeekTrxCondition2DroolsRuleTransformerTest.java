@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<DayOfWeekDTO> {
 
     private final DayOfWeekTrxCondition2DroolsRuleTransformer transformer = new DayOfWeekTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
-    public final DayOfWeekDTO dayOfWeekRule = DayOfWeekDTOFaker.mockInstance(1);
+    private final DayOfWeekDTO dayOfWeekRule = DayOfWeekDTOFaker.mockInstance(1);
 
     @Override
     protected DayOfWeekTrxCondition2DroolsRuleTransformer getTransformer() {

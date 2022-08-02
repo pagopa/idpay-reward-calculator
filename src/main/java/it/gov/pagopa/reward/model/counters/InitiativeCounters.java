@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
@@ -17,8 +18,8 @@ import java.util.Map;
 public class InitiativeCounters extends Counters {
     @Id
     private String initiativeId;
-    private Map<String, Counters> dailyCounters;
-    private Map<String, Counters> weeklyCounters;
-    private Map<String, Counters> monthlyCounters;
-    private Map<String, Counters> yearlyCounters;
+    private Map<String, Counters> dailyCounters = new HashMap<>();
+    private Map<String, Counters> weeklyCounters = new HashMap<>();
+    private Map<String, Counters> monthlyCounters = new HashMap<>();
+    private Map<String, Counters> yearlyCounters = new HashMap<>();
 }

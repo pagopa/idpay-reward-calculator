@@ -51,42 +51,44 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
     @Test
     void testNoRejectionReason() {
-        String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
-
-        Assertions.assertEquals(getExpectedRule(), rule);
-
         for(Supplier<TransactionDroolsDTO> trxSupplier : getSuccessfulUseCaseSuppliers()) {
-            TransactionDroolsDTO trx = trxSupplier.get();
-            testRule(rule, trx, true, false, false);
-            testRule(rule, trx, false, false, false);
+            trxSupplier.get(); // executed in order to configure useCase
+
+            String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
+            Assertions.assertEquals(getExpectedRule(), rule);
+
+            testRule(rule, trxSupplier, true, false, false);
+            testRule(rule, trxSupplier, false, false, false);
 
             // short-circuited
-            testRule(rule, trx, true, false, true);
-            testRule(rule, trx, false, false, true);
+            testRule(rule, trxSupplier, true, false, true);
+            testRule(rule, trxSupplier, false, false, true);
         }
     }
 
     @Test
     void testRejectionReason() {
-        String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
-
-        Assertions.assertEquals(getExpectedRule(), rule);
-
         for(Supplier<TransactionDroolsDTO> trxSupplier : getFailingUseCaseSuppliers()) {
-            TransactionDroolsDTO trx = trxSupplier.get();
-            testRule(rule, trx, true, true, false);
-            testRule(rule, trx, false, true, false);
+            trxSupplier.get(); // executed in order to configure useCase
+
+            String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxCondition());
+            Assertions.assertEquals(getExpectedRule(), rule);
+
+            testRule(rule, trxSupplier, true, true, false);
+            testRule(rule, trxSupplier, false, true, false);
 
             // short-circuited
-            testRule(rule, trx, true, true, true);
-            testRule(rule, trx, false, true, true);
+            testRule(rule, trxSupplier, true, true, true);
+            testRule(rule, trxSupplier, false, true, true);
         }
     }
 
     private final List<String> dummyRejection = List.of("DUMMYREJECTION");
     private final Map<String, List<String>> dummyRejectionMap = Map.of("agendaGroup", dummyRejection);
 
-    protected void testRule(String rule, TransactionDroolsDTO trx, boolean simulateOtherRejection, boolean expectRejectionReason, boolean shortCircuited) {
+    protected TransactionDroolsDTO testRule(String rule, Supplier<TransactionDroolsDTO> trxSupplier, boolean simulateOtherRejection, boolean expectRejectionReason, boolean shortCircuited) {
+        TransactionDroolsDTO trx = trxSupplier.get(); // executed in order to reset useCase condition at each execution
+
         trx.setInitiativeRejectionReasons(new HashMap<>());
         Map<String, List<String>> expectedInitiativeRejectionReasons = expectRejectionReason ? Map.of("agendaGroup", List.of(getExpectedRejectionReason())) : Collections.emptyMap();
 
@@ -101,6 +103,8 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
                 expectedInitiativeRejectionReasons
                 , trx.getInitiativeRejectionReasons()
                 , "Failing useCase: %s".formatted(toUseCase(trx)));
+
+        return trx;
     }
 
     protected String toUseCase(TransactionDroolsDTO trx){
