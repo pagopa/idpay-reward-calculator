@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.test.fakers.rule.TrxCountDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<TrxCountDTO> {
 
@@ -44,15 +45,15 @@ class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondit
     Long startingTransactioCount = null;
 
     @Override
-    protected List<TransactionDroolsDTO> getSuccessfulUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         startingTransactioCount = null;
-        return List.of(new TransactionDroolsDTO());
+        return List.of(TransactionDroolsDTO::new);
     }
 
     @Override
-    protected List<TransactionDroolsDTO> getFailingUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         startingTransactioCount = 11L;
-        return List.of(new TransactionDroolsDTO());
+        return List.of(TransactionDroolsDTO::new);
     }
 
     @Override

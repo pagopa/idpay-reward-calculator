@@ -42,12 +42,12 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                    $userCounters: %s()
                    $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s())
                    $trx: %s(!$config.shortCircuitConditions || initiativeRejectionReasons.get("%s") == null, !(%s))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("%s",k->new java.util.ArrayList<>()).add("%s");
+                then %s;
                 end
                 """.formatted(
                 ruleName,
                 getTrxConditionOrder().name(),
-                RewardConstants.InitiativeTrxConditionOrder.values().length-getTrxConditionOrder().ordinal(),
+                RewardConstants.InitiativeTrxConditionOrder.values().length-getTrxConditionOrder().getOrder(),
                 initiativeId,
                 RuleEngineConfig.class.getName(),
                 UserInitiativeCounters.class.getName(),
@@ -56,9 +56,14 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 InitiativeCounters.class.getName(),
                 TransactionDroolsDTO.class.getName(),
                 initiativeId,
-                trxCondition2DroolsConditionTransformerFacade.apply(trxCondition),
-                initiativeId,
-                rejectionReason
+                trxCondition2DroolsConditionTransformerFacade.apply(initiativeId, trxCondition),
+                buildConditionNotMetConsequence(initiativeId, rejectionReason)
+        );
+    }
+
+    protected String buildConditionNotMetConsequence(String initiativeId, String rejectionReason) {
+        return "$trx.getInitiativeRejectionReasons().computeIfAbsent(\"%s\",k->new java.util.ArrayList<>()).add(\"%s\")".formatted(
+                initiativeId, rejectionReason
         );
     }
 }

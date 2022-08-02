@@ -11,6 +11,7 @@ import java.util.List;
 
 class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
+    private final String initiativeId = "RewardGroups";
     private final RewardGroupsTrxCondition2DroolsConditionTransformer transformer = new RewardGroupsTrxCondition2DroolsConditionTransformer();
 
     private final BigDecimal lowerBound = BigDecimal.ZERO;
@@ -33,7 +34,7 @@ class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Initiative
                         .to(upperBound.add(BigDecimal.TEN))
                         .build()
         ));
-        String RewardGroupsCondition = transformer.apply(initiativeTrxCondition);
+        String RewardGroupsCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
         Assertions.assertEquals("((amount >= new java.math.BigDecimal(\"-10\") && amount <= new java.math.BigDecimal(\"-1\")) || (amount >= new java.math.BigDecimal(\"0\") && amount <= new java.math.BigDecimal(\"10.37\")) || (amount >= new java.math.BigDecimal(\"11.37\") && amount <= new java.math.BigDecimal(\"20.37\")))", RewardGroupsCondition);
 
@@ -45,24 +46,24 @@ class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Initiative
 
     private void testLowerBound(String RewardGroupsCondition, TransactionDroolsDTO transaction) {
         transaction.setAmount(bigDecimalValue(-0.01));
-        testRule("RewardGroups", RewardGroupsCondition, transaction, false);
+        testRule(initiativeId, RewardGroupsCondition, transaction, false);
 
         transaction.setAmount(lowerBound.setScale(2, RoundingMode.UNNECESSARY));
-        testRule("RewardGroups", RewardGroupsCondition, transaction, true);
+        testRule(initiativeId, RewardGroupsCondition, transaction, true);
 
         transaction.setAmount(bigDecimalValue(5.25));
-        testRule("RewardGroups", RewardGroupsCondition, transaction, true);
+        testRule(initiativeId, RewardGroupsCondition, transaction, true);
     }
 
     private void testUpperBound(String RewardGroupsCondition, TransactionDroolsDTO transaction) {
         transaction.setAmount(bigDecimalValue(7.8));
-        testRule("RewardGroups", RewardGroupsCondition, transaction, true);
+        testRule(initiativeId, RewardGroupsCondition, transaction, true);
 
         transaction.setAmount(upperBound.setScale(2, RoundingMode.UNNECESSARY));
-        testRule("RewardGroups", RewardGroupsCondition, transaction, true);
+        testRule(initiativeId, RewardGroupsCondition, transaction, true);
 
         transaction.setAmount(bigDecimalValue(10.38));
-        testRule("RewardGroups", RewardGroupsCondition, transaction, false);
+        testRule(initiativeId, RewardGroupsCondition, transaction, false);
     }
 
 }

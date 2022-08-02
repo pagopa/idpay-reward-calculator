@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2Drool
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.utils.RewardConstants;
 
 public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T extends InitiativeTrxConsequence> implements InitiativeTrxConsequence2DroolsRuleTransformer<T> {
 
@@ -14,7 +15,7 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
     }
 
     protected int getTrxConsequenceRuleOrder(){
-        return -1;
+        return RewardConstants.INITIATIVE_TRX_CONSEQUENCE_ORDER;
     }
 
     protected abstract String getTrxConsequenceRuleName();
@@ -47,7 +48,7 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 initiativeId,
                 initiativeId,
                 Reward.class.getName(),
-                trxConsequence2DroolsRewardExpressionTransformerFacade.apply(trxConsequence)
+                trxConsequence2DroolsRewardExpressionTransformerFacade.apply(initiativeId, trxConsequence)
         );
     }
 }

@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
@@ -12,13 +11,10 @@ import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceTest;
-import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kie.api.command.Command;
 import org.kie.api.runtime.KieContainer;
-import org.kie.internal.command.CommandFactory;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -26,6 +22,7 @@ import reactor.core.publisher.Flux;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.function.Supplier;
 
 public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends InitiativeTrxCondition> {
 
@@ -46,9 +43,9 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
     protected abstract String getExpectedRule();
 
-    protected abstract List<TransactionDroolsDTO> getSuccessfulUseCases();
+    protected abstract List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers();
 
-    protected abstract List<TransactionDroolsDTO> getFailingUseCases();
+    protected abstract List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers();
 
     protected abstract String getExpectedRejectionReason();
 
@@ -58,7 +55,8 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
-        for(TransactionDroolsDTO trx : getSuccessfulUseCases()) {
+        for(Supplier<TransactionDroolsDTO> trxSupplier : getSuccessfulUseCaseSuppliers()) {
+            TransactionDroolsDTO trx = trxSupplier.get();
             testRule(rule, trx, true, false, false);
             testRule(rule, trx, false, false, false);
 
@@ -74,7 +72,8 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
-        for(TransactionDroolsDTO trx : getFailingUseCases()) {
+        for(Supplier<TransactionDroolsDTO> trxSupplier : getFailingUseCaseSuppliers()) {
+            TransactionDroolsDTO trx = trxSupplier.get();
             testRule(rule, trx, true, true, false);
             testRule(rule, trx, false, true, false);
 

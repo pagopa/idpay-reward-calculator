@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.time.*;
 import java.util.List;
+import java.util.function.Supplier;
 
 class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<DayOfWeekDTO> {
 
@@ -42,19 +43,19 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     }
 
     @Override
-    protected List<TransactionDroolsDTO> getSuccessfulUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 45));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
-        return List.of(trx);
+        return List.of(() -> trx);
     }
 
     @Override
-    protected List<TransactionDroolsDTO> getFailingUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 44));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
-        return List.of(trx);
+        return List.of(() -> trx);
     }
 
     @Override

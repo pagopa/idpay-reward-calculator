@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public class TrxCountTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<TrxCountDTO> {
     @Override
-    public String apply(TrxCountDTO trxCountDTO) {
+    public String apply(String initiativeId, TrxCountDTO trxCountDTO) {
         return Stream.of(
                         checkDefinedThreshold(trxCountDTO.getFrom(), trxCountDTO.isFromIncluded(), ">"),
                         checkDefinedThreshold(trxCountDTO.getTo(), trxCountDTO.isToIncluded(), "<")

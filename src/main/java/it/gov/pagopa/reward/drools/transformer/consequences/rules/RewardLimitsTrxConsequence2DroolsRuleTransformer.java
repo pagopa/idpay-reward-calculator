@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacade;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
+import it.gov.pagopa.reward.utils.RewardConstants;
 
 public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitiativeTrxConsequence2DroolsRuleTransformer<RewardLimitsDTO> implements InitiativeTrxConsequence2DroolsRuleTransformer<RewardLimitsDTO> {
 
@@ -16,7 +17,7 @@ public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitia
 
     @Override
     protected int getTrxConsequenceRuleOrder() {
-        return super.getTrxConsequenceRuleOrder()-1;
+        return RewardConstants.INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER;
     }
 
     @Override

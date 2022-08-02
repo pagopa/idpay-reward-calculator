@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.Supplier;
 
 class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<ThresholdDTO> {
 
@@ -42,20 +43,20 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     }
 
     @Override
-    protected List<TransactionDroolsDTO>  getSuccessfulUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setAmount(BigDecimal.valueOf(10.00));
-        return List.of(trx);
+        return List.of(() -> trx);
     }
 
     @Override
-    protected List<TransactionDroolsDTO>  getFailingUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx1 = new TransactionDroolsDTO();
         trx1.setAmount(BigDecimal.valueOf(10.01));
 
         TransactionDroolsDTO trx2 = new TransactionDroolsDTO();
         trx2.setAmount(BigDecimal.valueOf(-0.01));
-        return List.of(trx1, trx2);
+        return List.of(() -> trx1, () -> trx2);
     }
 
     @Override

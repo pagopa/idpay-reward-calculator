@@ -19,10 +19,32 @@ import java.util.Map;
 @Service
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
 
-    private static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter weeklyDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
-    private static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    private static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
+    public static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter weekDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
+    public static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    public static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
+
+    //region getter's for constants due to allow Drools recognize and obtain them
+    @SuppressWarnings("unused")
+    public static DateTimeFormatter getDayDateFormatter() {
+        return dayDateFormatter;
+    }
+
+    @SuppressWarnings("unused")
+    public static DateTimeFormatter getWeekDateFormatter() {
+        return weekDateFormatter;
+    }
+
+    @SuppressWarnings("unused")
+    public static DateTimeFormatter getMonthDateFormatter() {
+        return monthDateFormatter;
+    }
+
+    @SuppressWarnings("unused")
+    public static DateTimeFormatter getYearDateFormatter() {
+        return yearDateFormatter;
+    }
+    //endregion
 
     private final RewardContextHolderService rewardContextHolderService;
 
@@ -63,25 +85,25 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
         if (initiativeConfig.isHasDailyThreshold()) {
-            if(initiativeCounters.getDailyCounters()==null){
+            if (initiativeCounters.getDailyCounters() == null) {
                 initiativeCounters.setDailyCounters(new HashMap<>());
             }
             updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, initiativeReward);
         }
         if (initiativeConfig.isHasWeeklyThreshold()) {
-            if(initiativeCounters.getWeeklyCounters()==null){
+            if (initiativeCounters.getWeeklyCounters() == null) {
                 initiativeCounters.setWeeklyCounters(new HashMap<>());
             }
-            updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weeklyDateFormatter, ruleEngineResult, initiativeReward);
+            updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, initiativeReward);
         }
         if (initiativeConfig.isHasMonthlyThreshold()) {
-            if(initiativeCounters.getMonthlyCounters()==null){
+            if (initiativeCounters.getMonthlyCounters() == null) {
                 initiativeCounters.setMonthlyCounters(new HashMap<>());
             }
             updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, initiativeReward);
         }
         if (initiativeConfig.isHasYearlyThreshold()) {
-            if(initiativeCounters.getYearlyCounters()==null){
+            if (initiativeCounters.getYearlyCounters() == null) {
                 initiativeCounters.setYearlyCounters(new HashMap<>());
             }
             updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, initiativeReward);
@@ -89,6 +111,6 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, Reward initiativeReward) {
-        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxDate()), k->new Counters()), initiativeReward, ruleEngineResult.getAmount());
+        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxDate()), k -> new Counters()), initiativeReward, ruleEngineResult.getAmount());
     }
 }

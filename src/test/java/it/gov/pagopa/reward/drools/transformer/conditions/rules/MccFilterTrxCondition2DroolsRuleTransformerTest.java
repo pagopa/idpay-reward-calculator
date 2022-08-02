@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<MccFilterDTO> {
 
@@ -41,17 +42,17 @@ class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     }
 
     @Override
-    protected List<TransactionDroolsDTO>  getSuccessfulUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setMcc("ALLOWEDMCC");
-        return List.of(trx);
+        return List.of(() -> trx);
     }
 
     @Override
-    protected List<TransactionDroolsDTO>  getFailingUseCases() {
+    protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setMcc("MCC_0");
-        return List.of(trx);
+        return List.of(() -> trx);
     }
 
     @Override

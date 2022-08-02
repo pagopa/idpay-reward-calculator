@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -74,9 +75,12 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
     }
 
     protected String buildCondition(String rewardCondition) {
-        return "$trx: %s(%s)".formatted(
+        return """
+                %s$trx: %s(%s)""".formatted(
+                getInitiativeCounters()!=null? "$initiativeCounters: %s()\n".formatted(InitiativeCounters.class.getName()) : "",
                 TransactionDroolsDTO.class.getName(),
-                rewardCondition);
+                rewardCondition
+        );
     }
 
     protected void executeRule(TransactionDroolsDTO trx, String agendaGroup, KieContainer kieContainer){
@@ -85,11 +89,18 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
     }
 
     protected List<Command<?>> buildKieContainerCommands(TransactionDroolsDTO trx, String agendaGroup) {
+
+        final InitiativeCounters counter = getInitiativeCounters();
         @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(trx),
+                CommandFactory.newInsert(counter),
                 new AgendaGroupSetFocusCommand(agendaGroup)
         );
         return commands;
+    }
+
+    protected InitiativeCounters getInitiativeCounters() {
+        return null;
     }
 }

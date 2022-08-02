@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class DayOfWeekTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<DayOfWeekDTO> {
 
     @Override
-    public String apply(DayOfWeekDTO dayOfWeekTrxCondition) {
+    public String apply(String initiativeId, DayOfWeekDTO dayOfWeekTrxCondition) {
         if (!CollectionUtils.isEmpty(dayOfWeekTrxCondition)) {
             return "(%s)".formatted(
                     dayOfWeekTrxCondition.stream()

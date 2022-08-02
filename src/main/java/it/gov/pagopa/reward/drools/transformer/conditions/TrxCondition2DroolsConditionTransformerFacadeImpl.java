@@ -25,24 +25,24 @@ public class TrxCondition2DroolsConditionTransformerFacadeImpl implements TrxCon
     }
 
     @Override
-    public String apply(InitiativeTrxCondition trxCondition) {
+    public String apply(String initiativeId, InitiativeTrxCondition trxCondition) {
         if(trxCondition instanceof DayOfWeekDTO dayOfWeekTrxCondition){
-            return dayOfWeekTrxConditionTransformer.apply(dayOfWeekTrxCondition);
+            return dayOfWeekTrxConditionTransformer.apply(initiativeId, dayOfWeekTrxCondition);
         }
         else if(trxCondition instanceof MccFilterDTO mccFilterTrxCondition){
-            return mccFilterTrxConditionTransformer.apply(mccFilterTrxCondition);
+            return mccFilterTrxConditionTransformer.apply(initiativeId, mccFilterTrxCondition);
         }
         else if(trxCondition instanceof RewardLimitsDTO rewardLimitsTrxCondition){
-            return rewardLimitsTrxConditionTransformer.apply(rewardLimitsTrxCondition);
+            return rewardLimitsTrxConditionTransformer.apply(initiativeId, rewardLimitsTrxCondition);
         }
         else if(trxCondition instanceof ThresholdDTO thresholdTrxCondition){
-            return thresholdTrxConditionTransformer.apply(thresholdTrxCondition);
+            return thresholdTrxConditionTransformer.apply(initiativeId, thresholdTrxCondition);
         }
         else if(trxCondition instanceof TrxCountDTO trxCountTrxCondition){
-            return trxCountTrxConditionTransformer.apply(trxCountTrxCondition);
+            return trxCountTrxConditionTransformer.apply(initiativeId, trxCountTrxCondition);
         }
         else if(trxCondition instanceof RewardGroupsDTO rewardGroupsTrxCondition){
-            return rewardGroupsTrxConditionTransformer.apply(rewardGroupsTrxCondition);
+            return rewardGroupsTrxConditionTransformer.apply(initiativeId, rewardGroupsTrxCondition);
         }
 
         throw new IllegalStateException("InitiativeTrxCondition not handled: %s".formatted(trxCondition.getClass().getName()));

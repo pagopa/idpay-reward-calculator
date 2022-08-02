@@ -23,18 +23,18 @@ public class TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl implemen
     }
 
     @Override
-    public String apply(InitiativeTrxConsequence trxConsequence) {
+    public String apply(String initiativeId, InitiativeTrxConsequence trxConsequence) {
         if(trxConsequence == null){
             return "";
         }
         else if(trxConsequence instanceof RewardValueDTO rewardValueDTO){
-            return rewardValueTrxConsequenceTransformer.apply(rewardValueDTO);
+            return rewardValueTrxConsequenceTransformer.apply(initiativeId, rewardValueDTO);
         }
         else if(trxConsequence instanceof RewardGroupsDTO rewardGroupsDTO){
-            return rewardGroupsTrxConsequenceTransformer.apply(rewardGroupsDTO);
+            return rewardGroupsTrxConsequenceTransformer.apply(initiativeId, rewardGroupsDTO);
         }
         else if(trxConsequence instanceof RewardLimitsDTO rewardLimitsDTO){
-            return rewardLimitsTrxConsequenceTransformer.apply(rewardLimitsDTO);
+            return rewardLimitsTrxConsequenceTransformer.apply(initiativeId, rewardLimitsDTO);
         }
 
         throw new IllegalStateException("InitiativeTrxConsequence not handled: %s".formatted(trxConsequence.getClass().getName()));

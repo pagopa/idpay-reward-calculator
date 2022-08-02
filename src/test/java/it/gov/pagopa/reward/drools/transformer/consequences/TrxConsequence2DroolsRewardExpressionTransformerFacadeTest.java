@@ -32,6 +32,7 @@ class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
 
     private static final TrxConsequence2DroolsRewardExpressionTransformerFacade transformer = new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl();
 
+    private final String initiativeId = "INITIATIVEID";
 
     @BeforeAll
     public static void removeFinalModifiers() throws IllegalAccessException {
@@ -53,8 +54,8 @@ class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
     }
 
     private <T extends InitiativeTrxConsequence> void test(T trxConsequence, InitiativeTrxConsequence2DroolsExpressionTransformer<T> mock){
-        transformer.apply(trxConsequence);
-        Mockito.verify(mock).apply(Mockito.same(trxConsequence));
+        transformer.apply(initiativeId, trxConsequence);
+        Mockito.verify(mock).apply(Mockito.same(initiativeId), Mockito.same(trxConsequence));
 
         Mockito.verifyNoMoreInteractions(mock);
         mocks.stream()
@@ -81,7 +82,7 @@ class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
     void testNotHandled() {
         InitiativeTrxConsequence notHandledTrxConsequence = new InitiativeTrxConsequence() {};
         try{
-            transformer.apply(notHandledTrxConsequence);
+            transformer.apply(initiativeId, notHandledTrxConsequence);
             Assertions.fail("Exception expected");
         } catch (IllegalStateException e){
             // Do nothing
@@ -90,7 +91,7 @@ class TrxConsequence2DroolsRewardExpressionTransformerFacadeTest {
 
     @Test
     void testNull() {
-        String result = transformer.apply(null);
+        String result = transformer.apply(initiativeId, null);
         Assertions.assertEquals("", result);
     }
 

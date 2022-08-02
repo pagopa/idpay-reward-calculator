@@ -10,6 +10,7 @@ import java.util.TreeSet;
 
 class MccFilterTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
+    private final String initiativeId = "MccFilter";
     private final MccFilterTrxCondition2DroolsConditionTransformer transformer = new MccFilterTrxCondition2DroolsConditionTransformer();
 
     @Test
@@ -18,20 +19,20 @@ class MccFilterTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         MccFilterDTO initiativeTrxCondition = new MccFilterDTO();
         initiativeTrxCondition.setAllowedList(true);
         initiativeTrxCondition.setValues(new TreeSet<>(Set.of("MCC", "MCC2")));
-        String mccCondition = transformer.apply(initiativeTrxCondition);
+        String mccCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
         Assertions.assertEquals("mcc in (\"MCC\",\"MCC2\")", mccCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
         transaction.setMcc("MCC");
-        testRule("MccFilter", mccCondition, transaction, true);
+        testRule(initiativeId, mccCondition, transaction, true);
 
         // testing not allowed list
         initiativeTrxCondition.setAllowedList(false);
-        String mccNotCondition = transformer.apply(initiativeTrxCondition);
+        String mccNotCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
         Assertions.assertEquals("mcc not in (\"MCC\",\"MCC2\")", mccNotCondition);
-        testRule("MccFilter", mccNotCondition, transaction, false);
+        testRule(initiativeId, mccNotCondition, transaction, false);
     }
 
 }
