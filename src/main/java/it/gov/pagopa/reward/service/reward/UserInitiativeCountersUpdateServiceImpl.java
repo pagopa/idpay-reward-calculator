@@ -42,6 +42,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
                 if (initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1) {
                     initiativeCounter.setExhaustedBudget(true);
+                    reward.setAccruedReward(initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()));
                 } else {
                     initiativeCounter.setExhaustedBudget(false);
                 }

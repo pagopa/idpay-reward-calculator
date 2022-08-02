@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -48,14 +50,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         String userId = trx.getHpan(); // TODO use userId
         return userInitiativeCountersRepository.findById(userId)
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
-                .mapNotNull(userCounters -> {
-                    RewardTransactionDTO trxRewarded = ruleEngineService.applyRules(trx, initiatives, userCounters);
-                    if(trxRewarded!=null){
-                        return Pair.of(userCounters, trxRewarded);
-                    } else {
-                        return null;
-                    }
-                })
+                .mapNotNull(userCounters -> pairCounters2TrxRewarded(trx, initiatives, userCounters))
                 .flatMap(counters2rewardedTrx -> {
                     userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond());
                     return userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst())
@@ -63,4 +58,22 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 });
     }
 
+    private Pair<UserInitiativeCounters, RewardTransactionDTO> pairCounters2TrxRewarded(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+        List<String> notExhaustedInitiatives = new ArrayList<>();
+        List<String> rejectedInitiativesForBudget = new ArrayList<>();
+        initiatives.forEach(initiativeId -> {
+            if(userCounters.getInitiatives().get(initiativeId).isExhaustedBudget()) {
+                rejectedInitiativesForBudget.add("BUDGET_EXHAUSTED_for_initiativeId_%s".formatted(initiativeId));
+            } else {
+                notExhaustedInitiatives.add(initiativeId);
+            }
+        });
+        RewardTransactionDTO trxRewarded = ruleEngineService.applyRules(trx, notExhaustedInitiatives, userCounters);
+        if(trxRewarded!=null){
+            trxRewarded.setRejectionReasons(Stream.concat(trxRewarded.getRejectionReasons().stream(), rejectedInitiativesForBudget.stream()).toList());
+            return Pair.of(userCounters, trxRewarded);
+        } else {
+            return null;
+        }
+    }
 }
