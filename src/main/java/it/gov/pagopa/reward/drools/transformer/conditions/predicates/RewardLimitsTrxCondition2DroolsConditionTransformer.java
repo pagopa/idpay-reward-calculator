@@ -11,10 +11,10 @@ import java.util.Map;
 public class RewardLimitsTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<RewardLimitsDTO> {
 
     private static final Map<RewardLimitsDTO.RewardLimitFrequency, Pair<String, String>> rewardLimitFrequency2CountersFieldAndFormatter = Map.of(
-            RewardLimitsDTO.RewardLimitFrequency.DAILY, Pair.of("dailyCounters","getDayDateFormatter()"),
-            RewardLimitsDTO.RewardLimitFrequency.WEEKLY, Pair.of("weeklyCounters","getWeekDateFormatter()"),
-            RewardLimitsDTO.RewardLimitFrequency.MONTHLY, Pair.of("monthlyCounters","getMonthDateFormatter()"),
-            RewardLimitsDTO.RewardLimitFrequency.YEARLY, Pair.of("yearlyCounters","getYearDateFormatter()")
+            RewardLimitsDTO.RewardLimitFrequency.DAILY, Pair.of("getDailyCounters()","getDayDateFormatter()"),
+            RewardLimitsDTO.RewardLimitFrequency.WEEKLY, Pair.of("getWeeklyCounters()","getWeekDateFormatter()"),
+            RewardLimitsDTO.RewardLimitFrequency.MONTHLY, Pair.of("getMonthlyCounters()","getMonthDateFormatter()"),
+            RewardLimitsDTO.RewardLimitFrequency.YEARLY, Pair.of("getYearlyCounters()","getYearDateFormatter()")
     );
 
     public static Pair<String, String> getRewardLimitFrequencyConfig(RewardLimitsDTO.RewardLimitFrequency frequency){
@@ -36,7 +36,7 @@ public class RewardLimitsTrxCondition2DroolsConditionTransformer implements Init
 
     public static String buildFrequencyCounterExpression(RewardLimitsDTO.RewardLimitFrequency frequency) {
         final Pair<String, String> frequencyConfig = getRewardLimitFrequencyConfig(frequency);
-        return "$initiativeCounters.%s.getOrDefault(%s.%s.format(trxDate), new %s())".formatted(
+        return "$initiativeCounters.%s.getOrDefault(%s.%s.format($trx.getTrxDate()), new %s())".formatted(
                 frequencyConfig.getFirst(),
                 UserInitiativeCountersUpdateServiceImpl.class.getName(),
                 frequencyConfig.getSecond(),

@@ -7,7 +7,7 @@ import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 public class RewardLimitsTrxConsequence2DroolsExpressionTransformer implements InitiativeTrxConsequence2DroolsExpressionTransformer<RewardLimitsDTO> {
     @Override
     public String apply(String initiativeId, RewardLimitsDTO trxConsequence) {
-        return "java.math.BigDecimal.min($trx.rewards.get(\"%s\").accruedReward, %s.subtract(%s.totalReward))"
+        return "$trx.getRewards().get(\"%s\").getAccruedReward().min(java.math.BigDecimal.ZERO.max(%s.subtract(%s.getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN)"
                 .formatted(
                         initiativeId,
                         DroolsTemplateRuleUtils.toTemplateParam(trxConsequence.getRewardLimit()),

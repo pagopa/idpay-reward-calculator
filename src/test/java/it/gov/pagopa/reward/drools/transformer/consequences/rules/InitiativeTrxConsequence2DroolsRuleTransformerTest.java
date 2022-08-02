@@ -11,20 +11,20 @@ import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceTest;
-import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kie.api.command.Command;
 import org.kie.api.runtime.KieContainer;
-import org.kie.internal.command.CommandFactory;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T extends InitiativeTrxConsequence> {
 
@@ -73,17 +73,23 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         testRule(rule, trx, null);
     }
 
-    private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward(BigDecimal.TEN, BigDecimal.TEN, false));
+    private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward(BigDecimal.TEN, BigDecimal.TEN));
 
-    protected void testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
-        trx.setRewards(new HashMap<>());
-        trx.getRewards().putAll(dummyReward);
+    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
+        cleanRewards(trx);
         KieContainer kieContainer = buildRule(rule);
         executeRule(trx, kieContainer);
         Assertions.assertEquals(dummyReward.get("DUMMYINITIATIVE"), trx.getRewards().get("DUMMYINITIATIVE"));
         Assertions.assertEquals(
                 expectReward
                 , Optional.ofNullable(trx.getRewards().get("agendaGroup")).map(Reward::getAccruedReward).orElse(null));
+
+        return trx;
+    }
+
+    protected void cleanRewards(TransactionDroolsDTO trx) {
+        trx.setRewards(new HashMap<>());
+        trx.getRewards().putAll(dummyReward);
     }
 
     protected KieContainer buildRule(String rule) {
@@ -107,6 +113,10 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     }
 
     protected void executeRule(TransactionDroolsDTO trx, KieContainer kieContainer) {
-        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, false, null, kieContainer);
+        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, false, getCounters(), kieContainer);
+    }
+
+    protected UserInitiativeCounters getCounters() {
+        return null;
     }
 }

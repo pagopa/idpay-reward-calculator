@@ -14,8 +14,17 @@ public class Reward {
     private BigDecimal providedReward;
     /** The effective reward after CAP evaluation */
     private BigDecimal accruedReward;
-    /** True, if the reward has been capped */
+    /** True, if the reward has been capped due to budget threshold */
     private boolean capped;
+
+    /** True, if the reward has been capped due to daily threshold */
+    private boolean dailyCapped;
+    /** True, if the reward has been capped due to monthly threshold */
+    private boolean monthlyCapped;
+    /** True, if the reward has been capped due to yearly threshold */
+    private boolean yearlyCapped;
+    /** True, if the reward has been capped due to weekly threshold */
+    private boolean weeklyCapped;
 
     public Reward(BigDecimal reward){
         this.providedReward=reward;
@@ -27,5 +36,11 @@ public class Reward {
         this.providedReward=providedReward;
         this.accruedReward=accruedReward;
         this.capped=providedReward.compareTo(accruedReward)!=0;
+    }
+
+    public Reward(BigDecimal providedReward, BigDecimal accruedReward, boolean capped){
+        this.providedReward=providedReward;
+        this.accruedReward=accruedReward;
+        this.capped=capped;
     }
 }
