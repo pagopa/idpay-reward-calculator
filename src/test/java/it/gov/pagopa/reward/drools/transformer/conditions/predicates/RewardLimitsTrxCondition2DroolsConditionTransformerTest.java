@@ -66,7 +66,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
         initiativeTrxCondition.setRewardLimit(rewardLimit);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.getDailyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", thresholdCondition);
+        Assertions.assertEquals("$initiativeCounters.getDailyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -80,7 +80,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
         initiativeTrxCondition.setRewardLimit(rewardLimit);
         String trxCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.getWeeklyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", trxCondition);
+        Assertions.assertEquals("$initiativeCounters.getWeeklyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", trxCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -94,7 +94,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
         initiativeTrxCondition.setRewardLimit(rewardLimit);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.getMonthlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", thresholdCondition);
+        Assertions.assertEquals("$initiativeCounters.getMonthlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -108,7 +108,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
         initiativeTrxCondition.setRewardLimit(rewardLimit);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.getYearlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", thresholdCondition);
+        Assertions.assertEquals("$initiativeCounters.getYearlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal(\"15\")) < 0", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 

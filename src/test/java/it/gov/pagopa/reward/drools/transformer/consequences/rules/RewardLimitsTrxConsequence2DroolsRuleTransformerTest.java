@@ -13,8 +13,10 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardLimitsDTO> {
 
@@ -123,9 +125,10 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                    it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("agendaGroup");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.set%sCapped(true);
+                         %s
                       }
                    }
                 end
@@ -134,7 +137,11 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 rewardLimitsDTO.getRewardLimit(),
                 StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase()),
                 rewardLimitsDTO.getFrequency() == RewardLimitsDTO.RewardLimitFrequency.DAILY ? "Day" : StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase()).replace("ly", ""),
-                StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase())
+                StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase()),
+                Arrays.stream(RewardLimitsDTO.RewardLimitFrequency.values())
+                        .filter(f->!f.equals(rewardLimitsDTO.getFrequency()))
+                        .map(f->"reward.set%sCapped(false);".formatted(StringUtils.capitalize(f.name().toLowerCase())))
+                        .collect(Collectors.joining("\n         "))
                 );
     }
 

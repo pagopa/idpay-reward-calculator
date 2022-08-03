@@ -6,6 +6,9 @@ import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitiativeTrxConsequence2DroolsRuleTransformer<RewardLimitsDTO> implements InitiativeTrxConsequence2DroolsRuleTransformer<RewardLimitsDTO> {
 
     public RewardLimitsTrxConsequence2DroolsRuleTransformer(TrxConsequence2DroolsRewardExpressionTransformerFacade trxConsequence2DroolsRewardExpressionTransformerFacade) {
@@ -41,13 +44,18 @@ public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitia
                       reward.setAccruedReward(%s);
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.set%sCapped(true);
+                         %s
                       }
                    }""".formatted(
                 "",
                 Reward.class.getName(),
                 initiativeId,
                 trxConsequence2DroolsRewardExpressionTransformerFacade.apply(initiativeId, trxConsequence),
-                StringUtils.capitalize(trxConsequence.getFrequency().name().toLowerCase())
+                StringUtils.capitalize(trxConsequence.getFrequency().name().toLowerCase()),
+                Arrays.stream(RewardLimitsDTO.RewardLimitFrequency.values())
+                        .filter(f->!f.equals(trxConsequence.getFrequency()))
+                        .map(f->"reward.set%sCapped(false);".formatted(StringUtils.capitalize(f.name().toLowerCase())))
+                        .collect(Collectors.joining("\n         "))
         );
     }
 }
