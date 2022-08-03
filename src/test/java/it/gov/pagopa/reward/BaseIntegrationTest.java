@@ -34,6 +34,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZoneId;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -104,6 +105,7 @@ public abstract class BaseIntegrationTest {
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+        Locale.setDefault(Locale.ITALY);
 
         ObjectName kafkaServerMbeanName = new ObjectName("kafka.server:type=app-info,id=0");
         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
