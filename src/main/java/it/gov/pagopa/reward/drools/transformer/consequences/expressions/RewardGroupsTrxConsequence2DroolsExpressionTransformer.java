@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class RewardGroupsTrxConsequence2DroolsExpressionTransformer implements InitiativeTrxConsequence2DroolsExpressionTransformer<RewardGroupsDTO> {
     @Override
-    public String apply(RewardGroupsDTO trxConsequence) {
+    public String apply(String initiativeId, RewardGroupsDTO trxConsequence) {
         return RewardValueTrxConsequence2DroolsExpressionTransformer.applyPercentReward(
                 new DroolsRuleTemplateParam(
                         "%s:java.math.BigDecimal.ZERO".formatted(

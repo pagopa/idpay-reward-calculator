@@ -12,7 +12,7 @@ public class RewardValueTrxConsequence2DroolsExpressionTransformer implements In
     public static final BigDecimal ONEHUNDRED = BigDecimal.valueOf(100).setScale(4, RoundingMode.UNNECESSARY);
 
     @Override
-    public String apply(RewardValueDTO trxConsequence) {
+    public String apply(String initiativeId, RewardValueDTO trxConsequence) {
         return applyPercentReward(rewardPercentValue2TemplateParam(trxConsequence.getRewardValue()));
     }
 

@@ -6,10 +6,13 @@ import it.gov.pagopa.reward.test.fakers.rule.MccFilterDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<MccFilterDTO> {
 
     private final MccFilterTrxCondition2DroolsRuleTransformer transformer = new MccFilterTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
-    public final MccFilterDTO mccFilterRule = MccFilterDTOFaker.mockInstance(0);
+    private final MccFilterDTO mccFilterRule = MccFilterDTOFaker.mockInstance(0);
 
     @Override
     protected MccFilterTrxCondition2DroolsRuleTransformer getTransformer() {
@@ -26,10 +29,12 @@ class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
         return """
                                 
                 rule "ruleName-MCCFILTER"
-                salience 6
+                salience 4
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(mcc not in ("0897","MCC_0")))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_MCCFILTER_FAIL");
                 end
@@ -37,17 +42,17 @@ class MccFilterTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     }
 
     @Override
-    protected TransactionDroolsDTO getSuccessfulUseCase() {
+    protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setMcc("ALLOWEDMCC");
-        return trx;
+        return List.of(() -> trx);
     }
 
     @Override
-    protected TransactionDroolsDTO getFailingUseCase() {
+    protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setMcc("MCC_0");
-        return trx;
+        return List.of(() -> trx);
     }
 
     @Override

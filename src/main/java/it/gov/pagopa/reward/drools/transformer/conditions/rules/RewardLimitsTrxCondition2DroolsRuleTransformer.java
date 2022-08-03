@@ -21,7 +21,8 @@ public class RewardLimitsTrxCondition2DroolsRuleTransformer extends BaseInitiati
                 agendaGroup,
                 "%s-%s".formatted(ruleNamePrefix, rewardLimitsDTO.getFrequency().name()),
                 rewardLimitsDTO,
-                "TRX_RULE_%s_%s_FAIL".formatted(getTrxConditionOrder().name(), rewardLimitsDTO.getFrequency().name())
+                RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason().formatted(rewardLimitsDTO.getFrequency().name())
         );
     }
+
 }

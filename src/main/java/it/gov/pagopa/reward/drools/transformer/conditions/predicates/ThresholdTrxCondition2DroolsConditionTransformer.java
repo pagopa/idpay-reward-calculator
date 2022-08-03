@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 public class ThresholdTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<ThresholdDTO> {
     @Override
-    public String apply(ThresholdDTO thresholdDTO) {
+    public String apply(String initiativeId, ThresholdDTO thresholdDTO) {
         return Stream.of(
                         checkDefinedThreshold(thresholdDTO.getFrom(), thresholdDTO.isFromIncluded(), ">"),
                         checkDefinedThreshold(thresholdDTO.getTo(), thresholdDTO.isToIncluded(), "<")
