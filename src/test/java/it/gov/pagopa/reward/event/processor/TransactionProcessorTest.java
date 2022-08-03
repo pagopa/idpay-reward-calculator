@@ -512,7 +512,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W");
+    private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
     private final DateTimeFormatter monthlyFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     private final DateTimeFormatter yearFormatter = DateTimeFormatter.ofPattern("yyyy");
 

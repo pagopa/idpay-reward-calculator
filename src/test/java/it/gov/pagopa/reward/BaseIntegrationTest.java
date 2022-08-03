@@ -105,7 +105,6 @@ public abstract class BaseIntegrationTest {
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
-        Locale.setDefault(Locale.ITALY);
 
         ObjectName kafkaServerMbeanName = new ObjectName("kafka.server:type=app-info,id=0");
         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
