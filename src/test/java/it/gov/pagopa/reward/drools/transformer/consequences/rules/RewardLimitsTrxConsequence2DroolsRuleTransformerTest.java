@@ -43,7 +43,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
         YEARLY_CAP,
         NO_COUNTER,
         DISCARDED
-    };
+    }
 
     public static final BigDecimal TRANSACTION_REWARD = BigDecimal.TEN;
     public static final BigDecimal TOTAL_REWARD = BigDecimal.valueOf(8);
@@ -51,9 +51,9 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     private USECASES useCase;
     private BigDecimal expectedReward;
 
-    private void configureUseCase(USECASES usecase){
-        this.useCase=usecase;
-        switch (usecase){
+    private void configureUseCase(USECASES useCase){
+        this.useCase=useCase;
+        switch (useCase){
             case DISCARDED, NO_COUNTER -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
                 rewardLimitsDTO.setRewardLimit(TRANSACTION_REWARD);
@@ -111,15 +111,15 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     protected String getExpectedRule() {
         return """
                                 
-                rule "ruleName-%s-REWARDLIMITS"
-                salience -3
+                rule "ruleName-%s-REWARDLIMITS-CAP"
+                salience -2
                 agenda-group "agendaGroup"
                 when
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
-                then\040
+                then\s
                    it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("agendaGroup");
                    if(reward != null){
                       reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));

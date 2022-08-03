@@ -8,22 +8,17 @@ public final class RewardConstants {
     //region rules' order and default rejection reasons
     /** The order of execution of the trx condition */
     public enum InitiativeTrxConditionOrder {
-        MCCFILTER,
-        THRESHOLD,
-        REWARDGROUPS_CONDITION,
-        DAYOFWEEK,
         REWARDLIMITS {
             /** Use the rejection reason as format where insert the {@link RewardLimitsDTO.RewardLimitFrequency#name()} */
             public String getRejectionReason() {
                 return "TRX_RULE_%s_%%s_FAIL".formatted(name());
             }
-
-            @Override
-            public int getOrder() {
-                return INITIATIVE_TRX_CONSEQUENCE_ORDER - 1;
-            }
         },
-        TRXCOUNT;
+        TRXCOUNT,
+        MCCFILTER,
+        THRESHOLD,
+        REWARDGROUPS_CONDITION,
+        DAYOFWEEK;
 
         public String getRejectionReason(){
             return "TRX_RULE_%s_FAIL".formatted(name());
@@ -35,6 +30,6 @@ public final class RewardConstants {
     }
 
     public static int INITIATIVE_TRX_CONSEQUENCE_ORDER = -1;
-    public static int INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER = InitiativeTrxConditionOrder.REWARDLIMITS.getOrder() - 1;
+    public static int INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER = INITIATIVE_TRX_CONSEQUENCE_ORDER - 1;
     //endregion
 }

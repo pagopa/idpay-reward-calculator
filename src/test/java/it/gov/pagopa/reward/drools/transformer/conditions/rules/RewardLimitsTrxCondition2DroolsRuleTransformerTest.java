@@ -55,7 +55,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return """
                                 
                 rule "ruleName-%s-REWARDLIMITS"
-                salience 8
+                salience 6
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()

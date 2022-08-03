@@ -30,7 +30,7 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
         return """
                                 
                 rule "ruleName-THRESHOLD"
-                salience 5
+                salience 3
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()

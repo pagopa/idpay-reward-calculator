@@ -30,7 +30,7 @@ class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondit
         return """
                                 
                 rule "ruleName-TRXCOUNT"
-                salience 1
+                salience 5
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()

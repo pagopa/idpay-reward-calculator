@@ -14,7 +14,7 @@ public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitia
 
     @Override
     protected String getTrxConsequenceRuleName() {
-        return "REWARDLIMITS";
+        return "REWARDLIMITS-CAP";
     }
 
     @Override

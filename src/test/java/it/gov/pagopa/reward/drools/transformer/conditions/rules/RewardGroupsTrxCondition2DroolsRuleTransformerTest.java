@@ -30,7 +30,7 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return """
                                 
                 rule "ruleName-REWARDGROUPS_CONDITION"
-                salience 4
+                salience 2
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()

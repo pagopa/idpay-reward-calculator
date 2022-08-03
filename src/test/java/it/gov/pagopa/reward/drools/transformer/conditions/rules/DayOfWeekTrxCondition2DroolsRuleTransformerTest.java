@@ -30,7 +30,7 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
         return """
                                 
                 rule "ruleName-DAYOFWEEK"
-                salience 3
+                salience 1
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()

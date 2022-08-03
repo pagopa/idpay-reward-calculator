@@ -102,7 +102,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 package it.gov.pagopa.reward.drools.buildrules;
                                         
                 rule "ID_0_ssx-NAME_0_vnj-DAYOFWEEK"
-                salience 3
+                salience 1
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -113,7 +113,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-MCCFILTER"
-                salience 6
+                salience 4
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -124,51 +124,55 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-DAILY-REWARDLIMITS"
-                salience 2
+                salience 6
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !(true))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_DAILY_FAIL");
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !((rewards.get("ID_0_ssx") == null || $initiativeCounters.getDailyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal("10")) < 0)))
+                then $trx.getRewards().remove("ID_0_ssx");
+                   $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_DAILY_FAIL");
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-WEEKLY-REWARDLIMITS"
-                salience 2
+                salience 6
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !(true))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL");
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !((rewards.get("ID_0_ssx") == null || $initiativeCounters.getWeeklyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal("70")) < 0)))
+                then $trx.getRewards().remove("ID_0_ssx");
+                   $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL");
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-MONTHLY-REWARDLIMITS"
-                salience 2
+                salience 6
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !(true))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_MONTHLY_FAIL");
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !((rewards.get("ID_0_ssx") == null || $initiativeCounters.getMonthlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal("300")) < 0)))
+                then $trx.getRewards().remove("ID_0_ssx");
+                   $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_MONTHLY_FAIL");
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-YEARLY-REWARDLIMITS"
-                salience 2
+                salience 6
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !(true))
-                then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_YEARLY_FAIL");
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("ID_0_ssx") == null, !((rewards.get("ID_0_ssx") == null || $initiativeCounters.getYearlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).totalReward.compareTo(new java.math.BigDecimal("3650")) < 0)))
+                then $trx.getRewards().remove("ID_0_ssx");
+                   $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_YEARLY_FAIL");
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-THRESHOLD"
-                salience 5
+                salience 3
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -179,7 +183,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-TRXCOUNT"
-                salience 1
+                salience 5
                 agenda-group "ID_0_ssx"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
@@ -192,41 +196,84 @@ public class RewardRule2DroolsRuleServiceTest {
                 rule "ID_0_ssx-NAME_0_vnj-REWARDVALUE"
                 salience -1
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                when
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
                 then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(new java.math.BigDecimal("0.0023")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-DAILY-"
+                rule "ID_0_ssx-NAME_0_vnj-DAILY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                when
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
-                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward(java.math.BigDecimal.ZERO));
+                then\s
+                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   if(reward != null){
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("10").subtract($initiativeCounters.getDailyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      if(reward.getAccruedReward().compareTo(reward.getProvidedReward()) != 0){
+                         reward.setDailyCapped(true);
+                      }
+                   }
                 end
-                                
-                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-WEEKLY-"
+                
+                rule "ID_0_ssx-NAME_0_vnj-WEEKLY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                when
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
-                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward(java.math.BigDecimal.ZERO));
+                then\s
+                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   if(reward != null){
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("70").subtract($initiativeCounters.getWeeklyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      if(reward.getAccruedReward().compareTo(reward.getProvidedReward()) != 0){
+                         reward.setWeeklyCapped(true);
+                      }
+                   }
                 end
-                                
-                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-MONTHLY-"
+                
+                rule "ID_0_ssx-NAME_0_vnj-MONTHLY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                when
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
-                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward(java.math.BigDecimal.ZERO));
+                then\s
+                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   if(reward != null){
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("300").subtract($initiativeCounters.getMonthlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      if(reward.getAccruedReward().compareTo(reward.getProvidedReward()) != 0){
+                         reward.setMonthlyCapped(true);
+                      }
+                   }
                 end
-                                
-                rule "ID_0_ssx-NAME_0_vnj-REWARDLIMITS-YEARLY-"
+                
+                rule "ID_0_ssx-NAME_0_vnj-YEARLY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                when
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
-                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward(java.math.BigDecimal.ZERO));
+                then\s
+                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   if(reward != null){
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("3650").subtract($initiativeCounters.getYearlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters()).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      if(reward.getAccruedReward().compareTo(reward.getProvidedReward()) != 0){
+                         reward.setYearlyCapped(true);
+                      }
+                   }
                 end
                                 
                 """);
