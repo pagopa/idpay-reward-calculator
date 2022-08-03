@@ -48,6 +48,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     public void configureMocks(){
         initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID1")
+                .budget(BigDecimal.valueOf(10000.00))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)
                 .monthlyThreshold(true)
@@ -325,5 +326,43 @@ class UserInitiativeCountersUpdateServiceImplTest {
         Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
         Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
+    }
+
+    @Test
+    void testRewardWithPartialAccrued() {
+
+        // Given
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(2000), BigDecimal.valueOf(2000), false));
+        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .trxDate(TRX_DATE)
+                .amount(BigDecimal.valueOf(100))
+                .rewards(rewardMock).build();
+
+        InitiativeCounters initiativeCounters = new InitiativeCounters();
+        initiativeCounters.setInitiativeId("INITIATIVEID1");
+        initiativeCounters.setTrxNumber(20L);
+        initiativeCounters.setTotalReward(BigDecimal.valueOf(9000));
+        initiativeCounters.setTotalAmount(BigDecimal.valueOf(4000));
+
+        initiativeCounters.setDailyCounters(new HashMap<>(Map.of(TRX_DATE_DAY, Counters.builder().trxNumber(10L).totalReward(BigDecimal.valueOf(70)).totalAmount(BigDecimal.valueOf(100)).build())));
+        initiativeCounters.setWeeklyCounters(new HashMap<>(Map.of(TRX_DATE_WEEK, Counters.builder().trxNumber(10L).totalReward(BigDecimal.valueOf(70)).totalAmount(BigDecimal.valueOf(100)).build())));
+        initiativeCounters.setMonthlyCounters(new HashMap<>(Map.of(TRX_DATE_MONTH, Counters.builder().trxNumber(10L).totalReward(BigDecimal.valueOf(70)).totalAmount(BigDecimal.valueOf(100)).build())));
+        initiativeCounters.setYearlyCounters(new HashMap<>(Map.of(TRX_DATE_YEAR, Counters.builder().trxNumber(10L).totalReward(BigDecimal.valueOf(70)).totalAmount(BigDecimal.valueOf(100)).build())));
+
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+                "USERID",
+                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+        );
+
+        // When
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+
+        // Then
+        checkCounters(initiativeCounters, 21L, 10000, 4100);
+        assertEquals(BigDecimal.valueOf(1000.0), rewardTransactionDTO.getRewards().get("INITIATIVEID1").getAccruedReward());
+        checkCounters(initiativeCounters.getDailyCounters().get(TRX_DATE_DAY), 11L, 1070, 200);
+        checkCounters(initiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), 11L, 1070, 200);
+        checkCounters(initiativeCounters.getMonthlyCounters().get(TRX_DATE_MONTH), 11L, 1070, 200);
+        checkCounters(initiativeCounters.getYearlyCounters().get(TRX_DATE_YEAR), 11L, 1070, 200);
     }
 }

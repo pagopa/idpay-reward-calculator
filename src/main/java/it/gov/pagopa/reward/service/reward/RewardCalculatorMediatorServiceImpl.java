@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -70,7 +69,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         });
         RewardTransactionDTO trxRewarded = ruleEngineService.applyRules(trx, notExhaustedInitiatives, userCounters);
         if(trxRewarded!=null){
-            trxRewarded.setRejectionReasons(Stream.concat(trxRewarded.getRejectionReasons().stream(), rejectedInitiativesForBudget.stream()).toList());
+            trxRewarded.getRejectionReasons().addAll(rejectedInitiativesForBudget);
             return Pair.of(userCounters, trxRewarded);
         } else {
             return null;
