@@ -25,13 +25,4 @@ public class RewardLimitsTrxCondition2DroolsRuleTransformer extends BaseInitiati
         );
     }
 
-    @Override
-    protected String buildConditionNotMetConsequence(String initiativeId, String rejectionReason) {
-        return """
-                $trx.getRewards().remove("%s");
-                   %s""".formatted(
-                        initiativeId,
-                        super.buildConditionNotMetConsequence(initiativeId, rejectionReason)
-        );
-    }
 }

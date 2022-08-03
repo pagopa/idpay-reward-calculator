@@ -18,7 +18,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
 
     @Override
     protected InitiativeCounters getInitiativeCounters() {
-        final InitiativeCounters counter = new InitiativeCounters();
+        final InitiativeCounters counter = new InitiativeCounters(initiativeId);
         counter.setTrxNumber(trxNumber);
         return counter;
     }

@@ -101,8 +101,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
-        InitiativeCounters initiativeCounters = new InitiativeCounters();
-        initiativeCounters.setInitiativeId("INITIATIVEID1");
+        InitiativeCounters initiativeCounters = new InitiativeCounters("INITIATIVEID1");
         initiativeCounters.setTrxNumber(20L);
         initiativeCounters.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters.setTotalAmount(BigDecimal.valueOf(4000));
@@ -138,20 +137,17 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock)
                 .build();
 
-        InitiativeCounters initiativeCounters1 = new InitiativeCounters();
-        initiativeCounters1.setInitiativeId("1");
+        InitiativeCounters initiativeCounters1 = new InitiativeCounters("1");
         initiativeCounters1.setTrxNumber(20L);
         initiativeCounters1.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters1.setTotalAmount(BigDecimal.valueOf(4000));
 
-        InitiativeCounters initiativeCounters2 = new InitiativeCounters();
-        initiativeCounters2.setInitiativeId("2");
+        InitiativeCounters initiativeCounters2 = new InitiativeCounters("2");
         initiativeCounters2.setTrxNumber(20L);
         initiativeCounters2.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters2.setTotalAmount(BigDecimal.valueOf(4000));
 
-        InitiativeCounters initiativeCounters3 = new InitiativeCounters();
-        initiativeCounters3.setInitiativeId("3");
+        InitiativeCounters initiativeCounters3 = new InitiativeCounters("3");
         initiativeCounters3.setTrxNumber(20L);
         initiativeCounters3.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters3.setTotalAmount(BigDecimal.valueOf(4000));
@@ -190,14 +186,12 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock)
                 .initiativeRejectionReasons(Map.of("1",List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()))).build();
 
-        InitiativeCounters initiativeCounters1 = new InitiativeCounters();
-        initiativeCounters1.setInitiativeId("1");
+        InitiativeCounters initiativeCounters1 = new InitiativeCounters("1");
         initiativeCounters1.setTrxNumber(20L);
         initiativeCounters1.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters1.setTotalAmount(BigDecimal.valueOf(4000));
 
-        InitiativeCounters initiativeCounters2 = new InitiativeCounters();
-        initiativeCounters2.setInitiativeId("2");
+        InitiativeCounters initiativeCounters2 = new InitiativeCounters("2");
         initiativeCounters2.setTrxNumber(20L);
         initiativeCounters2.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters2.setTotalAmount(BigDecimal.valueOf(4000));

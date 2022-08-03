@@ -31,7 +31,7 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
                 agenda-group "agendaGroup"
                 when
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
-                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters())
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
                 then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(new java.math.BigDecimal("0.1225")).setScale(2, java.math.RoundingMode.HALF_DOWN)));

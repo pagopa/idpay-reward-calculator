@@ -27,8 +27,7 @@ public class RewardLimitsTrxCondition2DroolsConditionTransformer implements Init
 
     @Override
     public String apply(String initiativeId, RewardLimitsDTO rewardLimitsDTO) {
-        return "(rewards.get(\"%s\") == null || %s.totalReward.compareTo(%s) < 0)".formatted(
-                initiativeId,
+        return "%s.totalReward.compareTo(%s) < 0".formatted(
                 buildFrequencyCounterExpression(rewardLimitsDTO.getFrequency()),
                 DroolsTemplateRuleUtils.toTemplateParam(rewardLimitsDTO.getRewardLimit())
         );

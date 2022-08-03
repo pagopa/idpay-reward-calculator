@@ -39,7 +39,7 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 agenda-group "%s"
                 when
                    $userCounters: %s()
-                   $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s())
+                   $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s("%s"))
                    $trx: %s()
                    eval($trx.getInitiativeRejectionReasons().get("%s") == null)
                 then %s
@@ -53,6 +53,7 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 InitiativeCounters.class.getName(),
                 initiativeId,
                 InitiativeCounters.class.getName(),
+                initiativeId,
                 TransactionDroolsDTO.class.getName(),
                 initiativeId,
                 buildConsequences(

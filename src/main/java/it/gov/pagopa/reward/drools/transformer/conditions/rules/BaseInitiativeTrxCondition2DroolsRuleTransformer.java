@@ -40,7 +40,7 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 when
                    $config: %s()
                    $userCounters: %s()
-                   $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s())
+                   $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s("%s"))
                    $trx: %s(!$config.shortCircuitConditions || initiativeRejectionReasons.get("%s") == null, !(%s))
                 then %s
                 end
@@ -54,6 +54,7 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 InitiativeCounters.class.getName(),
                 initiativeId,
                 InitiativeCounters.class.getName(),
+                initiativeId,
                 TransactionDroolsDTO.class.getName(),
                 initiativeId,
                 trxCondition2DroolsConditionTransformerFacade.apply(initiativeId, trxCondition),

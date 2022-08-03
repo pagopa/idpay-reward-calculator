@@ -184,11 +184,33 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
                                 .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
-                                .build()
-                        /* TODO
-                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(3, Set.of(RewardLimitsDTO.class), RewardValueDTO.class)
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(3, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
-                                .build()*/
+                                .trxRule(InitiativeTrxConditions.builder()
+                                        .rewardLimits(List.of(
+                                                RewardLimitsDTO.builder()
+                                                        .frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY)
+                                                        .rewardLimit(BigDecimal.valueOf(40))
+                                                        .build(),
+                                                RewardLimitsDTO.builder()
+                                                        .frequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY)
+                                                        .rewardLimit(BigDecimal.valueOf(200))
+                                                        .build(),
+                                                RewardLimitsDTO.builder()
+                                                        .frequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY)
+                                                        .rewardLimit(BigDecimal.valueOf(1000))
+                                                        .build(),
+                                                RewardLimitsDTO.builder()
+                                                        .frequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY)
+                                                        .rewardLimit(BigDecimal.valueOf(10000))
+                                                        .build()
+                                        ))
+                                        .build())
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .build()
                 )
                 .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
                 .forEach(i -> publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
@@ -221,7 +243,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
             INITIATIVE_ID_THRESHOLD_BASED, BigDecimal.valueOf(0.5),
             INITIATIVE_ID_DAYOFWEEK_BASED, BigDecimal.valueOf(5),
             INITIATIVE_ID_MCC_BASED, BigDecimal.valueOf(6),
-            INITIATIVE_ID_REWARDLIMITS_BASED, BigDecimal.valueOf(0),
+            INITIATIVE_ID_REWARDLIMITS_BASED, BigDecimal.valueOf(0.8),
             INITIATIVE_ID_TRXCOUNT_BASED, BigDecimal.valueOf(7)
     );
 
@@ -266,6 +288,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .initiatives(new HashMap<>(Map.of(
                                         INITIATIVE_ID_TRXCOUNT_BASED,
                                         InitiativeCounters.builder()
+                                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
                                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
                                                 .build()
                                 )))
@@ -276,17 +299,27 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                     },
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED)
             ),
-            /* TODO
             // rewarded by RewardLimits based initiative
             Pair.of(
-                    i -> onboardTrxHpan(
-                            TransactionDTOFaker.mockInstanceBuilder(i)
-                                    .amount(BigDecimal.valueOf(5))
-                                    .trxDate(trxDate)
-                                    .build(),
-                            INITIATIVE_ID_REWARDLIMITS_BASED),
+                    i -> {
+                        final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
+                                .amount(BigDecimal.valueOf(8))
+                                .build();
+                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
+                                .userId(trx.getHpan()) //TODO use userId
+                                .initiatives(new HashMap<>(Map.of(
+                                        INITIATIVE_ID_REWARDLIMITS_BASED,
+                                        InitiativeCounters.builder()
+                                                .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
+                                                .build()
+                                )))
+                                .build()).block();
+                        return onboardTrxHpanAndIncreaseCounters(
+                                trx,
+                                INITIATIVE_ID_REWARDLIMITS_BASED);
+                    },
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED)
-            ), */
+            ),
             // not rewarded hpan not onboarded
             Pair.of(
                     i -> {
@@ -310,15 +343,30 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .amount(BigDecimal.ONE)
                                 .mcc("NOTALLOWED")
                                 .build();
-                        onboardTrxHPan(
+
+                        final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
+                                .dailyCounters(new HashMap<>(Map.of(
+                                        "2021-12-31", Counters.builder().totalReward(BigDecimal.valueOf(40)).build()
+                                )))
+                                .build();
+                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
+                                .userId(trx.getHpan()) //TODO use userId
+                                .initiatives(new HashMap<>(Map.of(
+                                        INITIATIVE_ID_REWARDLIMITS_BASED,
+                                        initiativeRewardCounter
+                                )))
+                                .build()).block();
+
+                        final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
                                 INITIATIVE_ID_THRESHOLD_BASED,
                                 INITIATIVE_ID_DAYOFWEEK_BASED,
                                 INITIATIVE_ID_MCC_BASED,
-                                INITIATIVE_ID_TRXCOUNT_BASED
-                                /* TODO
-                                INITIATIVE_ID_REWARDLIMITS_BASED*/
+                                INITIATIVE_ID_TRXCOUNT_BASED,
+                                INITIATIVE_ID_REWARDLIMITS_BASED
                         );
+                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_REWARDLIMITS_BASED, initiativeRewardCounter);
                         return trx;
                     },
                     evaluation -> {
@@ -327,12 +375,11 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                         Assertions.assertFalse(evaluation.getInitiativeRejectionReasons().isEmpty());
                         Assertions.assertEquals(
                                 Map.of(
-                                        INITIATIVE_ID_THRESHOLD_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.THRESHOLD.getRejectionReason()),
                                         INITIATIVE_ID_DAYOFWEEK_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.DAYOFWEEK.getRejectionReason()),
+                                        INITIATIVE_ID_THRESHOLD_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.THRESHOLD.getRejectionReason()),
+                                        INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()),
                                         INITIATIVE_ID_MCC_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.MCCFILTER.getRejectionReason()),
-                                        INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())
-                                        /* TODO
-                                        INITIATIVE_ID_REWARDLIMITS_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason())*/
+                                        INITIATIVE_ID_REWARDLIMITS_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason().formatted(RewardLimitsDTO.RewardLimitFrequency.DAILY))
                                 ), evaluation.getInitiativeRejectionReasons());
                         Assertions.assertEquals("REJECTED", evaluation.getStatus());
                     }
@@ -354,10 +401,11 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         Arrays.stream(initiativeIds).forEach(id -> {
             InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
             // the use case of the initiative INITIATIVE_ID_TRXCOUNT_BASED start with a count of 9 trx
-            if(INITIATIVE_ID_TRXCOUNT_BASED.equals(id)) {
+            if (INITIATIVE_ID_TRXCOUNT_BASED.equals(id)) {
                 userInitiativeCounters.getInitiatives().computeIfAbsent(
                         INITIATIVE_ID_TRXCOUNT_BASED,
-                        i->InitiativeCounters.builder()
+                        i -> InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
                                 .build()
                 );

@@ -23,4 +23,14 @@ public class InitiativeCounters extends Counters {
     private Map<String, Counters> monthlyCounters = new HashMap<>();
     @Builder.Default
     private Map<String, Counters> yearlyCounters = new HashMap<>();
+
+    public InitiativeCounters(String initiativeId){
+        this.initiativeId=initiativeId;
+
+        // for some reason, lombok is changing the code letting null these fields when using this constructor
+        this.dailyCounters = new HashMap<>();
+        this.weeklyCounters = new HashMap<>();
+        this.monthlyCounters = new HashMap<>();
+        this.yearlyCounters = new HashMap<>();
+    }
 }
