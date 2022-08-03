@@ -20,11 +20,6 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
 
     private final RewardLimitsTrxConsequence2DroolsRuleTransformer transformer = new RewardLimitsTrxConsequence2DroolsRuleTransformer(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl());
 
-    // using frequency to indicate the use cases:
-    //  DAILY: capped reward
-    //  WEEKLY: no capped
-    //  MONTHLY: capped to 0
-    //  YEARLY: no counter for date
     private final RewardLimitsDTO rewardLimitsDTO = new RewardLimitsDTO();
 
     @Override
@@ -35,6 +30,81 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     @Override
     protected RewardLimitsDTO getInitiativeTrxConsequence() {
         return rewardLimitsDTO;
+    }
+
+    private enum USECASES {
+        DAILY_NO_CAP,
+        DAILY_CAP,
+        MONTHLY_NO_CAP,
+        WEEKLY_CAP,
+        WEEKLY_NO_CAP,
+        MONTHLY_CAP,
+        YEARLY_NO_CAP,
+        YEARLY_CAP,
+        NO_COUNTER,
+        DISCARDED
+    };
+
+    public static final BigDecimal TRANSACTION_REWARD = BigDecimal.TEN;
+    public static final BigDecimal TOTAL_REWARD = BigDecimal.valueOf(8);
+
+    private USECASES useCase;
+    private BigDecimal expectedReward;
+
+    private void configureUseCase(USECASES usecase){
+        this.useCase=usecase;
+        switch (usecase){
+            case DISCARDED, NO_COUNTER -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
+                rewardLimitsDTO.setRewardLimit(TRANSACTION_REWARD);
+                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+            }
+            case DAILY_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
+                rewardLimitsDTO.setRewardLimit(TRANSACTION_REWARD);
+                expectedReward=bigDecimalValue(2);
+            }
+            case DAILY_NO_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(18.01));
+                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+            }
+            case WEEKLY_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(17.99));
+                expectedReward=bigDecimalValue(9.99);
+            }
+            case WEEKLY_NO_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(18));
+                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+            }
+            case MONTHLY_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.ONE);
+                expectedReward=bigDecimalValue(0);
+            }
+            case MONTHLY_NO_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(19));
+                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+            }
+            case YEARLY_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.ZERO);
+                expectedReward=bigDecimalValue(0);
+            }
+            case YEARLY_NO_CAP -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(100));
+                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+            }
+        }
+    }
+
+    @Override
+    public BigDecimal getExpectedReward() {
+        return expectedReward;
     }
 
     @Override
@@ -75,108 +145,121 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
         return trx;
     }
 
-    private boolean testingDiscarded = true;
 
     @Override
     protected void cleanRewards(TransactionDroolsDTO trx) {
         super.cleanRewards(trx);
-        if (!testingDiscarded) {
-            trx.getRewards().put("agendaGroup", new Reward(BigDecimal.TEN));
+        if (!useCase.equals(USECASES.DISCARDED)) {
+            trx.getRewards().put("agendaGroup", new Reward(TRANSACTION_REWARD));
         }
     }
 
     @Override
     protected UserInitiativeCounters getCounters() {
-        if (!rewardLimitsDTO.getFrequency().equals(RewardLimitsDTO.RewardLimitFrequency.YEARLY)) {
+        if (USECASES.NO_COUNTER.equals(useCase)) {
+            return null;
+        } else {
             UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
             counters.getInitiatives().put("agendaGroup", InitiativeCounters.builder()
                     .dailyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03-15", Counters.builder()
-                                            .totalReward(BigDecimal.valueOf(8))
+                                            .totalReward(TOTAL_REWARD)
                                             .build()))
                     )
                     .weeklyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03-3", Counters.builder()
-                                            .totalReward(BigDecimal.valueOf(8))
+                                            .totalReward(TOTAL_REWARD)
                                             .build()))
                     )
                     .monthlyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03", Counters.builder()
-                                            .totalReward(BigDecimal.valueOf(8))
+                                            .totalReward(TOTAL_REWARD)
                                             .build()))
                     )
                     .build()
             );
             return counters;
-        } else {
-            return null;
         }
-    }
-
-    @Override
-    protected BigDecimal getExpectedReward() {
-        return switch (rewardLimitsDTO.getFrequency()) {
-            case DAILY -> bigDecimalValue(2);
-            case WEEKLY, YEARLY -> bigDecimalValue(10);
-            case MONTHLY -> bigDecimalValue(0);
-        };
     }
 
     @Test
     @Override
     void testDiscardedIfRejected() {
-        rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-        rewardLimitsDTO.setRewardLimit(BigDecimal.TEN);
-
-        testingDiscarded = true;
+        configureUseCase(USECASES.DISCARDED);
         super.testDiscardedIfRejected();
     }
 
     @Test
+    void testRewardCounterNotInitiated() {
+        configureUseCase(USECASES.NO_COUNTER);
+        super.testReward();
+    }
+
+    // test suppressed in order to execute it using a different name
     @Override
     void testReward() {
-        rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-        rewardLimitsDTO.setRewardLimit(BigDecimal.TEN);
-
-        testingDiscarded = false;
         super.testReward();
     }
 
     @Test
-    void testRewardNoCapped() {
-        rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-        rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(18));
-
-        testingDiscarded = false;
+    void testRewardDailyCapped(){
+        configureUseCase(USECASES.DAILY_CAP);
+        testReward();
     }
 
     @Test
-    void testRewardOverflow() {
-        rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-        rewardLimitsDTO.setRewardLimit(BigDecimal.ONE);
-
-        testingDiscarded = false;
+    void testRewardDailyNoCapped(){
+        configureUseCase(USECASES.DAILY_NO_CAP);
+        testReward();
     }
 
     @Test
-    void testRewardCounterNotInitiated() {
-        rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-        rewardLimitsDTO.setRewardLimit(BigDecimal.TEN);
+    void testRewardWeeklyCapped() {
+        configureUseCase(USECASES.WEEKLY_CAP);
+        super.testReward();
+    }
 
-        testingDiscarded = false;
+    @Test
+    void testRewardWeeklyNoCapped_perfectMatchLimit() {
+        configureUseCase(USECASES.WEEKLY_NO_CAP);
+        super.testReward();
+    }
+
+    @Test
+    void testRewardMontlyCapped_overflow() {
+        configureUseCase(USECASES.MONTHLY_CAP);
+        super.testReward();
+    }
+
+    @Test
+    void testRewardMontlyNoCapped() {
+        configureUseCase(USECASES.MONTHLY_CAP);
+        super.testReward();
+    }
+
+    @Test
+    void testRewardYearlyCapped() {
+        configureUseCase(USECASES.YEARLY_CAP);
+        super.testReward();
+    }
+
+    @Test
+    void testRewardYearlyNoCapped() {
+        configureUseCase(USECASES.YEARLY_CAP);
+        super.testReward();
     }
 
     @Override
     protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
         super.testRule(rule, trx, expectReward);
-        if(!testingDiscarded){
-            boolean expectedDailyCapped = rewardLimitsDTO.getFrequency().equals(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-            boolean expectedWeeklyCapped = false;
-            boolean expectedMonthlyCapped = rewardLimitsDTO.getFrequency().equals(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-            boolean expectedYearlyCapped = false;
+        if(!useCase.equals(USECASES.DISCARDED)){
+            boolean expectedDailyCapped = useCase.name().contains("DAILY") && !useCase.name().contains("NO_CAP");
+            boolean expectedWeeklyCapped = useCase.name().contains("WEEKLY") && !useCase.name().contains("NO_CAP");
+            boolean expectedMonthlyCapped = useCase.name().contains("MONTHLY") && !useCase.name().contains("NO_CAP");
+            boolean expectedYearlyCapped = useCase.name().contains("YEARLY") && !useCase.name().contains("NO_CAP");
 
             assertCaps(trx, expectedDailyCapped, expectedWeeklyCapped, expectedMonthlyCapped, expectedYearlyCapped);
         }
