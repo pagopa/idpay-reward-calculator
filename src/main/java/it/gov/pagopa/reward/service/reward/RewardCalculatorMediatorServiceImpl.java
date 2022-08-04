@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,25 +20,25 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final TransactionFilterService transactionFilterService;
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
-    private final RuleEngineService ruleEngineService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
+    private final InitiativesEvaluatorService initiativesEvaluatorService;
 
-    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, RuleEngineService ruleEngineService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
+    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, InitiativesEvaluatorService initiativesEvaluatorService) {
         this.transactionFilterService = transactionFilterService;
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
-        this.ruleEngineService = ruleEngineService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
+        this.initiativesEvaluatorService = initiativesEvaluatorService;
     }
 
     @Override
     public Flux<RewardTransactionDTO> execute(Flux<TransactionDTO> transactionDTOFlux) {
         return transactionDTOFlux
                 .filter(transactionFilterService::filter)
-                .flatMap(this::evaluate);
+                .flatMap(this::retrieveInitiativesAndEvaluate);
     }
 
-    private Mono<RewardTransactionDTO> evaluate(TransactionDTO trx) {
+    private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {
         return onboardedInitiativesService.getInitiatives(trx.getHpan(), trx.getTrxDate())
                 .collectList()
                 .flatMap(initiatives -> evaluate(trx, initiatives));
@@ -49,7 +48,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         String userId = trx.getHpan(); // TODO use userId
         return userInitiativeCountersRepository.findById(userId)
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
-                .mapNotNull(userCounters -> pairCounters2TrxRewarded(trx, initiatives, userCounters))
+                .mapNotNull(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
                 .flatMap(counters2rewardedTrx -> {
                     userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond());
                     return userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst())
@@ -57,19 +56,9 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 });
     }
 
-    private Pair<UserInitiativeCounters, RewardTransactionDTO> pairCounters2TrxRewarded(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
-        List<String> notExhaustedInitiatives = new ArrayList<>();
-        List<String> rejectedInitiativesForBudget = new ArrayList<>();
-        initiatives.forEach(initiativeId -> {
-            if(userCounters.getInitiatives().get(initiativeId).isExhaustedBudget()) {
-                rejectedInitiativesForBudget.add("BUDGET_EXHAUSTED_for_initiativeId_%s".formatted(initiativeId));
-            } else {
-                notExhaustedInitiatives.add(initiativeId);
-            }
-        });
-        RewardTransactionDTO trxRewarded = ruleEngineService.applyRules(trx, notExhaustedInitiatives, userCounters);
+    private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+        RewardTransactionDTO trxRewarded = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
         if(trxRewarded!=null){
-            trxRewarded.getRejectionReasons().addAll(rejectedInitiativesForBudget);
             return Pair.of(userCounters, trxRewarded);
         } else {
             return null;

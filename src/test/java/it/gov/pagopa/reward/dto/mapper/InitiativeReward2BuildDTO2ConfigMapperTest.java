@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
@@ -13,7 +14,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 class InitiativeReward2BuildDTO2ConfigMapperTest {
-
     @Test
     void mapperDailyFrequencyType() {
         // Given
@@ -108,6 +108,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Given
         InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
         initiative.setInitiativeId("INITIATIVE_ID");
+
+        InitiativeGeneralDTO initiativeGeneralDTO = new InitiativeGeneralDTO();
+        initiative.setGeneral(initiativeGeneralDTO);
+
         initiative.setTrxRule(new InitiativeTrxConditions());
 
         initiative.getTrxRule().setRewardLimits(List.of(
@@ -137,6 +141,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Given
         InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
         initiative.setInitiativeId("INITIATIVE_ID");
+
+        InitiativeGeneralDTO initiativeGeneralDTO = new InitiativeGeneralDTO();
+        initiative.setGeneral(initiativeGeneralDTO);
+
         initiative.setTrxRule(new InitiativeTrxConditions());
 
         initiative.getTrxRule().setRewardLimits(List.of(
@@ -152,5 +160,34 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         }catch (IllegalArgumentException actualException){
             Assertions.assertEquals("Frequency cannot be null",actualException.getMessage());
         }
+    }
+
+    @Test
+    void mapperBudgetField() {
+        // Given
+        InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
+        initiative.setInitiativeId("INITIATIVE_ID");
+
+        initiative.setGeneral(InitiativeGeneralDTO.builder().budget(BigDecimal.valueOf(100)).build());
+
+        initiative.setTrxRule(new InitiativeTrxConditions());
+
+        initiative.getTrxRule().setRewardLimits(List.of(
+                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY).build(),
+                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY).build(),
+                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY).build(),
+                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY).build()
+        ));
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(result);
+        Assertions.assertEquals(initiative.getGeneral().getBudget(), result.getBudget());
+
     }
 }

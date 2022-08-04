@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
@@ -56,6 +57,9 @@ public final class InitiativeReward2BuildDTOFaker {
 
         out.initiativeId("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+
+        InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO();
+        out.general(initiativeGeneral);
 
         InitiativeTrxConditions trxRule = new InitiativeTrxConditions();
         out.trxRule(trxRule);

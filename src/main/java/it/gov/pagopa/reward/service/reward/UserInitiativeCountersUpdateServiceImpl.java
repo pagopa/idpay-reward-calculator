@@ -40,16 +40,21 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                 InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
                 InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
-                if (initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1) {
-                    reward.setAccruedReward(initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()));
-                    initiativeCounter.setExhaustedBudget(true);
-                } else {
-                    initiativeCounter.setExhaustedBudget(false);
-                }
+
+                evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
                 updateCounters(initiativeCounter, reward, ruleEngineResult.getAmount());
                 updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, initiativeConfig);
             }
         });
+    }
+
+    private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
+        initiativeCounter.setExhaustedBudget(initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
+        if (initiativeCounter.isExhaustedBudget()) {
+            BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward());
+            reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);
+            reward.setAccruedReward(newAccruedReward);
+        }
     }
 
     private boolean isRewardedInitiative(Reward initiativeReward) {

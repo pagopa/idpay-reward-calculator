@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class UserInitiativeCountersUpdateServiceImplTest {
@@ -332,11 +333,11 @@ class UserInitiativeCountersUpdateServiceImplTest {
     void testRewardWithPartialAccrued() {
 
         // Given
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(2000), BigDecimal.valueOf(2000), false));
+        Reward reward = new Reward(BigDecimal.valueOf(2000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .trxDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
-                .rewards(rewardMock).build();
+                .rewards(Map.of("INITIATIVEID1", reward)).build();
 
         InitiativeCounters initiativeCounters = new InitiativeCounters();
         initiativeCounters.setInitiativeId("INITIATIVEID1");
@@ -359,7 +360,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Then
         checkCounters(initiativeCounters, 21L, 10000, 4100);
-        assertEquals(BigDecimal.valueOf(1000.0), rewardTransactionDTO.getRewards().get("INITIATIVEID1").getAccruedReward());
+        assertEquals(BigDecimal.valueOf(1000.0), reward.getAccruedReward());
+        assertTrue(reward.isCapped());
         checkCounters(initiativeCounters.getDailyCounters().get(TRX_DATE_DAY), 11L, 1070, 200);
         checkCounters(initiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), 11L, 1070, 200);
         checkCounters(initiativeCounters.getMonthlyCounters().get(TRX_DATE_MONTH), 11L, 1070, 200);
