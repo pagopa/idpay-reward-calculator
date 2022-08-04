@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import org.drools.core.rule.Collect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,8 +103,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
-        InitiativeCounters initiativeCounters = new InitiativeCounters();
-        initiativeCounters.setInitiativeId("INITIATIVEID1");
+        InitiativeCounters initiativeCounters = new InitiativeCounters("INITIATIVEID1");
         initiativeCounters.setTrxNumber(20L);
         initiativeCounters.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters.setTotalAmount(BigDecimal.valueOf(4000));
@@ -138,20 +139,17 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock)
                 .build();
 
-        InitiativeCounters initiativeCounters1 = new InitiativeCounters();
-        initiativeCounters1.setInitiativeId("1");
+        InitiativeCounters initiativeCounters1 = new InitiativeCounters("1");
         initiativeCounters1.setTrxNumber(20L);
         initiativeCounters1.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters1.setTotalAmount(BigDecimal.valueOf(4000));
 
-        InitiativeCounters initiativeCounters2 = new InitiativeCounters();
-        initiativeCounters2.setInitiativeId("2");
+        InitiativeCounters initiativeCounters2 = new InitiativeCounters("2");
         initiativeCounters2.setTrxNumber(20L);
         initiativeCounters2.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters2.setTotalAmount(BigDecimal.valueOf(4000));
 
-        InitiativeCounters initiativeCounters3 = new InitiativeCounters();
-        initiativeCounters3.setInitiativeId("3");
+        InitiativeCounters initiativeCounters3 = new InitiativeCounters("3");
         initiativeCounters3.setTrxNumber(20L);
         initiativeCounters3.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters3.setTotalAmount(BigDecimal.valueOf(4000));
@@ -190,14 +188,12 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock)
                 .initiativeRejectionReasons(Map.of("1",List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()))).build();
 
-        InitiativeCounters initiativeCounters1 = new InitiativeCounters();
-        initiativeCounters1.setInitiativeId("1");
+        InitiativeCounters initiativeCounters1 = new InitiativeCounters("1");
         initiativeCounters1.setTrxNumber(20L);
         initiativeCounters1.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters1.setTotalAmount(BigDecimal.valueOf(4000));
 
-        InitiativeCounters initiativeCounters2 = new InitiativeCounters();
-        initiativeCounters2.setInitiativeId("2");
+        InitiativeCounters initiativeCounters2 = new InitiativeCounters("2");
         initiativeCounters2.setTrxNumber(20L);
         initiativeCounters2.setTotalReward(BigDecimal.valueOf(200));
         initiativeCounters2.setTotalAmount(BigDecimal.valueOf(4000));
@@ -240,9 +236,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 50.0, 100.0);
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
     }
 
     @Test
@@ -267,10 +263,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 50.0, 100.0);
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
     }
 
     @Test
@@ -295,10 +291,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 50.0, 100.0);
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
     }
 
     @Test
@@ -323,9 +319,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
-        Assertions.assertNull(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
     }
 

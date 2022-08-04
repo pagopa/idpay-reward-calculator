@@ -1,10 +1,17 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.expressions;
 
+import it.gov.pagopa.reward.drools.transformer.conditions.predicates.RewardLimitsTrxCondition2DroolsConditionTransformer;
+import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 
 public class RewardLimitsTrxConsequence2DroolsExpressionTransformer implements InitiativeTrxConsequence2DroolsExpressionTransformer<RewardLimitsDTO> {
     @Override
-    public String apply(RewardLimitsDTO trxConsequence) {
-        return "java.math.BigDecimal.ZERO"; //TODO
+    public String apply(String initiativeId, RewardLimitsDTO trxConsequence) {
+        return "$trx.getRewards().get(\"%s\").getAccruedReward().min(java.math.BigDecimal.ZERO.max(%s.subtract(%s.getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN)"
+                .formatted(
+                        initiativeId,
+                        DroolsTemplateRuleUtils.toTemplateParam(trxConsequence.getRewardLimit()),
+                        RewardLimitsTrxCondition2DroolsConditionTransformer.buildFrequencyCounterExpression(trxConsequence.getFrequency())
+                );
     }
 }

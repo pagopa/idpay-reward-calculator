@@ -13,25 +13,28 @@ import java.util.TreeSet;
 class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     private final DayOfWeekTrxCondition2DroolsConditionTransformer transformer = new DayOfWeekTrxCondition2DroolsConditionTransformer();
+    
+    private final String initiativeId = "DayOfWeek";
 
     @Test
     void testNoDayConfigured() {
+        
         DayOfWeekDTO dayOfWeekDTO = new DayOfWeekDTO();
 
-        String dayOfWeekCondition = transformer.apply(dayOfWeekDTO);
+        String dayOfWeekCondition = transformer.apply(initiativeId, dayOfWeekDTO);
 
         Assertions.assertEquals("false", dayOfWeekCondition);
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         trx.setTrxDate(OffsetDateTime.now());
-        testRule("DayOfWeek", dayOfWeekCondition, trx, false);
+        testRule(initiativeId, dayOfWeekCondition, trx, false);
 
         dayOfWeekDTO= new DayOfWeekDTO();
-        String dayOfWeekConditionEmptyCollection = transformer.apply(dayOfWeekDTO);
+        String dayOfWeekConditionEmptyCollection = transformer.apply(initiativeId, dayOfWeekDTO);
 
         Assertions.assertEquals("false", dayOfWeekConditionEmptyCollection);
 
-        testRule("DayOfWeek", dayOfWeekConditionEmptyCollection, trx, false);
+        testRule(initiativeId, dayOfWeekConditionEmptyCollection, trx, false);
     }
 
     //region no interval
@@ -51,7 +54,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
                         .build()
         ));
 
-        String dayOfWeekCondition = transformer.apply(dayOfWeekDTO);
+        String dayOfWeekCondition = transformer.apply(initiativeId, dayOfWeekDTO);
 
         Assertions.assertEquals("(" +
                         "(trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"MONDAY\"),java.time.DayOfWeek.valueOf(\"SATURDAY\")))" +
@@ -70,7 +73,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
-        testRule("DayOfWeek", dayOfWeekCondition, trx, true);
+        testRule(initiativeId, dayOfWeekCondition, trx, true);
     }
 
     @Test
@@ -80,7 +83,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 7), LocalTime.of(0, 0));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
-        testRule("DayOfWeek", dayOfWeekCondition, trx, false);
+        testRule(initiativeId, dayOfWeekCondition, trx, false);
     }
     //endregion
 
@@ -117,7 +120,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
                         .build()
         ));
 
-        String dayOfWeekCondition = transformer.apply(dayOfWeekDTO);
+        String dayOfWeekCondition = transformer.apply(initiativeId, dayOfWeekDTO);
 
         Assertions.assertEquals("(" +
                         "("
@@ -147,7 +150,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(12, 0));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
-        testRule("DayOfWeek", dayOfWeekCondition, trx, true);
+        testRule(initiativeId, dayOfWeekCondition, trx, true);
     }
 
     @Test
@@ -157,7 +160,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(11, 59));
         trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
-        testRule("DayOfWeek", dayOfWeekCondition, trx, false);
+        testRule(initiativeId, dayOfWeekCondition, trx, false);
     }
     //endregion
 }

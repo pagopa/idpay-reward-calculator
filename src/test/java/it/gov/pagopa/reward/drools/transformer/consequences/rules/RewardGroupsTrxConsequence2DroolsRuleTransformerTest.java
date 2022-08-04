@@ -30,7 +30,10 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 rule "ruleName-REWARDGROUPS"
                 salience -1
                 agenda-group "agendaGroup"
-                when $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                when
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
                 then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.1000"):($trx.getAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.2000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
@@ -46,6 +49,6 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
 
     @Override
     protected BigDecimal getExpectedReward() {
-        return BigDecimal.valueOf(2.25).setScale(2, RoundingMode.UNNECESSARY);
+        return bigDecimalValue(2.25);
     }
 }

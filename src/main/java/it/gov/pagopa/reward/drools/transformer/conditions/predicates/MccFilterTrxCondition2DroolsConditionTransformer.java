@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 public class MccFilterTrxCondition2DroolsConditionTransformer implements InitiativeTrxCondition2DroolsConditionTransformer<MccFilterDTO> {
     @Override
-    public String apply(MccFilterDTO mccFilterDTO) {
+    public String apply(String initiativeId, MccFilterDTO mccFilterDTO) {
         return "mcc %s (%s)".formatted(
                 mccFilterDTO.isAllowedList() ? "in" : "not in",
                 mccFilterDTO.getValues().stream().map("\"%s\""::formatted).collect(Collectors.joining(","))

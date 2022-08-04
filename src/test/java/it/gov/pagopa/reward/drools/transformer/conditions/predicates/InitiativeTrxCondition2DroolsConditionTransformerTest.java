@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -55,15 +56,14 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
                                 
                 rule "%s"
                 agenda-group "%s"
-                when $trx: %s(%s)
+                when %s
                 then $trx.getInitiatives().add("%s");
                 end
                 """.formatted(
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                 dr.getName(),
                 dr.getId(),
-                TransactionDroolsDTO.class.getName(),
-                rewardCondition,
+                buildCondition(rewardCondition),
                 testName));
 
         try{
@@ -74,12 +74,33 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         }
     }
 
+    protected String buildCondition(String rewardCondition) {
+        return """
+                %s$trx: %s(%s)""".formatted(
+                getInitiativeCounters()!=null? "$initiativeCounters: %s()\n".formatted(InitiativeCounters.class.getName()) : "",
+                TransactionDroolsDTO.class.getName(),
+                rewardCondition
+        );
+    }
+
     protected void executeRule(TransactionDroolsDTO trx, String agendaGroup, KieContainer kieContainer){
+        List<Command<?>> commands = buildKieContainerCommands(trx, agendaGroup);
+        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+    }
+
+    protected List<Command<?>> buildKieContainerCommands(TransactionDroolsDTO trx, String agendaGroup) {
+
+        final InitiativeCounters counter = getInitiativeCounters();
         @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(trx),
+                CommandFactory.newInsert(counter),
                 new AgendaGroupSetFocusCommand(agendaGroup)
         );
-        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+        return commands;
+    }
+
+    protected InitiativeCounters getInitiativeCounters() {
+        return null;
     }
 }
