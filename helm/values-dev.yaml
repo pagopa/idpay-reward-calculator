@@ -88,7 +88,7 @@ microservice-chart:
 
   envConfigMapExternals:
     idpay-common:
-      TZ: tz
+      TZ: TZ
     idpay-eventhub-01:
       KAFKA_BROKER: kafka_broker
       KAFKA_REWARD_SASL_MECHANISM: kafka_sasl_mechanism
