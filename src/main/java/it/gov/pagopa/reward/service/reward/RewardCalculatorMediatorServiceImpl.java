@@ -45,7 +45,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     }
 
     private Mono<RewardTransactionDTO> evaluate(TransactionDTO trx, List<String> initiatives) {
-        String userId = trx.getHpan(); // TODO use userId
+        String userId = trx.getUserId();
         return userInitiativeCountersRepository.findById(userId)
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
                 .mapNotNull(userCounters -> {

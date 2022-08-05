@@ -35,6 +35,7 @@ public class Transaction2TransactionDroolsMapper implements Function<Transaction
             rewardTrx.setVat(transaction.getVat());
             rewardTrx.setPosType(transaction.getPosType());
             rewardTrx.setPar(transaction.getPar());
+            rewardTrx.setUserId(transaction.getUserId());
         }
         return rewardTrx;
     }

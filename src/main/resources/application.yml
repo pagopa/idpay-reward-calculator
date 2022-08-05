@@ -13,10 +13,10 @@ spring:
         definition: trxProcessor;rewardRuleConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
-          destination: ${KAFKA_RTD_TOPIC:rtd-trx}
-          group: ${KAFKA_RTD_GROUP_ID:idpay-consumer-group}
+          destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
+          group: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID:idpay-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-rtd
+          binder: kafka-idpay-splitter
         trxProcessor-out-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -26,13 +26,13 @@ spring:
           group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
-        # TODO removeme
+        # TODO remove me
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-rtd-producer
       binders:
-        kafka-rtd:
+        kafka-idpay-splitter:
           type: kafka
           environment:
             spring:
@@ -40,8 +40,8 @@ spring:
                 stream:
                   kafka:
                     binder:
-                      brokers: ${KAFKA_RTD_BROKER:${KAFKA_BROKER:}}
-                      configuration.sasl.jaas.config: ${KAFKA_RTD_SASL_JAAJ_CONFIG:}
+                      brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER:${KAFKA_BROKER:}}
+                      configuration.sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAJ_CONFIG:}
         kafka-idpay:
           type: kafka
           environment:
@@ -62,6 +62,7 @@ spring:
                     binder:
                       brokers: ${KAFKA_REWARD_RULE_REQUEST_BROKER:${KAFKA_BROKER:}}
                       configuration.sasl.jaas.config: ${KAFKA_REWARD_RULE_REQUEST_SASL_JAAJ_CONFIG:}
+        #TODO remove me
         kafka-rtd-producer:
           type: kafka
           environment:

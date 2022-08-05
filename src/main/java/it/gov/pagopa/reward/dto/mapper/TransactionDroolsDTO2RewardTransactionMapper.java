@@ -47,6 +47,8 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
                             ? "REWARDED"
                             : "REJECTED"
             );
+
+            trxDto.setUserId(rewardTrx.getUserId());
         }
 
         return trxDto;

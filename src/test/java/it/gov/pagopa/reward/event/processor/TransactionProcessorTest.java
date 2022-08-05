@@ -79,7 +79,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                 .mapToObj(this::mockInstance).toList();
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getHpan(), i)); // TODO use userId
+        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getUserId(), i));
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topicRewardProcessorOutcome, "idpay-group");
@@ -285,7 +285,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .amount(BigDecimal.valueOf(70))
                                 .build();
                         userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                                .userId(trx.getHpan()) //TODO use userId
+                                .userId(trx.getUserId())
                                 .initiatives(new HashMap<>(Map.of(
                                         INITIATIVE_ID_TRXCOUNT_BASED,
                                         InitiativeCounters.builder()
@@ -349,7 +349,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .yearlyCounters(new HashMap<>(Map.of("2021", Counters.builder().totalReward(BigDecimal.valueOf(10000)).build())))
                                 .build();
                         userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                                .userId(trx.getHpan()) //TODO use userId
+                                .userId(trx.getUserId())
                                 .initiatives(new HashMap<>(Map.of(
                                         INITIATIVE_ID_REWARDLIMITS_BASED,
                                         initiativeRewardCounter
@@ -405,7 +405,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                             .build();
 
                     userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                            .userId(trx.getHpan()) //TODO use userId
+                            .userId(trx.getUserId())
                             .initiatives(new HashMap<>(Map.of(
                                     INITIATIVE_ID_REWARDLIMITS_BASED,
                                     initialStateOfCounters
@@ -508,7 +508,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
-        return expectedCounters.computeIfAbsent(trx.getHpan(), u -> new UserInitiativeCounters(u, new HashMap<>()));//TODO use userId
+        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new HashMap<>()));
     }
 
     private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
