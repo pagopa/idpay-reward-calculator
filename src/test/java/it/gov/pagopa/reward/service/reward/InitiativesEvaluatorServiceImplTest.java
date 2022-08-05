@@ -21,36 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class InitiativesEvaluatorServiceImplTest {
 
     @Test
-    void evaluateInitiativesBudgetAndRules() {
-
-        // Given
-        RuleEngineService ruleEngineService = Mockito.mock(RuleEngineServiceImpl.class);
-
-        TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
-        List<String> initiatives = List.of("INITIATIVE1");
-
-        InitiativeCounters initiativeCounters = InitiativeCounters.builder().initiativeId("INITIATIVE1").build();
-        UserInitiativeCounters userCounters = UserInitiativeCounters.builder()
-                .userId("USER1")
-                .initiatives(Map.of("INITIATIVE1", initiativeCounters))
-                .build();
-
-        Reward reward = new Reward(new BigDecimal("200"));
-        RewardTransactionDTO rTrx = RewardTransactionDTO.builder()
-                        .rewards(Map.of("INITIATIVE1", reward)).build();
-        Mockito.when(ruleEngineService.applyRules(Mockito.same(trx), Mockito.eq(initiatives), Mockito.eq(userCounters))).thenReturn(rTrx);
-
-        InitiativesEvaluatorService initiativesEvaluatorService = new InitiativesEvaluatorServiceImpl(ruleEngineService);
-
-        // When
-        RewardTransactionDTO result = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
-
-        // Then
-        Assertions.assertNotNull(result);
-    }
-
-    @Test
-    void evaluateWithExhaustedInitiative() {
+    void evaluateInitiativesRuleAndBudget() {
 
         // Given
         RuleEngineService ruleEngineService = Mockito.mock(RuleEngineServiceImpl.class);
@@ -82,5 +53,6 @@ class InitiativesEvaluatorServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(Map.of("INITIATIVE1", List.of("BUDGET_EXHAUSTED")), result.getInitiativeRejectionReasons());
+        Assertions.assertFalse(result.getInitiativeRejectionReasons().containsKey("INITIATIVE2"));
     }
 }

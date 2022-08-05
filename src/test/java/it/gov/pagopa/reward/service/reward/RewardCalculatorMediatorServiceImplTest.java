@@ -40,16 +40,8 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(transactionFilterService.filter(Mockito.same(trx1))).thenReturn(true);
         Mockito.when(transactionFilterService.filter(Mockito.same(trx2))).thenReturn(false);
 
-        UserInitiativeCounters uCounters1 = UserInitiativeCounters.builder()
-                .userId("USER1")
-                .initiatives(
-                        new HashMap<>(Map.of(
-                                "INITIATIVE1",
-                                InitiativeCounters.builder().exhaustedBudget(false).build()
-                        ))
-                )
-                .build();
-        Mockito.when(userInitiativeCountersRepository.findById(Mockito.<String>any())).thenReturn(Mono.just(uCounters1));
+
+        Mockito.when(userInitiativeCountersRepository.findById(Mockito.<String>any())).thenReturn(Mono.empty());
         Mockito.when(userInitiativeCountersRepository.save(Mockito.any())).thenReturn(Mono.empty());
 
         List<String> initiatives1 = List.of("INITIATIVE1");

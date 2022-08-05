@@ -14,6 +14,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -58,7 +59,17 @@ public final class InitiativeReward2BuildDTOFaker {
         out.initiativeId("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
 
-        InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO();
+        InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
+                "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
+                new BigDecimal(fakeValuesService.numerify("?????.??")),
+                InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
+                randomGenerator.nextBoolean(),
+                new BigDecimal(fakeValuesService.numerify("???.??")),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now(),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now()
+        );
         out.general(initiativeGeneral);
 
         InitiativeTrxConditions trxRule = new InitiativeTrxConditions();
