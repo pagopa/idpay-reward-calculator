@@ -53,6 +53,5 @@ class InitiativesEvaluatorServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(Map.of("INITIATIVE1", List.of("BUDGET_EXHAUSTED")), result.getInitiativeRejectionReasons());
-        Assertions.assertFalse(result.getInitiativeRejectionReasons().containsKey("INITIATIVE2"));
     }
 }
