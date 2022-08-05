@@ -356,7 +356,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Then
         checkCounters(initiativeCounters, 21L, 10000, 4100);
-        assertEquals(BigDecimal.valueOf(1000.0), reward.getAccruedReward());
+        assertEquals(BigDecimal.valueOf(1000.00), reward.getAccruedReward());
         assertTrue(reward.isCapped());
         checkCounters(initiativeCounters.getDailyCounters().get(TRX_DATE_DAY), 11L, 1070, 200);
         checkCounters(initiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), 11L, 1070, 200);
