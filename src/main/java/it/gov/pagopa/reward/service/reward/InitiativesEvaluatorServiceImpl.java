@@ -2,7 +2,9 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,8 +26,9 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
         List<String> notExhaustedInitiatives = new ArrayList<>();
         Map<String, List<String>> rejectedInitiativesForBudget = new HashMap<>();
         initiatives.forEach(initiativeId -> {
-            if(userCounters.getInitiatives().get(initiativeId).isExhaustedBudget()) {
-                rejectedInitiativesForBudget.put(initiativeId, List.of("BUDGET_EXHAUSTED")); // TODO move into Constants
+            InitiativeCounters initiativeCounters = userCounters.getInitiatives().get(initiativeId);
+            if(initiativeCounters != null && initiativeCounters.isExhaustedBudget()) {
+                rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)); // TODO move into Constants
             } else {
                 notExhaustedInitiatives.add(initiativeId);
             }

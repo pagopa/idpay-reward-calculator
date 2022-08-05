@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -72,7 +73,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
         initiativeCounter.setExhaustedBudget(initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
         if (initiativeCounter.isExhaustedBudget()) {
-            BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward());
+            BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
             reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);
             reward.setAccruedReward(newAccruedReward);
         }

@@ -100,7 +100,6 @@ class RuleEngineServiceImplTest {
 
         // Then
         Mockito.verify(rewardContextHolderService,Mockito.never()).getRewardRulesKieContainer();
-
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
         Mockito.verify(rewardContextHolderService, Mockito.never()).getRewardRulesKieContainer();
         Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));

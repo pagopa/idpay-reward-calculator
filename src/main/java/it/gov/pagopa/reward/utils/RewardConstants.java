@@ -29,7 +29,11 @@ public final class RewardConstants {
         }
     }
 
-    public static int INITIATIVE_TRX_CONSEQUENCE_ORDER = -1;
-    public static int INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER = INITIATIVE_TRX_CONSEQUENCE_ORDER - 1;
+    public static final int INITIATIVE_TRX_CONSEQUENCE_ORDER = -1;
+    public static final int INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER = INITIATIVE_TRX_CONSEQUENCE_ORDER - 1;
     //endregion
+
+    public static final String INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
+
+    public static final String TRX_REJECTION_REASON_NO_INITIATIVE = "NO_ACTIVE_INITIATIVES";
 }

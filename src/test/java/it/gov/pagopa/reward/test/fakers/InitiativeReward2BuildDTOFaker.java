@@ -61,10 +61,10 @@ public final class InitiativeReward2BuildDTOFaker {
 
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
-                new BigDecimal(fakeValuesService.numerify("?????.??")),
+                BigDecimal.valueOf((bias + 1)* 10000L),
                 InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
                 randomGenerator.nextBoolean(),
-                new BigDecimal(fakeValuesService.numerify("???.??")),
+                new BigDecimal(fakeValuesService.numerify("###.##")),
                 LocalDate.of(1970, 1, 1),
                 LocalDate.now(),
                 LocalDate.of(1970, 1, 1),
@@ -118,6 +118,19 @@ public final class InitiativeReward2BuildDTOFaker {
 
         out.setInitiativeId(fakeValuesService.bothify("?????"));
         out.setInitiativeName(fakeValuesService.bothify("?????"));
+
+        InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
+                "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
+                new BigDecimal(fakeValuesService.numerify("#####.##")),
+                InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
+                randomGenerator.nextBoolean(),
+                new BigDecimal(fakeValuesService.numerify("###.##")),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now(),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now()
+        );
+        out.setGeneral(initiativeGeneral);
 
         out.setTrxRule(new InitiativeTrxConditions());
         out.getTrxRule().setRewardLimits(List.of(new RewardLimitsDTO(frequency,BigDecimal.valueOf(700.00))));

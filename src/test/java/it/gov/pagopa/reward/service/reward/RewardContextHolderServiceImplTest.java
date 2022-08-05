@@ -11,6 +11,8 @@ import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 class RewardContextHolderServiceImplTest {
 
     @Test
@@ -88,6 +90,7 @@ class RewardContextHolderServiceImplTest {
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
+                .budget(BigDecimal.valueOf(100))
                 .dailyThreshold(true)
                 .monthlyThreshold(false)
                 .yearlyThreshold(false).build();

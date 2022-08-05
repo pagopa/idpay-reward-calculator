@@ -106,13 +106,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
     @Test
     void mapperAllFrequencyType() {
         // Given
-        InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
-        initiative.setInitiativeId("INITIATIVE_ID");
-
-        InitiativeGeneralDTO initiativeGeneralDTO = new InitiativeGeneralDTO();
-        initiative.setGeneral(initiativeGeneralDTO);
-
-        initiative.setTrxRule(new InitiativeTrxConditions());
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstance(1);
 
         initiative.getTrxRule().setRewardLimits(List.of(
                 RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY).build(),

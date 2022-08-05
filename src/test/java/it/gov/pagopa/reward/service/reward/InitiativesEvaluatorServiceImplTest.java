@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -52,6 +53,6 @@ class InitiativesEvaluatorServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(Map.of("INITIATIVE1", List.of("BUDGET_EXHAUSTED")), result.getInitiativeRejectionReasons());
+        Assertions.assertEquals(Map.of("INITIATIVE1", List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)), result.getInitiativeRejectionReasons());
     }
 }

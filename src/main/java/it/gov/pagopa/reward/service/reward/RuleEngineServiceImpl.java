@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMap
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.kie.api.command.Command;
@@ -65,8 +66,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             log.debug("Send message prepared: {}", trx);
             log.info("Transaction evaluated  ({}) and resulted into rewards:({}), initiativeRejectionReason:{}", "%s-%s".formatted(trx.getHpan(), trx.getTrxDate()), trx.getRewards(), trx.getInitiativeRejectionReasons());
         }else {
-            // The date of transaction is not in an active range for the hpan
-            trx.setRejectionReasons(List.of("HPAN_NOT_ACTIVE"));
+            trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE);
         }
         return transactionDroolsDTO2RewardTransactionMapper.apply(trx);
     }

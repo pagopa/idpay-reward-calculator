@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRul
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
@@ -28,6 +29,7 @@ import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public class RewardRule2DroolsRuleServiceTest {
@@ -60,6 +62,7 @@ public class RewardRule2DroolsRuleServiceTest {
         // given
         InitiativeReward2BuildDTO dto = new InitiativeReward2BuildDTO();
         dto.setTrxRule(new InitiativeTrxConditions());
+        dto.setGeneral(InitiativeGeneralDTO.builder().budget(BigDecimal.TEN).build());
 
         // when
         DroolsRule result = buildRewardRule2DroolsRule(true).apply(dto);
@@ -292,6 +295,7 @@ public class RewardRule2DroolsRuleServiceTest {
 
         expected.setInitiativeConfig(InitiativeConfig.builder()
                 .initiativeId(expected.getId())
+                .budget(BigDecimal.valueOf(10000L))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)
                 .monthlyThreshold(true)
