@@ -19,19 +19,16 @@ class RewardCalculatorMediatorServiceImplTest {
     @Test
     void execute() {
         // Given
-        TransactionFilterService transactionFilterService = Mockito.mock(TransactionFilterServiceImpl.class);
         OnboardedInitiativesService onboardedInitiativesService = Mockito.mock(OnboardedInitiativesServiceImpl.class);
         UserInitiativeCountersRepository userInitiativeCountersRepository = Mockito.mock(UserInitiativeCountersRepository.class);
         RuleEngineService ruleEngineService = Mockito.mock(RuleEngineServiceImpl.class);
         UserInitiativeCountersUpdateService userInitiativeCountersUpdateService = Mockito.mock(UserInitiativeCountersUpdateService.class);
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(transactionFilterService, onboardedInitiativesService, userInitiativeCountersRepository, ruleEngineService, userInitiativeCountersUpdateService);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, ruleEngineService, userInitiativeCountersUpdateService);
 
         TransactionDTO trx1 = Mockito.mock(TransactionDTO.class);
         TransactionDTO trx2 = Mockito.mock(TransactionDTO.class);
         Flux<TransactionDTO> trxFlux = Flux.just(trx1,trx2);
 
-        Mockito.when(transactionFilterService.filter(Mockito.same(trx1))).thenReturn(true);
-        Mockito.when(transactionFilterService.filter(Mockito.same(trx2))).thenReturn(false);
         Mockito.when(userInitiativeCountersRepository.findById(Mockito.<String>any())).thenReturn(Mono.empty());
         Mockito.when(userInitiativeCountersRepository.save(Mockito.any())).thenReturn(Mono.empty());
 

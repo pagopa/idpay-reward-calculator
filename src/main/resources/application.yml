@@ -40,7 +40,7 @@ spring:
                 stream:
                   kafka:
                     binder:
-                      brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER:${KAFKA_BROKER:}}
+                      brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
                       configuration.sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAJ_CONFIG:}
         kafka-idpay:
           type: kafka

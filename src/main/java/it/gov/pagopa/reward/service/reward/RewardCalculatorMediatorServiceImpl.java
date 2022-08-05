@@ -17,14 +17,12 @@ import java.util.List;
 @Slf4j
 public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMediatorService{
 
-    private final TransactionFilterService transactionFilterService;
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final RuleEngineService ruleEngineService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
 
-    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, RuleEngineService ruleEngineService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
-        this.transactionFilterService = transactionFilterService;
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, RuleEngineService ruleEngineService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.ruleEngineService = ruleEngineService;
@@ -34,7 +32,6 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     @Override
     public Flux<RewardTransactionDTO> execute(Flux<TransactionDTO> transactionDTOFlux) {
         return transactionDTOFlux
-                .filter(transactionFilterService::filter)
                 .flatMap(this::evaluate);
     }
 
