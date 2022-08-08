@@ -302,16 +302,10 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                         final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                                 .amount(BigDecimal.valueOf(70))
                                 .build();
-                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                                .userId(trx.getUserId())
-                                .initiatives(new HashMap<>(Map.of(
-                                        INITIATIVE_ID_TRXCOUNT_BASED,
-                                        InitiativeCounters.builder()
-                                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
-                                                .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
-                                                .build()
-                                )))
-                                .build()).block();
+                        saveUserInitiativeCounter(trx, InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                                .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
+                                .build(), INITIATIVE_ID_TRXCOUNT_BASED);
                         return onboardTrxHpanAndIncreaseCounters(
                                 trx,
                                 INITIATIVE_ID_TRXCOUNT_BASED);
@@ -366,13 +360,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .monthlyCounters(new HashMap<>(Map.of("2021-12", Counters.builder().totalReward(BigDecimal.valueOf(1000)).build())))
                                 .yearlyCounters(new HashMap<>(Map.of("2021", Counters.builder().totalReward(BigDecimal.valueOf(10000)).build())))
                                 .build();
-                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                                .userId(trx.getUserId())
-                                .initiatives(new HashMap<>(Map.of(
-                                        INITIATIVE_ID_REWARDLIMITS_BASED,
-                                        initiativeRewardCounter
-                                )))
-                                .build()).block();
+                        saveUserInitiativeCounter(trx, initiativeRewardCounter, INITIATIVE_ID_REWARDLIMITS_BASED);
 
                         final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
@@ -411,13 +399,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .initiativeId(INITIATIVE_ID_EXHAUSTED)
                                 .exhaustedBudget(true)
                                 .build();
-                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                                .userId(trx.getHpan()) //TODO use userId
-                                .initiatives(new HashMap<>(Map.of(
-                                        INITIATIVE_ID_EXHAUSTED,
-                                        initiativeRewardCounter
-                                )))
-                                .build()).block();
+                        saveUserInitiativeCounter(trx, initiativeRewardCounter, INITIATIVE_ID_EXHAUSTED);
 
                         final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
@@ -443,13 +425,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .initiativeId(INITIATIVE_ID_EXHAUSTING)
                                 .totalReward(BigDecimal.valueOf(999))
                                 .build();
-                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                                .userId(trx.getHpan()) //TODO use userId
-                                .initiatives(new HashMap<>(Map.of(
-                                        INITIATIVE_ID_EXHAUSTING,
-                                        initiativeRewardCounter
-                                )))
-                                .build()).block();
+                        saveUserInitiativeCounter(trx, initiativeRewardCounter, INITIATIVE_ID_EXHAUSTING);
 
                         final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
@@ -490,13 +466,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                             .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().totalReward(BigDecimal.valueOf(isYearlyCapped ? 9999.2 : 9999)).build())))
                             .build();
 
-                    userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                            .userId(trx.getUserId())
-                            .initiatives(new HashMap<>(Map.of(
-                                    INITIATIVE_ID_REWARDLIMITS_BASED,
-                                    initialStateOfCounters
-                            )))
-                            .build()).block();
+                    saveUserInitiativeCounter(trx, initialStateOfCounters, INITIATIVE_ID_REWARDLIMITS_BASED);
                     createUserCounter(trx).getInitiatives().put(INITIATIVE_ID_REWARDLIMITS_BASED, initialStateOfCounters);
 
                     return onboardTrxHpanAndIncreaseCounters(
@@ -595,6 +565,16 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
     private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
         return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new HashMap<>()));
+    }
+
+    private void saveUserInitiativeCounter(TransactionDTO trx, InitiativeCounters initiativeRewardCounter, String initiativeIdExhausted) {
+        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
+                .userId(trx.getUserId())
+                .initiatives(new HashMap<>(Map.of(
+                        initiativeIdExhausted,
+                        initiativeRewardCounter
+                )))
+                .build()).block();
     }
 
     private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

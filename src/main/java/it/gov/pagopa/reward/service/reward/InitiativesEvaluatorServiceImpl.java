@@ -28,7 +28,7 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
         initiatives.forEach(initiativeId -> {
             InitiativeCounters initiativeCounters = userCounters.getInitiatives().get(initiativeId);
             if(initiativeCounters != null && initiativeCounters.isExhaustedBudget()) {
-                rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)); // TODO move into Constants
+                rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
             } else {
                 notExhaustedInitiatives.add(initiativeId);
             }

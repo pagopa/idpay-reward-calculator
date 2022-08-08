@@ -61,7 +61,6 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
-        //TODO retrieve initiativeConfig from DroolsRule entity
         DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block();
         if (droolsRule==null){
             log.error("cannot find initiative having id %s".formatted(initiativeId));
