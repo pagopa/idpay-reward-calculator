@@ -6,8 +6,8 @@ import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import org.drools.core.rule.Collect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -86,12 +87,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
     private void checkCounters(Counters counter, long expectedTrxCount, double expectedTotalReward, double expectedTotalAmount) {
         assertEquals(expectedTrxCount, counter.getTrxNumber());
-        assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalReward), counter.getTotalReward());
-        assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalAmount), counter.getTotalAmount());
-    }
-
-    private void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual){
-        assertEquals(0, expected.compareTo(actual), "Expected: %s, Obtained: %s".formatted(expected, actual));
+        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalReward), counter.getTotalReward());
+        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalAmount), counter.getTotalAmount());
     }
 
     @Test
@@ -356,7 +353,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Then
         checkCounters(initiativeCounters, 21L, 10000, 4100);
-        assertEquals(BigDecimal.valueOf(1000.00), reward.getAccruedReward());
+        assertEquals(BigDecimal.valueOf(1000.0).setScale(2, RoundingMode.HALF_DOWN), reward.getAccruedReward());
         assertTrue(reward.isCapped());
         checkCounters(initiativeCounters.getDailyCounters().get(TRX_DATE_DAY), 11L, 1070, 200);
         checkCounters(initiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), 11L, 1070, 200);

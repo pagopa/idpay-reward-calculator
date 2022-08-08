@@ -22,6 +22,7 @@ import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -250,10 +251,6 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
     }
 
-    private void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual) {
-        assertEquals(0, expected.compareTo(actual), "Expected: %s, Obtained: %s".formatted(expected, actual));
-    }
-
     //region useCases
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime));
@@ -466,7 +463,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                     evaluation -> {
                         assertRewardedState(evaluation, INITIATIVE_ID_EXHAUSTING, true);
                         Reward reward = evaluation.getRewards().get(INITIATIVE_ID_EXHAUSTING);
-                        assertBigDecimalEquals(BigDecimal.valueOf(10), reward.getProvidedReward());
+                        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(10), reward.getProvidedReward());
                         assertTrue(reward.isCapped());
                     }
             )
@@ -512,7 +509,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
                         final Reward initiativeReward = evaluation.getRewards().get(INITIATIVE_ID_REWARDLIMITS_BASED);
 
-                        assertBigDecimalEquals(BigDecimal.valueOf(8), initiativeReward.getProvidedReward());
+                        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(8), initiativeReward.getProvidedReward());
                         assertEquals(List.of(
                                         isDailyCapped,
                                         isWeeklyCapped,
@@ -542,9 +539,9 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         final Reward initiativeReward = evaluation.getRewards().get(rewardedInitiativeId);
         Assertions.assertNotNull(initiativeReward);
 
-        assertBigDecimalEquals(initiative2ExpectedReward.get(rewardedInitiativeId), initiativeReward.getAccruedReward());
+        TestUtils.assertBigDecimalEquals(initiative2ExpectedReward.get(rewardedInitiativeId), initiativeReward.getAccruedReward());
         if (!expectedCap) {
-            assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
+            TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
         }
     }
 
