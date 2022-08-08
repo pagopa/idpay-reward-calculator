@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -56,6 +58,19 @@ public final class InitiativeReward2BuildDTOFaker {
 
         out.initiativeId("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+
+        InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
+                "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
+                BigDecimal.valueOf((bias + 1)* 10000L),
+                InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
+                randomGenerator.nextBoolean(),
+                new BigDecimal(fakeValuesService.numerify("###.##")),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now(),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now()
+        );
+        out.general(initiativeGeneral);
 
         InitiativeTrxConditions trxRule = new InitiativeTrxConditions();
         out.trxRule(trxRule);
@@ -103,6 +118,19 @@ public final class InitiativeReward2BuildDTOFaker {
 
         out.setInitiativeId(fakeValuesService.bothify("?????"));
         out.setInitiativeName(fakeValuesService.bothify("?????"));
+
+        InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
+                "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
+                new BigDecimal(fakeValuesService.numerify("#####.##")),
+                InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
+                randomGenerator.nextBoolean(),
+                new BigDecimal(fakeValuesService.numerify("###.##")),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now(),
+                LocalDate.of(1970, 1, 1),
+                LocalDate.now()
+        );
+        out.setGeneral(initiativeGeneral);
 
         out.setTrxRule(new InitiativeTrxConditions());
         out.getTrxRule().setRewardLimits(List.of(new RewardLimitsDTO(frequency,BigDecimal.valueOf(700.00))));
