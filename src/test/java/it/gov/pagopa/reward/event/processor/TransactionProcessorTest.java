@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
@@ -21,6 +22,7 @@ import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -44,6 +46,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
@@ -133,6 +136,8 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_MCC_BASED = "ID_2_MCC";
     private static final String INITIATIVE_ID_TRXCOUNT_BASED = "ID_3_TRXCOUNT";
     private static final String INITIATIVE_ID_REWARDLIMITS_BASED = "ID_4_REWARDLIMITS";
+    private static final String INITIATIVE_ID_EXHAUSTED = "ID_5_EXHAUSTED";
+    private static final String INITIATIVE_ID_EXHAUSTING = "ID_6_EXHAUSTING";
 
     private void publishRewardRules() {
         int[] expectedRules = {0};
@@ -211,6 +216,21 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .rewardRule(RewardValueDTO.builder()
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(5, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_EXHAUSTED)
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_EXHAUSTING)
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .general(InitiativeGeneralDTO.builder()
+                                        .budget(BigDecimal.valueOf(1000))
+                                        .build())
                                 .build()
                 )
                 .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
@@ -231,10 +251,6 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
     }
 
-    private void assertBigDecimalEquals(BigDecimal expected, BigDecimal actual) {
-        assertEquals(0, expected.compareTo(actual), "Expected: %s, Obtained: %s".formatted(expected, actual));
-    }
-
     //region useCases
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime));
@@ -245,7 +261,9 @@ class TransactionProcessorTest extends BaseIntegrationTest {
             INITIATIVE_ID_DAYOFWEEK_BASED, BigDecimal.valueOf(5),
             INITIATIVE_ID_MCC_BASED, BigDecimal.valueOf(6),
             INITIATIVE_ID_REWARDLIMITS_BASED, BigDecimal.valueOf(0.8),
-            INITIATIVE_ID_TRXCOUNT_BASED, BigDecimal.valueOf(7)
+            INITIATIVE_ID_TRXCOUNT_BASED, BigDecimal.valueOf(7),
+            INITIATIVE_ID_EXHAUSTED, BigDecimal.valueOf(0),
+            INITIATIVE_ID_EXHAUSTING, BigDecimal.valueOf(1)
     );
 
     private final List<Pair<Function<Integer, TransactionDTO>, java.util.function.Consumer<RewardTransactionDTO>>> useCases = List.of(
@@ -317,7 +335,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.MONTHLY),
             // rewarded by RewardLimits based initiative, yearly capped
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.YEARLY),
-            // not rewarded hpan not onboarded
+            // not rewarded due to no initiatives
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
@@ -327,8 +345,8 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                     evaluation -> {
                         Assertions.assertFalse(evaluation.getRejectionReasons().isEmpty());
                         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
-                        Assertions.assertTrue(evaluation.getRewards().isEmpty());
-                        Assertions.assertEquals(List.of("HPAN_NOT_ACTIVE"), evaluation.getRejectionReasons());
+                        assertTrue(evaluation.getRewards().isEmpty());
+                        Assertions.assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), evaluation.getRejectionReasons());
                         Assertions.assertEquals("REJECTED", evaluation.getStatus());
                     }
             ),
@@ -379,7 +397,75 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                             RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason().formatted(RewardLimitsDTO.RewardLimitFrequency.MONTHLY),
                                             RewardConstants.InitiativeTrxConditionOrder.REWARDLIMITS.getRejectionReason().formatted(RewardLimitsDTO.RewardLimitFrequency.YEARLY)
                                     )
-                            ))
+                            ),
+                            Collections.emptyList())
+            ),
+            // useCase initiative budget exhausted
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
+                                .amount(BigDecimal.TEN)
+                                .build();
+
+                        final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_EXHAUSTED)
+                                .exhaustedBudget(true)
+                                .build();
+                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
+                                .userId(trx.getHpan()) //TODO use userId
+                                .initiatives(new HashMap<>(Map.of(
+                                        INITIATIVE_ID_EXHAUSTED,
+                                        initiativeRewardCounter
+                                )))
+                                .build()).block();
+
+                        final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                                trx,
+                                INITIATIVE_ID_EXHAUSTED
+                        );
+                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_EXHAUSTED, initiativeRewardCounter);
+                        return trx;
+                    },
+                    evaluation -> assertRejectedInitiativesState(evaluation,
+                            Map.of(
+                                    INITIATIVE_ID_EXHAUSTED, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)
+                            ),
+                            List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+            ),
+            // useCase exhausting initiative budget
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
+                                .amount(BigDecimal.valueOf(100))
+                                .build();
+
+                        final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_EXHAUSTING)
+                                .totalReward(BigDecimal.valueOf(999))
+                                .build();
+                        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
+                                .userId(trx.getHpan()) //TODO use userId
+                                .initiatives(new HashMap<>(Map.of(
+                                        INITIATIVE_ID_EXHAUSTING,
+                                        initiativeRewardCounter
+                                )))
+                                .build()).block();
+
+                        final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                                trx,
+                                INITIATIVE_ID_EXHAUSTING
+                        );
+                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_EXHAUSTING, initiativeRewardCounter);
+                        updateCounters(initiativeRewardCounter, trx, BigDecimal.valueOf(1));
+                        initiativeRewardCounter.setExhaustedBudget(true);
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertRewardedState(evaluation, INITIATIVE_ID_EXHAUSTING, true);
+                        Reward reward = evaluation.getRewards().get(INITIATIVE_ID_EXHAUSTING);
+                        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(10), reward.getProvidedReward());
+                        assertTrue(reward.isCapped());
+                    }
             )
     );
 
@@ -423,7 +509,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
                         final Reward initiativeReward = evaluation.getRewards().get(INITIATIVE_ID_REWARDLIMITS_BASED);
 
-                        assertBigDecimalEquals(BigDecimal.valueOf(8), initiativeReward.getProvidedReward());
+                        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(8), initiativeReward.getProvidedReward());
                         assertEquals(List.of(
                                         isDailyCapped,
                                         isWeeklyCapped,
@@ -453,17 +539,17 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         final Reward initiativeReward = evaluation.getRewards().get(rewardedInitiativeId);
         Assertions.assertNotNull(initiativeReward);
 
-        assertBigDecimalEquals(initiative2ExpectedReward.get(rewardedInitiativeId), initiativeReward.getAccruedReward());
+        TestUtils.assertBigDecimalEquals(initiative2ExpectedReward.get(rewardedInitiativeId), initiativeReward.getAccruedReward());
         if (!expectedCap) {
-            assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
+            TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
         }
     }
 
-    private void assertRejectedInitiativesState(RewardTransactionDTO evaluation, Map<String, List<String>> expectedRejectedReasons) {
+    private void assertRejectedInitiativesState(RewardTransactionDTO evaluation, Map<String, List<String>> expectedInitiativeRejectionReasons, List<String> expectedRejectionReasons) {
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
-        Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
+        Assertions.assertEquals(expectedRejectionReasons, evaluation.getRejectionReasons());
         Assertions.assertFalse(evaluation.getInitiativeRejectionReasons().isEmpty());
-        Assertions.assertEquals(expectedRejectedReasons, evaluation.getInitiativeRejectionReasons());
+        Assertions.assertEquals(expectedInitiativeRejectionReasons, evaluation.getInitiativeRejectionReasons());
         Assertions.assertEquals("REJECTED", evaluation.getStatus());
     }
 
@@ -518,22 +604,22 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
     private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
         updateCounters(counters, trx, expectedReward);
-        if (initiativeConfig.isHasDailyThreshold()) {
+        if (initiativeConfig.isDailyThreshold()) {
             updateCounters(
                     counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if (initiativeConfig.isHasWeeklyThreshold()) {
+        if (initiativeConfig.isWeeklyThreshold()) {
             updateCounters(
                     counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if (initiativeConfig.isHasMonthlyThreshold()) {
+        if (initiativeConfig.isMonthlyThreshold()) {
             updateCounters(
                     counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d -> new Counters()),
                     trx, expectedReward);
         }
-        if (initiativeConfig.isHasYearlyThreshold()) {
+        if (initiativeConfig.isYearlyThreshold()) {
             updateCounters(
                     counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d -> new Counters()),
                     trx, expectedReward);

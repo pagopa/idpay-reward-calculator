@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -62,10 +63,20 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                 InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
 
+                evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
                 updateCounters(initiativeCounter, reward, ruleEngineResult.getAmount());
                 updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, initiativeConfig);
             }
         });
+    }
+
+    private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
+        initiativeCounter.setExhaustedBudget(initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
+        if (initiativeCounter.isExhaustedBudget()) {
+            BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
+            reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);
+            reward.setAccruedReward(newAccruedReward);
+        }
     }
 
     private boolean isRewardedInitiative(Reward initiativeReward) {
@@ -83,16 +94,16 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
-        if (initiativeConfig.isHasDailyThreshold()) {
+        if (initiativeConfig.isDailyThreshold()) {
             updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, initiativeReward);
         }
-        if (initiativeConfig.isHasWeeklyThreshold()) {
+        if (initiativeConfig.isWeeklyThreshold()) {
             updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, initiativeReward);
         }
-        if (initiativeConfig.isHasMonthlyThreshold()) {
+        if (initiativeConfig.isMonthlyThreshold()) {
             updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, initiativeReward);
         }
-        if (initiativeConfig.isHasYearlyThreshold()) {
+        if (initiativeConfig.isYearlyThreshold()) {
             updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, initiativeReward);
         }
     }

@@ -15,6 +15,7 @@ import java.util.Map;
 public class InitiativeCounters extends Counters {
     @Id
     private String initiativeId;
+    private boolean exhaustedBudget;
     @Builder.Default
     private Map<String, Counters> dailyCounters = new HashMap<>();
     @Builder.Default

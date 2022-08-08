@@ -14,6 +14,7 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
     public InitiativeConfig apply(InitiativeReward2BuildDTO initiativeReward2BuildDTO) {
         InitiativeConfig out = new InitiativeConfig();
         out.setInitiativeId(initiativeReward2BuildDTO.getInitiativeId());
+        out.setBudget(initiativeReward2BuildDTO.getGeneral().getBudget());
         setPeriodicalInfo(initiativeReward2BuildDTO, out);
         return out;
     }
@@ -28,10 +29,10 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
     private void setLimitFrequency(RewardLimitsDTO.RewardLimitFrequency limitFrequency, InitiativeConfig initiativeConfig){
         if(limitFrequency!=null) {
             switch (limitFrequency) {
-                case DAILY -> initiativeConfig.setHasDailyThreshold(true);
-                case WEEKLY -> initiativeConfig.setHasWeeklyThreshold(true);
-                case MONTHLY -> initiativeConfig.setHasMonthlyThreshold(true);
-                case YEARLY -> initiativeConfig.setHasYearlyThreshold(true);
+                case DAILY -> initiativeConfig.setDailyThreshold(true);
+                case WEEKLY -> initiativeConfig.setWeeklyThreshold(true);
+                case MONTHLY -> initiativeConfig.setMonthlyThreshold(true);
+                case YEARLY -> initiativeConfig.setYearlyThreshold(true);
                 default -> throw new IllegalArgumentException("Frequency type not expected");
             }
         }else {

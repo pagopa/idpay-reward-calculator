@@ -42,7 +42,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
 
     @Override
     public DroolsRule apply(InitiativeReward2BuildDTO initiative) {
-        log.info("Building inititative having id: %s".formatted(initiative.getInitiativeId()));
+        log.info("Building initiative having id: %s".formatted(initiative.getInitiativeId()));
 
         try {
             DroolsRule out = new DroolsRule();

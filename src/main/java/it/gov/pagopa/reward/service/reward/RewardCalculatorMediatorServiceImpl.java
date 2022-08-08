@@ -20,25 +20,25 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final TransactionFilterService transactionFilterService;
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
-    private final RuleEngineService ruleEngineService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
+    private final InitiativesEvaluatorService initiativesEvaluatorService;
 
-    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, RuleEngineService ruleEngineService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
+    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, InitiativesEvaluatorService initiativesEvaluatorService) {
         this.transactionFilterService = transactionFilterService;
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
-        this.ruleEngineService = ruleEngineService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
+        this.initiativesEvaluatorService = initiativesEvaluatorService;
     }
 
     @Override
     public Flux<RewardTransactionDTO> execute(Flux<TransactionDTO> transactionDTOFlux) {
         return transactionDTOFlux
                 .filter(transactionFilterService::filter)
-                .flatMap(this::evaluate);
+                .flatMap(this::retrieveInitiativesAndEvaluate);
     }
 
-    private Mono<RewardTransactionDTO> evaluate(TransactionDTO trx) {
+    private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {
         return onboardedInitiativesService.getInitiatives(trx.getHpan(), trx.getTrxDate())
                 .collectList()
                 .flatMap(initiatives -> evaluate(trx, initiatives));
@@ -48,14 +48,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         String userId = trx.getHpan(); // TODO use userId
         return userInitiativeCountersRepository.findById(userId)
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
-                .mapNotNull(userCounters -> {
-                    RewardTransactionDTO trxRewarded = ruleEngineService.applyRules(trx, initiatives, userCounters);
-                    if(trxRewarded!=null){
-                        return Pair.of(userCounters, trxRewarded);
-                    } else {
-                        return null;
-                    }
-                })
+                .mapNotNull(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
                 .flatMap(counters2rewardedTrx -> {
                     userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond());
                     return userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst())
@@ -63,4 +56,12 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 });
     }
 
+    private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+        RewardTransactionDTO trxRewarded = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
+        if(trxRewarded!=null){
+            return Pair.of(userCounters, trxRewarded);
+        } else {
+            return null;
+        }
+    }
 }
