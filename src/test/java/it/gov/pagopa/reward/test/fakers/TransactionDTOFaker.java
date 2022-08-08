@@ -68,6 +68,7 @@ public class TransactionDTOFaker {
                 .fiscalCode("FISCALCODE%s".formatted(bias))
                 .vat("VAT%s".formatted(bias))
                 .posType("POSTYPE%s".formatted(bias))
-                .par("PAR%s".formatted(bias));
+                .par("PAR%s".formatted(bias))
+                .userId("USERID%s".formatted(bias));
     }
 }

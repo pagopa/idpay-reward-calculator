@@ -136,7 +136,7 @@ class RuleEngineServiceImplTest {
                 .amount(BigDecimal.valueOf(11))
                 .mcc("MCC_0")
                 .build();
-        RewardTransactionDTO result = ruleEngineService.applyRules(trx, rules.stream().map(DroolsRule::getId).collect(Collectors.toList()), new UserInitiativeCounters(trx.getHpan(), new HashMap<>()));// TODO use userId
+        RewardTransactionDTO result = ruleEngineService.applyRules(trx, rules.stream().map(DroolsRule::getId).collect(Collectors.toList()), new UserInitiativeCounters(trx.getUserId(), new HashMap<>()));
 
         Assertions.assertEquals(Map.of(
                 "ID_0_ssx", shortCircuited ? List.of("TRX_RULE_MCCFILTER_FAIL") :List.of("TRX_RULE_MCCFILTER_FAIL","TRX_RULE_THRESHOLD_FAIL"),

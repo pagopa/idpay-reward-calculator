@@ -60,5 +60,7 @@ public class TransactionDTO {
 
     private String par;
 
+    private String userId;
+
 
 }

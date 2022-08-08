@@ -17,24 +17,21 @@ import java.util.List;
 @Slf4j
 public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMediatorService{
 
-    private final TransactionFilterService transactionFilterService;
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
-    private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
     private final InitiativesEvaluatorService initiativesEvaluatorService;
+    private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
 
-    public RewardCalculatorMediatorServiceImpl(TransactionFilterService transactionFilterService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, InitiativesEvaluatorService initiativesEvaluatorService) {
-        this.transactionFilterService = transactionFilterService;
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
-        this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
+        this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
     }
 
     @Override
     public Flux<RewardTransactionDTO> execute(Flux<TransactionDTO> transactionDTOFlux) {
         return transactionDTOFlux
-                .filter(transactionFilterService::filter)
                 .flatMap(this::retrieveInitiativesAndEvaluate);
     }
 
@@ -45,7 +42,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     }
 
     private Mono<RewardTransactionDTO> evaluate(TransactionDTO trx, List<String> initiatives) {
-        String userId = trx.getHpan(); // TODO use userId
+        String userId = trx.getUserId();
         return userInitiativeCountersRepository.findById(userId)
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
                 .mapNotNull(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
