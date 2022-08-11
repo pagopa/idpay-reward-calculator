@@ -19,7 +19,6 @@ import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
-        "app.rules.cache.refresh-ms-rate=60000",
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
 })
