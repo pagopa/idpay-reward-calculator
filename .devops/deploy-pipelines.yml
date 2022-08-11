@@ -188,4 +188,3 @@ stages:
                     name: '$(helmReleaseName)-microservice-chart'
                     mergeStrategy: strategic
                     patch: '{"spec":{"template":{"metadata":{"annotations":{"buildNumber":"$(Build.BuildNumber)"}}}}}'
-                    
