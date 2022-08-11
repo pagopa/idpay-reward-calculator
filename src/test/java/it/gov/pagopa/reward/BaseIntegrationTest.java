@@ -53,6 +53,10 @@ import static org.awaitility.Awaitility.await;
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
+                //region common feature disabled
+                "app.rules.cache.refresh-ms-rate=60000",
+                //endregion
+
                 //region kafka brokers
                 "logging.level.org.apache.zookeeper=WARN",
                 "logging.level.org.apache.kafka=WARN",
