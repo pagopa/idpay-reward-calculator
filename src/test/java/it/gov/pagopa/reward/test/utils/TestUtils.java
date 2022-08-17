@@ -7,9 +7,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 
 import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,7 +19,13 @@ public class TestUtils {
     private TestUtils() {
     }
 
-    /** applications's objectMapper */
+    static {
+        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+    }
+
+    /**
+     * applications's objectMapper
+     */
     public static ObjectMapper objectMapper = new JsonConfig().objectMapper();
 
     /**
@@ -41,7 +49,9 @@ public class TestUtils {
         assertEquals(0, expected.compareTo(actual), "Expected: %s, Obtained: %s".formatted(expected, actual));
     }
 
-    /** To serialize an object as a JSON handling Exception */
+    /**
+     * To serialize an object as a JSON handling Exception
+     */
     public static String jsonSerializer(Object value) {
         try {
             return objectMapper.writeValueAsString(value);
@@ -50,7 +60,9 @@ public class TestUtils {
         }
     }
 
-    /** To read {@link org.apache.kafka.common.header.Header} value */
+    /**
+     * To read {@link org.apache.kafka.common.header.Header} value
+     */
     public static String getHeaderValue(ConsumerRecord<String, String> errorMessage, String errorMsgHeaderSrcServer) {
         return new String(errorMessage.headers().lastHeader(errorMsgHeaderSrcServer).value());
     }
