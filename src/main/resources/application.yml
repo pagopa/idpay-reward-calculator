@@ -30,6 +30,10 @@ spring:
           group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
+        errors-out-0:
+          destination: ${KAFKA_ERROR_TOPIC:idpay-errors}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-errors
         # TODO remove me
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
@@ -54,6 +58,12 @@ spring:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_REWARD_RULE_REQUEST_BROKER:${KAFKA_BROKER:}}
               configuration.sasl.jaas.config: ${KAFKA_REWARD_RULE_REQUEST_SASL_JAAJ_CONFIG:}
+        kafka-errors:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
+              configuration.sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAJ_CONFIG:}
         #TODO remove me
         kafka-rtd-producer:
           type: kafka
@@ -134,14 +144,14 @@ app:
     online-syntax-check: ${REWARD_RULE_BUILD_ONLINE_SYNTAX_CHECK:false}
     # the delay after which it will fetch all the rules and compile them
     build-delay-duration: ${REWARD_RULE_BUILD_DELAY_DURATION:PT1S} # each second
+    # The milliseconds rate after which to fetch from cache a new instance of the benefiricaryRilekieContainer
+    # TODO revert default value (10000) once filled env-specific value into config Map
+    cache.refresh-ms-rate: ${CACHE_REFRESH_MS_RATE:31536000000}
     rule-engine:
       # if exit immediately at the first condition failed
       short-circuit-conditions: ${REWARD_RULE_SHORT_CIRCUIT:false}
   filter:
     mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
-  rules:
-    cache:
-      refresh-ms-rate: ${CACHE_REFRESH_MS_RATE:10000}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
 
