@@ -53,6 +53,8 @@ class RewardCalculatorMediatorServiceImplTest {
         Flux<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux);
 
         // Then
+        Mockito.verifyNoInteractions(errorNotifierServiceMock);
+
         Assertions.assertEquals(1L, result.count().block());
 
         Mockito.verify(userInitiativeCountersRepository).save(Mockito.any());
