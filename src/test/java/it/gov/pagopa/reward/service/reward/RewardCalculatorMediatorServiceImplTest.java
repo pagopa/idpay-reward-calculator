@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -16,10 +17,19 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.management.*;
+import java.lang.management.ManagementFactory;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.TimeZone;
 
 @ExtendWith(MockitoExtension.class)
 class RewardCalculatorMediatorServiceImplTest {
+
+    @BeforeAll
+    public static void setDefaultTimezone() {
+        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+    }
 
     @Test
     void execute() {
@@ -50,12 +60,12 @@ class RewardCalculatorMediatorServiceImplTest {
                 .thenReturn(rTrx1);
 
         // When
-        Flux<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux);
+        List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
 
         // Then
         Mockito.verifyNoInteractions(errorNotifierServiceMock);
 
-        Assertions.assertEquals(1L, result.count().block());
+        Assertions.assertEquals(1, result.size());
 
         Mockito.verify(userInitiativeCountersRepository).save(Mockito.any());
     }
