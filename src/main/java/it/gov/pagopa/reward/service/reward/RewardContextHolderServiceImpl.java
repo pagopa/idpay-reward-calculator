@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.kie.api.runtime.KieContainer;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,10 +42,12 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     //TODO use cache
-    @Scheduled(fixedRateString = "${app.rules.cache.refresh-ms-rate}")
+    @Scheduled(fixedRateString = "${app.reward-rule.cache.refresh-ms-rate}")
     public void refreshKieContainer(){
         log.trace("Refreshing KieContainer");
-        kieContainerBuilderService.buildAll().subscribe(this::setRewardRulesKieContainer);
+        final Flux<DroolsRule> droolsRuleFlux = droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig()));
+
+        kieContainerBuilderService.build(droolsRuleFlux).subscribe(this::setRewardRulesKieContainer);
     }
 
     //endregion

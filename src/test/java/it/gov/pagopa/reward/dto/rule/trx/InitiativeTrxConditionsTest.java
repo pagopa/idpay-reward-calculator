@@ -1,9 +1,7 @@
 package it.gov.pagopa.reward.dto.rule.trx;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import it.gov.pagopa.reward.config.JsonConfig;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -17,11 +15,9 @@ import java.util.TreeSet;
 
 class InitiativeTrxConditionsTest {
 
-    private final ObjectMapper objectMapper = new JsonConfig().objectMapper();
-
     private void testDeserialization(String content, InitiativeTrxConditions expected) throws JsonProcessingException {
-        Assertions.assertEquals(expected, objectMapper.readValue(content, InitiativeTrxConditions.class));
-        Assertions.assertEquals(content.trim(), objectMapper.writeValueAsString(expected));
+        Assertions.assertEquals(expected, TestUtils.objectMapper.readValue(content, InitiativeTrxConditions.class));
+        Assertions.assertEquals(content.trim(), TestUtils.objectMapper.writeValueAsString(expected));
     }
 
     @Test

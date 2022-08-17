@@ -3,10 +3,10 @@ package it.gov.pagopa.reward.service.build;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRuleTransformerFacade;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacade;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
+import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
-import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.model.DroolsRule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,32 +44,27 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
     public DroolsRule apply(InitiativeReward2BuildDTO initiative) {
         log.info("Building initiative having id: %s".formatted(initiative.getInitiativeId()));
 
-        try {
-            DroolsRule out = new DroolsRule();
-            out.setId(initiative.getInitiativeId());
-            out.setName(String.format("%s-%s", initiative.getInitiativeId(), initiative.getInitiativeName()));
+        DroolsRule out = new DroolsRule();
+        out.setId(initiative.getInitiativeId());
+        out.setName(String.format("%s-%s", initiative.getInitiativeId(), initiative.getInitiativeName()));
 
-            out.setRule("""
-                    package %s;
-                    %s
-                    """.formatted(
-                    KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
-                    buildRules(out.getId(), out.getName(), initiative))
-            );
+        out.setRule("""
+                package %s;
+                %s
+                """.formatted(
+                KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
+                buildRules(out.getId(), out.getName(), initiative))
+        );
 
-            if (onlineSyntaxCheck) {
-                log.debug("Checking if the rule has valid syntax. id: %s".formatted(initiative.getInitiativeId()));
-                builderService.build(Flux.just(out)).block(); // TODO handle if it goes to exception due to error
-            }
-
-            out.setInitiativeConfig(initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
-
-            log.debug("Conversion into drools rule completed; storing it. id: %s".formatted(initiative.getInitiativeId()));
-            return out;
-        } catch (RuntimeException e) {
-            log.error("Something gone wrong while building initiative %s".formatted(initiative.getInitiativeId()), e);
-            return null;
+        if (onlineSyntaxCheck) {
+            log.debug("Checking if the rule has valid syntax. id: %s".formatted(initiative.getInitiativeId()));
+            builderService.build(Flux.just(out)).block();
         }
+
+        out.setInitiativeConfig(initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
+
+        log.debug("Conversion into drools rule completed; storing it. id: %s".formatted(initiative.getInitiativeId()));
+        return out;
     }
 
     private String buildRules(String agendaGroup, String ruleNamePrefix, InitiativeReward2BuildDTO initiative) {
@@ -97,7 +92,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
             initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, trxRules.getThreshold()));
             initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, trxRules.getTrxCount()));
 
-            if(initiative.getRewardRule() instanceof RewardGroupsDTO rewardGroupsDTO){
+            if (initiative.getRewardRule() instanceof RewardGroupsDTO rewardGroupsDTO) {
                 initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, rewardGroupsDTO));
             }
         }
@@ -105,8 +100,8 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
 
     private void buildRuleConsequences(String agendaGroup, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
         initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, initiative.getRewardRule()));
-        if(!CollectionUtils.isEmpty(initiative.getTrxRule().getRewardLimits())){
-            initiative.getTrxRule().getRewardLimits().forEach(rl->
+        if (!CollectionUtils.isEmpty(initiative.getTrxRule().getRewardLimits())) {
+            initiative.getTrxRule().getRewardLimits().forEach(rl ->
                     initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, rl))
             );
         }

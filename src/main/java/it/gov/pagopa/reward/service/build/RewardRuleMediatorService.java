@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.build;
 
-import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
+import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 
 /**
@@ -13,5 +13,5 @@ import reactor.core.publisher.Flux;
  * </ol>
  * */
 public interface RewardRuleMediatorService {
-    void execute(Flux<InitiativeReward2BuildDTO> initiativeRewardRuleDTOFlux);
+    void execute(Flux<Message<String>> initiativeRewardRuleDTOFlux);
 }

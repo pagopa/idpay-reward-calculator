@@ -1,11 +1,16 @@
 package it.gov.pagopa.reward.service.reward;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,24 +20,44 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMediatorService{
+public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMediatorService {
 
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final InitiativesEvaluatorService initiativesEvaluatorService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
+    private final ErrorNotifierService errorNotifierService;
 
-    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
+    private final ObjectReader objectReader;
+
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
+        this.errorNotifierService = errorNotifierService;
+
+        this.objectReader = objectMapper.readerFor(TransactionDTO.class);
     }
 
     @Override
-    public Flux<RewardTransactionDTO> execute(Flux<TransactionDTO> transactionDTOFlux) {
-        return transactionDTOFlux
-                .flatMap(this::retrieveInitiativesAndEvaluate);
+    public Flux<RewardTransactionDTO> execute(Flux<Message<String>> messageFlux) {
+        return messageFlux.flatMap(this::execute);
+    }
+
+    public Mono<RewardTransactionDTO> execute(Message<String> message) {
+        return Mono.just(message)
+                .mapNotNull(this::deserializeMessage)
+                .flatMap(this::retrieveInitiativesAndEvaluate)
+
+                .onErrorResume(e -> {
+                    errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);
+                    return Mono.empty();
+                });
+    }
+
+    private TransactionDTO deserializeMessage(Message<String> message) {
+        return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyTransactionEvaluation(message, "Unexpected JSON", true, e));
     }
 
     private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {
@@ -55,7 +80,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
 
     private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
         RewardTransactionDTO trxRewarded = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
-        if(trxRewarded!=null){
+        if (trxRewarded != null) {
             return Pair.of(userCounters, trxRewarded);
         } else {
             return null;

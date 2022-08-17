@@ -3,18 +3,27 @@ package it.gov.pagopa.reward.event.consumer;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
+import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
+import it.gov.pagopa.reward.test.utils.TestUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
@@ -28,35 +37,41 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private KieContainerBuilderService kieContainerBuilderServiceSpy;
     @SpyBean
     private RewardContextHolderService rewardContextHolderService;
+    @SpyBean
+    private DroolsRuleRepository droolsRuleRepositorySpy;
 
     @Test
     void testRewardRuleBuilding(){
-        int N=100;
+        int validRules=100; // use even number
+        int notValidRules = errorUseCases.size();
+        long maxWaitingMs = 30000;
+
         int[] expectedRules ={0};
-        List<InitiativeReward2BuildDTO> initiatives = IntStream.range(0,N)
-                .mapToObj(InitiativeReward2BuildDTOFaker::mockInstance)
-                .peek(i-> expectedRules[0] += calcDroolsRuleGenerated(i))
-                .toList();
+        List<String> initiativePayloads = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validRules / 2, expectedRules));
+        initiativePayloads.addAll(IntStream.range(0, notValidRules).mapToObj(i -> errorUseCases.get(i).getFirst().get()).collect(Collectors.toList()));
+        initiativePayloads.addAll(buildValidPayloads(errorUseCases.size() + (validRules / 2) + notValidRules, validRules / 2, expectedRules));
 
         long timeStart=System.currentTimeMillis();
-        initiatives.forEach(i->publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
+        initiativePayloads.forEach(i->publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
         long timePublishingEnd=System.currentTimeMillis();
 
-        long countSaved = waitForDroolsRulesStored(N);
+        long countSaved = waitForDroolsRulesStored(validRules);
         long timeDroolsSavingCheckPublishingEnd=System.currentTimeMillis();
 
         int ruleBuiltSize = waitForKieContainerBuild(expectedRules[0]);
         long timeEnd=System.currentTimeMillis();
 
-        Assertions.assertEquals(N, countSaved);
+        Assertions.assertEquals(validRules, countSaved);
         Assertions.assertEquals(expectedRules[0], ruleBuiltSize);
+
+        checkErrorsPublished(notValidRules, maxWaitingMs, errorUseCases);
 
         Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(2)).buildAll(); // +1 due to refresh at startup
         Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.any());
 
         System.out.printf("""
             ************************
-            Time spent to send %d messages (from start): %d millis
+            Time spent to send %d (%d + %d) messages (from start): %d millis
             Time spent to assert drools rule count (from previous check): %d millis
             Time spent to assert kie container rules' size (from previous check): %d millis
             ************************
@@ -66,15 +81,25 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
             The %d initiative generated %d rules
             ************************
             """,
-                N,
+                validRules + notValidRules,
+                validRules,
+                notValidRules,
                 timePublishingEnd-timeStart,
                 timeDroolsSavingCheckPublishingEnd-timePublishingEnd,
                 timeEnd-timeDroolsSavingCheckPublishingEnd,
                 timeEnd-timeStart,
                 Mockito.mockingDetails(kieContainerBuilderServiceSpy).getInvocations().stream()
                         .filter(i->i.getMethod().getName().equals("buildAll")).count()-1, // 1 is due on startup
-                N, expectedRules[0]
+                validRules, expectedRules[0]
         );
+    }
+
+    private List<String> buildValidPayloads(int bias, int validRules, int[] expectedRules) {
+        return IntStream.range(bias, bias + validRules)
+                .mapToObj(InitiativeReward2BuildDTOFaker::mockInstance)
+                .peek(i-> expectedRules[0] += calcDroolsRuleGenerated(i))
+                .map(TestUtils::jsonSerializer)
+                .toList();
     }
 
     public static int calcDroolsRuleGenerated(InitiativeReward2BuildDTO i) {
@@ -89,7 +114,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private long waitForDroolsRulesStored(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 30, 1000);
+        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 
@@ -109,4 +134,38 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         }
     }
 
+    //region not valid useCases
+    // all use cases configured must have a unique id recognized by the regexp errorUseCaseIdPatternMatch
+    private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
+    {
+        String useCaseJsonNotExpected = "{\"initiativeId\":\"id_0\",unexpectedStructure:0}";
+        errorUseCases.add(Pair.of(
+                () -> useCaseJsonNotExpected,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", useCaseJsonNotExpected)
+        ));
+
+        String jsonNotValid = "{\"initiativeId\":\"id_1\",invalidJson";
+        errorUseCases.add(Pair.of(
+                () -> jsonNotValid,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+        ));
+
+
+        final String errorWhenSavingUseCaseId = "id_%s_ERRORWHENSAVING".formatted(errorUseCases.size());
+        String droolRuleSaveInError = TestUtils.jsonSerializer(InitiativeReward2BuildDTOFaker.mockInstanceBuilder(errorUseCases.size(), null, null)
+                .initiativeId(errorWhenSavingUseCaseId)
+                .build());
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doReturn(Mono.error(new RuntimeException("DUMMYEXCEPTION"))).when(droolsRuleRepositorySpy).save(Mockito.argThat(i->errorWhenSavingUseCaseId.equals(i.getId())));
+                    return droolRuleSaveInError;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred handling initiative", droolRuleSaveInError)
+        ));
+    }
+
+    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
+        checkErrorMessageHeaders(topicRewardRuleConsumer, errorMessage, errorDescription, expectedPayload);
+    }
+    //endregion
 }

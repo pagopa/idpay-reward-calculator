@@ -16,31 +16,36 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
+import it.gov.pagopa.reward.service.reward.RuleEngineService;
+import it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -58,53 +63,44 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TransactionProcessorTest extends BaseIntegrationTest {
 
     public static final long TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT = 9L;
+
     @SpyBean
     private RewardContextHolderService rewardContextHolderService;
-
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
-
-    @Autowired
-    private DroolsRuleRepository droolsRuleRepository;
-
     @Autowired
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
 
+    @SpyBean
+    private RuleEngineService ruleEngineServiceSpy;
+    @SpyBean
+    private UserInitiativeCountersUpdateService userInitiativeCountersUpdateServiceSpy;
+
     @Test
     void testTransactionProcessor() throws JsonProcessingException {
-        int N = 1000;
+        int validTrx = 1000; // use even number
+        int notValidTrx = errorUseCases.size();
         long maxWaitingMs = 30000;
 
         publishRewardRules();
 
-        List<TransactionDTO> trxs = IntStream.range(0, N)
-                .mapToObj(this::mockInstance).toList();
+        List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
+        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).collect(Collectors.toList()));
+        trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getUserId(), i));
+        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(i), i));
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
-        Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topicRewardProcessorOutcome, "idpay-group");
-
         long timeConsumerResponse = System.currentTimeMillis();
-
-        List<String> payloadConsumed = new ArrayList<>(N);
-        int counter = 0;
-        while (counter < N) {
-            if (System.currentTimeMillis() - timeConsumerResponse > maxWaitingMs) {
-                Assertions.fail("timeout of %d ms expired. Read %d while expected %d messages".formatted(maxWaitingMs, counter, N));
-            }
-            ConsumerRecords<String, String> published = consumer.poll(Duration.ofMillis(7000));
-            for (ConsumerRecord<String, String> record : published) {
-                payloadConsumed.add(record.value());
-                counter++;
-            }
-        }
+        List<ConsumerRecord<String, String>> payloadConsumed = consumeMessages(topicRewardProcessorOutcome, validTrx, maxWaitingMs);
         long timeEnd = System.currentTimeMillis();
+
         long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;
-        Assertions.assertEquals(N, counter);
-        for (String p : payloadConsumed) {
-            checkResponse(objectMapper.readValue(p, RewardTransactionDTO.class));
+        Assertions.assertEquals(validTrx, payloadConsumed.size());
+
+        for (ConsumerRecord<String, String> p : payloadConsumed) {
+            checkResponse(objectMapper.readValue(p.value(), RewardTransactionDTO.class));
         }
 
         Assertions.assertEquals(
@@ -115,18 +111,36 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                         .sorted(Comparator.comparing(UserInitiativeCounters::getUserId))
                         .toList()));
 
+        checkErrorsPublished(notValidTrx, maxWaitingMs, errorUseCases);
+
         System.out.printf("""
                         ************************
-                        Time spent to send %d trx messages: %d millis
+                        Time spent to send %d (%d + %d) trx messages: %d millis
                         Time spent to consume reward responses: %d millis
                         ************************
                         Test Completed in %d millis
                         ************************
                         """,
-                N, timePublishingOnboardingRequest,
+                validTrx + notValidTrx,
+                validTrx,
+                notValidTrx,
+                timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
                 timeEnd - timePublishOnboardingStart
         );
+    }
+
+    private final Pattern userIdPatternMatch = Pattern.compile("\"userId\":\"([^\"]*)\"");
+    private String readUserId(String payload) {
+        final Matcher matcher = userIdPatternMatch.matcher(payload);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private List<String> buildValidPayloads(int bias, int validOnboardings) {
+        return IntStream.range(bias, bias + validOnboardings)
+                .mapToObj(this::mockInstance)
+                .map(TestUtils::jsonSerializer)
+                .toList();
     }
 
     // region initiative build
@@ -609,6 +623,60 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         counters.setTrxNumber(counters.getTrxNumber() + 1);
         counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount()).setScale(2, RoundingMode.UNNECESSARY));
         counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
+    }
+    //endregion
+
+    //region not valid useCases
+    // all use cases configured must have a unique id recognized by the regexp getErrorUseCaseIdPatternMatch
+    protected Pattern getErrorUseCaseIdPatternMatch() {
+        return Pattern.compile("\"correlationId\":\"CORRELATIONID([0-9]+)\"");
+    }
+
+    private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
+    {
+        String useCaseJsonNotExpected = "{\"correlationId\":\"CORRELATIONID0\",unexpectedStructure:0}";
+        errorUseCases.add(Pair.of(
+                () -> useCaseJsonNotExpected,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", useCaseJsonNotExpected)
+        ));
+
+        String jsonNotValid = "{\"correlationId\":\"CORRELATIONID1\",invalidJson";
+        errorUseCases.add(Pair.of(
+                () -> jsonNotValid,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+        ));
+
+        final String failingRuleEngineUserId = "FAILING_RULE_ENGINE";
+        String failingRuleEngineUseCase = TestUtils.jsonSerializer(
+                TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                        .userId(failingRuleEngineUserId)
+                        .build()
+        );
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(ruleEngineServiceSpy).applyRules(Mockito.argThat(i->failingRuleEngineUserId.equals(i.getUserId())), Mockito.any(), Mockito.any());
+                    return failingRuleEngineUseCase;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingRuleEngineUseCase)
+        ));
+
+        final String failingCounterUpdateUserId = "FAILING_COUNTER_UPDATE";
+        String failingCounterUpdate = TestUtils.jsonSerializer(
+                TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                        .userId(failingCounterUpdateUserId)
+                        .build()
+        );
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i->failingCounterUpdateUserId.equals(i.getUserId())));
+                    return failingCounterUpdate;
+                },
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingCounterUpdate)
+        ));
+    }
+
+    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
+        checkErrorMessageHeaders(topicRewardProcessorRequest, errorMessage, errorDescription, expectedPayload);
     }
     //endregion
 }
