@@ -8,6 +8,7 @@ import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
 import org.kie.api.builder.KieModule;
+import org.kie.api.builder.Message;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.runtime.KieContainer;
@@ -43,10 +44,14 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
                 .then(Mono.fromSupplier(() -> {
                     KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
                     kieBuilder.buildAll();
-                    /* TODO check and notify errors
-                    if (kb.getResults().hasMessages(Message.Level.ERROR)) {
-                        throw new IllegalArgumentException("Build Errors:" + kb.getResults().toString());
-                    }*/
+
+                    if (kieBuilder.getResults().hasMessages(Message.Level.ERROR)) {
+                        /* TODO if a stored rule don't compile, stop the container build or ignore the rule?
+                        kieBuilder.getResults().getMessages(Message.Level.ERROR).stream().map(Message::getPath).forEach(kieFileSystem::delete);
+                        */
+                        throw new IllegalArgumentException("Build Errors:" + kieBuilder.getResults().toString());
+                    }
+
                     KieModule kieModule = kieBuilder.getKieModule();
                     KieContainer newKieContainer = kieServices.newKieContainer(kieModule.getReleaseId());
 

@@ -229,7 +229,11 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    private final Pattern errorUseCaseIdPatternMatch = Pattern.compile("\"initiativeId\":\"id_([0-9]+)_?[^\"]*\"");
+    protected final Pattern errorUseCaseIdPatternMatch = getErrorUseCaseIdPatternMatch();
+
+    protected Pattern getErrorUseCaseIdPatternMatch() {
+        return Pattern.compile("\"initiativeId\":\"id_([0-9]+)_?[^\"]*\"");
+    }
 
     protected void checkErrorsPublished(int notValidRules, long maxWaitingMs, List<Pair<Supplier<String>, java.util.function.Consumer<ConsumerRecord<String, String>>>> errorUseCases) {
         final List<ConsumerRecord<String, String>> errors = consumeMessages(topicErrors, notValidRules, maxWaitingMs);

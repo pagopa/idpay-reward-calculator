@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -20,9 +21,10 @@ class RewardContextHolderServiceImplTest {
         // Given
         KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
         DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
-
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+
+        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.empty());
+        Mockito.when(kieContainerBuilderService.build(Mockito.any())).thenReturn(Mono.just(kieContainer));
 
         RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
@@ -32,17 +34,17 @@ class RewardContextHolderServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(kieContainer, result);
-
-
     }
 
     @Test
     void testNotRetrieveInitiativeConfig(){
         KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
         DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
-
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+
+        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.empty());
+        Mockito.when(kieContainerBuilderService.build(Mockito.any())).thenReturn(Mono.just(kieContainer));
+
         RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         String initiativeId="INITIATIVE-ID";
@@ -60,9 +62,11 @@ class RewardContextHolderServiceImplTest {
     void testRetrieveInitiativeConfig(){
         KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
         DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
-
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+
+        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.empty());
+        Mockito.when(kieContainerBuilderService.build(Mockito.any())).thenReturn(Mono.just(kieContainer));
+
         RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         String initiativeId="INITIATIVE-ID";
@@ -82,9 +86,11 @@ class RewardContextHolderServiceImplTest {
     void testSetInitiativeConfig(){
         KieContainerBuilderService kieContainerBuilderService = Mockito.mock(KieContainerBuilderService.class);
         DroolsRuleRepository droolsRuleRepository = Mockito.mock(DroolsRuleRepository.class);
-
         KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(kieContainer));
+
+        Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.empty());
+        Mockito.when(kieContainerBuilderService.build(Mockito.any())).thenReturn(Mono.just(kieContainer));
+
         RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderService, droolsRuleRepository);
 
         String initiativeId="INITIATIVE-ID";

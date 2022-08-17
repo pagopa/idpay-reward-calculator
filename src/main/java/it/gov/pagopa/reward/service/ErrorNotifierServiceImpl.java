@@ -48,7 +48,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
-    public void notifyTransaction(Message<?> message, String description, boolean retryable, Throwable exception) {
+    public void notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
         notify(trxServer, trxTopic, message, description, retryable, exception);
     }
 
