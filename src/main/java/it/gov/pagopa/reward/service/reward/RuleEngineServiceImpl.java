@@ -59,7 +59,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
             long after=System.currentTimeMillis();
 
-            log.info("Time between before and after fireAllRules: {} ms", after-before);
+            log.info("[PERFORMANCE_LOG] - Time between before and after fireAllRules %d ms with transactionId: {idTrxAcquirer: %s, acquirerCode: %s, trxDate: %s}".formatted(after-before, transaction.getIdTrxAcquirer(),transaction.getAcquirerCode(),transaction.getTrxDate()));
 
             /* TODO uncomment
             if(log.isDebugEnabled()){
