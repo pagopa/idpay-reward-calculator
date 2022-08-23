@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 public class HpanInitiativeDTO {
     private String initiativeId;
     private String hpan;
-    private LocalDateTime timestamp;
+    private LocalDateTime operationDate;
     private String userId;
-    private OperationType operationType;
+    private String operationType;
 
     public enum OperationType{
         ADD_INSTRUMENT,

@@ -14,7 +14,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;rewardRuleConsumer;trxProducer
+        definition: trxProcessor;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
@@ -30,6 +30,11 @@ spring:
           group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
+        hpanInitiativeConsumer-in-0:
+          destination: ${KAFKA_REWARD_RULE_REQUEST_TOPIC:idpay-hpan-update}
+          group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-hpan-initiative
         errors-out-0:
           destination: ${KAFKA_ERROR_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -64,6 +69,12 @@ spring:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
               configuration.sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAJ_CONFIG:}
+        kafka-idpay-hpan-initiative:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_HPAN_UPDATE_BROKER:${KAFKA_BROKER:}}
+              configuration.sasl.jaas.config: ${KAFKA_HPAN_UPDATE_SASL_JAAJ_CONFIG:}
         #TODO remove me
         kafka-rtd-producer:
           type: kafka

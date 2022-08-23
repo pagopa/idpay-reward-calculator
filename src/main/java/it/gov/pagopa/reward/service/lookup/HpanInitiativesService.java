@@ -9,5 +9,5 @@ import reactor.core.publisher.Mono;
  * This component evaluate a single object and save it into DB*/
 
 public interface HpanInitiativesService {
-    void hpanInitiativeUpdateInformation(Pair<HpanInitiativeDTO, Mono<HpanInitiatives>> hpanInitiativePair);
+    Mono<HpanInitiatives> hpanInitiativeUpdateInformation(Pair<HpanInitiativeDTO, Mono<HpanInitiatives>> hpanInitiativePair);
 }
