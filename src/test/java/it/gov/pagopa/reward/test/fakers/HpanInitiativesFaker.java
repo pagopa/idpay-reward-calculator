@@ -16,12 +16,7 @@ public final class HpanInitiativesFaker {
     private static final FakeValuesService fakeValuesServiceGlobal = new FakeValuesService(new Locale("it"), new RandomService());
 
     public static HpanInitiatives mockInstance(Integer bias){
-        HpanInitiatives out = new HpanInitiatives();
-
-        FakeValuesService fakeValuesService = getFakeValuesService(bias);
-
-        out.setHpan(fakeValuesService.bothify("?????"));
-        out.setUserId(fakeValuesService.bothify("?????"));
+        HpanInitiatives out = mockInstanceWithoutInitiative(bias);
 
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
@@ -45,10 +40,8 @@ public final class HpanInitiativesFaker {
     public static HpanInitiatives mockInstanceWithoutInitiative(Integer bias){
         HpanInitiatives out = new HpanInitiatives();
 
-        FakeValuesService fakeValuesService = getFakeValuesService(bias);
-
-        out.setHpan(fakeValuesService.bothify("?????"));
-        out.setUserId(fakeValuesService.bothify("?????"));
+        out.setHpan("HPAN_%d".formatted(bias));
+        out.setUserId("USERID_%d".formatted(bias));
 
 
         TestUtils.checkNotNullFields(out,"onboardedInitiatives");
@@ -81,6 +74,30 @@ public final class HpanInitiativesFaker {
 
 
         TestUtils.checkNotNullFields(out,"onboardedInitiatives");
+        return out;
+    }
+
+    public static HpanInitiatives mockInstanceWithCloseIntervals(Integer bias){
+        HpanInitiatives out = mockInstanceWithoutInitiative(bias);
+
+        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .status("ACCEPTED")
+                .activeTimeIntervals(new ArrayList<>()).build();
+
+        LocalDateTime onboardedTime = LocalDateTime.now();
+        ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(3L))
+                .endInterval(onboardedTime.minusYears(2L)).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval1);
+
+        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(1L))
+                .endInterval(onboardedTime.minusMonths(5L)).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval2);
+
+        out.setOnboardedInitiatives(List.of(onboardedInitiative));
+
+
+        TestUtils.checkNotNullFields(out);
         return out;
     }
 

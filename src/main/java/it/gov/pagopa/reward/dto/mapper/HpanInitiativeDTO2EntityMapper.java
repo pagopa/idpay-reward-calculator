@@ -13,11 +13,12 @@ import java.util.function.Function;
 public class HpanInitiativeDTO2EntityMapper implements Function<HpanInitiativeDTO, HpanInitiatives> {
     @Override
     public HpanInitiatives apply(HpanInitiativeDTO hpanInitiativeDTO) {
-        HpanInitiatives out = new HpanInitiatives();
-        out.setHpan(hpanInitiativeDTO.getHpan());
-        out.setUserId(hpanInitiativeDTO.getUserId());
 
         if (hpanInitiativeDTO.getOperationType().equals(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name())){
+            HpanInitiatives out = new HpanInitiatives();
+
+            out.setHpan(hpanInitiativeDTO.getHpan());
+            out.setUserId(hpanInitiativeDTO.getUserId());
             OnboardedInitiative onboardedInitiative= new OnboardedInitiative();
             onboardedInitiative.setInitiativeId(hpanInitiativeDTO.getInitiativeId());
 
@@ -27,9 +28,8 @@ public class HpanInitiativeDTO2EntityMapper implements Function<HpanInitiativeDT
             interval.setStartInterval(hpanInitiativeDTO.getOperationDate());
             onboardedInitiative.setActiveTimeIntervals(List.of(interval));
             out.setOnboardedInitiatives(List.of(onboardedInitiative));
-        }else {
-            return null;
+            return out;
         }
-        return out;
+        return null;
     }
 }

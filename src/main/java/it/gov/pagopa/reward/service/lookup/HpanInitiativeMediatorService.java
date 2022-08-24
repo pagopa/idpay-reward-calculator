@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
+import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 
 /**
@@ -12,6 +13,6 @@ import reactor.core.publisher.Flux;
  * </ol>*/
 
 public interface HpanInitiativeMediatorService {
-    void execute(Flux<HpanInitiativeDTO> hpanInitiativeDTOFlux);
+    void execute(Flux<Message<HpanInitiativeDTO>> hpanInitiativeDTOFlux);
 }
 

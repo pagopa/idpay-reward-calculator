@@ -57,6 +57,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
+        "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO remove me
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -115,6 +116,8 @@ public abstract class BaseIntegrationTest {
     protected String topicRewardProcessorOutcome;
     @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}")
     protected String topicRewardRuleConsumer;
+    @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}")
+    protected String topicHpanInitiativeLookupConsumer;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
 

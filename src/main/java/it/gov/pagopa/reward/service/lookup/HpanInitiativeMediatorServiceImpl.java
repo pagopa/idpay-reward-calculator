@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -20,8 +21,9 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
 
 
     @Override
-    public void execute(Flux<HpanInitiativeDTO> hpanInitiativeDTOFlux) {
+    public void execute(Flux<Message<HpanInitiativeDTO>> hpanInitiativeDTOFlux) {
         hpanInitiativeDTOFlux
+                .map(Message::getPayload)
                 .map(hpanInitiativeDTO -> hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, hpanInitiativesRepository.findById(hpanInitiativeDTO.getHpan()))))
                 .map(hpanInitiativesMono -> hpanInitiativesMono.subscribe(hpanInitiativesRepository::save));
     }
