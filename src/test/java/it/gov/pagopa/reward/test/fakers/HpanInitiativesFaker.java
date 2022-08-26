@@ -94,7 +94,9 @@ public final class HpanInitiativesFaker {
                 .endInterval(onboardedTime.minusMonths(5L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval2);
 
-        out.setOnboardedInitiatives(List.of(onboardedInitiative));
+        List<OnboardedInitiative> onboardedInitiativeList = new ArrayList<>();
+        onboardedInitiativeList.add(onboardedInitiative);
+        out.setOnboardedInitiatives(onboardedInitiativeList);
 
 
         TestUtils.checkNotNullFields(out);

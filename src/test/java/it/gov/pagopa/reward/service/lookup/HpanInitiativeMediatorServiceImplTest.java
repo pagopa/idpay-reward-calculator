@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
@@ -7,6 +9,7 @@ import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.util.Pair;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,43 +17,110 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class HpanInitiativeMediatorServiceImplTest {
 
     @Test
-    void execute() {
+    void execute() throws JsonProcessingException, InterruptedException {
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
         HpanInitiativesService hpanInitiativesService = Mockito.mock(HpanInitiativesService.class);
         HpanInitiativeMediatorService hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl(hpanInitiativesRepository, hpanInitiativesService);
 
+        //region input test
         HpanInitiativeDTO hpanInitiativeDTO1 = HpanInitiativeDTOFaker.mockInstance(1);
         hpanInitiativeDTO1.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
         hpanInitiativeDTO1.setOperationDate(LocalDateTime.now().plusDays(10L));
+
         HpanInitiativeDTO hpanInitiativeDTO2 = HpanInitiativeDTOFaker.mockInstance(2);
         hpanInitiativeDTO2.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
-        hpanInitiativeDTO2.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO2.setOperationDate(LocalDateTime.now().plusDays(10L));
+
         HpanInitiativeDTO hpanInitiativeDTO3 = HpanInitiativeDTOFaker.mockInstance(3);
 
-        HpanInitiatives hpanInitiatives1 = HpanInitiativesFaker.mockInstance(1);
-        HpanInitiatives hpanInitiatives2 = HpanInitiativesFaker.mockInstanceWithCloseIntervals(2);
+        HpanInitiativeDTO hpanInitiativeDTO4 = HpanInitiativeDTOFaker.mockInstance(4);
+        hpanInitiativeDTO4.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO4.setOperationDate(LocalDateTime.now().plusDays(4L));
 
-        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO1.getHpan())).thenReturn(Mono.just(hpanInitiatives1));
-        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO2.getHpan())).thenReturn(Mono.just(hpanInitiatives2));
+        HpanInitiativeDTO hpanInitiativeDTO5 = HpanInitiativeDTOFaker.mockInstance(5);
+        hpanInitiativeDTO5.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO5.setOperationDate(LocalDateTime.now().minusYears(1L).minusMonths(2L));
+
+        HpanInitiativeDTO hpanInitiativeDTO6 = HpanInitiativeDTOFaker.mockInstance(6);
+        hpanInitiativeDTO6.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO6.setOperationDate(LocalDateTime.now().plusDays(4L));
+
+
+        //Check this case
+        HpanInitiativeDTO hpanInitiativeDTO7 = HpanInitiativeDTOFaker.mockInstance(7);
+        hpanInitiativeDTO7.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO7.setOperationDate(LocalDateTime.now().plusMonths(2L));
+
+        HpanInitiativeDTO hpanInitiativeDTO8 = HpanInitiativeDTOFaker.mockInstance(8);
+        hpanInitiativeDTO8.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO8.setOperationDate(LocalDateTime.now().plusMonths(2L));
+
+        HpanInitiativeDTO hpanInitiativeDTO9 = HpanInitiativeDTOFaker.mockInstance(9);
+        hpanInitiativeDTO9.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO9.setOperationDate(LocalDateTime.now().minusDays(4L));
+
+        HpanInitiativeDTO hpanInitiativeDTO10 = HpanInitiativeDTOFaker.mockInstance(10);
+        hpanInitiativeDTO10.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO10.setOperationDate(LocalDateTime.now().minusYears(1L).minusMonths(2L));
+        //endregion
+
+        Mono<HpanInitiatives> hpanInitiatives1 = Mono.just(HpanInitiativesFaker.mockInstance(1));
+        Mono<HpanInitiatives> hpanInitiatives2 = Mono.just(HpanInitiativesFaker.mockInstanceWithCloseIntervals(2));
+        Mono<HpanInitiatives> hpanInitiatives4 = Mono.just(HpanInitiativesFaker.mockInstance(4));
+        Mono<HpanInitiatives> hpanInitiatives5 = Mono.just(HpanInitiativesFaker.mockInstanceWithCloseIntervals(5));
+        Mono<HpanInitiatives> hpanInitiatives6 = Mono.just(HpanInitiativesFaker.mockInstance(6));
+
+        Mono<HpanInitiatives> hpanInitiatives7 = Mono.just(HpanInitiativesFaker.mockInstance(7));
+        Mono<HpanInitiatives> hpanInitiatives8 = Mono.just(HpanInitiativesFaker.mockInstanceWithCloseIntervals(8));
+        Mono<HpanInitiatives> hpanInitiatives9 = Mono.just(HpanInitiativesFaker.mockInstance(9));
+        Mono<HpanInitiatives> hpanInitiatives10 = Mono.just(HpanInitiativesFaker.mockInstanceWithCloseIntervals(10));
+
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO1.getHpan())).thenReturn(hpanInitiatives1);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO2.getHpan())).thenReturn(hpanInitiatives2);
         Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO3.getHpan())).thenReturn(Mono.empty());
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO4.getHpan())).thenReturn(hpanInitiatives4);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO5.getHpan())).thenReturn(hpanInitiatives5);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO6.getHpan())).thenReturn(hpanInitiatives6);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO7.getHpan())).thenReturn(hpanInitiatives7);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO8.getHpan())).thenReturn(hpanInitiatives8);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO9.getHpan())).thenReturn(hpanInitiatives9);
+        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO10.getHpan())).thenReturn(hpanInitiatives10);
 
-        HpanInitiatives hpanInitiativesOut = Mockito.mock(HpanInitiatives.class);
+        HpanInitiatives hpanInitiativesOut = HpanInitiatives.builder()
+                .hpan("HPAN_OUT")
+                .userId("USERID_OUT").build();
 
-       // Mockito.when(hpanInitiativesRepository.save(Mockito.any(HpanInitiatives.class))).thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO1,hpanInitiatives1)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
 
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO7,hpanInitiatives7)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+
+        Mockito.when(hpanInitiativesRepository.save(Mockito.any(HpanInitiatives.class))).thenReturn(Mono.just(hpanInitiativesOut));
+
+        ObjectMapper objectMapper = new ObjectMapper();
         // When
         hpanInitiativeMediatorService.execute(Flux
-                .fromIterable(List.of(MessageBuilder.withPayload(hpanInitiativeDTO1).build(),
-                        MessageBuilder.withPayload(hpanInitiativeDTO2).build(),
-                        MessageBuilder.withPayload(hpanInitiativeDTO3).build())));
+                .fromIterable(List.of(MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO1)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO2)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO3)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO4)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO5)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO6)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO7)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO8)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO9)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO10)).build()
+                )));
 
         // Then
-       // Mockito.verify(hpanInitiativesRepository, Mockito.times(2)).save(Mockito.any());
+        Mockito.verify(hpanInitiativesRepository,Mockito.times(10)).findById(Mockito.anyString());
+        Mockito.verify(hpanInitiativesService,Mockito.times(10)).hpanInitiativeUpdateInformation(Mockito.any());
+        Mockito.verify(hpanInitiativesRepository,Mockito.times(2)).save(Mockito.any());
+
     }
 }

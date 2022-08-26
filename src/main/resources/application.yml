@@ -32,9 +32,9 @@ spring:
           binder: kafka-idpay-rule
         hpanInitiativeConsumer-in-0:
           destination: ${KAFKA_REWARD_RULE_REQUEST_TOPIC:idpay-hpan-update}
-          group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
+          group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-hpan-update-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-idpay-hpan-initiative
+          binder: kafka-idpay-hpan-update
         errors-out-0:
           destination: ${KAFKA_ERROR_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -69,7 +69,7 @@ spring:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
               configuration.sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAJ_CONFIG:}
-        kafka-idpay-hpan-initiative:
+        kafka-idpay-hpan-update:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
@@ -126,8 +126,8 @@ spring:
             consumer:
               startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: ${KAFKA_HPAN_UPDATE_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
-              #enableDlq: ${KAFKA_HPAN_UPDATE_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
-              #dlqName: ${KAFKA_HPAN_UPDATE_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
+#              enableDlq: ${KAFKA_HPAN_UPDATE_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
+#              dlqName: ${KAFKA_HPAN_UPDATE_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
               standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:

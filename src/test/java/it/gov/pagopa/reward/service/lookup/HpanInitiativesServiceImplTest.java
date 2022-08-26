@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanInitiativeDTO2EntityMapper;
+import it.gov.pagopa.reward.dto.mapper.HpanInitiativeDTO2InitialEntityMapper;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -20,8 +20,8 @@ class HpanInitiativesServiceImplTest {
     @Test
     void addHpanAfterLastIntervalClose() {
         // Given
-        HpanInitiativeDTO2EntityMapper hpanInitiativeDTO2EntityMapper = Mockito.mock(HpanInitiativeDTO2EntityMapper.class);
-        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2EntityMapper);
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
 
         int bias = 1;
         LocalDateTime time = LocalDateTime.now();
@@ -53,10 +53,10 @@ class HpanInitiativesServiceImplTest {
     }
 
     @Test
-    void addHpanAfterLastActiveInterval(){
+    void addHpanBeforeLastActiveInterval(){
         // Given
-        HpanInitiativeDTO2EntityMapper hpanInitiativeDTO2EntityMapper = Mockito.mock(HpanInitiativeDTO2EntityMapper.class);
-        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2EntityMapper);
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
 
         int bias = 1;
         LocalDateTime time = LocalDateTime.now();
@@ -89,14 +89,13 @@ class HpanInitiativesServiceImplTest {
     @Test
     void addHpanWithInitiativeNotValid(){
         // Given
-        HpanInitiativeDTO2EntityMapper hpanInitiativeDTO2EntityMapper = Mockito.mock(HpanInitiativeDTO2EntityMapper.class);
-        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2EntityMapper);
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
 
         int bias = 1;
         LocalDateTime time = LocalDateTime.now();
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
-        int activeIntervalsInitial = hpanInitiatives.getOnboardedInitiatives().size();
 
         HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
         hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
@@ -109,15 +108,43 @@ class HpanInitiativesServiceImplTest {
         HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.just(hpanInitiatives))).block();
 
         // Then
-        Assertions.assertNull(result);
-//        Assertions.assertNotEquals(hpanInitiatives.getOnboardedInitiatives().size(),result.getOnboardedInitiatives().size());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(2,result.getOnboardedInitiatives().size());
+    }
+
+    @Test
+    void addHpanWithNoOneInitiative(){
+        // Given
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
+
+        int bias = 1;
+        LocalDateTime time = LocalDateTime.now();
+
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .hpan("HPAN_%d".formatted(bias))
+                .userId("USERID_%d".formatted(bias)).build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("ANOTHER_INITIATIVE_%d".formatted(bias));
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(time);
+        hpanInitiativeDTO.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+
+        // When
+        HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.just(hpanInitiatives))).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1,result.getOnboardedInitiatives().size());
     }
 
     @Test
     void deleteHpanBeforeLastActiveInterval(){
         // Given
-        HpanInitiativeDTO2EntityMapper hpanInitiativeDTO2EntityMapper = Mockito.mock(HpanInitiativeDTO2EntityMapper.class);
-        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2EntityMapper);
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
 
         int bias = 1;
         LocalDateTime time = LocalDateTime.now();
@@ -153,8 +180,8 @@ class HpanInitiativesServiceImplTest {
     @Test
     void deleteHpanAfterLastActiveIntervalNotClose(){
         // Given
-        HpanInitiativeDTO2EntityMapper hpanInitiativeDTO2EntityMapper = Mockito.mock(HpanInitiativeDTO2EntityMapper.class);
-        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2EntityMapper);
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
 
         int bias = 1;
         LocalDateTime time = LocalDateTime.now().plusMonths(2L);
@@ -185,8 +212,8 @@ class HpanInitiativesServiceImplTest {
     @Test
     void anyOperationHpanNotPresent(){
         // Given
-        HpanInitiativeDTO2EntityMapper hpanInitiativeDTO2EntityMapper = Mockito.mock(HpanInitiativeDTO2EntityMapper.class);
-        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2EntityMapper);
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
 
         int bias = 1;
         LocalDateTime time = LocalDateTime.now();

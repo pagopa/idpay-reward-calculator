@@ -79,6 +79,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO remove me
                 //endregion
 

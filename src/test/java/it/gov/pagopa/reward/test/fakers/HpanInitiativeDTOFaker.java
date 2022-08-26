@@ -9,12 +9,15 @@ public class HpanInitiativeDTOFaker {
 
     private static final FakeValuesService fakeValuesServiceGlobal = new FakeValuesService(new Locale("it"), new RandomService());
 
+    public static HpanInitiativeDTO.HpanInitiativeDTOBuilder mockInstanceBuilder(Integer bias){
+        return HpanInitiativeDTO.builder()
+                .hpan("HPAN_%d".formatted(bias))
+                .userId("USERID_%d".formatted(bias))
+                .initiativeId("INITIATIVE_%d".formatted(bias));
+    }
     public static HpanInitiativeDTO mockInstance(Integer bias){
-        HpanInitiativeDTO out = HpanInitiativeDTO.builder().build();
-
-        out.setHpan("HPAN_%d".formatted(bias));
-        out.setUserId("USERID_%d".formatted(bias));
-        out.setInitiativeId("INITIATIVEID_%d".formatted(bias));
+        mockInstanceBuilder(bias).build();
+        HpanInitiativeDTO out = mockInstanceBuilder(bias).build();
         return out;
     }
 
