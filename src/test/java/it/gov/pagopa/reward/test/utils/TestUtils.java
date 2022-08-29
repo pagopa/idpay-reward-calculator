@@ -67,15 +67,4 @@ public class TestUtils {
         return new String(errorMessage.headers().lastHeader(errorMsgHeaderSrcServer).value());
     }
 
-    public static void checkNullFields(Object o, String... excludedFields) {
-        Set<String> excludedFieldsSet = new HashSet<>(Arrays.asList(excludedFields));
-        org.springframework.util.ReflectionUtils.doWithFields(o.getClass(),
-                f -> {
-                    f.setAccessible(true);
-                    Assertions.assertNull(f.get(o), "The field %s of the input object of type %s is not null!".formatted(f.getName(), o.getClass()));
-                },
-                f -> !excludedFieldsSet.contains(f.getName()));
-
-    }
-
 }

@@ -44,7 +44,6 @@ class HpanInitiativeDTO2InitialEntityMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-//        TestUtils.checkNullFields(result);
         Assertions.assertNull(result.getUserId());
         Assertions.assertNull(result.getHpan());
         Assertions.assertNull(result.getOnboardedInitiatives());

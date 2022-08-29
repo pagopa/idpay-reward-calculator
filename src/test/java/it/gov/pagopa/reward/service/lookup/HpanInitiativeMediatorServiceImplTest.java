@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.lookup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
+import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
@@ -66,6 +67,9 @@ class HpanInitiativeMediatorServiceImplTest {
         HpanInitiativeDTO hpanInitiativeDTO10 = HpanInitiativeDTOFaker.mockInstance(10);
         hpanInitiativeDTO10.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
         hpanInitiativeDTO10.setOperationDate(LocalDateTime.now().minusYears(1L).minusMonths(2L));
+
+        RewardTransactionDTO notValidDTO = RewardTransactionDTO.builder()
+                .status("ACTIVE").mcc("4560").build();
         //endregion
 
         Mono<HpanInitiatives> hpanInitiatives1 = Mono.just(HpanInitiativesFaker.mockInstance(1));
@@ -114,7 +118,8 @@ class HpanInitiativeMediatorServiceImplTest {
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO7)).build(),
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO8)).build(),
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO9)).build(),
-                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO10)).build()
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO10)).build(),
+                        MessageBuilder.withPayload(objectMapper.writeValueAsString(notValidDTO)).build()
                 )));
 
         // Then
