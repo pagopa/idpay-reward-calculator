@@ -14,7 +14,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;rewardRuleConsumer;trxProducer
+        definition: trxProcessor;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
@@ -30,8 +30,13 @@ spring:
           group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
+        hpanInitiativeConsumer-in-0:
+          destination: ${KAFKA_HPAN_UPDATE_TOPIC:idpay-hpan-update}
+          group: ${KAFKA_HPAN_UPDATE_GROUP_ID:idpay-hpan-update-consumer-group}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-hpan-update
         errors-out-0:
-          destination: ${KAFKA_ERROR_TOPIC:idpay-errors}
+          destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-errors
         # TODO remove me
@@ -64,6 +69,12 @@ spring:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
               configuration.sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAJ_CONFIG:}
+        kafka-idpay-hpan-update:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_HPAN_UPDATE_BROKER:${KAFKA_BROKER:}}
+              configuration.sasl.jaas.config: ${KAFKA_HPAN_UPDATE_SASL_JAAJ_CONFIG:}
         #TODO remove me
         kafka-rtd-producer:
           type: kafka
@@ -111,6 +122,21 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          hpanInitiativeConsumer-in-0:
+            consumer:
+              startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              autoCommitOffset: ${KAFKA_HPAN_UPDATE_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
+#              enableDlq: ${KAFKA_HPAN_UPDATE_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
+#              dlqName: ${KAFKA_HPAN_UPDATE_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
+              standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              configuration:
+                max.poll:
+                  records: ${KAFKA_HPAN_UPDATE_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_HPAN_UPDATE_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_HPAN_UPDATE_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
             # TODO producerProperties to handle "linter" (buffering) and buffer size
   data:
     mongodb:
