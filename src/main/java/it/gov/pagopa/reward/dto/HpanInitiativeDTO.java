@@ -27,8 +27,4 @@ public class HpanInitiativeDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime operationDate;
 
-    public enum OperationType{
-        ADD_INSTRUMENT,
-        DELETE_INSTRUMENT
-    }
 }

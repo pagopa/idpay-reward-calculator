@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
+import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -34,7 +35,7 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO.setOperationDate(time);
-        hpanInitiativeDTO.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         // When
         HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.just(hpanInitiatives))).block();
@@ -68,14 +69,14 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO1.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO1.setOperationDate(time.minusYears(4L));
-        hpanInitiativeDTO1.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         HpanInitiativeDTO hpanInitiativeDTO2 = new HpanInitiativeDTO();
         hpanInitiativeDTO2.setHpan(hpanInitiatives.getHpan());
         hpanInitiativeDTO2.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO2.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO2.setOperationDate(time.minusYears(1L).minusMonths(3L));
-        hpanInitiativeDTO2.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO2.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         // When
         Mono<HpanInitiatives> resultBeforeAllActiveIntervals = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO1, Mono.just(hpanInitiatives)));
@@ -102,7 +103,7 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO.setInitiativeId("ANOTHER_INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO.setOperationDate(time);
-        hpanInitiativeDTO.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         // When
         HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.just(hpanInitiatives))).block();
@@ -130,7 +131,7 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO.setInitiativeId("ANOTHER_INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO.setOperationDate(time);
-        hpanInitiativeDTO.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         // When
         HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.just(hpanInitiatives))).block();
@@ -157,14 +158,14 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO1.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO1.setOperationDate(time.minusYears(4L));
-        hpanInitiativeDTO1.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
 
         HpanInitiativeDTO hpanInitiativeDTO2 = new HpanInitiativeDTO();
         hpanInitiativeDTO2.setHpan(hpanInitiatives.getHpan());
         hpanInitiativeDTO2.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO2.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO2.setOperationDate(time.minusYears(1L).minusMonths(3L));
-        hpanInitiativeDTO2.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO2.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
 
         //When
         Mono<HpanInitiatives> result1 = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO1, Mono.just(hpanInitiatives)));
@@ -195,7 +196,7 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO1.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO1.setOperationDate(time);
-        hpanInitiativeDTO1.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
 
         //When
         HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO1, Mono.just(hpanInitiatives))).block();
@@ -204,7 +205,7 @@ class HpanInitiativesServiceImplTest {
         Assertions.assertNotNull(result);
 
         ActiveTimeInterval activeTimeIntervalAfter = result.getOnboardedInitiatives().get(0).getActiveTimeIntervals().stream().filter(o -> o.getStartInterval().equals(activeTimeIntervalsInitials.getStartInterval())).toList().get(0);
-        Assertions.assertEquals(time,activeTimeIntervalAfter.getEndInterval());
+        Assertions.assertEquals(time.withHour(23).withMinute(59).withSecond(59),activeTimeIntervalAfter.getEndInterval());
         Assertions.assertNotEquals(activeTimeIntervalsInitials,activeTimeIntervalAfter);
 
     }
@@ -223,14 +224,14 @@ class HpanInitiativesServiceImplTest {
         hpanInitiativeDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO1.setUserId("USERID_"+bias);
         hpanInitiativeDTO1.setOperationDate(time);
-        hpanInitiativeDTO1.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
 
         HpanInitiativeDTO hpanInitiativeDTO2 = new HpanInitiativeDTO();
         hpanInitiativeDTO2.setHpan("HPAN_"+bias);
         hpanInitiativeDTO2.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanInitiativeDTO2.setUserId("USERID_"+bias);
         hpanInitiativeDTO2.setOperationDate(time);
-        hpanInitiativeDTO2.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO2.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         // When
         Mono<HpanInitiatives> result1 = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO1, Mono.empty()));

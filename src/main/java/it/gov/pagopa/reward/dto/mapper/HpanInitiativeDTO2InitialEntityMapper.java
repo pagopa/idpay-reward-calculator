@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
@@ -11,7 +12,7 @@ public class HpanInitiativeDTO2InitialEntityMapper implements Function<HpanIniti
     @Override
     public HpanInitiatives apply(HpanInitiativeDTO hpanInitiativeDTO) {
         HpanInitiatives out = new HpanInitiatives();
-        if (hpanInitiativeDTO.getOperationType().equals(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name())){
+        if (hpanInitiativeDTO.getOperationType().equals(HpanInitiativeConstants.ADD_INSTRUMENT)){
             out.setHpan(hpanInitiativeDTO.getHpan());
             out.setUserId(hpanInitiativeDTO.getUserId());
         }

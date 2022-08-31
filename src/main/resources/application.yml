@@ -31,12 +31,12 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
         hpanInitiativeConsumer-in-0:
-          destination: ${KAFKA_REWARD_RULE_REQUEST_TOPIC:idpay-hpan-update}
-          group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-hpan-update-consumer-group}
+          destination: ${KAFKA_HPAN_UPDATE_TOPIC:idpay-hpan-update}
+          group: ${KAFKA_HPAN_UPDATE_GROUP_ID:idpay-hpan-update-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-hpan-update
         errors-out-0:
-          destination: ${KAFKA_ERROR_TOPIC:idpay-errors}
+          destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-errors
         # TODO remove me

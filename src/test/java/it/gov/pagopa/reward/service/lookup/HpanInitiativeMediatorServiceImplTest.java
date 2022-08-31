@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
+import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.util.Pair;
@@ -29,43 +30,43 @@ class HpanInitiativeMediatorServiceImplTest {
 
         //region input test
         HpanInitiativeDTO hpanInitiativeDTO1 = HpanInitiativeDTOFaker.mockInstance(1);
-        hpanInitiativeDTO1.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
         hpanInitiativeDTO1.setOperationDate(LocalDateTime.now().plusDays(10L));
 
         HpanInitiativeDTO hpanInitiativeDTO2 = HpanInitiativeDTOFaker.mockInstance(2);
-        hpanInitiativeDTO2.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO2.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
         hpanInitiativeDTO2.setOperationDate(LocalDateTime.now().plusDays(10L));
 
         HpanInitiativeDTO hpanInitiativeDTO3 = HpanInitiativeDTOFaker.mockInstance(3);
 
         HpanInitiativeDTO hpanInitiativeDTO4 = HpanInitiativeDTOFaker.mockInstance(4);
-        hpanInitiativeDTO4.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO4.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
         hpanInitiativeDTO4.setOperationDate(LocalDateTime.now().plusDays(4L));
 
         HpanInitiativeDTO hpanInitiativeDTO5 = HpanInitiativeDTOFaker.mockInstance(5);
-        hpanInitiativeDTO5.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO5.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
         hpanInitiativeDTO5.setOperationDate(LocalDateTime.now().minusYears(1L).minusMonths(2L));
 
         HpanInitiativeDTO hpanInitiativeDTO6 = HpanInitiativeDTOFaker.mockInstance(6);
-        hpanInitiativeDTO6.setOperationType(HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name());
+        hpanInitiativeDTO6.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
         hpanInitiativeDTO6.setOperationDate(LocalDateTime.now().plusDays(4L));
 
 
         //Check this case
         HpanInitiativeDTO hpanInitiativeDTO7 = HpanInitiativeDTOFaker.mockInstance(7);
-        hpanInitiativeDTO7.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO7.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
         hpanInitiativeDTO7.setOperationDate(LocalDateTime.now().plusMonths(2L));
 
         HpanInitiativeDTO hpanInitiativeDTO8 = HpanInitiativeDTOFaker.mockInstance(8);
-        hpanInitiativeDTO8.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO8.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
         hpanInitiativeDTO8.setOperationDate(LocalDateTime.now().plusMonths(2L));
 
         HpanInitiativeDTO hpanInitiativeDTO9 = HpanInitiativeDTOFaker.mockInstance(9);
-        hpanInitiativeDTO9.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO9.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
         hpanInitiativeDTO9.setOperationDate(LocalDateTime.now().minusDays(4L));
 
         HpanInitiativeDTO hpanInitiativeDTO10 = HpanInitiativeDTOFaker.mockInstance(10);
-        hpanInitiativeDTO10.setOperationType(HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name());
+        hpanInitiativeDTO10.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
         hpanInitiativeDTO10.setOperationDate(LocalDateTime.now().minusYears(1L).minusMonths(2L));
 
         RewardTransactionDTO notValidDTO = RewardTransactionDTO.builder()

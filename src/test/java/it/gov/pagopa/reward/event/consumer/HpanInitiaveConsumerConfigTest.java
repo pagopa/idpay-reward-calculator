@@ -6,10 +6,10 @@ import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
+import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Mono;
@@ -42,14 +42,14 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         List<HpanInitiativeDTO> hpanInitiativeDTOValids = IntStream.range(0, dbElementsNumbers)
                 .mapToObj(i -> HpanInitiativeDTOFaker.mockInstanceBuilder(i)
                         .operationDate(LocalDateTime.now().plusDays(10L))
-                        .operationType(i%2 == 0 ? HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name() : HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name()).build())
+                        .operationType(i%2 == 0 ? HpanInitiativeConstants.ADD_INSTRUMENT : HpanInitiativeConstants.DELETE_INSTRUMENT).build())
                 .toList();
         List<HpanInitiativeDTO> hpanUpdatedEvents = new ArrayList<>(hpanInitiativeDTOValids);
 
         List<HpanInitiativeDTO> hpanInitiativeDTOAnothers = IntStream.range(dbElementsNumbers, updatedHpanNumbers)
                 .mapToObj(i -> HpanInitiativeDTOFaker.mockInstanceBuilder(i)
                         .operationDate(LocalDateTime.now().plusDays(10L))
-                        .operationType(i%2 == 0 ? HpanInitiativeDTO.OperationType.ADD_INSTRUMENT.name() : HpanInitiativeDTO.OperationType.DELETE_INSTRUMENT.name())
+                        .operationType(i%2 == 0 ? HpanInitiativeConstants.ADD_INSTRUMENT : HpanInitiativeConstants.DELETE_INSTRUMENT)
                         .build()).toList();
         hpanUpdatedEvents.addAll(hpanInitiativeDTOAnothers);
         //endregion
