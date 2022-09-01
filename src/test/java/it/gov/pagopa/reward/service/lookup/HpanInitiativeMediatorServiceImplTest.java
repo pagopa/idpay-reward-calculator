@@ -89,7 +89,7 @@ class HpanInitiativeMediatorServiceImplTest {
 
         Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO1.getHpan())).thenReturn(hpanInitiatives1);
         Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO2.getHpan())).thenReturn(hpanInitiatives2);
-        Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO3.getHpan())).thenReturn(Mono.empty());
+//        Mockito.when(hpanInitiativesRepository.findById().thenThrow(IllegalArgumentException.class);
         Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO4.getHpan())).thenReturn(hpanInitiatives4);
         Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO5.getHpan())).thenReturn(hpanInitiatives5);
         Mockito.when(hpanInitiativesRepository.findById(hpanInitiativeDTO6.getHpan())).thenReturn(hpanInitiatives6);
@@ -107,6 +107,25 @@ class HpanInitiativeMediatorServiceImplTest {
 
         Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO7,hpanInitiatives7)))
                 .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO2,hpanInitiatives2)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO3,Mono.empty())))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO4,hpanInitiatives4)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO5,hpanInitiatives5)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO6,hpanInitiatives6)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO8,hpanInitiatives8)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO9,hpanInitiatives9)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO10,hpanInitiatives10)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
+
+        Mockito.when(hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO7,hpanInitiatives7)))
+                .thenReturn(Mono.just(hpanInitiativesOut));
 
         Mockito.when(hpanInitiativesRepository.save(Mockito.any(HpanInitiatives.class))).thenReturn(Mono.just(hpanInitiativesOut));
 
@@ -115,7 +134,7 @@ class HpanInitiativeMediatorServiceImplTest {
         hpanInitiativeMediatorService.execute(Flux
                 .fromIterable(List.of(MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO1)).build(),
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO2)).build(),
-                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO3)).build(),
+//                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO3)).build(),
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO4)).build(),
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO5)).build(),
                         MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTO6)).build(),
@@ -127,9 +146,9 @@ class HpanInitiativeMediatorServiceImplTest {
                 )));
 
         // Then
-        Mockito.verify(hpanInitiativesRepository,Mockito.times(10)).findById(Mockito.anyString());
-        Mockito.verify(hpanInitiativesService,Mockito.times(10)).hpanInitiativeUpdateInformation(Mockito.any());
-        Mockito.verify(hpanInitiativesRepository,Mockito.times(2)).save(Mockito.any());
+        Mockito.verify(hpanInitiativesRepository,Mockito.times(9)).findById(Mockito.anyString());
+        Mockito.verify(hpanInitiativesService,Mockito.times(9)).hpanInitiativeUpdateInformation(Mockito.any());
+        Mockito.verify(hpanInitiativesRepository,Mockito.times(9)).save(Mockito.any());
 
     }
 }

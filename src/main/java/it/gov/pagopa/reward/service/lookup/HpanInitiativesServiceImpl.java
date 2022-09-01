@@ -31,9 +31,13 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
         HpanInitiativeDTO hpanInitiativeDTO = hpanInitiativePair.getFirst();
         Mono<HpanInitiatives> hpanRetrieved = hpanInitiativePair.getSecond();
 
-        return hpanRetrieved
+        if(hpanInitiativeDTO.getHpan() == null){
+            return Mono.empty();
+        } else {
+            return hpanRetrieved
                 .defaultIfEmpty(hpanInitiativeDTO2InitialEntityMapper.apply(hpanInitiativeDTO))
                 .mapNotNull(h-> evaluate(h, hpanInitiativeDTO));
+        }
     }
 
     private HpanInitiatives evaluate(HpanInitiatives hpanInitiatives, HpanInitiativeDTO dto){

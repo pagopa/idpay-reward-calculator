@@ -44,9 +44,7 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .mapNotNull(hpanInitiativeDTO -> hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO,
-                                hpanInitiativesRepository.findById(hpanInitiativeDTO.getHpan()).onErrorResume(e -> {
-                                    errorNotifierService.notifyHpanUpdateEvaluation(message, "Invalid JSON, hpan field is mandatory", true, e);
-                                    return Mono.empty();})))
+                                hpanInitiativesRepository.findById(hpanInitiativeDTO.getHpan())))
                         .onErrorResume(e -> {
                             errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", true, e);
                             return Mono.empty();}))
