@@ -6,8 +6,10 @@ import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,7 +28,8 @@ class HpanInitiativeMediatorServiceImplTest {
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
         HpanInitiativesService hpanInitiativesService = Mockito.mock(HpanInitiativesService.class);
-        HpanInitiativeMediatorService hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl(hpanInitiativesRepository, hpanInitiativesService);
+        ErrorNotifierService errorNotifierService=Mockito.mock(ErrorNotifierService.class);
+        HpanInitiativeMediatorService hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl(hpanInitiativesRepository, hpanInitiativesService, TestUtils.objectMapper,  errorNotifierService);
 
         //region input test
         HpanInitiativeDTO hpanInitiativeDTO1 = HpanInitiativeDTOFaker.mockInstance(1);

@@ -62,10 +62,10 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
                 LocalDateTime lastActivate = Collections.max(activeTimeIntervalsList.stream().map(ActiveTimeInterval::getStartInterval).toList());
                 ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().filter(activeTimeInterval -> activeTimeInterval.getStartInterval().equals(lastActivate)).toList().get(0);
 
-                if (lastActiveInterval.getEndInterval() != null) {
+                if (lastActiveInterval.getEndInterval() != null && lastActiveInterval.getEndInterval().isBefore(dto.getOperationDate())) {
                     onboardedInitiative.getActiveTimeIntervals()
                             .add(ActiveTimeInterval.builder()
-                                    .startInterval(dto.getOperationDate())
+                                    .startInterval(dto.getOperationDate().with(LocalTime.MIN).plusDays(1L))
                                     .build());
                     return hpanInitiatives;
                 }
@@ -75,9 +75,9 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
             log.trace("[ADD_HPAN] [HPAN_WITHOUT_INITIATIVE] Added evaluation for hpan: %s and add initiative: %s".formatted(dto.getHpan(),dto.getInitiativeId()));
             OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                     .initiativeId(dto.getInitiativeId())
-                    .acceptanceDate(dto.getOperationDate().toLocalDate())
+//                    .acceptanceDate(dto.getOperationDate().toLocalDate())
                     .status("ACCEPTED")
-                    .activeTimeIntervals(List.of(ActiveTimeInterval.builder().startInterval(dto.getOperationDate()).build()))
+                    .activeTimeIntervals(List.of(ActiveTimeInterval.builder().startInterval(dto.getOperationDate().with(LocalTime.MIN).plusDays(1L)).build()))
                     .build();
 
             if(hpanInitiatives.getOnboardedInitiatives() == null) {
@@ -110,7 +110,7 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
 
                     onboardedInitiative.getActiveTimeIntervals().add(ActiveTimeInterval.builder()
                             .startInterval(lastActivate)
-                            .endInterval(dto.getOperationDate().withHour(23).withMinute(59).withSecond(59))
+                            .endInterval(dto.getOperationDate().with(LocalTime.MAX))
                             .build());
 
                     return hpanInitiatives;

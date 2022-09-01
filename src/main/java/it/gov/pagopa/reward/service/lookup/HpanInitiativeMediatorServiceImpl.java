@@ -1,10 +1,12 @@
 package it.gov.pagopa.reward.service.lookup;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.Message;
@@ -17,10 +19,14 @@ import reactor.core.publisher.Mono;
 public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediatorService{
     private final HpanInitiativesRepository hpanInitiativesRepository;
     private final HpanInitiativesService hpanInitiativesService;
+    private final ErrorNotifierService errorNotifierService;
+    private final ObjectReader objectReader;
 
-    public HpanInitiativeMediatorServiceImpl(HpanInitiativesRepository hpanInitiativesRepository, HpanInitiativesService hpanInitiativesService) {
+    public HpanInitiativeMediatorServiceImpl(HpanInitiativesRepository hpanInitiativesRepository, HpanInitiativesService hpanInitiativesService, ObjectMapper objectMapper, ErrorNotifierService errorNotifierService) {
         this.hpanInitiativesRepository = hpanInitiativesRepository;
         this.hpanInitiativesService = hpanInitiativesService;
+        this.objectReader = objectMapper.readerFor(HpanInitiativeDTO.class);
+        this.errorNotifierService = errorNotifierService;
     }
 
 
@@ -42,12 +48,7 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
     }
 
     private HpanInitiativeDTO deserializeMessage(Message<String> message) {
-            ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(message.getPayload(),HpanInitiativeDTO.class);
-        } catch (JsonProcessingException e) {
-            return null;
-        }
+       return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyRewardRuleBuilder(message, "Unexpected JSON", true, e ));
 
     }
 }

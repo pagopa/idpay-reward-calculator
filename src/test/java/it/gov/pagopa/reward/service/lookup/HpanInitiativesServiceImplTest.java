@@ -14,6 +14,7 @@ import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 class HpanInitiativesServiceImplTest {
@@ -49,7 +50,7 @@ class HpanInitiativesServiceImplTest {
 
         List<ActiveTimeInterval> activeTimeIntervals = onboardedInitiativeList.get(0).getActiveTimeIntervals();
         Assertions.assertEquals(3,activeTimeIntervals.size());
-        Assertions.assertTrue(activeTimeIntervals.contains(ActiveTimeInterval.builder().startInterval(time).build()));
+        Assertions.assertTrue(activeTimeIntervals.contains(ActiveTimeInterval.builder().startInterval(time.with(LocalTime.MIN).plusDays(1L)).build()));
         Assertions.assertNotEquals(activeIntervalsInitial,activeTimeIntervals.size());
     }
 
@@ -205,9 +206,8 @@ class HpanInitiativesServiceImplTest {
         Assertions.assertNotNull(result);
 
         ActiveTimeInterval activeTimeIntervalAfter = result.getOnboardedInitiatives().get(0).getActiveTimeIntervals().stream().filter(o -> o.getStartInterval().equals(activeTimeIntervalsInitials.getStartInterval())).toList().get(0);
-        Assertions.assertEquals(time.withHour(23).withMinute(59).withSecond(59),activeTimeIntervalAfter.getEndInterval());
+        Assertions.assertEquals(time.with(LocalTime.MAX),activeTimeIntervalAfter.getEndInterval());
         Assertions.assertNotEquals(activeTimeIntervalsInitials,activeTimeIntervalAfter);
-
     }
 
     @Test
@@ -240,6 +240,29 @@ class HpanInitiativesServiceImplTest {
         // Then
         Assertions.assertEquals(Boolean.FALSE,result1.hasElement().block());
         Assertions.assertEquals(Boolean.FALSE,result2.hasElement().block());
+    }
 
+    @Test
+    void invalidOperationHpanNotPresent(){
+        // Given
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
+        int bias=1;
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .hpan("HPAN_%d".formatted(bias))
+                .userId("USERID_%d".formatted(bias)).build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("ANOTHER_INITIATIVE_%d".formatted(bias));
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO.setOperationType("COMMAND_INSTRUMENT");
+
+        //When
+        HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.just(hpanInitiatives))).block();
+
+        // Then
+        Assertions.assertNull(result);
     }
 }
