@@ -44,10 +44,6 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .mapNotNull(hpanInitiativeDTO -> getHpanInitiativesMono(hpanInitiativeDTO, message))
-                .onErrorResume(e -> {
-                    errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", true, e);
-                    return Mono.empty();
-                })
                 .doFinally(s -> log.info("[PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis()-before));
     }
     private Mono<HpanInitiatives> getHpanInitiativesMono(HpanInitiativeDTO hpanInitiativeDTO, Message<String> message) {
