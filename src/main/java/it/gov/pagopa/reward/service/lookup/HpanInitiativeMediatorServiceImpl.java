@@ -52,7 +52,7 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
     }
 
     private HpanInitiativeDTO deserializeMessage(Message<String> message) {
-       return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyRewardRuleBuilder(message, "Unexpected JSON", true, e ));
+       return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyHpanUpdateEvaluation(message, "Unexpected JSON", true, e));
 
     }
 }
