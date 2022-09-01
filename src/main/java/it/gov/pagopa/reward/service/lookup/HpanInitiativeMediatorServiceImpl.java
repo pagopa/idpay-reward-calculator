@@ -43,21 +43,14 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
         long before = System.currentTimeMillis();
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
-                .mapNotNull(hpanInitiativeDTO -> getHpanInitiativesMono(hpanInitiativeDTO, message))
-                .onErrorResume(e -> {
-                    errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", true, e);
-                    return Mono.empty();
-                })
+                .mapNotNull(hpanInitiativeDTO -> hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO,
+                                hpanInitiativesRepository.findById(hpanInitiativeDTO.getHpan()).onErrorResume(e -> {
+                                    errorNotifierService.notifyHpanUpdateEvaluation(message, "Invalid JSON, hpan field is mandatory", true, e);
+                                    return Mono.empty();})))
+                        .onErrorResume(e -> {
+                            errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", true, e);
+                            return Mono.empty();}))
                 .doFinally(s -> log.info("[PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis()-before));
-    }
-
-    private Mono<HpanInitiatives> getHpanInitiativesMono(HpanInitiativeDTO hpanInitiativeDTO, Message<String> message) {
-        try{
-            return hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, hpanInitiativesRepository.findById(hpanInitiativeDTO.getHpan())));
-        } catch (IllegalArgumentException e){
-            errorNotifierService.notifyHpanUpdateEvaluation(message, "Invalid JSON, hpan field is mandatory", true, e);
-            return Mono.empty();
-        }
     }
     private HpanInitiativeDTO deserializeMessage(Message<String> message) {
        return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyHpanUpdateEvaluation(message, "Unexpected JSON", true, e));
