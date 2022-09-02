@@ -108,7 +108,8 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
                 List<ActiveTimeInterval> lastActiveInterval = activeTimeIntervalsList.stream().filter(activeTimeInterval -> activeTimeInterval.getStartInterval().equals(lastActivate)).toList();
 
                 if (dto.getOperationDate().isAfter(lastActivate)
-                        && lastActiveInterval.get(0).getEndInterval() == null) {
+                        && (lastActiveInterval.get(0).getEndInterval() == null
+                            || (lastActiveInterval.get(0).getEndInterval() != null && lastActiveInterval.get(0).getEndInterval().isBefore(dto.getOperationDate())))) {
 
                     onboardedInitiative.getActiveTimeIntervals().remove(lastActiveInterval.get(0));
 

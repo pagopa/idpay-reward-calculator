@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 
 class HpanInitiativesServiceImplTest {
@@ -211,6 +212,38 @@ class HpanInitiativesServiceImplTest {
     }
 
     @Test
+    void deleteHpanAfterLastActiveIntervalClose(){
+        // Given
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
+
+        int bias = 1;
+        LocalDateTime time = LocalDateTime.now().plusMonths(2L);
+
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
+        List<ActiveTimeInterval> activeTimeIntervalsInitials = hpanInitiatives.getOnboardedInitiatives().get(0).getActiveTimeIntervals();
+        LocalDateTime lastActive = Collections.max(activeTimeIntervalsInitials.stream().map(ActiveTimeInterval::getStartInterval).toList());
+        List<ActiveTimeInterval> lastActiveInterval = activeTimeIntervalsInitials.stream().filter(activeTimeInterval -> activeTimeInterval.getStartInterval().equals(lastActive)).toList();
+
+
+        HpanInitiativeDTO hpanInitiativeDTO1 = new HpanInitiativeDTO();
+        hpanInitiativeDTO1.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
+        hpanInitiativeDTO1.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO1.setOperationDate(time);
+        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+
+        //When
+        HpanInitiatives result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO1, Mono.just(hpanInitiatives))).block();
+
+        //Then
+        Assertions.assertNotNull(result);
+
+        ActiveTimeInterval activeTimeIntervalAfter = result.getOnboardedInitiatives().get(0).getActiveTimeIntervals().stream().filter(o -> o.getStartInterval().equals(lastActive)).toList().get(0);
+        Assertions.assertEquals(time.with(LocalTime.MAX),activeTimeIntervalAfter.getEndInterval());
+        Assertions.assertNotEquals(lastActiveInterval.get(0),activeTimeIntervalAfter);
+    }
+    @Test
     void anyOperationHpanNotPresent(){
         // Given
         HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
@@ -264,5 +297,24 @@ class HpanInitiativesServiceImplTest {
 
         // Then
         Assertions.assertNull(result);
+    }
+
+    @Test
+    void hpanNull(){
+        // Given
+        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = Mockito.mock(HpanInitiativeDTO2InitialEntityMapper.class);
+        HpanInitiativesService hpanInitiativesService = new HpanInitiativesServiceImpl(hpanInitiativeDTO2InitialEntityMapper);
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setInitiativeId("ANOTHER_INITIATIVE");
+        hpanInitiativeDTO.setUserId("USERID");
+        hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO.setOperationType("ADD_INSTRUMENT");
+
+        // When
+        Mono<HpanInitiatives> result = hpanInitiativesService.hpanInitiativeUpdateInformation(Pair.of(hpanInitiativeDTO, Mono.empty()));
+
+        // Then
+        Assertions.assertEquals(Boolean.FALSE, result.hasElement().block());
     }
 }
