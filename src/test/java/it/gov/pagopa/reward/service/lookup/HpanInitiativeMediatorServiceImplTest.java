@@ -24,7 +24,7 @@ import java.util.List;
 class HpanInitiativeMediatorServiceImplTest {
 
     @Test
-    void execute() throws JsonProcessingException{
+    void execute(){
         // Given
         HpanInitiativesRepository hpanInitiativesRepository = Mockito.mock(HpanInitiativesRepository.class);
         HpanInitiativesService hpanInitiativesService = Mockito.mock(HpanInitiativesService.class);
@@ -77,9 +77,9 @@ class HpanInitiativeMediatorServiceImplTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // When
         hpanInitiativeMediatorService.execute(Flux
-                .fromIterable(List.of(MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeValidJson)).build(),
-                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTONotHpan)).build(),
-                        MessageBuilder.withPayload(objectMapper.writeValueAsString(hpanInitiativeDTONotDate)).build(),
+               .fromIterable(List.of(MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeValidJson)).build(),
+                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeDTONotHpan)).build(),
+                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeDTONotDate)).build(),
                         MessageBuilder.withPayload("NOT VALID JSON").build()
                 )));
 
