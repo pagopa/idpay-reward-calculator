@@ -1,17 +1,15 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanInitiativeDTO2InitialEntityMapper;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
-import java.time.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,33 +18,15 @@ import java.util.List;
 @Slf4j
 public class HpanInitiativesServiceImpl implements HpanInitiativesService{
 
-    private final HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper;
-
-    public HpanInitiativesServiceImpl(HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper) {
-        this.hpanInitiativeDTO2InitialEntityMapper = hpanInitiativeDTO2InitialEntityMapper;
-    }
-
     @Override
-    public Mono<HpanInitiatives> hpanInitiativeUpdateInformation(Pair<HpanInitiativeDTO, Mono<HpanInitiatives>> hpanInitiativePair) {
-        HpanInitiativeDTO hpanInitiativeDTO = hpanInitiativePair.getFirst();
-        Mono<HpanInitiatives> hpanRetrieved = hpanInitiativePair.getSecond();
-
-        if(hpanInitiativeDTO.getHpan() == null){
-            return Mono.empty();
-        } else {
-            return hpanRetrieved
-                .defaultIfEmpty(hpanInitiativeDTO2InitialEntityMapper.apply(hpanInitiativeDTO))
-                .mapNotNull(h-> evaluate(h, hpanInitiativeDTO));
-        }
-    }
-
-    private HpanInitiatives evaluate(HpanInitiatives hpanInitiatives, HpanInitiativeDTO dto){
-        return switch (dto.getOperationType()) {
-            case HpanInitiativeConstants.ADD_INSTRUMENT -> addedHpanInitiative(hpanInitiatives, dto);
-            case HpanInitiativeConstants.DELETE_INSTRUMENT -> deletedHpanInitiative(hpanInitiatives, dto);
+    public HpanInitiatives evaluate(HpanInitiativeDTO hpanInitiativeDTO, HpanInitiatives hpanRetrieved) {
+        return switch (hpanInitiativeDTO.getOperationType()) {
+            case HpanInitiativeConstants.ADD_INSTRUMENT -> addedHpanInitiative(hpanRetrieved, hpanInitiativeDTO);
+            case HpanInitiativeConstants.DELETE_INSTRUMENT -> deletedHpanInitiative(hpanRetrieved, hpanInitiativeDTO);
             default -> null;
         };
     }
+
     private HpanInitiatives addedHpanInitiative(HpanInitiatives hpanInitiatives, HpanInitiativeDTO dto){
         List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();
         log.trace("[ADD_HPAN] Added evaluation for hpan: {}",dto.getHpan());
@@ -104,17 +84,17 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
                 log.trace("[DELETED_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_IS_PRESENT] The hpan: %s, contain the initiative: %s".formatted(dto.getHpan(),dto.getInitiativeId()));
                 List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
 
-                LocalDateTime lastActivate = Collections.max(activeTimeIntervalsList.stream().map(ActiveTimeInterval::getStartInterval).toList());
-                List<ActiveTimeInterval> lastActiveInterval = activeTimeIntervalsList.stream().filter(activeTimeInterval -> activeTimeInterval.getStartInterval().equals(lastActivate)).toList();
+                LocalDateTime lastActiveStart = Collections.max(activeTimeIntervalsList.stream().map(ActiveTimeInterval::getStartInterval).toList());
+                ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().filter(activeTimeInterval -> activeTimeInterval.getStartInterval().equals(lastActiveStart)).toList().get(0);
 
-                if (dto.getOperationDate().isAfter(lastActivate)
-                        && (lastActiveInterval.get(0).getEndInterval() == null
-                            || (lastActiveInterval.get(0).getEndInterval() != null && lastActiveInterval.get(0).getEndInterval().isBefore(dto.getOperationDate())))) {
+                if (dto.getOperationDate().isAfter(lastActiveStart)
+                        && (lastActiveInterval.getEndInterval() == null
+                            || (lastActiveInterval.getEndInterval() != null && dto.getOperationDate().isAfter(lastActiveInterval.getEndInterval())))) {
 
-                    onboardedInitiative.getActiveTimeIntervals().remove(lastActiveInterval.get(0));
+                    onboardedInitiative.getActiveTimeIntervals().remove(lastActiveInterval);
 
                     onboardedInitiative.getActiveTimeIntervals().add(ActiveTimeInterval.builder()
-                            .startInterval(lastActivate)
+                            .startInterval(lastActiveStart)
                             .endInterval(dto.getOperationDate().with(LocalTime.MAX))
                             .build());
 
