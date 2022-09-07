@@ -14,6 +14,29 @@ import java.math.BigDecimal;
 import java.util.List;
 
 class InitiativeReward2BuildDTO2ConfigMapperTest {
+
+    @Test
+    void test() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(initiative.getInitiativeId(), result.getInitiativeId());
+        Assertions.assertEquals(initiative.getGeneral().getEndDate(), result.getEndDate());
+        Assertions.assertEquals(initiative.getGeneral().getBudget(), result.getBudget());
+
+        TestUtils.checkNotNullFields(result);
+
+    }
+
     @Test
     void mapperDailyFrequencyType() {
         // Given
@@ -154,34 +177,5 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         }catch (IllegalArgumentException actualException){
             Assertions.assertEquals("Frequency cannot be null",actualException.getMessage());
         }
-    }
-
-    @Test
-    void mapperBudgetField() {
-        // Given
-        InitiativeReward2BuildDTO initiative = new InitiativeReward2BuildDTO();
-        initiative.setInitiativeId("INITIATIVE_ID");
-
-        initiative.setGeneral(InitiativeGeneralDTO.builder().budget(BigDecimal.valueOf(100)).build());
-
-        initiative.setTrxRule(new InitiativeTrxConditions());
-
-        initiative.getTrxRule().setRewardLimits(List.of(
-                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY).build(),
-                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY).build(),
-                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY).build(),
-                RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY).build()
-        ));
-
-        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
-
-        // When
-        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
-
-        // Then
-        Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
-        Assertions.assertEquals(initiative.getGeneral().getBudget(), result.getBudget());
-
     }
 }

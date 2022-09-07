@@ -71,7 +71,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
-        initiativeCounter.setExhaustedBudget(initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
+        initiativeCounter.setExhaustedBudget(initiativeConfig.getBudget() !=null && initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
         if (initiativeCounter.isExhaustedBudget()) {
             BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
             reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);

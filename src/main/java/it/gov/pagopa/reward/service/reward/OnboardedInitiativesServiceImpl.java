@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
@@ -18,9 +19,11 @@ import java.util.List;
 public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesService {
 
     private final HpanInitiativesRepository hpanInitiativesRepository;
+    private final RewardContextHolderService rewardContextHolderService;
 
-    public OnboardedInitiativesServiceImpl(HpanInitiativesRepository hpanInitiativesRepository){
+    public OnboardedInitiativesServiceImpl(HpanInitiativesRepository hpanInitiativesRepository, RewardContextHolderService rewardContextHolderService){
         this.hpanInitiativesRepository = hpanInitiativesRepository;
+        this.rewardContextHolderService = rewardContextHolderService;
     }
 
     @Override
@@ -33,13 +36,18 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                     if (initiativesForHpan != null && initiativesForHpan.getOnboardedInitiatives() != null) {
                         List<OnboardedInitiative> onboardedInitiatives = initiativesForHpan.getOnboardedInitiatives();
                         for (OnboardedInitiative i : onboardedInitiatives) {
-                            if (checkDate(trxDateTime, i.getActiveTimeIntervals())) {
+                            if (checkInitiativeValidity(i.getInitiativeId(), trxDate) && checkDate(trxDateTime, i.getActiveTimeIntervals())) {
                                 initiatives.add(i.getInitiativeId());
                             }
                         }
                     }
                     return Flux.fromIterable(initiatives);
                 });
+    }
+
+    private boolean checkInitiativeValidity(String initiativeId, OffsetDateTime trxDate) {
+        InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        return initiativeConfig != null && (initiativeConfig.getEndDate() == null || initiativeConfig.getEndDate().isAfter(trxDate.toLocalDate()));
     }
 
     //scroll the ActiveTimeInterval list from the end to facilitate the exit of the for-cycle
