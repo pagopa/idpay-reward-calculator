@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -14,7 +13,7 @@ import java.util.List;
 @Builder
 public class OnboardedInitiative {
     private String initiativeId;
-    private LocalDate acceptanceDate;
+//    private LocalDate acceptanceDate;
     private String status;
     private List<ActiveTimeInterval> activeTimeIntervals;
 }

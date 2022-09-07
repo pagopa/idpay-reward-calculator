@@ -26,13 +26,19 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     private final String trxServer;
     private final String trxTopic;
 
+    private final String hpanUpdateServer;
+    private final String hpanUpdateTopic;
+
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-splitter.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardRuleBuilderServer,
                                     @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}") String rewardRuleBuilderTopic,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers}") String trxServer,
-                                    @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}") String trxTopic) {
+                                    @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}") String trxTopic,
+
+                                    @Value("${spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateServer,
+                                    @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}") String hpanUpdateTopic) {
         this.streamBridge = streamBridge;
 
         this.rewardRuleBuilderServer = rewardRuleBuilderServer;
@@ -40,6 +46,9 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
         this.trxServer = trxServer;
         this.trxTopic = trxTopic;
+
+        this.hpanUpdateServer = hpanUpdateServer;
+        this.hpanUpdateTopic = hpanUpdateTopic;
     }
 
     @Override
@@ -50,6 +59,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     @Override
     public void notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
         notify(trxServer, trxTopic, message, description, retryable, exception);
+    }
+
+    @Override
+    public void notifyHpanUpdateEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
+        notify(hpanUpdateServer,hpanUpdateTopic,message,description,retryable,exception);
     }
 
     @Override

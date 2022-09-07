@@ -46,6 +46,8 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     }
 
     public Mono<RewardTransactionDTO> execute(Message<String> message) {
+
+        long startTime = System.currentTimeMillis();
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
@@ -53,7 +55,8 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 .onErrorResume(e -> {
                     errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);
                     return Mono.empty();
-                });
+                })
+                .doFinally(x -> log.info("[PERFORMANCE_LOG] - Time between before and after evaluate message %d ms with payload: %s".formatted(System.currentTimeMillis()-startTime,message.getPayload())));
     }
 
     private TransactionDTO deserializeMessage(Message<String> message) {
