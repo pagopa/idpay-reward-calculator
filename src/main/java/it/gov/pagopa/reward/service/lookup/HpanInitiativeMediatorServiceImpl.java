@@ -38,7 +38,6 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
     public void execute(Flux<Message<String>> messageFlux) {
         messageFlux
                 .flatMap(this::execute)
-                .flatMap(hpanInitiativesRepository::save)
                 .subscribe(hpanInitiatives -> log.debug("Updated Hpan: {}",hpanInitiatives.getHpan()));
     }
 
@@ -47,6 +46,7 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .flatMap(this::retrieveAndEvaluateHpan)
+                .flatMap(hpanInitiativesRepository::save)
                 .onErrorResume(e ->  {errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", false, e);
                     return Mono.empty();})
                 .doFinally(s -> log.info("[PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before));

@@ -8,7 +8,11 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 public final class HpanInitiativesFaker {
     private HpanInitiativesFaker(){}
@@ -28,7 +32,7 @@ public final class HpanInitiativesFaker {
                 .endInterval(onboardedTime.plusDays(2L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval1);
 
-        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.plusDays(5L)).build();
+        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.plusDays(5L).with(LocalTime.MIN).plusDays(1L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval2);
 
         out.setOnboardedInitiatives(List.of(onboardedInitiative));
@@ -90,8 +94,8 @@ public final class HpanInitiativesFaker {
                 .endInterval(onboardedTime.minusYears(2L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval1);
 
-        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(1L))
-                .endInterval(onboardedTime.minusMonths(5L)).build();
+        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(1L).with(LocalTime.MIN).plusDays(1L))
+                .endInterval(onboardedTime.minusMonths(5L).with(LocalTime.MAX)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval2);
 
         List<OnboardedInitiative> onboardedInitiativeList = new ArrayList<>();
@@ -106,4 +110,6 @@ public final class HpanInitiativesFaker {
     private static FakeValuesService getFakeValuesService(Integer bias) {
         return bias == null ? fakeValuesServiceGlobal : new FakeValuesService(new Locale("it"), new RandomService(new Random(bias)));
     }
+
+
 }
