@@ -177,7 +177,7 @@ stages:
                     valueFile: "$(Pipeline.Workspace)/helm/values-${{ lower(variables.environment) }}.yaml"
                     install: true
                     waitForExecution: true
-                    arguments: "--timeout 3m0s --debug"
+                    arguments: "--timeout 5m0s --debug"
                 - task: KubernetesManifest@0
                   displayName: Patch
                   inputs:

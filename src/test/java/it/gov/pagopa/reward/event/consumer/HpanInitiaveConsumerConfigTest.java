@@ -21,9 +21,7 @@ import java.util.stream.IntStream;
 
 @Slf4j
 @TestPropertySource(properties = {
-        "app.reward-rule.build-delay-duration=PT1S",
-        "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativeMediatorServiceImpl=WARN",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
 
