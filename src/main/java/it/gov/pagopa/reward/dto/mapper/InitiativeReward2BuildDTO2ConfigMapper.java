@@ -15,6 +15,7 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
         InitiativeConfig out = new InitiativeConfig();
         out.setInitiativeId(initiativeReward2BuildDTO.getInitiativeId());
         out.setBudget(initiativeReward2BuildDTO.getGeneral().getBudget());
+        out.setEndDate(initiativeReward2BuildDTO.getGeneral().getEndDate());
         setPeriodicalInfo(initiativeReward2BuildDTO, out);
         return out;
     }
