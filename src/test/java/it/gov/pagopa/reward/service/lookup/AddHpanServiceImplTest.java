@@ -9,13 +9,9 @@ import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class AddHpanServiceImplTest {
 
@@ -53,8 +49,6 @@ class AddHpanServiceImplTest {
         Assertions.assertNotEquals(activeIntervalsInitial,activeTimeIntervals.size());
     }
 
-    //TODO fix
-/*
     @Test
     void addHpanAfterLasIntervalOpen(){
         // Given
@@ -64,15 +58,15 @@ class AddHpanServiceImplTest {
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
 
 
-        HpanInitiativeDTO hpanInitiativeDTO1 = new HpanInitiativeDTO();
-        hpanInitiativeDTO1.setHpan(hpanInitiatives.getHpan());
-        hpanInitiativeDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
-        hpanInitiativeDTO1.setUserId(hpanInitiatives.getUserId());
-        hpanInitiativeDTO1.setOperationDate(time.plusMonths(2L));
-        hpanInitiativeDTO1.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(time.plusMonths(2L));
+        hpanInitiativeDTO.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
 
         //When
-        HpanInitiatives result = addHpanService.execute(hpanInitiatives, hpanInitiativeDTO1);
+        HpanInitiatives result = addHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
         //Then
         Assertions.assertNotNull(result);
 
@@ -80,14 +74,14 @@ class AddHpanServiceImplTest {
         Assertions.assertEquals(3, activeTimeIntervalsResult.size());
         System.out.println(activeTimeIntervalsResult);
 
-        ActiveTimeInterval changeLastIntervalPrecedent = ActiveTimeInterval.builder().startInterval(time.plusDays(5L).with(LocalTime.MIN).plusDays(1)).endInterval(time.with(LocalDate.MAX)).build();
-        Assertions.assertTrue(activeTimeIntervalsResult.contains(changeLastIntervalPrecedent));
+        ActiveTimeInterval intervalChangeExpected = ActiveTimeInterval.builder().startInterval(time.plusDays(5L).with(LocalTime.MIN).plusDays(1)).endInterval(time.plusMonths(2L).with(LocalTime.MAX)).build();
+        Assertions.assertTrue(activeTimeIntervalsResult.contains(intervalChangeExpected));
 
-        ActiveTimeInterval newInterval = ActiveTimeInterval.builder().startInterval(time.plusMonths(2L).with(LocalTime.MIN).plusDays(1)).build();
-        Assertions.assertTrue(activeTimeIntervalsResult.contains(newInterval));
+        ActiveTimeInterval newIntervalExpected = ActiveTimeInterval.builder().startInterval(time.plusMonths(2L).with(LocalTime.MIN).plusDays(1)).build();
+        Assertions.assertTrue(activeTimeIntervalsResult.contains(newIntervalExpected));
 
     }
-*/
+
     @Test
     void addHpanIntoLastIntervalClose() {
         // Given

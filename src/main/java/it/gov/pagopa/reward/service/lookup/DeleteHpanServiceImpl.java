@@ -21,10 +21,10 @@ public class DeleteHpanServiceImpl implements DeleteHpanService{
             List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();
             log.trace("[DELETED_HPAN] Is presente in db the follow hpan: {}",hpanInitiativeDTO.getHpan());
             if (onboardedInitiatives != null){
-                Optional<OnboardedInitiative> onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId())).findFirst();
-                if (onboardedInitiative.isPresent()) {
+               OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId())).findFirst().orElse(null);
+                if (onboardedInitiative!=null) {
                     log.trace("[DELETED_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_IS_PRESENT] The hpan: %s, contain the initiative: %s".formatted(hpanInitiativeDTO.getHpan(),hpanInitiativeDTO.getInitiativeId()));
-                    List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.get().getActiveTimeIntervals();
+                    List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
 
                     Optional<ActiveTimeInterval> lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval));
 

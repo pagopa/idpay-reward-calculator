@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.event.consumer;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
-import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
@@ -20,13 +19,17 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 @Slf4j
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
-        "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativeMediatorServiceImpl=INFO",
+        "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativesServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.reward.service.lookup.AddHpanServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.lookup.DeleteHpanServiceImpl=OFF",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
@@ -35,39 +38,32 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     void hpanInitiativeConsumer() {
         int dbElementsNumbers = 200;
         int updatedHpanNumbers = 1000;
-        int notValidRules = errorUseCases.size();
+        int notValidMessages = errorUseCases.size();
         long maxWaitingMs = 30000;
 
         initializeDB(dbElementsNumbers);
         long startTest = System.currentTimeMillis();
 
         List<String> hpanUpdatedEvents = new ArrayList<>(buildValidPayloads(0,dbElementsNumbers));
-        hpanUpdatedEvents.addAll(IntStream.range(0, notValidRules).mapToObj(i -> errorUseCases.get(i).getFirst()).toList());
+        hpanUpdatedEvents.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         hpanUpdatedEvents.addAll(buildValidPayloads(dbElementsNumbers,updatedHpanNumbers));
 
         hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, null,e));
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
         waitForDB(dbElementsNumbers+((updatedHpanNumbers-dbElementsNumbers)/2));
-
-        // consume error messages
-        long timeConsumerResponse = System.currentTimeMillis();
-        List<ConsumerRecord<String, String>> errorsConsumed = consumeMessages(topicErrors, notValidRules, maxWaitingMs);
         long endTestWithoutAsserts = System.currentTimeMillis();
 
-        // TODO fix
-//        checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
-        checkErrorsPublished(notValidRules, errorsConsumed);
+        checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
+        checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
 
         System.out.printf("""
             ************************
             Time spent to send %d messages (from start): %d millis
-            Time to consume %d messages from errorTopic: %d millis
             Test Completed in %d millis
             ************************
             """,
-                updatedHpanNumbers+notValidRules, timeAfterSendHpanUpdateMessages-startTest,
-                notValidRules, endTestWithoutAsserts-timeConsumerResponse,
+                updatedHpanNumbers+notValidMessages, timeAfterSendHpanUpdateMessages-startTest,
                 endTestWithoutAsserts-startTest
         );
     }
@@ -76,6 +72,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         List<Mono<HpanInitiatives>> closeIntervals = IntStream.range(0, dbElementsNumbers /2).mapToObj(i -> hpanInitiativesRepository.findById("HPAN_%s".formatted(i))).toList();
         closeIntervals.forEach(hpanInitiativesMono -> {
             HpanInitiatives hpanInitiativeResult= hpanInitiativesMono.block();
+            assert hpanInitiativeResult != null;
             if(Integer.parseInt(hpanInitiativeResult.getHpan().substring(5))%2 == 0) {
                 Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
                 Assertions.assertEquals(3, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
@@ -89,8 +86,14 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         List<Mono<HpanInitiatives>> openIntervals = IntStream.range(dbElementsNumbers /2, dbElementsNumbers).mapToObj(i -> hpanInitiativesRepository.findById("HPAN_%s".formatted(i))).toList();
         openIntervals.forEach(hpanInitiativesMono -> {
             HpanInitiatives hpanInitiativeResult= hpanInitiativesMono.block();
-            Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
-            Assertions.assertEquals(2, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            assert hpanInitiativeResult != null;
+            if(Integer.parseInt(hpanInitiativeResult.getHpan().substring(5))%2 == 0) {
+                Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
+                Assertions.assertEquals(3, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            }else {
+                Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
+                Assertions.assertEquals(2, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            }
         });
 
         List<Mono<HpanInitiatives>> newHpans = IntStream.range(dbElementsNumbers, updatedHpanNumbers)
@@ -99,6 +102,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         newHpans.forEach(hpanInitiativesMono -> {
             if (Boolean.TRUE.equals(hpanInitiativesMono.hasElement().block())) {
                 HpanInitiatives hpanInitiativeResult = hpanInitiativesMono.block();
+                assert hpanInitiativeResult != null;
                 if (Integer.parseInt(hpanInitiativeResult.getHpan().substring(5))%2 == 0) {
                     Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
                     Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
@@ -107,31 +111,21 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         });
     }
 
-    private void checkErrorsPublished(int notValidRules, List<ConsumerRecord<String, String>> payloadConsumed) {
-        Assertions.assertEquals(notValidRules, payloadConsumed.size());
-        for (ConsumerRecord<String, String> p : payloadConsumed) {
-            Assertions.assertEquals(new String(p.headers().lastHeader("srcTopic").value()),topicHpanInitiativeLookupConsumer);
-            Assertions.assertTrue(errorUseCases.contains(
-                    Pair.of(p.value(),new String(p.headers().lastHeader("description").value()))
-            ));
-        }
-    }
-
     void initializeDB(int requestElements){
         int initiativesWithCloseIntervals = requestElements/2;
         IntStream.range(0, initiativesWithCloseIntervals).
                 mapToObj(HpanInitiativesFaker::mockInstanceWithCloseIntervals)
-                .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.info("saved hpan: {}", hSaved.getHpan())));
+                .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
         IntStream.range(initiativesWithCloseIntervals, requestElements)
                 .mapToObj(HpanInitiativesFaker::mockInstance)
-                .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.info("saved hpan: {}", hSaved.getHpan())));
+                .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
         waitForDB(requestElements);
     }
 
-    private long waitForDB(int N) {
+    private void waitForDB(int N) {
         long[] countSaved={0};
+        //noinspection ConstantConditions
         waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= N, ()->"Expected %d saved initiatives, read %d".formatted(N, countSaved[0]), 60, 1000);
-        return countSaved[0];
     }
 
     private List<String> buildValidPayloads(int start, int end) {
@@ -143,22 +137,30 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 .toList();
     }
 
-
-    private final List<Pair<String,String>> errorUseCases = new ArrayList<>();
+    //region not valid useCases
+    private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
     {
-        String evaluateErrorDescription = "An error occurred evaluating hpan update";
-        String unexpectedJsonErrorDescription = "Unexpected JSON";
+        String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
+        errorUseCases.add(Pair.of(
+                () -> useCaseJsonNotHpan,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating hpan update", useCaseJsonNotHpan)
+        ));
 
-        String useCaseJsonNotHpan =  TestUtils.jsonSerializer(HpanInitiativeDTO.builder()
-                .userId("userId").initiativeId("initiativeId").hpan("hpan").operationType(HpanInitiativeConstants.ADD_INSTRUMENT).build());//"{\"userId\":\"userid_0\",\"initiativeId\":\"id_0\", \"operationType\":\"ADD_INSTRUMENT\",\"hpan\":\"hpan\"}";
-        errorUseCases.add(Pair.of(useCaseJsonNotHpan, evaluateErrorDescription));
+        String useCaseJsonNotDate = "{\"initiativeId\":\"id_1\",\"userId\":\"userid_1\", \"operationType\":\"ADD_INSTRUMENT\",\"hpan\":\"hpan\"}";
+        errorUseCases.add(Pair.of(
+                () -> useCaseJsonNotDate,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating hpan update", useCaseJsonNotDate)
+        ));
 
-        String useCaseJsonNotDate = TestUtils.jsonSerializer(HpanInitiativeDTO.builder()
-                .userId("userId").initiativeId("initiativeId").hpan("hpan").operationType(HpanInitiativeConstants.ADD_INSTRUMENT).build());//"{\"userId\":\"userid_0\",\"initiativeId\":\"id_0\", \"operationType\":\"ADD_INSTRUMENT\",\"hpan\":\"hpan\"}";
-        errorUseCases.add(Pair.of(useCaseJsonNotDate, evaluateErrorDescription));
-
-        String jsonNotValid = "{\"initiativeId\":\"id_0\",unexpectedStructure:0}";
-        errorUseCases.add(Pair.of(jsonNotValid, unexpectedJsonErrorDescription));
+        String jsonNotValid = "{\"initiativeId\":\"id_2\",invalidJson";
+        errorUseCases.add(Pair.of(
+                () -> jsonNotValid,
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+        ));
     }
 
+    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
+        checkErrorMessageHeaders(topicHpanInitiativeLookupConsumer, errorMessage, errorDescription, expectedPayload);
+    }
+    //endregion
 }
