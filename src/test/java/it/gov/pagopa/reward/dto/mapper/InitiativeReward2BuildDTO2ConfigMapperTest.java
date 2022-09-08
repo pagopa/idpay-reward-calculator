@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 class InitiativeReward2BuildDTO2ConfigMapperTest {
@@ -130,7 +131,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
     void mapperAllFrequencyType() {
         // Given
         InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstance(1);
-
+        initiative.getGeneral().setEndDate(LocalDate.MAX);
         initiative.getTrxRule().setRewardLimits(List.of(
                 RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY).build(),
                 RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY).build(),
