@@ -50,7 +50,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService{
                 log.debug("The hpan is before the last active interval, Source message: {}", hpanInitiativeDTO);
                 return null;
             }
-            log.error("Unexpected case, the initiative for this hpan not have last active interval. Source message: {} ", hpanInitiativeDTO);
+            log.error("Unexpected case, the initiative have a empty actives interval. Source message: {} ", hpanInitiativeDTO);
             return null;
         }
         log.error("Unexpected case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
