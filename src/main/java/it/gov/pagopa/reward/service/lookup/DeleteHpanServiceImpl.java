@@ -23,12 +23,14 @@ public class DeleteHpanServiceImpl implements DeleteHpanService{
                OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId())).findFirst().orElse(null);
                 if (onboardedInitiative!=null) {
                     return evaluateHpanWithInitiativePresent(hpanInitiatives, hpanInitiativeDTO, onboardedInitiative);
+                } else{
+                    log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanInitiativeDTO);
+                    return null;
                 }
-                log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanInitiativeDTO);
+            } else{
+                log.error("Unexpected use case, the hpan not have any initiatives associate. Source message: {}", hpanInitiativeDTO);
                 return null;
             }
-            log.error("Unexpected use case, the hpan not have any initiatives associate. Source message: {}", hpanInitiativeDTO);
-            return null;
         }else{
             log.error("Unexpected use case, the hpan is not present into DB. Source message: {}", hpanInitiativeDTO);
             return null;
