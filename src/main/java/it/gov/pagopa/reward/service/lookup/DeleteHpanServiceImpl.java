@@ -24,15 +24,15 @@ public class DeleteHpanServiceImpl implements DeleteHpanService{
                 if (onboardedInitiative!=null) {
                     return evaluateHpanWithInitiativePresent(hpanInitiatives, hpanInitiativeDTO, onboardedInitiative);
                 }
-                log.debug("The hpan has no reference to the initiative. Source message: {}", hpanInitiativeDTO);
+                log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanInitiativeDTO);
                 return null;
             }
             log.error("Unexpected use case, the hpan not have any initiatives associate. Source message: {}", hpanInitiativeDTO);
             return null;
+        }else{
+            log.error("Unexpected use case, the hpan is not present into DB. Source message: {}", hpanInitiativeDTO);
+            return null;
         }
-        log.debug("The hpan is not present into DB. Source message: {}", hpanInitiativeDTO);
-        return null;
-
     }
 
     private HpanInitiatives evaluateHpanWithInitiativePresent(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO, OnboardedInitiative onboardedInitiative) {
@@ -47,13 +47,13 @@ public class DeleteHpanServiceImpl implements DeleteHpanService{
                     lastActiveInterval.setEndInterval(hpanInitiativeDTO.getOperationDate().with(LocalTime.MAX));
                     return hpanInitiatives;
                 }
-                log.debug("The hpan is before the last active interval, Source message: {}", hpanInitiativeDTO);
+                log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanInitiativeDTO);
                 return null;
             }
-            log.error("Unexpected case, the initiative have a empty actives interval. Source message: {} ", hpanInitiativeDTO);
+            log.error("Unexpected use case, the initiative have a empty actives interval. Source message: {} ", hpanInitiativeDTO);
             return null;
         }
-        log.error("Unexpected case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
+        log.error("Unexpected use case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
         return null;
     }
 }

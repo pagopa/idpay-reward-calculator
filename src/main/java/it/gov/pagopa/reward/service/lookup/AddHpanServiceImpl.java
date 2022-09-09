@@ -54,10 +54,10 @@ public class AddHpanServiceImpl implements AddHpanService{
                         return hpanInitiatives;
                     }
                 }
-                log.error("Unexpected case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
+                log.error("Unexpected use case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
                 return null;
             }
-            log.debug("The hpan is before the last active interval. Source message: {}", hpanInitiativeDTO);
+            log.error("Unexpected use case, the hpan is before the last active interval. Source message: {}", hpanInitiativeDTO);
             return null;
         }else{
             log.trace("[ADD_HPAN] [HPAN_WITHOUT_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId());
