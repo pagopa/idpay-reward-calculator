@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 class AddHpanServiceImplTest {
@@ -186,5 +187,33 @@ class AddHpanServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(1,result.getOnboardedInitiatives().size());
+    }
+
+    @Test
+    void unexpectedNotMaxActiveInterval(){
+        // Given
+        AddHpanService addHpanService = new AddHpanServiceImpl();
+
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
+                .status("ACTIVE")
+                .activeTimeIntervals(new ArrayList<>()).build();
+
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID")
+                .hpan("HPAN")
+                .onboardedInitiatives(List.of(onboarded)).build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("INITIATIVEID");
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO.setOperationType("ADD_INSTRUMENT");
+
+        // When
+        HpanInitiatives result = addHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
+
+        // Then
+        Assertions.assertNull(result);
     }
 }
