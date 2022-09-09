@@ -25,7 +25,7 @@ public class AddHpanServiceImpl implements AddHpanService{
     }
 
     private HpanInitiatives executeHpanCreate(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO) {
-        log.trace("[ADD_HPAN] [NEW_HPAN] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: %s and add initiative: %s".formatted(hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId()));
+        log.trace("[ADD_HPAN] [NEW_HPAN] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}",hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId());
         OnboardedInitiative onboardedInitiative = getNewOnboardedInitiative(hpanInitiativeDTO);
 
         hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
@@ -33,21 +33,18 @@ public class AddHpanServiceImpl implements AddHpanService{
     }
 
     private HpanInitiatives executeHpanUpdate(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO, List<OnboardedInitiative> onboardedInitiatives) {
-        log.trace("[ADD_HPAN] [HPAN_PRESENT_IN_DB] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: %s and add initiative: %s".formatted(hpanInitiativeDTO.getHpan(),hpanInitiativeDTO.getInitiativeId()));
+        log.trace("[ADD_HPAN] [HPAN_PRESENT_IN_DB] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}",hpanInitiativeDTO.getHpan(),hpanInitiativeDTO.getInitiativeId());
         OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream()//.map(OnboardedInitiative::getInitiativeId)
                 .filter(o -> o.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
-            List<ActiveTimeInterval> intervalsList = hpanInitiatives.getOnboardedInitiatives().stream()
-                .filter(h -> h.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId()))
-                .map(OnboardedInitiative::getActiveTimeIntervals)
-                .toList().get(0);
+            List<ActiveTimeInterval> intervalsList = onboardedInitiative.getActiveTimeIntervals();
             if (intervalsList.stream().noneMatch(activeTimeInterval -> hpanInitiativeDTO.getOperationDate().isBefore(activeTimeInterval.getStartInterval()))) {
-                log.trace("[ADD_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_ALREADY_PRESENT] Added evaluation for hpan: %s and add initiative: %s".formatted(hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId()));
+                log.trace("[ADD_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_ALREADY_PRESENT] Added evaluation for hpan: {} and add initiative: {}", hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId());
                 List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
 
                 ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
                 if (lastActiveInterval != null) {
-                    if (lastActiveInterval.getEndInterval() != null && lastActiveInterval.getEndInterval().isBefore(hpanInitiativeDTO.getOperationDate())) {
+                    if (lastActiveInterval.getEndInterval() != null && !lastActiveInterval.getEndInterval().isAfter(hpanInitiativeDTO.getOperationDate())) {
                         onboardedInitiative.getActiveTimeIntervals()
                                 .add(initializeInterval(hpanInitiativeDTO));
                         return hpanInitiatives;
@@ -57,15 +54,17 @@ public class AddHpanServiceImpl implements AddHpanService{
                         return hpanInitiatives;
                     }
                 }
+                log.error("Unexpected case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
+                return null;
             }
+            log.debug("The hpan is before the last active interval. Source message: {}", hpanInitiativeDTO);
+            return null;
         }else{
-            log.trace("[ADD_HPAN] [HPAN_WITHOUT_INITIATIVE] Added evaluation for hpan: %s and add initiative: %s".formatted(hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId()));
+            log.trace("[ADD_HPAN] [HPAN_WITHOUT_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId());
             onboardedInitiative = getNewOnboardedInitiative(hpanInitiativeDTO);
             hpanInitiatives.getOnboardedInitiatives().add(onboardedInitiative);
             return hpanInitiatives;
         }
-        log.error("Unexpected case for update hpan: {}", hpanInitiativeDTO);
-        return null;
     }
 
     private ActiveTimeInterval initializeInterval(HpanInitiativeDTO hpanInitiativeDTO) {

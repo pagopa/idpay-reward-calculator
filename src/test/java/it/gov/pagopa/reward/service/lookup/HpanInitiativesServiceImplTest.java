@@ -1,11 +1,9 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanInitiativeDTO2InitialEntityMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -86,6 +84,8 @@ class HpanInitiativesServiceImplTest {
 
         // Then
         Assertions.assertNull(result);
+        Mockito.verify(addHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanInitiativeDTO.class));
+        Mockito.verify(deleteHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanInitiativeDTO.class));
     }
 
 }

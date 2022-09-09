@@ -2,9 +2,9 @@ package it.gov.pagopa.reward.service.lookup;
 
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanInitiativeDTO2InitialEntityMapper;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -124,7 +125,6 @@ class DeleteHpanServiceImplTest {
         Assertions.assertNotEquals(intervalBefore.getEndInterval(), activeTimeIntervalAfter.getEndInterval());
     }
 
-
     @Test
     void deleteHpanPresentWithNotInitiativeId() {
         // Given
@@ -176,13 +176,85 @@ class DeleteHpanServiceImplTest {
     void hpanNull() {
         // Given
         DeleteHpanService deleteHpanService = new DeleteHpanServiceImpl();
-        HpanInitiativeDTO2InitialEntityMapper hpanInitiativeDTO2InitialEntityMapper = new HpanInitiativeDTO2InitialEntityMapper();
-
         HpanInitiatives hpanInitiatives = HpanInitiatives.builder().userId("USERID").build();
 
         HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
         hpanInitiativeDTO.setInitiativeId("ANOTHER_INITIATIVE");
         hpanInitiativeDTO.setUserId("USERID");
+        hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO.setOperationType("DELETE_INSTRUMENT");
+
+        // When
+        HpanInitiatives result = deleteHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
+
+        // Then
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    void unexpectedHpanWithoutInitiatives(){
+        // Given
+        DeleteHpanService deleteHpanService = new DeleteHpanServiceImpl();
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID").hpan("HPAN").build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("INITIATIVEID");
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO.setOperationType("DELETE_INSTRUMENT");
+
+        // When
+        HpanInitiatives result = deleteHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
+
+        // Then
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    void unexpectedInitiativeWithoutIntervals(){
+        // Given
+        DeleteHpanService deleteHpanService = new DeleteHpanServiceImpl();
+
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID").status("ACTIVE").build();
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID")
+                .hpan("HPAN")
+                .onboardedInitiatives(List.of(onboarded)).build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("INITIATIVEID");
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
+        hpanInitiativeDTO.setOperationType("DELETE_INSTRUMENT");
+
+        // When
+        HpanInitiatives result = deleteHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
+
+        // Then
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    void unexpectedNotMaxActiveInterval(){
+        // Given
+        DeleteHpanService deleteHpanService = new DeleteHpanServiceImpl();
+
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
+                .status("ACTIVE")
+                .activeTimeIntervals(new ArrayList<>()).build();
+
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID")
+                .hpan("HPAN")
+                .onboardedInitiatives(List.of(onboarded)).build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("INITIATIVEID");
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO.setOperationDate(LocalDateTime.now());
         hpanInitiativeDTO.setOperationType("DELETE_INSTRUMENT");
 
