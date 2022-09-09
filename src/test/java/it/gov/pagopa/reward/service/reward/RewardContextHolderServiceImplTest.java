@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 class RewardContextHolderServiceImplTest {
 
@@ -97,6 +98,7 @@ class RewardContextHolderServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .budget(BigDecimal.valueOf(100))
+                .endDate(LocalDate.MAX)
                 .dailyThreshold(true)
                 .monthlyThreshold(false)
                 .yearlyThreshold(false).build();

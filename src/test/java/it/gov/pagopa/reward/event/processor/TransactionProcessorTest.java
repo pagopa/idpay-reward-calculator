@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -58,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.reward.RuleEngineServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
 })
 @Slf4j
 class TransactionProcessorTest extends BaseIntegrationTest {
@@ -131,6 +131,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private final Pattern userIdPatternMatch = Pattern.compile("\"userId\":\"([^\"]*)\"");
+
     private String readUserId(String payload) {
         final Matcher matcher = userIdPatternMatch.matcher(payload);
         return matcher.find() ? matcher.group(1) : "";
@@ -151,6 +152,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_REWARDLIMITS_BASED = "ID_4_REWARDLIMITS";
     private static final String INITIATIVE_ID_EXHAUSTED = "ID_5_EXHAUSTED";
     private static final String INITIATIVE_ID_EXHAUSTING = "ID_6_EXHAUSTING";
+    private static final String INITIATIVE_ID_EXPIRED = "ID_7_EXPIRED";
 
     private void publishRewardRules() {
         int[] expectedRules = {0};
@@ -244,6 +246,15 @@ class TransactionProcessorTest extends BaseIntegrationTest {
                                 .general(InitiativeGeneralDTO.builder()
                                         .budget(BigDecimal.valueOf(1000))
                                         .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), null)
+                                .initiativeId(INITIATIVE_ID_EXPIRED)
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .general(InitiativeGeneralDTO.builder()
+                                        .endDate(trxDate.minusDays(1).toLocalDate())
+                                        .build())
                                 .build()
                 )
                 .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
@@ -254,7 +265,9 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     //endregion
 
     private TransactionDTO mockInstance(int bias) {
-        return useCases.get(bias % useCases.size()).getFirst().apply(bias);
+        final TransactionDTO trx = useCases.get(bias % useCases.size()).getFirst().apply(bias);
+        onboardTrxHPan(trx, INITIATIVE_ID_EXPIRED);
+        return trx;
     }
 
     private void checkResponse(RewardTransactionDTO rewardedTrx) {
@@ -526,6 +539,8 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         if (!expectedCap) {
             TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
         }
+
+        Assertions.assertNull(evaluation.getRewards().get(INITIATIVE_ID_EXPIRED));
     }
 
     private void assertRejectedInitiativesState(RewardTransactionDTO evaluation, Map<String, List<String>> expectedInitiativeRejectionReasons, List<String> expectedRejectionReasons) {
@@ -560,17 +575,25 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private UserInitiativeCounters onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
-        hpanInitiativesRepository.save(HpanInitiatives.builder()
-                .hpan(trx.getHpan())
-                .onboardedInitiatives(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
-                                .initiativeId(initiativeId)
-                                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
-                                        .startInterval(trx.getTrxDate().toLocalDateTime())
-                                        .endInterval(trx.getTrxDate().toLocalDateTime())
-                                        .build()))
+        hpanInitiativesRepository.findById(trx.getHpan())
+                .defaultIfEmpty(
+                        HpanInitiatives.builder()
+                                .hpan(trx.getHpan())
+                                .onboardedInitiatives(new ArrayList<>())
                                 .build())
-                        .collect(Collectors.toList()))
-                .build()).block();
+                .map(hpan2initiative -> {
+                    hpan2initiative.getOnboardedInitiatives().addAll(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
+                                    .initiativeId(initiativeId)
+                                    .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                                            .startInterval(trx.getTrxDate().toLocalDateTime())
+                                            .endInterval(trx.getTrxDate().toLocalDateTime())
+                                            .build()))
+                                    .build())
+                            .collect(Collectors.toList()));
+                    return hpan2initiative;
+                })
+                .flatMap(hpanInitiativesRepository::save)
+                .block();
 
 
         return createUserCounter(trx);
@@ -633,6 +656,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
+
     {
         String useCaseJsonNotExpected = "{\"correlationId\":\"CORRELATIONID0\",unexpectedStructure:0}";
         errorUseCases.add(Pair.of(
@@ -654,7 +678,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         );
         errorUseCases.add(Pair.of(
                 () -> {
-                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(ruleEngineServiceSpy).applyRules(Mockito.argThat(i->failingRuleEngineUserId.equals(i.getUserId())), Mockito.any(), Mockito.any());
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(ruleEngineServiceSpy).applyRules(Mockito.argThat(i -> failingRuleEngineUserId.equals(i.getUserId())), Mockito.any(), Mockito.any());
                     return failingRuleEngineUseCase;
                 },
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingRuleEngineUseCase)
@@ -668,7 +692,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
         );
         errorUseCases.add(Pair.of(
                 () -> {
-                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i->failingCounterUpdateUserId.equals(i.getUserId())));
+                    Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i -> failingCounterUpdateUserId.equals(i.getUserId())));
                     return failingCounterUpdate;
                 },
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingCounterUpdate)

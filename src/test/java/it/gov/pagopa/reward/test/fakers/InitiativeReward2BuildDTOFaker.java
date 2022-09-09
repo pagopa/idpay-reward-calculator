@@ -66,7 +66,7 @@ public final class InitiativeReward2BuildDTOFaker {
                 randomGenerator.nextBoolean(),
                 new BigDecimal(fakeValuesService.numerify("###.##")),
                 LocalDate.of(1970, 1, 1),
-                LocalDate.now(),
+                null,
                 LocalDate.of(1970, 1, 1),
                 LocalDate.now()
         );
