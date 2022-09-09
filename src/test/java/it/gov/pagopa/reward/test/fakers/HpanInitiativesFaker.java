@@ -84,18 +84,21 @@ public final class HpanInitiativesFaker {
     public static HpanInitiatives mockInstanceWithCloseIntervals(Integer bias){
         HpanInitiatives out = mockInstanceWithoutInitiative(bias);
 
+        LocalDateTime onboardedTime = LocalDateTime.now();
+        LocalDateTime lastEndInterval = onboardedTime.minusMonths(5L).with(LocalTime.MAX);
+
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
                 .status("ACCEPTED")
-                .activeTimeIntervals(new ArrayList<>()).build();
+                .activeTimeIntervals(new ArrayList<>())
+                .lastEndInterval(lastEndInterval).build();
 
-        LocalDateTime onboardedTime = LocalDateTime.now();
         ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(3L))
                 .endInterval(onboardedTime.minusYears(2L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval1);
 
         ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(1L).with(LocalTime.MIN).plusDays(1L))
-                .endInterval(onboardedTime.minusMonths(5L).with(LocalTime.MAX)).build();
+                .endInterval(lastEndInterval).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval2);
 
         List<OnboardedInitiative> onboardedInitiativeList = new ArrayList<>();

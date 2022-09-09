@@ -40,14 +40,16 @@ class AddHpanServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
 
-        List<OnboardedInitiative> onboardedInitiativeList = result.getOnboardedInitiatives()
-                .stream().filter(o -> o.getInitiativeId().equals("INITIATIVE_%d".formatted(bias))).toList();
-        Assertions.assertEquals(1,onboardedInitiativeList.size());
+        OnboardedInitiative onboardedInitiativeResult = result.getOnboardedInitiatives()
+                .stream().filter(o -> o.getInitiativeId().equals("INITIATIVE_%d".formatted(bias))).findFirst().orElse(null);
+        Assertions.assertNotNull(onboardedInitiativeResult);
 
-        List<ActiveTimeInterval> activeTimeIntervals = onboardedInitiativeList.get(0).getActiveTimeIntervals();
+        List<ActiveTimeInterval> activeTimeIntervals = onboardedInitiativeResult.getActiveTimeIntervals();
         Assertions.assertEquals(3,activeTimeIntervals.size());
         Assertions.assertTrue(activeTimeIntervals.contains(ActiveTimeInterval.builder().startInterval(time.with(LocalTime.MIN).plusDays(1L)).build()));
         Assertions.assertNotEquals(activeIntervalsInitial,activeTimeIntervals.size());
+
+        Assertions.assertNull(onboardedInitiativeResult.getLastEndInterval());
     }
 
     @Test
@@ -58,10 +60,10 @@ class AddHpanServiceImplTest {
         LocalDateTime time = LocalDateTime.now();
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
 
-
+        String initiativeId = "INITIATIVE_%d".formatted(bias);
         HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
         hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
-        hpanInitiativeDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
+        hpanInitiativeDTO.setInitiativeId(initiativeId);
         hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
         hpanInitiativeDTO.setOperationDate(time.plusMonths(2L));
         hpanInitiativeDTO.setOperationType(HpanInitiativeConstants.ADD_INSTRUMENT);
@@ -71,9 +73,12 @@ class AddHpanServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
 
-        List<ActiveTimeInterval> activeTimeIntervalsResult = result.getOnboardedInitiatives().get(0).getActiveTimeIntervals();
+        OnboardedInitiative onboardedInitiativeResult = result.getOnboardedInitiatives()
+                .stream().filter(o -> o.getInitiativeId().equals(initiativeId)).findFirst().orElse(null);
+        Assertions.assertNotNull(onboardedInitiativeResult);
+
+        List<ActiveTimeInterval> activeTimeIntervalsResult = onboardedInitiativeResult.getActiveTimeIntervals();
         Assertions.assertEquals(3, activeTimeIntervalsResult.size());
-        System.out.println(activeTimeIntervalsResult);
 
         ActiveTimeInterval intervalChangeExpected = ActiveTimeInterval.builder().startInterval(time.plusDays(5L).with(LocalTime.MIN).plusDays(1)).endInterval(time.plusMonths(2L).with(LocalTime.MAX)).build();
         Assertions.assertTrue(activeTimeIntervalsResult.contains(intervalChangeExpected));
@@ -81,6 +86,7 @@ class AddHpanServiceImplTest {
         ActiveTimeInterval newIntervalExpected = ActiveTimeInterval.builder().startInterval(time.plusMonths(2L).with(LocalTime.MIN).plusDays(1)).build();
         Assertions.assertTrue(activeTimeIntervalsResult.contains(newIntervalExpected));
 
+        Assertions.assertNull(onboardedInitiativeResult.getLastEndInterval());
     }
 
     @Test
@@ -159,13 +165,16 @@ class AddHpanServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2,result.getOnboardedInitiatives().size());
 
-        List<String> initiativesOnboarded = result.getOnboardedInitiatives().stream().map(OnboardedInitiative::getInitiativeId).toList();
-        Assertions.assertTrue(initiativesOnboarded.contains(newInitiativeId));
-        Assertions.assertEquals(List.of(String.format("INITIATIVE_%d",bias), newInitiativeId),initiativesOnboarded);
+        List<String> initiativesOnboardedList = result.getOnboardedInitiatives().stream().map(OnboardedInitiative::getInitiativeId).toList();
+        Assertions.assertEquals(List.of(String.format("INITIATIVE_%d",bias), newInitiativeId),initiativesOnboardedList);
+
+        OnboardedInitiative onboardedInitiativeResult = result.getOnboardedInitiatives().stream().filter(o -> o.getInitiativeId().equals(newInitiativeId)).findFirst().orElse(null);
+        Assertions.assertNotNull(onboardedInitiativeResult);
+        Assertions.assertNull(onboardedInitiativeResult.getLastEndInterval());
     }
 
     @Test
-    void addHpanWithNoOneInitiative(){
+    void addHpanWithNoneInitiative(){
         // Given
         AddHpanService addHpanService = new AddHpanServiceImpl();
         int bias = 1;
@@ -186,7 +195,11 @@ class AddHpanServiceImplTest {
         HpanInitiatives result = addHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
         // Then
         Assertions.assertNotNull(result);
+
         Assertions.assertEquals(1,result.getOnboardedInitiatives().size());
+        OnboardedInitiative onboardedInitiativesResult = result.getOnboardedInitiatives().stream().findFirst().orElse(null);
+        Assertions.assertNotNull(onboardedInitiativesResult);
+        Assertions.assertNull(onboardedInitiativesResult.getLastEndInterval());
     }
 
     @Test

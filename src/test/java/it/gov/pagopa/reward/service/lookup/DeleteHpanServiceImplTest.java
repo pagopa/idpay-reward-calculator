@@ -74,7 +74,10 @@ class DeleteHpanServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
 
-        List<ActiveTimeInterval> activeTimeIntervalsResult = result.getOnboardedInitiatives().get(0).getActiveTimeIntervals();
+        OnboardedInitiative onboardedInitiativeResult = result.getOnboardedInitiatives().stream().findFirst().orElse(null);
+        Assertions.assertNotNull(onboardedInitiativeResult);
+
+        List<ActiveTimeInterval> activeTimeIntervalsResult = onboardedInitiativeResult.getActiveTimeIntervals();
         Assertions.assertEquals(2, activeTimeIntervalsResult.size());
 
         ActiveTimeInterval activeIntervalExpected = ActiveTimeInterval.builder()
@@ -86,6 +89,8 @@ class DeleteHpanServiceImplTest {
         Assertions.assertEquals(activeIntervalExpected.getStartInterval(),activeIntervalAfter.getStartInterval());
         Assertions.assertNotNull(activeIntervalAfter.getEndInterval());
         Assertions.assertEquals(activeIntervalExpected.getEndInterval(), activeIntervalAfter.getEndInterval());
+        Assertions.assertNotNull(onboardedInitiativeResult.getLastEndInterval());
+        Assertions.assertEquals(onboardedInitiativeResult.getLastEndInterval(), activeIntervalExpected.getEndInterval());
     }
 
     @Test

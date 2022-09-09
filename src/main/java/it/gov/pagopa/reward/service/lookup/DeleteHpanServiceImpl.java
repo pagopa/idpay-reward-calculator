@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
@@ -45,7 +46,9 @@ public class DeleteHpanServiceImpl implements DeleteHpanService{
             if (lastActiveInterval != null) {
                 if (!hpanInitiativeDTO.getOperationDate().isBefore(lastActiveInterval.getStartInterval())){
                         if (lastActiveInterval.getEndInterval() == null) {
-                            lastActiveInterval.setEndInterval(hpanInitiativeDTO.getOperationDate().with(LocalTime.MAX));
+                            LocalDateTime endInterval = hpanInitiativeDTO.getOperationDate().with(LocalTime.MAX);
+                            lastActiveInterval.setEndInterval(endInterval);
+                            onboardedInitiative.setLastEndInterval(endInterval);
                             return hpanInitiatives;
                         }
                         log.error("Unexpected use case, the initiative for this hpan not have an active interval open. Source message: {}", hpanInitiativeDTO);

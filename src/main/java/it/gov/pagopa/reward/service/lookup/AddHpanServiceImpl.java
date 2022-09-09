@@ -8,7 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -37,19 +38,18 @@ public class AddHpanServiceImpl implements AddHpanService{
         OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream()//.map(OnboardedInitiative::getInitiativeId)
                 .filter(o -> o.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
-            List<ActiveTimeInterval> intervalsList = onboardedInitiative.getActiveTimeIntervals();
-            if (intervalsList.stream().noneMatch(activeTimeInterval -> hpanInitiativeDTO.getOperationDate().isBefore(activeTimeInterval.getStartInterval()))) {
+            List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
+            if (activeTimeIntervalsList.stream().noneMatch(activeTimeInterval -> hpanInitiativeDTO.getOperationDate().isBefore(activeTimeInterval.getStartInterval()))) {
                 log.trace("[ADD_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_ALREADY_PRESENT] Added evaluation for hpan: {} and add initiative: {}", hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId());
-                List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
-
                 ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
+
                 if (lastActiveInterval != null) {
-                    if (lastActiveInterval.getEndInterval() != null && !lastActiveInterval.getEndInterval().isAfter(hpanInitiativeDTO.getOperationDate())) {
-                        onboardedInitiative.getActiveTimeIntervals()
-                                .add(initializeInterval(hpanInitiativeDTO));
-                        return hpanInitiatives;
-                    }else if(lastActiveInterval.getEndInterval()==null){
+                    if(lastActiveInterval.getEndInterval()==null){
                         lastActiveInterval.setEndInterval(hpanInitiativeDTO.getOperationDate().with(LocalTime.MAX));
+                        activeTimeIntervalsList.add(initializeInterval(hpanInitiativeDTO));
+                        return hpanInitiatives;
+                    } else if (lastActiveInterval.getEndInterval() != null && !lastActiveInterval.getEndInterval().isAfter(hpanInitiativeDTO.getOperationDate())) {
+                        onboardedInitiative.setLastEndInterval(null);
                         activeTimeIntervalsList.add(initializeInterval(hpanInitiativeDTO));
                         return hpanInitiatives;
                     }
@@ -77,6 +77,7 @@ public class AddHpanServiceImpl implements AddHpanService{
         return OnboardedInitiative.builder()
                 .initiativeId(hpanInitiativeDTO.getInitiativeId())
                 .status("ACCEPTED")
+                .acceptanceDate(hpanInitiativeDTO.getOperationDate().with(LocalTime.MIN).plusDays(1L))
                 .activeTimeIntervals(List.of(initializeInterval(hpanInitiativeDTO)))
                 .build();
     }
