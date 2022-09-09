@@ -26,15 +26,17 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final InitiativesEvaluatorService initiativesEvaluatorService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
+    private final TransactionProcessedService transactionProcessedService;
     private final ErrorNotifierService errorNotifierService;
 
     private final ObjectReader objectReader;
 
-    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
+        this.transactionProcessedService = transactionProcessedService;
         this.errorNotifierService = errorNotifierService;
 
         this.objectReader = objectMapper.readerFor(TransactionDTO.class);
@@ -76,6 +78,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 .mapNotNull(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
                 .flatMap(counters2rewardedTrx -> {
                     userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond());
+                    transactionProcessedService.saveTransactionProcessed(trx);
                     return userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst())
                             .then(Mono.just(counters2rewardedTrx.getSecond()));
                 });
