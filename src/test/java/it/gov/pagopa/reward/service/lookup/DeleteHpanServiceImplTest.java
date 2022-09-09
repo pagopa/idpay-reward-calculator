@@ -94,8 +94,7 @@ class DeleteHpanServiceImplTest {
         DeleteHpanService deleteHpanService = new DeleteHpanServiceImpl();
 
         int bias = 1;
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime time = now.plusMonths(2L);
+        LocalDateTime time = LocalDateTime.now().plusMonths(2L);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
 
@@ -110,19 +109,7 @@ class DeleteHpanServiceImplTest {
         HpanInitiatives result = deleteHpanService.execute(hpanInitiatives, hpanInitiativeDTO1);
 
         //Then
-        Assertions.assertNotNull(result);
-        List<ActiveTimeInterval> activeTimeIntervalsResult = result.getOnboardedInitiatives().get(0).getActiveTimeIntervals();
-        Assertions.assertEquals(2, activeTimeIntervalsResult.size());
-
-        ActiveTimeInterval activeTimeIntervalAfter = activeTimeIntervalsResult.stream().filter(o -> o.getStartInterval().equals(now.minusYears(1L).with(LocalTime.MIN).plusDays(1L))).toList().get(0);
-        Assertions.assertEquals(time.with(LocalTime.MAX), activeTimeIntervalAfter.getEndInterval());
-
-        ActiveTimeInterval intervalBefore= ActiveTimeInterval.builder().startInterval(now.minusYears(1L).with(LocalTime.MIN).plusDays(1L))
-                .endInterval(now.minusMonths(5L).with(LocalTime.MAX)).build();
-
-        Assertions.assertNotEquals(intervalBefore, activeTimeIntervalAfter);
-        Assertions.assertEquals(intervalBefore.getStartInterval(), activeTimeIntervalAfter.getStartInterval());
-        Assertions.assertNotEquals(intervalBefore.getEndInterval(), activeTimeIntervalAfter.getEndInterval());
+        Assertions.assertNull(result);
     }
 
     @Test
