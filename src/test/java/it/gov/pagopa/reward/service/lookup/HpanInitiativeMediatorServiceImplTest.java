@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.dto.mapper.HpanInitiativeDTO2InitialEntityMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -74,7 +73,6 @@ class HpanInitiativeMediatorServiceImplTest {
 
         Mockito.when(hpanInitiativesRepository.save(Mockito.any(HpanInitiatives.class))).thenReturn(Mono.just(hpanInitiativesOut));
 
-        ObjectMapper objectMapper = new ObjectMapper();
         // When
         hpanInitiativeMediatorService.execute(Flux
                .fromIterable(List.of(MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeValidJson)).build(),
@@ -82,7 +80,6 @@ class HpanInitiativeMediatorServiceImplTest {
                         MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeDTONotDate)).build(),
                         MessageBuilder.withPayload("NOT VALID JSON").build()
                 )));
-
         // Then
         Mockito.verify(hpanInitiativesRepository,Mockito.times(2)).findById(Mockito.anyString());
         Mockito.verify(hpanInitiativesService,Mockito.times(1)).evaluate(Mockito.any(HpanInitiativeDTO.class),Mockito.any(HpanInitiatives.class));
