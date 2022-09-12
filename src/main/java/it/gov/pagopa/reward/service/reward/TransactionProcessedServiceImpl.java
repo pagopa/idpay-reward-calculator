@@ -21,6 +21,11 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     }
 
     @Override
+    public String computeTrxId(TransactionDTO trx) {
+        return transaction2TransactionProcessedMapper.computeTrxId(trx);
+    }
+
+    @Override
     public Mono<TransactionProcessed> getProcessedTransactions(String trxId) {
         return transactionProcessedRepository.findById(trxId);
     }

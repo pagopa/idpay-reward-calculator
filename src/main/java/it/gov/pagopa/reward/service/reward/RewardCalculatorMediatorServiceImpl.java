@@ -67,7 +67,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     }
 
     private Mono<TransactionDTO> checkDuplicateTransaction(TransactionDTO trx) {
-        return transactionProcessedService.getProcessedTransactions(trx.getIdTrxAcquirer())
+        return transactionProcessedService.getProcessedTransactions(transactionProcessedService.computeTrxId(trx))
                 .flatMap(result -> {
                         log.info("[DUPLICATE_TRX] Already processed transaction {}", result);
                         return Mono.<TransactionDTO>error(new IllegalStateException("[DUPLICATE_TRX] Already processed transaction"));

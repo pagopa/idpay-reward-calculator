@@ -22,6 +22,8 @@ import java.util.Map;
 @Document(collection = "transactions_processed")
 public class TransactionProcessed {
     @Id
+    private String id;
+
     private String idTrxAcquirer;
 
     private String acquirerCode;
