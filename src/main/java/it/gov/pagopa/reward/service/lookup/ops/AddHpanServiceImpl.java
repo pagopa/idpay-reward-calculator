@@ -48,7 +48,7 @@ public class AddHpanServiceImpl implements AddHpanService {
                         lastActiveInterval.setEndInterval(hpanInitiativeDTO.getOperationDate().with(LocalTime.MAX));
                         activeTimeIntervalsList.add(initializeInterval(hpanInitiativeDTO));
                         return hpanInitiatives;
-                    } else if (lastActiveInterval.getEndInterval() != null && !lastActiveInterval.getEndInterval().isAfter(hpanInitiativeDTO.getOperationDate())) {
+                    } else if (!lastActiveInterval.getEndInterval().isAfter(hpanInitiativeDTO.getOperationDate())) {
                         onboardedInitiative.setLastEndInterval(null);
                         activeTimeIntervalsList.add(initializeInterval(hpanInitiativeDTO));
                         return hpanInitiatives;
