@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.lookup;
+package it.gov.pagopa.reward.service.lookup.ops;
 
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
