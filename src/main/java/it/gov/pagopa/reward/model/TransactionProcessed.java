@@ -1,14 +1,19 @@
 package it.gov.pagopa.reward.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -16,6 +21,7 @@ import java.time.OffsetDateTime;
 @Builder
 @Document(collection = "transactions_processed")
 public class TransactionProcessed {
+    @Id
     private String idTrxAcquirer;
 
     private String acquirerCode;
@@ -26,5 +32,14 @@ public class TransactionProcessed {
     private String operationType;
 
     private String acquirerId;
+
+    private String userId;
+
+    private String correlationId;
+
+    @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
+    private BigDecimal amount;
+
+    private Map<String, Reward> rewards;
 }
 
