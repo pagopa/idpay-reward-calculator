@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.lookup;
+package it.gov.pagopa.reward.service.lookup.ops;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class DeleteHpanServiceImpl implements DeleteHpanService{
+public class DeleteHpanServiceImpl implements DeleteHpanService {
     @Override
     public HpanInitiatives execute(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO) {
         if (hpanInitiatives.getHpan() != null) {

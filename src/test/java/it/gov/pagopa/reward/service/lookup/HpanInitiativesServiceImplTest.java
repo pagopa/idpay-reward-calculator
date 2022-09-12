@@ -2,6 +2,10 @@ package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.service.lookup.ops.AddHpanService;
+import it.gov.pagopa.reward.service.lookup.ops.AddHpanServiceImpl;
+import it.gov.pagopa.reward.service.lookup.ops.DeleteHpanService;
+import it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;

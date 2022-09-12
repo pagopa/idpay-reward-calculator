@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.lookup;
+package it.gov.pagopa.reward.service.lookup.ops;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class AddHpanServiceImpl implements AddHpanService{
+public class AddHpanServiceImpl implements AddHpanService {
     @Override
     public HpanInitiatives execute(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO) {
         List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();

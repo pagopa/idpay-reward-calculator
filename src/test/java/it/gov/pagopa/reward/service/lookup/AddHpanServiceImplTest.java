@@ -4,6 +4,8 @@ import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.service.lookup.ops.AddHpanService;
+import it.gov.pagopa.reward.service.lookup.ops.AddHpanServiceImpl;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;
@@ -228,5 +230,50 @@ class AddHpanServiceImplTest {
 
         // Then
         Assertions.assertNull(result);
+    }
+
+    @Test
+    void addHpanDateSameLastEndActiveInterval(){
+        // Given
+        AddHpanService addHpanService = new AddHpanServiceImpl();
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime start = now.with(LocalTime.MIN).plusDays(1L);
+        LocalDateTime end = now.plusDays(2L).with(LocalTime.MAX);
+        ActiveTimeInterval initialActiveInterval = ActiveTimeInterval.builder().startInterval(start).endInterval(end).build();
+        List<ActiveTimeInterval> activeList = new ArrayList<>();
+        activeList.add(initialActiveInterval);
+
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
+                .status("ACTIVE")
+                .activeTimeIntervals(activeList).build();
+
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID")
+                .hpan("HPAN")
+                .onboardedInitiatives(List.of(onboarded)).build();
+
+        HpanInitiativeDTO hpanInitiativeDTO = new HpanInitiativeDTO();
+        hpanInitiativeDTO.setHpan(hpanInitiatives.getHpan());
+        hpanInitiativeDTO.setInitiativeId("INITIATIVEID");
+        hpanInitiativeDTO.setUserId(hpanInitiatives.getUserId());
+        hpanInitiativeDTO.setOperationDate(end);
+        hpanInitiativeDTO.setOperationType("ADD_INSTRUMENT");
+
+        // When
+        HpanInitiatives result = addHpanService.execute(hpanInitiatives, hpanInitiativeDTO);
+
+        // Then
+        Assertions.assertNotNull(result);
+
+        OnboardedInitiative onboardedInitiative = result.getOnboardedInitiatives().stream().findFirst().orElse(null);
+        Assertions.assertNotNull(onboardedInitiative);
+        Assertions.assertNull(onboardedInitiative.getLastEndInterval());
+
+        List<ActiveTimeInterval> activeIntervalsListResult = onboardedInitiative.getActiveTimeIntervals();
+        Assertions.assertEquals(2, activeIntervalsListResult.size());
+        ActiveTimeInterval newActiveIntervalExpected = ActiveTimeInterval.builder().startInterval(end.with(LocalTime.MIN).plusDays(1L)).build();
+        Assertions.assertTrue(activeIntervalsListResult.contains(newActiveIntervalExpected));
+        Assertions.assertEquals(activeIntervalsListResult, List.of(initialActiveInterval, newActiveIntervalExpected));
     }
 }

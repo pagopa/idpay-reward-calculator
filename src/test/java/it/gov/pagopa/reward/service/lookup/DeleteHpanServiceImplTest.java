@@ -5,6 +5,8 @@ import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.service.lookup.ops.DeleteHpanService;
+import it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;

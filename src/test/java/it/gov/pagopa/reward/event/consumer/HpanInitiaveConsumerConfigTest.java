@@ -28,8 +28,8 @@ import java.util.stream.IntStream;
         "app.reward-rule.build-delay-duration=PT1S",
         "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativeMediatorServiceImpl=INFO",
         "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativesServiceImpl=DEBUG",
-        "logging.level.it.gov.pagopa.reward.service.lookup.AddHpanServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.lookup.DeleteHpanServiceImpl=OFF",
+        "logging.level.it.gov.pagopa.reward.service.lookup.ops.AddHpanServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
