@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
+@ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -16,9 +17,6 @@ import java.util.Map;
 public class RewardTransactionDTO extends TransactionDTO {
 
     private String status;
-
-    @Builder.Default
-    private List<String> rejectionReasons = new ArrayList<>();
 
     @Builder.Default
     private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();

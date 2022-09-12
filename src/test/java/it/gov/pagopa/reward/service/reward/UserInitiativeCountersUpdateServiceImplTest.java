@@ -70,7 +70,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
@@ -96,7 +96,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
@@ -131,7 +131,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Map<String, Reward> rewardMock = Map.of("2", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false), "3", new Reward(BigDecimal.ZERO, BigDecimal.ZERO, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock)
                 .build();
@@ -180,7 +180,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 "3", new Reward(BigDecimal.valueOf(100), BigDecimal.valueOf(50), false)
         );
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock)
                 .initiativeRejectionReasons(Map.of("1",List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()))).build();
@@ -223,7 +223,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
@@ -251,7 +251,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
@@ -279,7 +279,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
@@ -307,7 +307,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward(BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
@@ -328,7 +328,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Reward reward = new Reward(BigDecimal.valueOf(2000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
-                .trxDate(TRX_DATE)
+                .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .rewards(Map.of("INITIATIVEID1", reward)).build();
 

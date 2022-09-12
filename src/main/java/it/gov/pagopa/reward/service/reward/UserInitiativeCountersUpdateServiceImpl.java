@@ -109,6 +109,6 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, Reward initiativeReward) {
-        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxDate()), k -> new Counters()), initiativeReward, ruleEngineResult.getAmount());
+        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), initiativeReward, ruleEngineResult.getAmount());
     }
 }

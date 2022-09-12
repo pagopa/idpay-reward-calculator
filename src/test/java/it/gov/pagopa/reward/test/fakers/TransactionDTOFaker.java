@@ -53,7 +53,7 @@ public class TransactionDTOFaker {
                         ZoneId.of("Europe/Rome").getRules().getOffset(trxDateTime)
                 ))
                 .hpan("HPAN%s".formatted(bias))
-                .operationType("OPERATIONTYPE%s".formatted(bias))
+                .operationType("00")
                 .circuitType("CIRCUITTYPE%s".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%s".formatted(bias))
                 .correlationId("CORRELATIONID%s".formatted(bias))

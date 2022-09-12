@@ -178,6 +178,11 @@ app:
       short-circuit-conditions: ${REWARD_RULE_SHORT_CIRCUIT:false}
   filter:
     mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
+  operationType:
+    # comma separated of the operation types related to charge operations
+    charge: ${OPERATION_TYPE_CHARGE:00}
+    # comma separated of the operation types related to reversal operations
+    reversal: ${OPERATION_TYPE_REVERSAL:01}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
 

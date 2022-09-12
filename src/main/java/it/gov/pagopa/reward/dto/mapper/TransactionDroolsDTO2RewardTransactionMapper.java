@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -16,27 +17,7 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
 
         if (rewardTrx != null) {
             trxDto = new RewardTransactionDTO();
-            trxDto.setIdTrxAcquirer(rewardTrx.getIdTrxAcquirer());
-            trxDto.setAcquirerCode(rewardTrx.getAcquirerCode());
-            trxDto.setTrxDate(rewardTrx.getTrxDate());
-            trxDto.setHpan(rewardTrx.getHpan());
-            trxDto.setCircuitType(rewardTrx.getCircuitType());
-            trxDto.setOperationType(rewardTrx.getOperationType());
-            trxDto.setIdTrxIssuer(rewardTrx.getIdTrxIssuer());
-            trxDto.setCorrelationId(rewardTrx.getCorrelationId());
-            trxDto.setAmount(rewardTrx.getAmount());
-            trxDto.setAmountCurrency(rewardTrx.getAmountCurrency());
-            trxDto.setMcc(rewardTrx.getMcc());
-            trxDto.setAcquirerId(rewardTrx.getAcquirerId());
-            trxDto.setMerchantId(rewardTrx.getMerchantId());
-            trxDto.setTerminalId(rewardTrx.getTerminalId());
-            trxDto.setBin(rewardTrx.getBin());
-            trxDto.setSenderCode(rewardTrx.getSenderCode());
-            trxDto.setFiscalCode(rewardTrx.getFiscalCode());
-            trxDto.setVat(rewardTrx.getVat());
-            trxDto.setPosType(rewardTrx.getPosType());
-            trxDto.setPar(rewardTrx.getPar());
-            trxDto.setRejectionReasons(rewardTrx.getRejectionReasons());
+            Transaction2RewardTransactionMapper.copyFields(rewardTrx, trxDto);
             trxDto.setInitiativeRejectionReasons(rewardTrx.getInitiativeRejectionReasons());
             trxDto.setInitiatives(rewardTrx.getInitiatives());
             trxDto.setRewards(rewardTrx.getRewards());
@@ -44,11 +25,9 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
             trxDto.setStatus(
                     CollectionUtils.isEmpty(rewardTrx.getRejectionReasons()) &&
                             rewardTrx.getRewards().values().stream().anyMatch(r->r.getAccruedReward().compareTo(BigDecimal.ZERO)!=0)
-                            ? "REWARDED"
-                            : "REJECTED"
+                            ? RewardConstants.REWARD_STATE_REWARDED
+                            : RewardConstants.REWARD_STATE_REJECTED
             );
-
-            trxDto.setUserId(rewardTrx.getUserId());
         }
 
         return trxDto;

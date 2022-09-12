@@ -28,6 +28,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
     @Override
     public Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
+        log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate");
         return hpanInitiativesRepository.findById(hpan)
                 .flatMapMany(initiativesForHpan -> {
                     LocalDateTime trxDateTime = trxDate.atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();
