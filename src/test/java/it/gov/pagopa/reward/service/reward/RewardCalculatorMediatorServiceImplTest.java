@@ -1,10 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
-import it.gov.pagopa.reward.dto.trx.ReversalInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
@@ -27,7 +25,6 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 @ExtendWith(MockitoExtension.class)
@@ -84,49 +81,40 @@ class RewardCalculatorMediatorServiceImplTest {
         // Given
         TransactionDTO trx = buildTrx(0);
         TransactionDTO trxInvalidOpType = buildTrx(1);
-        TransactionDTO trxCompleteReverseNoCharge = buildTrx(2);
-        TransactionDTO trxCompleteReverse = buildTrx(3);
-        TransactionDTO trxPartialReverse = buildTrx(4);
-        Flux<Message<String>> trxFlux = buildTrxFlux(trx, trxInvalidOpType, trxCompleteReverseNoCharge, trxCompleteReverse, trxPartialReverse);
+        Flux<Message<String>> trxFlux = buildTrxFlux(trx, trxInvalidOpType);
 
         List<String> initiatives = List.of("INITIATIVE");
-        Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any(), Mockito.any()))
+        Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any()))
                 .thenReturn(Flux.fromIterable(initiatives));
-
-        mockReversalUseCases(trxInvalidOpType, trxCompleteReverseNoCharge, trxCompleteReverse, trxPartialReverse);
 
         Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenAnswer(i-> rewardTransactionMapper.apply(i.getArgument(0)));
+
+        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxInvalidOpType)).thenAnswer(i-> {
+            final TransactionDTO t = i.getArgument(0);
+            t.setRejectionReasons(List.of("REJECTED"));
+            return Mono.just(t);
+        });
 
         // When
         List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(5, result.size());
+        Assertions.assertEquals(2, result.size());
 
         Assertions.assertEquals(List.of("REJECTED"), result.get(1).getRejectionReasons());
-        Assertions.assertEquals(List.of("NO_ACTIVE_INITIATIVES"), result.get(2).getRejectionReasons());
 
         Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(trx);
         Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(trxInvalidOpType);
-        Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(trxCompleteReverseNoCharge);
-        Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(trxCompleteReverse);
-        Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(trxPartialReverse);
 
-        Mockito.verify(onboardedInitiativesServiceMock).getInitiatives(trx.getHpan(), trx.getTrxDate());
-        Mockito.verify(onboardedInitiativesServiceMock).getInitiatives(trxPartialReverse.getHpan(), trxPartialReverse.getTrxDate());
+        Mockito.verify(onboardedInitiativesServiceMock).getInitiatives(trx);
 
         Mockito.verify(userInitiativeCountersRepositoryMock).findById(trx.getUserId());
-        Mockito.verify(userInitiativeCountersRepositoryMock).findById(trxPartialReverse.getUserId());
 
         Mockito.verify(initiativesEvaluatorServiceMock).evaluateInitiativesBudgetAndRules(Mockito.eq(trx), Mockito.eq(initiatives), Mockito.any());
-        Mockito.verify(initiativesEvaluatorServiceMock).evaluateInitiativesBudgetAndRules(Mockito.eq(trxPartialReverse), Mockito.eq(initiatives), Mockito.any());
-        Mockito.verify(initiativesEvaluatorServiceMock).evaluateInitiativesBudgetAndRules(Mockito.eq(trxCompleteReverse), Mockito.eq(List.of("INITIATIVE2REVERSE")), Mockito.any());
 
         Mockito.verify(userInitiativeCountersRepositoryMock).save(Mockito.argThat(i->i.getUserId().equals(trx.getUserId())));
-        Mockito.verify(userInitiativeCountersRepositoryMock).save(Mockito.argThat(i->i.getUserId().equals(trxPartialReverse.getUserId())));
-        Mockito.verify(userInitiativeCountersRepositoryMock).save(Mockito.argThat(i->i.getUserId().equals(trxCompleteReverse.getUserId())));
 
         Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, userInitiativeCountersRepositoryMock, initiativesEvaluatorServiceMock);
 
@@ -138,39 +126,6 @@ class RewardCalculatorMediatorServiceImplTest {
         final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
         trx.setAmount(BigDecimal.valueOf(i+1));
         return trx;
-    }
-
-    private void mockReversalUseCases(TransactionDTO trxInvalidOpType, TransactionDTO trxCompleteReverseNoCharge, TransactionDTO trxCompleteReverse, TransactionDTO trxPartialReverse) {
-        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxInvalidOpType)).thenAnswer(i-> {
-            final TransactionDTO t = i.getArgument(0);
-            t.setRejectionReasons(List.of("REJECTED"));
-            return Mono.just(t);
-        });
-
-        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxCompleteReverseNoCharge)).thenAnswer(i-> {
-            final TransactionDTO t = i.getArgument(0);
-            t.setOperationTypeTranscoded(OperationType.REVERSAL);
-            t.setEffectiveAmount(BigDecimal.ZERO);
-            return Mono.just(t);
-        });
-
-        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxCompleteReverse)).thenAnswer(i-> {
-            final TransactionDTO t = i.getArgument(0);
-            t.setOperationTypeTranscoded(OperationType.REVERSAL);
-            t.setEffectiveAmount(BigDecimal.ZERO);
-            t.setReversalInfo(new ReversalInfo());
-            t.getReversalInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new Reward()));
-            return Mono.just(t);
-        });
-
-        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxPartialReverse)).thenAnswer(i-> {
-            final TransactionDTO t = i.getArgument(0);
-            t.setOperationTypeTranscoded(OperationType.REVERSAL);
-            t.setEffectiveAmount(t.getAmount());
-            t.setReversalInfo(new ReversalInfo());
-            t.getReversalInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new Reward()));
-            return Mono.just(t);
-        });
     }
 
 }

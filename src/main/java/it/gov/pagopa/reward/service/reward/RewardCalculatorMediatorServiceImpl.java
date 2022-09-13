@@ -5,13 +5,10 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
-import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMapper;
-import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
@@ -21,8 +18,6 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -40,6 +35,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
 
     private final ObjectReader objectReader;
 
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardCalculatorMediatorServiceImpl(OperationTypeHandlerService operationTypeHandlerService, OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, Transaction2RewardTransactionMapper rewardTransactionMapper, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.operationTypeHandlerService = operationTypeHandlerService;
         this.onboardedInitiativesService = onboardedInitiativesService;
@@ -69,7 +65,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                     errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);
                     return Mono.empty();
                 })
-                .doFinally(x -> log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message %d ms with payload: %s".formatted(System.currentTimeMillis()-startTime,message.getPayload())));
+                .doFinally(x -> log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload()));
     }
 
     private TransactionDTO deserializeMessage(Message<String> message) {
@@ -77,33 +73,12 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     }
 
     private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {
-        if(CollectionUtils.isEmpty(trx.getRejectionReasons())){
-            Mono<List<String>> initiatives2Evaluate = buildInitiativeListMono(trx);
-            if(initiatives2Evaluate!=null) {
-                // in case of complete reverse, we will yet call evaluate method in order to update counters
-                return initiatives2Evaluate.flatMap(initiatives -> evaluate(trx, initiatives));
-            } else {
-                trx.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
-                return Mono.just(rewardTransactionMapper.apply(trx));
-            }
+        if (CollectionUtils.isEmpty(trx.getRejectionReasons())) {
+            return onboardedInitiativesService.getInitiatives(trx)
+                    .collectList().flatMap(initiatives -> evaluate(trx, initiatives));
         } else {
             log.trace("[REWARD] [REWARD_KO] Transaction discarded: {}", trx.getRejectionReasons());
             return Mono.just(rewardTransactionMapper.apply(trx));
-        }
-    }
-
-    /** In case of complete reverse, it will retrieve just the rewarded initiatives, otherwise it will search for the active initiatives */
-    private Mono<List<String>> buildInitiativeListMono(TransactionDTO trx) {
-        if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || BigDecimal.ZERO.compareTo(trx.getEffectiveAmount()) < 0){
-            return onboardedInitiativesService.getInitiatives(trx.getHpan(), trx.getTrxChargeDate())
-                    .collectList();
-        } else {
-            if(trx.getReversalInfo() != null){
-                return Mono.just(new ArrayList<>(trx.getReversalInfo().getPreviousRewards().keySet()));
-            } else {
-                log.trace("[REWARD] [REWARD_KO] Recognized REVERSAL operation without previous rewards");
-                return null;
-            }
         }
     }
 
