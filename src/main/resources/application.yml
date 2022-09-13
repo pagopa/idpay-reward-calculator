@@ -181,8 +181,8 @@ app:
   operationType:
     # comma separated of the operation types related to charge operations
     charge: ${OPERATION_TYPE_CHARGE:00}
-    # comma separated of the operation types related to reversal operations
-    reversal: ${OPERATION_TYPE_REVERSAL:01}
+    # comma separated of the operation types related to refund operations
+    refund: ${OPERATION_TYPE_REFUND:01}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
 

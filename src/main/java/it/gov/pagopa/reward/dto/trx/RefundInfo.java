@@ -1,18 +1,18 @@
 package it.gov.pagopa.reward.dto.trx;
 
-import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReversalInfo {
+public class RefundInfo {
     private List<TransactionProcessed> previousTrxs;
-    private Map<String, Reward> previousRewards;
+    private Map<String, BigDecimal> previousRewards;
 }

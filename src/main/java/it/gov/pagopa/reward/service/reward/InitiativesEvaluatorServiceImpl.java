@@ -29,7 +29,7 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
         Map<String, List<String>> rejectedInitiativesForBudget = new HashMap<>();
         initiatives.forEach(initiativeId -> {
             InitiativeCounters initiativeCounters = userCounters.getInitiatives().get(initiativeId);
-            // exhausted initiative to be considered in case of REVERSAL in order to
+            // exhausted initiative to be considered in case of REFUND in order to
             if(initiativeCounters != null && initiativeCounters.isExhaustedBudget() && !isExhausted2Reverse(trx, initiativeId)) {
                 rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
             } else {
@@ -43,8 +43,10 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
         return trxRewarded;
     }
 
-    /** if REVERSAL, exhausted initiative considered only if they have already rewarded */
+    /** if REFUND, exhausted initiative considered only if they have already rewarded */
     private boolean isExhausted2Reverse(TransactionDTO trx, String initiativeId) {
-        return OperationType.REVERSAL.equals(trx.getOperationTypeTranscoded()) && trx.getReversalInfo()!=null && BigDecimal.ZERO.compareTo(trx.getReversalInfo().getPreviousRewards().get(initiativeId).getAccruedReward())<0;
+        return OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) &&
+                trx.getRefundInfo()!=null &&
+                BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId))<0;
     }
 }

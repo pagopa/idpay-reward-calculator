@@ -9,17 +9,14 @@ import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -38,13 +35,13 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
             return getInitiatives(trx.getHpan(), trx.getTrxChargeDate());
         } else {
-            if(trx.getReversalInfo() != null){
-                return Flux.fromIterable(trx.getReversalInfo()
+            if(trx.getRefundInfo() != null){
+                return Flux.fromIterable(trx.getRefundInfo()
                         .getPreviousRewards().entrySet().stream()
-                        .filter(r-> isPositive(r.getValue().getAccruedReward()))
+                        .filter(r-> isPositive(r.getValue()))
                         .map(Map.Entry::getKey).toList());
             } else {
-                log.trace("[REWARD] [REWARD_KO] Recognized REVERSAL operation without previous rewards");
+                log.trace("[REWARD] [REWARD_KO] Recognized REFUND operation without previous rewards");
                 return Flux.empty();
             }
         }

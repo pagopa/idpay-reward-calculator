@@ -1,9 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.dto.trx.ReversalInfo;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
@@ -22,7 +21,6 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -36,8 +34,8 @@ class OnboardedInitiativesServiceImplTest {
     private OnboardedInitiativesService onboardedInitiativesService;
 
 
-    private String hpan = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
-    private OffsetDateTime trxDate = OffsetDateTime.now().plusDays(6L);
+    private final String hpan = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
+    private final OffsetDateTime trxDate = OffsetDateTime.now().plusDays(6L);
 
     @BeforeEach
     public void init(){
@@ -168,7 +166,7 @@ class OnboardedInitiativesServiceImplTest {
     void getCompleteReverseNoChargeRewarded() {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REVERSAL);
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmount(BigDecimal.ZERO);
 
         // When
@@ -183,10 +181,10 @@ class OnboardedInitiativesServiceImplTest {
     void getCompleteReverse() {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REVERSAL);
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmount(BigDecimal.ZERO);
-        trx.setReversalInfo(new ReversalInfo());
-        trx.getReversalInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new Reward(BigDecimal.ONE)));
+        trx.setRefundInfo(new RefundInfo());
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
 
         // When
         List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
@@ -200,10 +198,10 @@ class OnboardedInitiativesServiceImplTest {
     void getCompleteReverseCapped() {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REVERSAL);
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmount(BigDecimal.ZERO);
-        trx.setReversalInfo(new ReversalInfo());
-        trx.getReversalInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new Reward(BigDecimal.ONE, BigDecimal.ZERO)));
+        trx.setRefundInfo(new RefundInfo());
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ZERO));
 
         // When
         List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
@@ -217,7 +215,7 @@ class OnboardedInitiativesServiceImplTest {
     void getPartialReverseCapped() {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REVERSAL);
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
 
         testGetInitiativesPrivateMethod(trx, null, true);
     }

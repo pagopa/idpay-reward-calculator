@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.dto.trx.ReversalInfo;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -58,8 +58,8 @@ class InitiativesEvaluatorServiceImplTest {
         Assertions.assertEquals(rejectedInitiatives, result.getInitiativeRejectionReasons());
         Mockito.verify(ruleEngineService).applyRules(trx, List.of("INITIATIVE2"), userCounters);
 
-        // Given reversal having not rewarded charge
-        trx.setOperationTypeTranscoded(OperationType.REVERSAL);
+        // Given refund having not rewarded charge
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
         // When
         result = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
 
@@ -68,9 +68,9 @@ class InitiativesEvaluatorServiceImplTest {
         Assertions.assertEquals(rejectedInitiatives, result.getInitiativeRejectionReasons());
         Mockito.verify(ruleEngineService, Mockito.times(2)).applyRules(trx, List.of("INITIATIVE2"), userCounters);
 
-        // Given reversal having rewarded charge equal to 0
-        trx.setReversalInfo(new ReversalInfo());
-        trx.getReversalInfo().setPreviousRewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ZERO)));
+        // Given refund having rewarded charge equal to 0
+        trx.setRefundInfo(new RefundInfo());
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE1", BigDecimal.ZERO));
         // When
         result = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
 
@@ -79,8 +79,8 @@ class InitiativesEvaluatorServiceImplTest {
         Assertions.assertEquals(rejectedInitiatives, result.getInitiativeRejectionReasons());
         Mockito.verify(ruleEngineService, Mockito.times(3)).applyRules(trx, List.of("INITIATIVE2"), userCounters);
 
-        // Given reversal having rewarded charge
-        trx.getReversalInfo().setPreviousRewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ONE)));
+        // Given refund having rewarded charge
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE1", BigDecimal.ONE));
 
         // When
         result = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);

@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -41,5 +43,7 @@ public class TransactionProcessed {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private OperationType operationTypeTranscoded;
+
+    private OffsetDateTime timestamp; // TODO to fill
 }
 

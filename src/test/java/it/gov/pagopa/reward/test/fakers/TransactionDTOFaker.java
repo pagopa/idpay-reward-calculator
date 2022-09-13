@@ -57,7 +57,7 @@ public class TransactionDTOFaker {
                 .circuitType("CIRCUITTYPE%s".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%s".formatted(bias))
                 .correlationId("CORRELATIONID%s".formatted(bias))
-                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)))
+                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE))
                 .amountCurrency("AMOUNTCURRENCY%s".formatted(bias))
                 .mcc("MCC%s".formatted(bias))
                 .acquirerId("ACQUIRERID%s".formatted(bias))

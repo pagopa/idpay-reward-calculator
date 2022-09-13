@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import it.gov.pagopa.reward.dto.trx.ReversalInfo;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
 import lombok.*;
@@ -70,6 +70,6 @@ public class TransactionDTO {
     private BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
-    private ReversalInfo reversalInfo;
+    private RefundInfo refundInfo;
     //endregion
 }

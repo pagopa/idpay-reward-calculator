@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.ReversalInfo;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.fakers.TransactionDroolsDtoFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -33,7 +33,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     void mapWithNotNullRewardTransaction() {
         // Given
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
-        trx.setReversalInfo(new ReversalInfo());
+        trx.setRefundInfo(new RefundInfo());
 
         trx.setRewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ZERO, BigDecimal.ZERO, false)));
         trx.setRewards(Map.of("INITIATIVE2", new Reward(BigDecimal.TEN, BigDecimal.ZERO, true)));

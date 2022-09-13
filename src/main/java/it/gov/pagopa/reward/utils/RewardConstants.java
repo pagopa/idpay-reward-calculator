@@ -14,6 +14,7 @@ public final class RewardConstants {
     public enum InitiativeTrxConditionOrder {
         REWARDLIMITS {
             /** Use the rejection reason as format where insert the {@link RewardLimitsDTO.RewardLimitFrequency#name()} */
+            @Override
             public String getRejectionReason() {
                 return "TRX_RULE_%s_%%s_FAIL".formatted(name());
             }
@@ -40,6 +41,9 @@ public final class RewardConstants {
     //region reward evaluation rejection reasons
     public static final String TRX_REJECTION_REASON_NO_INITIATIVE = "NO_ACTIVE_INITIATIVES";
     public static final String TRX_REJECTION_REASON_INVALID_OPERATION_TYPE = "INVALID_OPERATION_TYPE";
+    public static final String TRX_REJECTION_REASON_INVALID_AMOUNT = "INVALID_AMOUNT";
+    public static final String TRX_REJECTION_REASON_INVALID_REFUND = "INVALID_REFUND";
+    public static final String TRX_REJECTION_REASON_REFUND_NOT_MATCH = "REFUND_NOT_MATCH";
     //endregion
 
     //region reward status

@@ -2,12 +2,10 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.math.BigDecimal;
 import java.util.function.Function;
 
 @Service
@@ -55,7 +53,7 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setUserId(src.getUserId());
         dest.setEffectiveAmount(src.getEffectiveAmount());
         dest.setTrxChargeDate(src.getTrxChargeDate());
-        dest.setReversalInfo(src.getReversalInfo());
+        dest.setRefundInfo(src.getRefundInfo());
         dest.setOperationTypeTranscoded(src.getOperationTypeTranscoded());
     }
 }

@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.dto.trx.ReversalInfo;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -31,7 +31,7 @@ class Transaction2RewardTransactionDTOMapperTest {
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
         trx.setEffectiveAmount(trx.getAmount());
-        trx.setReversalInfo(new ReversalInfo());
+        trx.setRefundInfo(new RefundInfo());
 
         // When
         RewardTransactionDTO result = transactionDTO2RewardTransactionMapper.apply(trx);
