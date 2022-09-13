@@ -6,9 +6,6 @@ import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
 import java.util.Locale;
 
 public class HpanInitiativeDTOFaker {
-
-    private static final FakeValuesService fakeValuesServiceGlobal = new FakeValuesService(new Locale("it"), new RandomService());
-
     public static HpanInitiativeDTO.HpanInitiativeDTOBuilder mockInstanceBuilder(Integer bias){
         return HpanInitiativeDTO.builder()
                 .hpan("HPAN_%d".formatted(bias))

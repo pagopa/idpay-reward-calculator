@@ -1,9 +1,12 @@
 package it.gov.pagopa.reward.event.consumer;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
+import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativeDTOFaker;
+import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
@@ -21,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -36,9 +41,10 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private HpanInitiativesRepository hpanInitiativesRepository;
     @Test
     void hpanInitiativeConsumer() {
-        int dbElementsNumbers = 200;
-        int updatedHpanNumbers = 1000;
+        int dbElementsNumbers = 2; //200;
+        int updatedHpanNumbers = 10; //1000;
         int notValidMessages = errorUseCases.size();
+        int concurrencyMessages = 2;
         long maxWaitingMs = 30000;
 
         initializeDB(dbElementsNumbers);
@@ -47,15 +53,17 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         List<String> hpanUpdatedEvents = new ArrayList<>(buildValidPayloads(0,dbElementsNumbers));
         hpanUpdatedEvents.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         hpanUpdatedEvents.addAll(buildValidPayloads(dbElementsNumbers,updatedHpanNumbers));
+        hpanUpdatedEvents.addAll(buildConcurrencyMessages(concurrencyMessages));
 
-        hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, null,e));
+        hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, readUserId(e),e));
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
-        waitForDB(dbElementsNumbers+((updatedHpanNumbers-dbElementsNumbers)/2));
+        waitForDB(dbElementsNumbers+((updatedHpanNumbers+1-dbElementsNumbers)/2));
         long endTestWithoutAsserts = System.currentTimeMillis();
 
         checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
         checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
+        checkConcurrencyMessages();
 
         System.out.printf("""
             ************************
@@ -119,9 +127,29 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         IntStream.range(initiativesWithCloseIntervals, requestElements)
                 .mapToObj(HpanInitiativesFaker::mockInstance)
                 .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
-        waitForDB(requestElements);
-    }
+        initializeConcurrencyCase();
+        waitForDB(requestElements+1);
 
+    }
+    private void initializeConcurrencyCase(){
+        List<OnboardedInitiative> onboardedInitiatives = new ArrayList<>();
+        LocalDateTime start = LocalDateTime.of(2022,9,5,0,0);
+        LocalDateTime end = LocalDateTime.of(2022,9,10, 23, 59, 59,999999);
+        ActiveTimeInterval activeTimeInterval = ActiveTimeInterval.builder().startInterval(start).endInterval(end).build();
+        List<ActiveTimeInterval> activeTimeIntervalList = new ArrayList<>();
+        activeTimeIntervalList.add(activeTimeInterval);
+
+        OnboardedInitiative onboardedInitiative1 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_1").lastEndInterval(end).activeTimeIntervals(activeTimeIntervalList).build();
+        onboardedInitiatives.add(onboardedInitiative1);
+        OnboardedInitiative onboardedInitiative2 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_2").lastEndInterval(end).activeTimeIntervals(activeTimeIntervalList).build();
+        onboardedInitiatives.add(onboardedInitiative2);
+
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID_CONCURRENCY")
+                .hpan("HPAN_CONCURRENCY")
+                .onboardedInitiatives(onboardedInitiatives).build();
+        hpanInitiativesRepository.save(hpanInitiatives).subscribe(h -> log.info("saved hpan: {}", h.getHpan()));
+    }
     private void waitForDB(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
@@ -130,9 +158,20 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
 
     private List<String> buildValidPayloads(int start, int end) {
         return IntStream.range(start, end)
-                .mapToObj(i -> HpanInitiativeDTOFaker.mockInstanceBuilder(i)
+                .mapToObj(i -> HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
                         .operationDate(LocalDateTime.now().plusDays(10L))
                         .operationType(i%2 == 0 ? HpanInitiativeConstants.ADD_INSTRUMENT : HpanInitiativeConstants.DELETE_INSTRUMENT).build())
+                .map(TestUtils::jsonSerializer)
+                .toList();
+    }
+
+    private List<String> buildConcurrencyMessages(int concurrencyMessagesNumber){
+        return IntStream.range(1, concurrencyMessagesNumber+1).mapToObj(i -> HpanInitiativeBulkDTO.builder()
+                .userId("USERID_CONCURRENCY")
+                .initiativeId("INITIATIVEID_%d".formatted(i))
+                .hpanList(List.of("HPAN_CONCURRENCY"))
+                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationDate(LocalDateTime.of(2022, 9, 15, 10, 45, 30)).build())
                 .map(TestUtils::jsonSerializer)
                 .toList();
     }
@@ -163,4 +202,25 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         checkErrorMessageHeaders(topicHpanInitiativeLookupConsumer, errorMessage, errorDescription, expectedPayload);
     }
     //endregion
+
+    private void checkConcurrencyMessages(){
+        HpanInitiatives hpanConcurrecy = hpanInitiativesRepository.findById("HPAN_CONCURRENCY").block();
+
+        System.out.println(hpanConcurrecy);
+        Assertions.assertNotNull(hpanConcurrecy);
+
+        List<OnboardedInitiative> onboardedInitiatives = hpanConcurrecy.getOnboardedInitiatives();
+        System.out.println(onboardedInitiatives);
+        Assertions.assertEquals(2, onboardedInitiatives.size());
+
+        onboardedInitiatives.forEach(onboardedInitiative ->
+                Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size()));
+    }
+
+    private final Pattern userIdPatternMatch = Pattern.compile("\"userId\":\"([^\"]*)\"");
+
+    private String readUserId(String payload) {
+        final Matcher matcher = userIdPatternMatch.matcher(payload);
+        return matcher.find() ? matcher.group(1) : "";
+    }
 }
