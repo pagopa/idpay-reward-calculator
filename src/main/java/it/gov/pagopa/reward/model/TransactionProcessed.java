@@ -8,11 +8,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
@@ -21,19 +22,24 @@ import java.util.Map;
 @Builder
 @Document(collection = "transactions_processed")
 public class TransactionProcessed {
+    @Id
+    private String id;
+
     private String idTrxAcquirer;
 
     private String acquirerCode;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxDate;
+    private LocalDateTime trxDate;
 
     private String operationType;
 
     private String acquirerId;
 
     private String userId;
+
     private String correlationId;
+
     @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
     private BigDecimal amount;
 
@@ -41,9 +47,9 @@ public class TransactionProcessed {
 
     private BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxChargeDate;
+    private LocalDateTime trxChargeDate;
     private OperationType operationTypeTranscoded;
 
-    private OffsetDateTime timestamp; // TODO to fill
+    private LocalDateTime timestamp; // TODO to fill
 }
 

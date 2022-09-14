@@ -38,6 +38,7 @@ class RewardCalculatorMediatorServiceImplTest {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
     }
 
+    @Mock private TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
     @Mock private OperationTypeHandlerService operationTypeHandlerServiceMock;
     @Mock private TransactionValidatorService transactionValidatorServiceMock;
     @Mock private OnboardedInitiativesService onboardedInitiativesServiceMock;
@@ -55,6 +56,7 @@ class RewardCalculatorMediatorServiceImplTest {
         rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(
                 operationTypeHandlerServiceMock,
                 transactionValidatorServiceMock,
+                transactionProcessedService,
                 onboardedInitiativesServiceMock,
                 userInitiativeCountersRepositoryMock,
                 initiativesEvaluatorServiceMock,
@@ -62,6 +64,9 @@ class RewardCalculatorMediatorServiceImplTest {
                 rewardTransactionMapper,
                 errorNotifierServiceMock,
                 TestUtils.objectMapper);
+
+        Mockito.when(transactionProcessedService.checkDuplicateTransactions(Mockito.any())).thenAnswer(i->Mono.just(i));
+        Mockito.when(transactionProcessedService.save(Mockito.any())).thenAnswer(i->Mono.just(i));
 
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(Mockito.any())).thenAnswer(i-> {
             final TransactionDTO trx = i.getArgument(0);
@@ -110,13 +115,15 @@ class RewardCalculatorMediatorServiceImplTest {
         assertRejectionReasons(result, 4,null);
         assertRejectionReasons(result, 5, "NO_ACTIVE_INITIATIVES");
 
+        verifyDuplicateCheckCalls(trx);
         verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
         verifyOnboardedInitiativeCalls(trx, trxPartialRefund);
         verifyUserInitiativeCounterFindByIdCalls(trx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
         verifyInitiativeEvaluatorCalls(expectedInitiatives,trx, trxPartialRefund);
+        verifyTransactionProcessedSaveCalls(trx);
         verifyUserInitiativeCounterSaveCalls(trx, trxPartialRefund, trxTotalRefund);
 
-        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, userInitiativeCountersRepositoryMock, initiativesEvaluatorServiceMock);
+        Mockito.verifyNoMoreInteractions(transactionProcessedService, operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, userInitiativeCountersRepositoryMock, initiativesEvaluatorServiceMock);
 
         Mockito.verifyNoInteractions(errorNotifierServiceMock);
 
@@ -178,6 +185,12 @@ class RewardCalculatorMediatorServiceImplTest {
         });
     }
 
+    private void verifyDuplicateCheckCalls(TransactionDTO... expectedTrxs){
+        for (TransactionDTO t : expectedTrxs) {
+            Mockito.verify(transactionProcessedService).checkDuplicate(t);
+        }
+    }
+
     private void verifyOperationTypeCalls(TransactionDTO... expectedTrxs){
         for (TransactionDTO t : expectedTrxs) {
             Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(t);
@@ -199,6 +212,12 @@ class RewardCalculatorMediatorServiceImplTest {
     private void verifyInitiativeEvaluatorCalls(List<String> expectedInitiatives, TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
             Mockito.verify(initiativesEvaluatorServiceMock).evaluateInitiativesBudgetAndRules(Mockito.eq(t), Mockito.eq(expectedInitiatives), Mockito.any());
+        }
+    }
+
+    private void verifyTransactionProcessedSaveCalls(TransactionDTO... expectedTrxs){
+        for (TransactionDTO t : expectedTrxs) {
+            Mockito.verify(transactionProcessedService).save(t);
         }
     }
 
