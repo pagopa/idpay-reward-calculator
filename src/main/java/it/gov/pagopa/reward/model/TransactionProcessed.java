@@ -50,6 +50,6 @@ public class TransactionProcessed {
     private LocalDateTime trxChargeDate;
     private OperationType operationTypeTranscoded;
 
-    private LocalDateTime timestamp; // TODO to fill
+    private LocalDateTime timestamp;
 }
 

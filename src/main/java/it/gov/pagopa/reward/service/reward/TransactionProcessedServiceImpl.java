@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 @Service
 @Slf4j
 public class TransactionProcessedServiceImpl implements TransactionProcessedService {
@@ -39,6 +41,7 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     @Override
     public Mono<TransactionProcessed> save(RewardTransactionDTO trx) {
         TransactionProcessed trxProcessed = transaction2TransactionProcessedMapper.apply(trx);
+        trxProcessed.setTimestamp(LocalDateTime.now());
         return transactionProcessedRepository.save(trxProcessed);
     }
 }

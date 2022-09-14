@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
@@ -11,24 +10,16 @@ import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
-import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
-import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.service.reward.RuleEngineService;
+import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
-import it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateService;
+import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,7 +27,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
-import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -55,26 +45,10 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestPropertySource(properties = {
-        "app.reward-rule.build-delay-duration=PT1S",
-        "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
-        "logging.level.it.gov.pagopa.reward.service.reward.RuleEngineServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
-})
-@Slf4j
-class TransactionProcessorTest extends BaseIntegrationTest {
+class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     public static final long TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT = 9L;
 
-    @SpyBean
-    private RewardContextHolderService rewardContextHolderService;
-    @Autowired
-    private HpanInitiativesRepository hpanInitiativesRepository;
-    @Autowired
-    private UserInitiativeCountersRepository userInitiativeCountersRepository;
-    @Autowired
-    private TransactionProcessedRepository transactionProcessedRepository;
     @Autowired
     private TransactionProcessedService transactionProcessedService;
     @Autowired
@@ -547,19 +521,12 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, boolean expectedCap) {
-        Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
-        Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
-        Assertions.assertFalse(evaluation.getRewards().isEmpty());
-        Assertions.assertEquals("REWARDED", evaluation.getStatus());
+        assertRewardedState(evaluation, rewardedInitiativeId, initiative2ExpectedReward.get(rewardedInitiativeId), expectedCap);
+    }
 
-        final Reward initiativeReward = evaluation.getRewards().get(rewardedInitiativeId);
-        Assertions.assertNotNull(initiativeReward);
-
-        TestUtils.assertBigDecimalEquals(initiative2ExpectedReward.get(rewardedInitiativeId), initiativeReward.getAccruedReward());
-        if (!expectedCap) {
-            TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
-        }
-
+    @Override
+    protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap) {
+        super.assertRewardedState(evaluation, rewardedInitiativeId, expectedReward, expectedCap);
         Assertions.assertNull(evaluation.getRewards().get(INITIATIVE_ID_EXPIRED));
     }
 
@@ -595,42 +562,13 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     }
 
     private UserInitiativeCounters onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
-        hpanInitiativesRepository.findById(trx.getHpan())
-                .defaultIfEmpty(
-                        HpanInitiatives.builder()
-                                .hpan(trx.getHpan())
-                                .onboardedInitiatives(new ArrayList<>())
-                                .build())
-                .map(hpan2initiative -> {
-                    hpan2initiative.getOnboardedInitiatives().addAll(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
-                                    .initiativeId(initiativeId)
-                                    .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
-                                            .startInterval(trx.getTrxDate().toLocalDateTime())
-                                            .endInterval(trx.getTrxDate().toLocalDateTime())
-                                            .build()))
-                                    .build())
-                            .collect(Collectors.toList()));
-                    return hpan2initiative;
-                })
-                .flatMap(hpanInitiativesRepository::save)
-                .block();
-
+        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime(), initiativeIds);
 
         return createUserCounter(trx);
     }
 
     private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
         return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new HashMap<>()));
-    }
-
-    private void saveUserInitiativeCounter(TransactionDTO trx, InitiativeCounters initiativeRewardCounter, String initiativeIdExhausted) {
-        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                .userId(trx.getUserId())
-                .initiatives(new HashMap<>(Map.of(
-                        initiativeIdExhausted,
-                        initiativeRewardCounter
-                )))
-                .build()).block();
     }
 
     private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

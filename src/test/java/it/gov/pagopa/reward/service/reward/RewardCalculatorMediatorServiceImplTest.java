@@ -5,8 +5,8 @@ import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -42,9 +42,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private OperationTypeHandlerService operationTypeHandlerServiceMock;
     @Mock private TransactionValidatorService transactionValidatorServiceMock;
     @Mock private OnboardedInitiativesService onboardedInitiativesServiceMock;
-    @Mock private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
-    @Mock private UserInitiativeCountersUpdateService userInitiativeCountersUpdateServiceMock;
-    @Mock private InitiativesEvaluatorService initiativesEvaluatorServiceMock;
+    @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
 
     private RewardCalculatorMediatorService rewardCalculatorMediatorService;
@@ -54,19 +52,16 @@ class RewardCalculatorMediatorServiceImplTest {
     @BeforeEach
     public void initMocks(){
         rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(
+                transactionProcessedService,
                 operationTypeHandlerServiceMock,
                 transactionValidatorServiceMock,
-                transactionProcessedService,
                 onboardedInitiativesServiceMock,
-                userInitiativeCountersRepositoryMock,
-                initiativesEvaluatorServiceMock,
-                userInitiativeCountersUpdateServiceMock,
+                initiativesEvaluatorFacadeServiceMock,
                 rewardTransactionMapper,
                 errorNotifierServiceMock,
                 TestUtils.objectMapper);
 
-        Mockito.when(transactionProcessedService.checkDuplicateTransactions(Mockito.any())).thenAnswer(i->Mono.just(i));
-        Mockito.when(transactionProcessedService.save(Mockito.any())).thenAnswer(i->Mono.just(i));
+        Mockito.when(transactionProcessedService.checkDuplicateTransactions(Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(0)));
 
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(Mockito.any())).thenAnswer(i-> {
             final TransactionDTO trx = i.getArgument(0);
@@ -78,8 +73,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
         Mockito.when(transactionValidatorServiceMock.validate(Mockito.any())).thenAnswer(i->i.getArgument(0));
 
-        Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.<String>any())).thenReturn(Mono.empty());
-        Mockito.when(userInitiativeCountersRepositoryMock.save(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluate(Mockito.any(), Mockito.any())).thenAnswer(i->Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
     }
 
     private Flux<Message<String>> buildTrxFlux(TransactionDTO... trxs) {
@@ -96,34 +90,31 @@ class RewardCalculatorMediatorServiceImplTest {
         TransactionDTO trxInvalidAmount = buildTrx(2);
         TransactionDTO trxPartialRefund = buildTrx(3);
         TransactionDTO trxTotalRefund = buildTrx(4);
-        TransactionDTO trxTotalRefundNoCharge = buildTrx(5);
-        Flux<Message<String>> trxFlux = buildTrxFlux(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
+        Flux<Message<String>> trxFlux = buildTrxFlux(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund);
 
         List<String> expectedInitiatives = List.of("INITIATIVE");
 
-        mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
+        mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund);
 
         // When
         List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(6, result.size());
+        Assertions.assertEquals(5, result.size());
 
+        assertRejectionReasons(result, 0,null);
         assertRejectionReasons(result, 1, "REJECTED");
         assertRejectionReasons(result, 2, "INVALID_AMOUNT");
+        assertRejectionReasons(result, 3,null);
         assertRejectionReasons(result, 4,null);
-        assertRejectionReasons(result, 5, "NO_ACTIVE_INITIATIVES");
 
         verifyDuplicateCheckCalls(trx);
-        verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
+        verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund);
         verifyOnboardedInitiativeCalls(trx, trxPartialRefund);
-        verifyUserInitiativeCounterFindByIdCalls(trx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
         verifyInitiativeEvaluatorCalls(expectedInitiatives,trx, trxPartialRefund);
-        verifyTransactionProcessedSaveCalls(trx);
-        verifyUserInitiativeCounterSaveCalls(trx, trxPartialRefund, trxTotalRefund);
 
-        Mockito.verifyNoMoreInteractions(transactionProcessedService, operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, userInitiativeCountersRepositoryMock, initiativesEvaluatorServiceMock);
+        Mockito.verifyNoMoreInteractions(transactionProcessedService, operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock);
 
         Mockito.verifyNoInteractions(errorNotifierServiceMock);
 
@@ -140,12 +131,9 @@ class RewardCalculatorMediatorServiceImplTest {
         return trx;
     }
 
-    private void mockUseCases(List<String> initiatives, TransactionDTO trxInvalidOpType, TransactionDTO trxInvalidAmount, TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund, TransactionDTO trxTotalRefundNoCharge) {
+    private void mockUseCases(List<String> initiatives, TransactionDTO trxInvalidOpType, TransactionDTO trxInvalidAmount, TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund) {
         Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any()))
                 .thenReturn(Flux.fromIterable(initiatives));
-
-        Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenAnswer(i-> rewardTransactionMapper.apply(i.getArgument(0)));
 
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxInvalidOpType)).thenAnswer(i-> {
             final TransactionDTO t = i.getArgument(0);
@@ -168,13 +156,6 @@ class RewardCalculatorMediatorServiceImplTest {
             return Mono.just(t);
         });
 
-        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxTotalRefundNoCharge)).thenAnswer(i-> {
-            final TransactionDTO t = i.getArgument(0);
-            t.setOperationTypeTranscoded(OperationType.REFUND);
-            t.setEffectiveAmount(BigDecimal.ZERO);
-            return Mono.just(t);
-        });
-
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxTotalRefund)).thenAnswer(i-> {
             final TransactionDTO t = i.getArgument(0);
             t.setOperationTypeTranscoded(OperationType.REFUND);
@@ -187,7 +168,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
     private void verifyDuplicateCheckCalls(TransactionDTO... expectedTrxs){
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(transactionProcessedService).checkDuplicate(t);
+            Mockito.verify(transactionProcessedService).checkDuplicateTransactions(t);
         }
     }
 
@@ -203,27 +184,9 @@ class RewardCalculatorMediatorServiceImplTest {
         }
     }
 
-    private void verifyUserInitiativeCounterFindByIdCalls(TransactionDTO... expectedTrxs) {
-        for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(userInitiativeCountersRepositoryMock).findById(t.getUserId());
-        }
-    }
-
     private void verifyInitiativeEvaluatorCalls(List<String> expectedInitiatives, TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(initiativesEvaluatorServiceMock).evaluateInitiativesBudgetAndRules(Mockito.eq(t), Mockito.eq(expectedInitiatives), Mockito.any());
-        }
-    }
-
-    private void verifyTransactionProcessedSaveCalls(TransactionDTO... expectedTrxs){
-        for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(transactionProcessedService).save(t);
-        }
-    }
-
-    private void verifyUserInitiativeCounterSaveCalls(TransactionDTO... expectedTrxs) {
-        for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(userInitiativeCountersRepositoryMock).save(Mockito.argThat(i->i.getUserId().equals(t.getUserId())));
+            Mockito.verify(initiativesEvaluatorFacadeServiceMock).evaluate(t, expectedInitiatives);
         }
     }
 }

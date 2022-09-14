@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.reward;
+package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
@@ -7,6 +7,10 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorService;
+import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorServiceImpl;
+import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
+import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;

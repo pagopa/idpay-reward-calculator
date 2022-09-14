@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -115,15 +116,15 @@ class OperationTypeRefundHandlerServiceTest {
         List<TransactionProcessed> expectedPreviousTrxs = List.of(
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.CHARGE)
-                        .trxDate(OffsetDateTime.MIN)
-                        .trxChargeDate(OffsetDateTime.MIN)
+                        .trxDate(LocalDateTime.MIN)
+                        .trxChargeDate(LocalDateTime.MIN)
                         .amount(BigDecimal.TEN).effectiveAmount(BigDecimal.TEN)
                         .rewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ONE), "INITIATIVE2", new Reward(BigDecimal.ONE), "INITIATIVE3", new Reward(BigDecimal.ONE)))
                         .build(),
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.REFUND)
-                        .trxDate(OffsetDateTime.MAX)
-                        .trxChargeDate(OffsetDateTime.MIN)
+                        .trxDate(LocalDateTime.MAX)
+                        .trxChargeDate(LocalDateTime.MIN)
                         .amount(BigDecimal.ONE).effectiveAmount(BigDecimal.valueOf(9))
                         .rewards(Map.of("INITIATIVE1", new Reward(BigDecimal.valueOf(-0.5)), "INITIATIVE3", new Reward(BigDecimal.valueOf(-1))))
                         .build()
@@ -142,7 +143,7 @@ class OperationTypeRefundHandlerServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertSame(trx, result);
         Assertions.assertEquals(OperationType.REFUND, result.getOperationTypeTranscoded());
-        Assertions.assertEquals(OffsetDateTime.MIN, result.getTrxChargeDate());
+        Assertions.assertEquals(OffsetDateTime.MIN.toLocalDateTime(), result.getTrxChargeDate().toLocalDateTime());
         TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(7), result.getEffectiveAmount());
         Assertions.assertEquals(Collections.emptyList(), result.getRejectionReasons());
         Assertions.assertNotNull(result.getRefundInfo());

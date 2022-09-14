@@ -3,18 +3,21 @@ package it.gov.pagopa.reward.event.processor;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.service.reward.RuleEngineService;
-import it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -22,35 +25,32 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
-        "logging.level.it.gov.pagopa.reward.service.reward.RuleEngineServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
     @SpyBean
-    private RewardContextHolderService rewardContextHolderService;
+    protected RewardContextHolderService rewardContextHolderService;
     @Autowired
-    private HpanInitiativesRepository hpanInitiativesRepository;
+    protected HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
-    private UserInitiativeCountersRepository userInitiativeCountersRepository;
+    protected UserInitiativeCountersRepository userInitiativeCountersRepository;
+    @Autowired
+    protected TransactionProcessedRepository transactionProcessedRepository;
 
-    @SpyBean
-    private RuleEngineService ruleEngineServiceSpy;
-    @SpyBean
-    private UserInitiativeCountersUpdateService userInitiativeCountersUpdateServiceSpy;
+    @AfterEach
+    void clearData(){
+        transactionProcessedRepository.deleteAll().block();
+    }
 
     protected void publishRewardRules(List<InitiativeReward2BuildDTO> initiatives) {
         int[] expectedRules = {0};
@@ -84,6 +84,16 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 .block();
     }
 
+    protected void saveUserInitiativeCounter(TransactionDTO trx, InitiativeCounters initiativeRewardCounter, String initiativeIdExhausted) {
+        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
+                .userId(trx.getUserId())
+                .initiatives(new HashMap<>(Map.of(
+                        initiativeIdExhausted,
+                        initiativeRewardCounter
+                )))
+                .build()).block();
+    }
+
     protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
@@ -97,7 +107,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         if (!expectedCap) {
             TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
         } else {
-            Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())<0);
+            Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())>0);
         }
     }
 }

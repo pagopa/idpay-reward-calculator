@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
-import it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl;
+import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl;
 import org.springframework.data.util.Pair;
 
 import java.util.Map;
