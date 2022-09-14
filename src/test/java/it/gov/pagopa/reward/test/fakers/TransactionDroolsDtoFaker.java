@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.test.fakers.rule.TransactionDTOFaker;
 
 public class TransactionDroolsDtoFaker {
     private static final Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = new Transaction2TransactionDroolsMapper();

@@ -7,7 +7,6 @@ import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
-import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
@@ -15,10 +14,9 @@ import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.service.build.*;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
-import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.rule.TransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,10 +52,7 @@ class RuleEngineServiceImplTest {
         Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = Mockito.mock(Transaction2TransactionDroolsMapper.class);
         TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper = Mockito.mock(TransactionDroolsDTO2RewardTransactionMapper.class);
 
-        TransactionProcessedRepository transactionProcessedRepository = Mockito.mock(TransactionProcessedRepository.class);
-        Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper = Mockito.mock(Transaction2TransactionProcessedMapper.class);
-
-        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper, transactionProcessedRepository, transaction2TransactionProcessedMapper);
+        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives =  List.of("Initiative1");
@@ -91,10 +86,7 @@ class RuleEngineServiceImplTest {
         Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = Mockito.mock(Transaction2TransactionDroolsMapper.class);
         TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper = Mockito.mock(TransactionDroolsDTO2RewardTransactionMapper.class);
 
-        TransactionProcessedRepository transactionProcessedRepository = Mockito.mock(TransactionProcessedRepository.class);
-        Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper = Mockito.mock(Transaction2TransactionProcessedMapper.class);
-
-        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper, transactionProcessedRepository, transaction2TransactionProcessedMapper);
+        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives = new ArrayList<>();
@@ -123,9 +115,6 @@ class RuleEngineServiceImplTest {
     }
     void testComplete(boolean shortCircuited){
         // given
-        TransactionProcessedRepository transactionProcessedRepository = Mockito.mock(TransactionProcessedRepository.class);
-        Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper = Mockito.mock(Transaction2TransactionProcessedMapper.class);
-
         RewardRule2DroolsRuleService droolsRuleService = RewardRule2DroolsRuleServiceTest.buildRewardRule2DroolsRule(false);
         KieContainerBuilderService kieContainerBuilder = new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class));
 
@@ -140,7 +129,7 @@ class RuleEngineServiceImplTest {
 
         RuleEngineConfig ruleEngineConfig = new RuleEngineConfig();
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
-        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(ruleEngineConfig, rewardContextHolderServiceMock, new Transaction2TransactionDroolsMapper(), new TransactionDroolsDTO2RewardTransactionMapper(), transactionProcessedRepository, transaction2TransactionProcessedMapper);
+        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(ruleEngineConfig, rewardContextHolderServiceMock, new Transaction2TransactionDroolsMapper(), new TransactionDroolsDTO2RewardTransactionMapper());
 
         // when
         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(1)

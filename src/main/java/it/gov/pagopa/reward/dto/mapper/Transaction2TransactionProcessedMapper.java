@@ -20,7 +20,7 @@ public class Transaction2TransactionProcessedMapper implements Function<RewardTr
             trxProcessed.setId(computeTrxId(trx));
             trxProcessed.setIdTrxAcquirer(trx.getIdTrxAcquirer());
             trxProcessed.setAcquirerCode(trx.getAcquirerCode());
-            trxProcessed.setTrxDate(trx.getTrxDate());
+            trxProcessed.setTrxDate(trx.getTrxDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime());
             trxProcessed.setOperationType(trx.getOperationType());
             trxProcessed.setAcquirerId(trx.getAcquirerId());
             trxProcessed.setUserId(trx.getUserId());

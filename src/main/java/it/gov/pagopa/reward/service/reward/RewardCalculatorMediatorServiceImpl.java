@@ -52,7 +52,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         long startTime = System.currentTimeMillis();
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
-                .flatMap(this::checkDuplicateTransaction)
+                .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
 
                 .onErrorResume(e -> {
@@ -64,16 +64,6 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
 
     private TransactionDTO deserializeMessage(Message<String> message) {
         return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyTransactionEvaluation(message, "Unexpected JSON", true, e));
-    }
-
-    private Mono<TransactionDTO> checkDuplicateTransaction(TransactionDTO trx) {
-        return transactionProcessedService.getProcessedTransactions(transactionProcessedService.computeTrxId(trx))
-                .flatMap(result -> {
-                        log.info("[DUPLICATE_TRX] Already processed transaction {}", result);
-                        return Mono.<TransactionDTO>error(new IllegalStateException("[DUPLICATE_TRX] Already processed transaction"));
-                })
-                .defaultIfEmpty(trx)
-                .onErrorResume(e -> Mono.empty());
     }
 
     private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {

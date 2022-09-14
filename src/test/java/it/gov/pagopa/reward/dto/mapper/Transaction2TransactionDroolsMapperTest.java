@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.TransactionDTO;
-import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.rule.TransactionDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;

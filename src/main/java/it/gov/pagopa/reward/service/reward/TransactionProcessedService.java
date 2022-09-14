@@ -8,6 +8,6 @@ import reactor.core.publisher.Mono;
 public interface TransactionProcessedService {
 
     String computeTrxId(TransactionDTO trx);
-    Mono<TransactionProcessed> getProcessedTransactions(String trxId);
+    Mono<TransactionDTO> checkDuplicateTransactions(TransactionDTO trx);
     Mono<TransactionProcessed> save(RewardTransactionDTO trx);
 }

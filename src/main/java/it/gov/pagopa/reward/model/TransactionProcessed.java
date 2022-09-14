@@ -12,7 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
@@ -29,7 +29,7 @@ public class TransactionProcessed {
     private String acquirerCode;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxDate;
+    private LocalDateTime trxDate;
 
     private String operationType;
 

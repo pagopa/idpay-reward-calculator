@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.rule.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
