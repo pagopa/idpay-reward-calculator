@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
-import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
+import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Assertions;
@@ -27,13 +27,13 @@ class HpanUpdateBulk2SingleMapperTest {
                 .operationDate(now).build();
 
         // When
-        HpanInitiativeDTO result = hpanUpdateBulk2SingleMapper.apply(hpanInitiativeBulkDTO, "HPAN_1");
+        HpanUpdateEvaluateDTO result = hpanUpdateBulk2SingleMapper.apply(hpanInitiativeBulkDTO, "HPAN_1");
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "onboardedInitiative");
         Assertions.assertEquals("HPAN_1", result.getHpan());
         Assertions.assertEquals("USERID", result.getUserId());
         Assertions.assertEquals("INITIATIVEID", result.getInitiativeId());
         Assertions.assertEquals(HpanInitiativeConstants.ADD_INSTRUMENT, result.getOperationType());
-        Assertions.assertEquals(now, result.getOperationDate());
+        Assertions.assertEquals(now, result.getEvaluationDate());
     }
 }

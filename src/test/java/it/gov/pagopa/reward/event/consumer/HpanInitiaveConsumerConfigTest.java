@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -41,8 +42,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private HpanInitiativesRepository hpanInitiativesRepository;
     @Test
     void hpanInitiativeConsumer() {
-        int dbElementsNumbers = 2; //200;
-        int updatedHpanNumbers = 10; //1000;
+        int dbElementsNumbers = 20;
+        int updatedHpanNumbers = 100;
         int notValidMessages = errorUseCases.size();
         int concurrencyMessages = 2;
         long maxWaitingMs = 30000;
@@ -58,7 +59,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, readUserId(e),e));
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
-        waitForDB(dbElementsNumbers+((updatedHpanNumbers+1-dbElementsNumbers)/2));
+        waitForDB(dbElementsNumbers+1+((updatedHpanNumbers-dbElementsNumbers)/2));
         long endTestWithoutAsserts = System.currentTimeMillis();
 
         checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
@@ -71,7 +72,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
             Test Completed in %d millis
             ************************
             """,
-                updatedHpanNumbers+notValidMessages, timeAfterSendHpanUpdateMessages-startTest,
+                updatedHpanNumbers+notValidMessages+concurrencyMessages, timeAfterSendHpanUpdateMessages-startTest,
                 endTestWithoutAsserts-startTest
         );
     }
@@ -205,12 +206,9 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
 
     private void checkConcurrencyMessages(){
         HpanInitiatives hpanConcurrecy = hpanInitiativesRepository.findById("HPAN_CONCURRENCY").block();
-
-        System.out.println(hpanConcurrecy);
         Assertions.assertNotNull(hpanConcurrecy);
 
         List<OnboardedInitiative> onboardedInitiatives = hpanConcurrecy.getOnboardedInitiatives();
-        System.out.println(onboardedInitiatives);
         Assertions.assertEquals(2, onboardedInitiatives.size());
 
         onboardedInitiatives.forEach(onboardedInitiative ->

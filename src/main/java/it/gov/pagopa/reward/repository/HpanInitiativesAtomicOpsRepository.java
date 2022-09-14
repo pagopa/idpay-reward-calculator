@@ -6,6 +6,6 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import reactor.core.publisher.Mono;
 
 public interface HpanInitiativesAtomicOpsRepository {
-    Mono<HpanInitiatives> createIfNotExist(HpanInitiatives hpanInitiatives);
+    Mono<UpdateResult> createIfNotExist(HpanInitiatives hpanInitiatives);
     Mono<UpdateResult> setInitiative(String hpan, OnboardedInitiative onboardedInitiative);
 }

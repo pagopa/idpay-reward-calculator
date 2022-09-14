@@ -11,11 +11,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HpanInitiativeDTO {
+public class HpanUpdateEvaluateDTO {
     private String userId;
     private String initiativeId;
     private String hpan;
     private String operationType;
-    private LocalDateTime operationDate;
-
+    private LocalDateTime evaluationDate;
 }
