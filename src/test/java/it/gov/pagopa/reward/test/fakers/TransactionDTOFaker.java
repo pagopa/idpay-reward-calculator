@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.test.fakers.rule;
+package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;

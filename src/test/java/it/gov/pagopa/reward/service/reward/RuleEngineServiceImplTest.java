@@ -16,7 +16,7 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.*;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
-import it.gov.pagopa.reward.test.fakers.rule.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
