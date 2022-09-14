@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.utils.Utils;
@@ -26,15 +27,16 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final InitiativesEvaluatorService initiativesEvaluatorService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
+    private final TransactionProcessedService transactionProcessedService;
     private final ErrorNotifierService errorNotifierService;
-
     private final ObjectReader objectReader;
 
-    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
+        this.transactionProcessedService = transactionProcessedService;
         this.errorNotifierService = errorNotifierService;
 
         this.objectReader = objectMapper.readerFor(TransactionDTO.class);
@@ -50,6 +52,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         long startTime = System.currentTimeMillis();
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
+                .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
 
                 .onErrorResume(e -> {
@@ -75,9 +78,12 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
                 .mapNotNull(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
                 .flatMap(counters2rewardedTrx -> {
-                    userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond());
-                    return userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst())
-                            .then(Mono.just(counters2rewardedTrx.getSecond()));
+                    RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
+                    userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), rewardedTrx);
+
+                    return transactionProcessedService.save(rewardedTrx)
+                            .then(userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst()))
+                            .then(Mono.just(rewardedTrx));
                 });
     }
 

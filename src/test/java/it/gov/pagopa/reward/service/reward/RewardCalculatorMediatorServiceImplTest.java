@@ -17,8 +17,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.management.*;
-import java.lang.management.ManagementFactory;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.TimeZone;
@@ -38,15 +36,20 @@ class RewardCalculatorMediatorServiceImplTest {
         UserInitiativeCountersRepository userInitiativeCountersRepository = Mockito.mock(UserInitiativeCountersRepository.class);
         UserInitiativeCountersUpdateService userInitiativeCountersUpdateService = Mockito.mock(UserInitiativeCountersUpdateService.class);
         InitiativesEvaluatorService initiativesEvaluatorService = Mockito.mock(InitiativesEvaluatorServiceImpl.class);
+        TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
 
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, errorNotifierServiceMock, TestUtils.objectMapper);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, TestUtils.objectMapper);
 
         TransactionDTO trx1 = TransactionDTOFaker.mockInstance(0);
         TransactionDTO trx2 = TransactionDTOFaker.mockInstance(1);
         Flux<Message<String>> trxFlux = Flux.just(trx1, trx2)
                 .map(TestUtils::jsonSerializer)
                 .map(MessageBuilder::withPayload).map(MessageBuilder::build);
+
+        Mockito.when(transactionProcessedService.checkDuplicateTransactions(trx1)).thenReturn(Mono.just(trx1));
+        Mockito.when(transactionProcessedService.checkDuplicateTransactions(trx2)).thenReturn(Mono.just(trx2));
+        Mockito.when(transactionProcessedService.save(Mockito.any())).thenReturn(Mono.empty());
 
         Mockito.when(userInitiativeCountersRepository.findById(Mockito.<String>any())).thenReturn(Mono.empty());
         Mockito.when(userInitiativeCountersRepository.save(Mockito.any())).thenReturn(Mono.empty());
@@ -68,6 +71,39 @@ class RewardCalculatorMediatorServiceImplTest {
 
         Mockito.verifyNoInteractions(errorNotifierServiceMock);
 
+        Mockito.verify(transactionProcessedService).save(Mockito.any());
         Mockito.verify(userInitiativeCountersRepository).save(Mockito.any());
+    }
+
+    @Test
+    void executeWithDuplicateTransaction() {
+        // Given
+        OnboardedInitiativesService onboardedInitiativesService = Mockito.mock(OnboardedInitiativesServiceImpl.class);
+        UserInitiativeCountersRepository userInitiativeCountersRepository = Mockito.mock(UserInitiativeCountersRepository.class);
+        UserInitiativeCountersUpdateService userInitiativeCountersUpdateService = Mockito.mock(UserInitiativeCountersUpdateService.class);
+        InitiativesEvaluatorService initiativesEvaluatorService = Mockito.mock(InitiativesEvaluatorServiceImpl.class);
+        TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
+        ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
+
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, TestUtils.objectMapper);
+
+        TransactionDTO trx1 = TransactionDTOFaker.mockInstance(0);
+        Flux<Message<String>> trxFlux = Flux.just(trx1)
+                .map(TestUtils::jsonSerializer)
+                .map(MessageBuilder::withPayload).map(MessageBuilder::build);
+
+        Mockito.when(transactionProcessedService.checkDuplicateTransactions(trx1)).thenReturn(Mono.empty());
+
+        // When
+        List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(0, result.size());
+
+        Mockito.verifyNoInteractions(errorNotifierServiceMock);
+
+        Mockito.verify(transactionProcessedService, Mockito.never()).save(Mockito.any());
+        Mockito.verify(userInitiativeCountersRepository, Mockito.never()).save(Mockito.any());
     }
 }

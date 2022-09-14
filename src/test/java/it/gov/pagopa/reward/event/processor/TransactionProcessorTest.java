@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
@@ -17,9 +18,11 @@ import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.RuleEngineService;
+import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -70,6 +73,12 @@ class TransactionProcessorTest extends BaseIntegrationTest {
     private HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
+    @Autowired
+    private TransactionProcessedRepository transactionProcessedRepository;
+    @Autowired
+    private TransactionProcessedService transactionProcessedService;
+    @Autowired
+    private Transaction2RewardTransactionMapper transaction2RewardTransactionMapper;
 
     @SpyBean
     private RuleEngineService ruleEngineServiceSpy;
@@ -84,12 +93,22 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
         publishRewardRules();
 
+        TransactionDTO trxDuplicated = TransactionDTOFaker.mockInstance(1);
+        trxDuplicated.setIdTrxAcquirer("ALREADY_PROCESSED_TRX");
+        transactionProcessedService.save(transaction2RewardTransactionMapper.apply(trxDuplicated)).block();
+
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).collect(Collectors.toList()));
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
+        trxs.add(objectMapper.writeValueAsString(trxDuplicated));
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(i), i));
+        trxs.forEach(i -> {
+            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(i), i);
+            /* TODO fix parallel execution
+             * publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(i), i);
+             */
+        });
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
@@ -98,6 +117,7 @@ class TransactionProcessorTest extends BaseIntegrationTest {
 
         long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;
         Assertions.assertEquals(validTrx, payloadConsumed.size());
+        Assertions.assertEquals(validTrx+1, transactionProcessedRepository.count().block());
 
         for (ConsumerRecord<String, String> p : payloadConsumed) {
             checkResponse(objectMapper.readValue(p.value(), RewardTransactionDTO.class));
