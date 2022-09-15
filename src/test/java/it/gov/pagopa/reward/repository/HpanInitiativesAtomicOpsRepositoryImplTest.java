@@ -2,12 +2,11 @@ package it.gov.pagopa.reward.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.BaseIntegrationTest;
-import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.utils.TestUtils;
-import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +22,18 @@ import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
 class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
-
     @Autowired
-    private HpanInitiativesRepository hpanInitiativesRepository;
-
+    protected HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
     private HpanInitiativesAtomicOpsRepositoryImpl hpanInitiativesAtomicOpsRepositoryImpl;
 
+    @AfterEach
+    void clearData(){
+        hpanInitiativesRepository.deleteById("hpan_prova").block();
+    }
     @Test
     void createIfNotExist() {
-        String hpan = "HPAN";
-        String initiative = "INITIATIVEID";
+        String hpan = "hpan_prova";
         HpanInitiatives hpanInitiativesFirst = HpanInitiatives.builder()
                 .userId("USERID")
                 .hpan(hpan).build();
@@ -59,7 +59,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
     @Test
     void setInitiative() {
-        String hpan = "HPAN1";
+        String hpan = "hpan_prova";
 
         LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN);
         LocalDateTime end = now.minusDays(2L).with(LocalTime.MAX);
@@ -75,13 +75,12 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
         final List<Future<UpdateResult>> tasks = IntStream.range(1, 3)
-                .mapToObj(i -> {
-                    return OnboardedInitiative.builder()
+                .mapToObj(i -> OnboardedInitiative.builder()
                             .initiativeId("INITIATIVE_%d".formatted(i))
                             .acceptanceDate(now.minusDays(10L))
                             .status("ACCEPTED")
-                            .activeTimeIntervals(activeIntervalList).build();
-                })
+                            .activeTimeIntervals(activeIntervalList).build()
+                )
                 .map(oi -> executorService.submit(() -> hpanInitiativesAtomicOpsRepositoryImpl.setInitiative(hpan,oi).block())).toList();
 
         tasks.forEach(updateResultFuture -> {
@@ -95,13 +94,12 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
         HpanInitiatives result = hpanInitiativesRepository.findById(hpan).block();
         Assertions.assertNotNull(result);
-        result.getOnboardedInitiatives().forEach(onboardedInitiative -> {
-            Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size());
-        });
+        result.getOnboardedInitiatives().forEach(onboardedInitiative ->
+            Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size()));
 
         //set another initiative
         List<ActiveTimeInterval> activeTimeIntervalList2 = List.of(ActiveTimeInterval.builder().startInterval(now).build());
-        setAnotherInitiative(hpan, now, activeTimeIntervalList2);
+        setAnotherInitiative(hpan, activeTimeIntervalList2);
 
         HpanInitiatives result2 = hpanInitiativesRepository.findById(hpan).block();
         Assertions.assertNotNull(result2);
@@ -116,7 +114,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
     @Test
     void createIfNotExistConcurrency() {
-        String hpan = "HPAN_CONCURRENCY";
+        String hpan = "hpan_prova";
         String userId = "USERID_CONCURRENCY";
 
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -143,7 +141,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         Assertions.assertEquals(hpan, result.getHpan());
     }
 
-    private void setAnotherInitiative(String hpan, LocalDateTime now, List<ActiveTimeInterval> activeTimeIntervalList) {
+    private void setAnotherInitiative(String hpan, List<ActiveTimeInterval> activeTimeIntervalList) {
         OnboardedInitiative onboardedInitiative2 = OnboardedInitiative.builder().initiativeId("ANOTHER_INITIATIVE")
                 .activeTimeIntervals(activeTimeIntervalList)
                 .build();
