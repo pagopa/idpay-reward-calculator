@@ -125,7 +125,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                    it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("agendaGroup");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.set%sCapped(true);
                          %s

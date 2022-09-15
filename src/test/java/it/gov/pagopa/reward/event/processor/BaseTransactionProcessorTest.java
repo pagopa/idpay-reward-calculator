@@ -14,6 +14,8 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.service.LockService;
+import it.gov.pagopa.reward.service.LockServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +24,13 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 @TestPropertySource(properties = {
@@ -34,6 +39,9 @@ import java.util.stream.Collectors;
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
+
+        "logging.level.it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.reward.service.LockServiceImpl=TRACE",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
@@ -46,6 +54,17 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected UserInitiativeCountersRepository userInitiativeCountersRepository;
     @Autowired
     protected TransactionProcessedRepository transactionProcessedRepository;
+
+    @Autowired
+    protected LockServiceImpl lockService;
+
+    @AfterEach
+    void checkLockBuquet() throws NoSuchFieldException, IllegalAccessException {
+        final Field locksField = LockServiceImpl.class.getDeclaredField("locks");
+        locksField.setAccessible(true);
+        @SuppressWarnings("unchecked") Map<Integer, Semaphore> locks = (Map<Integer, Semaphore>)locksField.get(lockService);
+        locks.values().forEach(l->Assertions.assertEquals(1, l.availablePermits()));
+    }
 
     @AfterEach
     void clearData(){

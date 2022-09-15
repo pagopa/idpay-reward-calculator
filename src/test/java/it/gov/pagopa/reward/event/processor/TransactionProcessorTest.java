@@ -13,8 +13,8 @@ import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
+import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -77,11 +77,12 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         trxs.add(objectMapper.writeValueAsString(trxDuplicated));
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(i -> {
-            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(i), i);
-            /* TODO fix parallel execution
-             * publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(i), i);
-             */
+        int i[]=new int[]{0};
+        trxs.forEach(p -> {
+            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(p), p);
+            if(i[0]%7==0){
+                publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(p), p);
+            }
         });
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 

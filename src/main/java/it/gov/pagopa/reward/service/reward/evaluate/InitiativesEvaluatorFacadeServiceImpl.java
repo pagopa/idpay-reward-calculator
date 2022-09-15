@@ -7,11 +7,14 @@ import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -19,15 +22,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluatorFacadeService {
 
+    private final LockService lockService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final InitiativesEvaluatorService initiativesEvaluatorService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
     private final TransactionProcessedService transactionProcessedService;
     private final Transaction2RewardTransactionMapper rewardTransactionMapper;
 
-    public InitiativesEvaluatorFacadeServiceImpl(UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, Transaction2RewardTransactionMapper rewardTransactionMapper) {
+    public InitiativesEvaluatorFacadeServiceImpl(LockService lockService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, Transaction2RewardTransactionMapper rewardTransactionMapper) {
+        this.lockService = lockService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
@@ -37,7 +43,10 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
     @Override
     public Mono<RewardTransactionDTO> evaluate(TransactionDTO trx, List<String> initiatives) {
-        String userId = trx.getUserId();
+        final String userId = trx.getUserId();
+        final int lockId = calculateLockId(userId);
+        lockService.acquireLock(lockId);
+        log.debug("[REWARD] [LOCK_ACQUIRED] trx having userId {} acquired lock having id {}", userId, lockId);
         return userInitiativeCountersRepository.findById(userId)
                 .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
                 .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
@@ -48,7 +57,15 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                     return transactionProcessedService.save(rewardedTrx)
                             .then(userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst()))
                             .then(Mono.just(rewardedTrx));
+                })
+                .doFinally(t-> {
+                    lockService.releaseLock(lockId);
+                    log.debug("[REWARD] [LOCK_RELEASED] trx having userId {} released lock having id {}", userId, lockId);
                 });
+    }
+
+    public int calculateLockId(String userId){
+        return Math.abs(userId.hashCode()) % lockService.getBuketSize();
     }
 
     private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
