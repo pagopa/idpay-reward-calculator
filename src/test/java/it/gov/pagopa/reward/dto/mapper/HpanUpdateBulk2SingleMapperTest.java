@@ -34,6 +34,8 @@ class HpanUpdateBulk2SingleMapperTest {
         Assertions.assertEquals("USERID", result.getUserId());
         Assertions.assertEquals("INITIATIVEID", result.getInitiativeId());
         Assertions.assertEquals(HpanInitiativeConstants.ADD_INSTRUMENT, result.getOperationType());
-        Assertions.assertEquals(now, result.getEvaluationDate());
+        Assertions.assertEquals(now.getDayOfWeek(), result.getEvaluationDate().getDayOfWeek());
+        Assertions.assertEquals(now.getMonth(), result.getEvaluationDate().getMonth());
+        Assertions.assertEquals(now.getYear(), result.getEvaluationDate().getYear());
     }
 }
