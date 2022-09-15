@@ -141,7 +141,6 @@ spring:
             # TODO producerProperties to handle "linter" (buffering) and buffer size
   data:
     mongodb:
-#      uri: ${MONGODB_URI}
       uri: ${MONGODB_URI:mongodb://localhost:27017}
       database: ${MONGODB_DBNAME:idpay}
 
