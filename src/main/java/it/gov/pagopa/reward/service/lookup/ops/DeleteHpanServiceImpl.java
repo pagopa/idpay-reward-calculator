@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.lookup.ops;
 
-import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
+import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -16,51 +16,47 @@ import java.util.List;
 @Slf4j
 public class DeleteHpanServiceImpl implements DeleteHpanService {
     @Override
-    public HpanInitiatives execute(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO) {
-        if (hpanInitiatives.getHpan() != null) {
+    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
             List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();
-            log.trace("[DELETED_HPAN] Is presente in db the follow hpan: {}",hpanInitiativeDTO.getHpan());
+            log.trace("[DELETED_HPAN] Is presente in db the follow hpan: {}", hpanUpdateEvaluateDTO.getHpan());
             if (onboardedInitiatives != null){
-               OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanInitiativeDTO.getInitiativeId())).findFirst().orElse(null);
+               OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
                 if (onboardedInitiative!=null) {
-                    return evaluateHpanWithInitiativePresent(hpanInitiatives, hpanInitiativeDTO, onboardedInitiative);
+                    return evaluateHpanWithInitiativePresent(hpanUpdateEvaluateDTO, onboardedInitiative);
                 } else{
-                    log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanInitiativeDTO);
+                    log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanUpdateEvaluateDTO);
                     return null;
                 }
             } else{
-                log.error("Unexpected use case, the hpan not have any initiatives associate. Source message: {}", hpanInitiativeDTO);
+                log.error("Unexpected use case, the hpan not have any initiatives associate. Source message: {}", hpanUpdateEvaluateDTO);
                 return null;
             }
-        }else{
-            log.error("Unexpected use case, the hpan is not present into DB. Source message: {}", hpanInitiativeDTO);
-            return null;
-        }
     }
 
-    private HpanInitiatives evaluateHpanWithInitiativePresent(HpanInitiatives hpanInitiatives, HpanInitiativeDTO hpanInitiativeDTO, OnboardedInitiative onboardedInitiative) {
-        log.trace("[DELETED_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_IS_PRESENT] The hpan: {}, contain the initiative: {}", hpanInitiativeDTO.getHpan(), hpanInitiativeDTO.getInitiativeId());
+    private OnboardedInitiative evaluateHpanWithInitiativePresent(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative onboardedInitiative) {
+        log.trace("[DELETED_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_IS_PRESENT] The hpan: {}, contain the initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
         List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
         if(activeTimeIntervalsList != null) {
             ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
             if (lastActiveInterval != null) {
-                if (!hpanInitiativeDTO.getOperationDate().isBefore(lastActiveInterval.getStartInterval())){
+                if (!hpanUpdateEvaluateDTO.getEvaluationDate().isBefore(lastActiveInterval.getStartInterval())){
                         if (lastActiveInterval.getEndInterval() == null) {
-                            LocalDateTime endInterval = hpanInitiativeDTO.getOperationDate().with(LocalTime.MAX);
+                            LocalDateTime endInterval = hpanUpdateEvaluateDTO.getEvaluationDate().with(LocalTime.MAX);
                             lastActiveInterval.setEndInterval(endInterval);
                             onboardedInitiative.setLastEndInterval(endInterval);
-                            return hpanInitiatives;
+
+                            return onboardedInitiative;
                         }
-                        log.error("Unexpected use case, the initiative for this hpan not have an active interval open. Source message: {}", hpanInitiativeDTO);
+                        log.error("Unexpected use case, the initiative for this hpan not have an active interval open. Source message: {}", hpanUpdateEvaluateDTO);
                         return null;
                 }
-                log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanInitiativeDTO);
+                log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanUpdateEvaluateDTO);
                 return null;
             }
-            log.error("Unexpected use case, the initiative have a empty actives interval. Source message: {} ", hpanInitiativeDTO);
+            log.error("Unexpected use case, the initiative have a empty actives interval. Source message: {} ", hpanUpdateEvaluateDTO);
             return null;
         }
-        log.error("Unexpected use case, the initiative for this hpan not have an active interval. Source message: {} ", hpanInitiativeDTO);
+        log.error("Unexpected use case, the initiative for this hpan not have an active interval. Source message: {} ", hpanUpdateEvaluateDTO);
         return null;
     }
 }
