@@ -42,9 +42,9 @@ public class TransactionProcessor implements ApplicationListener<RewardContextHo
 
     @EventListener(BindingCreatedEvent.class)
     public void onBindingCreatedEvent(BindingCreatedEvent event) {
-        if (event.getSource() instanceof Binding<?> binding && TRX_PROCESSOR_BINDING_NAME.equals(binding.getBindingName()) && !contextReady) {
+        if (event.getSource() instanceof Binding<?> binding && TRX_PROCESSOR_BINDING_NAME.equals(binding.getBindingName()) && contextReady) {
             synchronized (this) {
-                binding.stop();
+                binding.start();
             }
         }
     }

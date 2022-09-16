@@ -22,6 +22,7 @@ spring:
           group: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID:idpay-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-splitter
+          consumer.autoStartup: false
         trxProcessor-out-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -108,6 +109,19 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          trxProcessor-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-transaction
+          errors-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-errors
+          # TODO remove me
+          trxProducer-out-0:
+            producer:
+              configuration:
+                client.id: trxProducer-simulateTrx
           rewardRuleConsumer-in-0:
             consumer:
               startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
