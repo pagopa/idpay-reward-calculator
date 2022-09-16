@@ -46,6 +46,7 @@ public class LockServiceImpl implements LockService {
                     log.warn("lock timeout occurred at lockId {}", lockId);
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new IllegalStateException("Something gone wrong while acquiring lock", e);
             }
         } else {
