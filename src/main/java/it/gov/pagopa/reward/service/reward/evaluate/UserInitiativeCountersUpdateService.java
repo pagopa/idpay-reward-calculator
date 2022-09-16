@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.reward;
+package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;

@@ -1,12 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.dto.TransactionDTO;
 import reactor.core.publisher.Flux;
-
-import java.time.OffsetDateTime;
 
 /**
  * This component will retrieve initiatives to which the input hpan has been enabled
  * */
 public interface OnboardedInitiativesService {
-    Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate);
+    Flux<String> getInitiatives(TransactionDTO trx);
 }

@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,5 +44,12 @@ public class TransactionProcessed {
     private BigDecimal amount;
 
     private Map<String, Reward> rewards;
+
+    private BigDecimal effectiveAmount;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime trxChargeDate;
+    private OperationType operationTypeTranscoded;
+
+    private LocalDateTime timestamp;
 }
 

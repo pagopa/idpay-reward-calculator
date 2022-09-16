@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
@@ -8,11 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -27,7 +31,29 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     }
 
     @Override
-    public Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
+    public Flux<String> getInitiatives(TransactionDTO trx) {
+        if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
+            return getInitiatives(trx.getHpan(), trx.getTrxChargeDate());
+        } else {
+            if(trx.getRefundInfo() != null){
+                return Flux.fromIterable(trx.getRefundInfo()
+                        .getPreviousRewards().entrySet().stream()
+                        .filter(r-> isPositive(r.getValue()))
+                        .map(Map.Entry::getKey).toList());
+            } else {
+                log.trace("[REWARD] [REWARD_KO] Recognized REFUND operation without previous rewards");
+                return Flux.empty();
+            }
+        }
+    }
+
+    /** true if > 0 */
+    private boolean isPositive(BigDecimal value) {
+        return BigDecimal.ZERO.compareTo(value) < 0;
+    }
+
+    private Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
+        log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate");
         return hpanInitiativesRepository.findById(hpan)
                 .flatMapMany(initiativesForHpan -> {
                     LocalDateTime trxDateTime = trxDate.atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();

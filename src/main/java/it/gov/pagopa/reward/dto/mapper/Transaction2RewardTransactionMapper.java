@@ -2,8 +2,11 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.HashMap;
 import java.util.function.Function;
 
 @Service
@@ -16,11 +19,14 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
             out = new RewardTransactionDTO();
             copyFields(trx, out);
 
-            /*out.setStatus(
+            out.setStatus(
                     CollectionUtils.isEmpty(trx.getRejectionReasons())
                             ? RewardConstants.REWARD_STATE_REWARDED
                             : RewardConstants.REWARD_STATE_REJECTED
-            );*/
+            );
+
+            out.setRewards(new HashMap<>());
+            out.setInitiativeRejectionReasons(new HashMap<>());
         }
 
         return out;
@@ -47,11 +53,11 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setVat(src.getVat());
         dest.setPosType(src.getPosType());
         dest.setPar(src.getPar());
-//        dest.setRejectionReasons(src.getRejectionReasons());
+        dest.setRejectionReasons(src.getRejectionReasons());
         dest.setUserId(src.getUserId());
-//        dest.setEffectiveAmount(src.getEffectiveAmount());
-//        dest.setTrxChargeDate(src.getTrxChargeDate());
-//        dest.setRefundInfo(src.getRefundInfo());
-//        dest.setOperationTypeTranscoded(src.getOperationTypeTranscoded());
+        dest.setEffectiveAmount(src.getEffectiveAmount());
+        dest.setTrxChargeDate(src.getTrxChargeDate());
+        dest.setRefundInfo(src.getRefundInfo());
+        dest.setOperationTypeTranscoded(src.getOperationTypeTranscoded());
     }
 }

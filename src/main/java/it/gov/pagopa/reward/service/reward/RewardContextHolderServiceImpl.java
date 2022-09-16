@@ -6,12 +6,15 @@ import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.runtime.KieContainer;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -20,13 +23,19 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final KieContainerBuilderService kieContainerBuilderService;
     private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
+
     private KieContainer kieContainer;
 
-
-    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository) {
+    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
-        refreshKieContainer();
+        refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
+    }
+
+    public static class RewardContextHolderReadyEvent extends ApplicationEvent {
+        public RewardContextHolderReadyEvent(Object source) {
+            super(source);
+        }
     }
 
     //region kieContainer holder
@@ -41,13 +50,17 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         //TODO store in cache
     }
 
-    //TODO use cache
     @Scheduled(fixedRateString = "${app.reward-rule.cache.refresh-ms-rate}")
     public void refreshKieContainer(){
+        refreshKieContainer(x -> log.trace("Refreshed KieContainer"));
+    }
+
+    //TODO use cache
+    public void refreshKieContainer(Consumer<? super KieContainer> subscriber){
         log.trace("Refreshing KieContainer");
         final Flux<DroolsRule> droolsRuleFlux = droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig()));
 
-        kieContainerBuilderService.build(droolsRuleFlux).subscribe(this::setRewardRulesKieContainer);
+        kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieContainer).subscribe(subscriber);
     }
 
     //endregion

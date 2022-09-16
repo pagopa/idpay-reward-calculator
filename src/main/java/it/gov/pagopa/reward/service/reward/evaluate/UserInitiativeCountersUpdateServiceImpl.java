@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.reward;
+package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.Reward;
@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +57,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
 
     @Override
-    public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) { // TODO operation of storno
+    public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) {
         ruleEngineResult.getRewards().forEach((initiativeId, reward) -> {
             if (isRewardedInitiative(reward) || isJustTrxCountRejection(ruleEngineResult, initiativeId)) {
                 InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
@@ -64,8 +65,9 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
 
                 evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
-                updateCounters(initiativeCounter, reward, ruleEngineResult.getAmount());
-                updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, initiativeConfig);
+                final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId) : null;
+                updateCounters(initiativeCounter, reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount());
+                updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, previousRewards, initiativeConfig);
             }
         });
     }
@@ -87,28 +89,35 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         return justTrxCountRejectionReason.equals(ruleEngineResult.getInitiativeRejectionReasons().get(initiativeId));
     }
 
-    private void updateCounters(Counters counters, Reward reward, BigDecimal amount) {
-        counters.setTrxNumber(counters.getTrxNumber() + 1);
+    private void updateCounters(Counters counters, Reward reward, BigDecimal previousRewards, BigDecimal amount, BigDecimal effectiveAmount) {
+        if(previousRewards==null){
+            counters.setTrxNumber(counters.getTrxNumber() + 1);
+            counters.setTotalAmount(counters.getTotalAmount().add(effectiveAmount));
+        } else {
+            counters.setTotalAmount(counters.getTotalAmount().subtract(amount));
+            if(BigDecimal.ZERO.compareTo(previousRewards.add(reward.getAccruedReward())) == 0){
+                counters.setTrxNumber(counters.getTrxNumber() - 1);
+            }
+        }
         counters.setTotalReward(counters.getTotalReward().add(reward.getAccruedReward()));
-        counters.setTotalAmount(counters.getTotalAmount().add(amount));
     }
 
-    private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, InitiativeConfig initiativeConfig) {
+    private void updateTemporalCounters(InitiativeCounters initiativeCounters, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, BigDecimal previousRewards, InitiativeConfig initiativeConfig) {
         if (initiativeConfig.isDailyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, initiativeReward);
+            updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, previousRewards, initiativeReward);
         }
         if (initiativeConfig.isWeeklyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, initiativeReward);
+            updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, previousRewards, initiativeReward);
         }
         if (initiativeConfig.isMonthlyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, initiativeReward);
+            updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, previousRewards, initiativeReward);
         }
         if (initiativeConfig.isYearlyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, initiativeReward);
+            updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, previousRewards, initiativeReward);
         }
     }
 
-    private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, Reward initiativeReward) {
-        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxDate()), k -> new Counters()), initiativeReward, ruleEngineResult.getAmount());
+    private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, BigDecimal previousRewards, Reward initiativeReward) {
+        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), initiativeReward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount());
     }
 }

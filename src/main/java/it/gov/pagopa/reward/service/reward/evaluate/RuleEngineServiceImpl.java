@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.reward;
+package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMap
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
