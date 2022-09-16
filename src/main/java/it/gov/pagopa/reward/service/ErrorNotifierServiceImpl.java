@@ -2,11 +2,15 @@ package it.gov.pagopa.reward.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.kafka.common.errors.TimeoutException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.kafka.KafkaException;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Hooks;
 
 @Service
 @Slf4j
@@ -59,6 +63,18 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.hpanUpdateMessagingServiceType = hpanUpdateMessagingServiceType;
         this.hpanUpdateServer = hpanUpdateServer;
         this.hpanUpdateTopic = hpanUpdateTopic;
+
+        Hooks.onNextError((e, data) -> {
+            if ((e instanceof MessageHandlingException messageHandlingException) && (messageHandlingException.getMostSpecificCause() instanceof KafkaException || messageHandlingException.getMostSpecificCause() instanceof TimeoutException)) {
+                if (e.getMessage().contains(trxTopic) && data instanceof Message<?> message) {
+                    log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred evaluating transaction", e);
+                    notifyTransactionEvaluation(message, "Unexpected error occurred", true, e);
+                    return null;
+                }
+            }
+
+            return e;
+        });
     }
 
     @Override
@@ -73,7 +89,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
     @Override
     public void notifyHpanUpdateEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(hpanUpdateMessagingServiceType, hpanUpdateServer,hpanUpdateTopic,message,description,retryable,exception);
+        notify(hpanUpdateMessagingServiceType, hpanUpdateServer, hpanUpdateTopic, message, description, retryable, exception);
     }
 
     @Override
