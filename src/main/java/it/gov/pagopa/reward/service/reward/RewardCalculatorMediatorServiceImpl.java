@@ -33,7 +33,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final ErrorNotifierService errorNotifierService;
     private final ObjectReader objectReader;
 
-    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, ErrorNotifierService errorNotifierService, MessageKeyedPreparationMapper messageKeyedPreparationMapper, ObjectMapper objectMapper) {
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, MessageKeyedPreparationMapper messageKeyedPreparationMapper, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;

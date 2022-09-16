@@ -24,7 +24,7 @@ public class TransactionProcessor {
      * Read from the topic ${KAFKA_TOPIC_RTD_TRX} and publish to topic ${KAFKA_TOPIC_REWARD_TRX}
      * */
     @Bean
-    public Function<Flux<Message<String>>,Flux<RewardTransactionDTO>> trxProcessor(){
+    public Function<Flux<Message<String>>,Flux<Message<RewardTransactionDTO>>> trxProcessor(){
         return rewardCalculatorMediatorService::execute;
     }
 

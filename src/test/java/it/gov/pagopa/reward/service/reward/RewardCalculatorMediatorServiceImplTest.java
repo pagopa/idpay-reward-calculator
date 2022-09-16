@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.mapper.MessageKeyedPreparationMapper;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -37,9 +38,10 @@ class RewardCalculatorMediatorServiceImplTest {
         UserInitiativeCountersUpdateService userInitiativeCountersUpdateService = Mockito.mock(UserInitiativeCountersUpdateService.class);
         InitiativesEvaluatorService initiativesEvaluatorService = Mockito.mock(InitiativesEvaluatorServiceImpl.class);
         TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
+        MessageKeyedPreparationMapper messageKeyedPreparationMapper = new MessageKeyedPreparationMapper();
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
 
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, messageKeyedPreparationMapper, TestUtils.objectMapper);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, messageKeyedPreparationMapper, errorNotifierServiceMock, TestUtils.objectMapper);
 
         TransactionDTO trx1 = TransactionDTOFaker.mockInstance(0);
         TransactionDTO trx2 = TransactionDTOFaker.mockInstance(1);
@@ -63,7 +65,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 .thenReturn(rTrx1);
 
         // When
-        List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
+        List<Message<RewardTransactionDTO>> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -83,9 +85,10 @@ class RewardCalculatorMediatorServiceImplTest {
         UserInitiativeCountersUpdateService userInitiativeCountersUpdateService = Mockito.mock(UserInitiativeCountersUpdateService.class);
         InitiativesEvaluatorService initiativesEvaluatorService = Mockito.mock(InitiativesEvaluatorServiceImpl.class);
         TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
+        MessageKeyedPreparationMapper messageKeyedPreparationMapper = new MessageKeyedPreparationMapper();
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
 
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, messageKeyedPreparationMapper, TestUtils.objectMapper);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, messageKeyedPreparationMapper, errorNotifierServiceMock, TestUtils.objectMapper);
 
         TransactionDTO trx1 = TransactionDTOFaker.mockInstance(0);
         Flux<Message<String>> trxFlux = Flux.just(trx1)
@@ -95,7 +98,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(transactionProcessedService.checkDuplicateTransactions(trx1)).thenReturn(Mono.empty());
 
         // When
-        List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
+        List<Message<RewardTransactionDTO>> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
