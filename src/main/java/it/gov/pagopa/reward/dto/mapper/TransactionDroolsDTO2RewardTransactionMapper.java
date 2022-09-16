@@ -38,7 +38,6 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
             trxDto.setPar(rewardTrx.getPar());
             trxDto.setRejectionReasons(rewardTrx.getRejectionReasons());
             trxDto.setInitiativeRejectionReasons(rewardTrx.getInitiativeRejectionReasons());
-            trxDto.setInitiatives(rewardTrx.getInitiatives());
             trxDto.setRewards(rewardTrx.getRewards());
 
             trxDto.setStatus(

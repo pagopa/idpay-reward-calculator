@@ -75,7 +75,6 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getPar(), result.getPar());
         Assertions.assertSame(trx.getRejectionReasons(), result.getRejectionReasons());
         Assertions.assertSame(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
-        Assertions.assertSame(trx.getInitiatives(), result.getInitiatives());
         Assertions.assertSame(trx.getRewards(), result.getRewards());
     }
 

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.mapper.MessageKeyedPreparationMapper;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.utils.Utils;
@@ -28,32 +28,36 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final InitiativesEvaluatorService initiativesEvaluatorService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
     private final TransactionProcessedService transactionProcessedService;
+    private final MessageKeyedPreparationMapper messageKeyedPreparationMapper;
+
     private final ErrorNotifierService errorNotifierService;
     private final ObjectReader objectReader;
 
-    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+    public RewardCalculatorMediatorServiceImpl(OnboardedInitiativesService onboardedInitiativesService, UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, ErrorNotifierService errorNotifierService, MessageKeyedPreparationMapper messageKeyedPreparationMapper, ObjectMapper objectMapper) {
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
         this.transactionProcessedService = transactionProcessedService;
+        this.messageKeyedPreparationMapper = messageKeyedPreparationMapper;
         this.errorNotifierService = errorNotifierService;
 
         this.objectReader = objectMapper.readerFor(TransactionDTO.class);
     }
 
     @Override
-    public Flux<RewardTransactionDTO> execute(Flux<Message<String>> messageFlux) {
+    public Flux<Message<RewardTransactionDTO>> execute(Flux<Message<String>> messageFlux) {
         return messageFlux.flatMap(this::execute);
     }
 
-    public Mono<RewardTransactionDTO> execute(Message<String> message) {
+    public Mono<Message<RewardTransactionDTO>> execute(Message<String> message) {
 
         long startTime = System.currentTimeMillis();
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
+                .mapNotNull(messageKeyedPreparationMapper)
 
                 .onErrorResume(e -> {
                     errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);

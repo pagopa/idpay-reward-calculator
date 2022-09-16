@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -83,12 +84,21 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 50.0, 100.0);
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 50.0, 100.0);
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 1L, false, 50.0, 10000.0, 100.0);
     }
 
     private void checkCounters(Counters counter, long expectedTrxCount, double expectedTotalReward, double expectedTotalAmount) {
         assertEquals(expectedTrxCount, counter.getTrxNumber());
         TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalReward), counter.getTotalReward());
         TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalAmount), counter.getTotalAmount());
+    }
+
+    private void checkRewardCounters(RewardCounters rewardCounters, long expectedTrxCount, boolean expectedExhaustedBudget, double expectedTotalReward, double expectedInitiativeBudget, double expectedTotalAmount) {
+        assertEquals(expectedTrxCount, rewardCounters.getTrxNumber());
+        assertEquals(expectedExhaustedBudget, rewardCounters.isExhaustedBudget());
+        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalAmount), rewardCounters.getTotalAmount());
+        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedInitiativeBudget), rewardCounters.getInitiativeBudget());
+        TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalReward), rewardCounters.getTotalReward());
     }
 
     @Test
@@ -124,6 +134,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkCounters(initiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), 11L, 120, 200);
         checkCounters(initiativeCounters.getMonthlyCounters().get(TRX_DATE_MONTH), 11L, 120, 200);
         checkCounters(initiativeCounters.getYearlyCounters().get(TRX_DATE_YEAR), 11L, 120, 200);
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 21L, false, 250, 10000, 4100);
     }
 
     @Test
@@ -167,8 +178,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkCounters(userInitiativeCounters.getInitiatives().get("1"), 20L, 200, 4000);
         // Second initiative (rewarded)
         checkCounters(userInitiativeCounters.getInitiatives().get("2"), 21L, 250, 4100);
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("2").getCounters(), 21L, false, 250, 10000, 4100);
         // Third initiate (reward is 0)
         checkCounters(userInitiativeCounters.getInitiatives().get("3"), 20L, 200, 4000);
+        Assertions.assertNull(rewardTransactionDTO.getRewards().get("3").getCounters());
     }
 
     @Test

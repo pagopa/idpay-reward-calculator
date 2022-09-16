@@ -39,7 +39,7 @@ class RewardCalculatorMediatorServiceImplTest {
         TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
 
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, TestUtils.objectMapper);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, messageKeyedPreparationMapper, TestUtils.objectMapper);
 
         TransactionDTO trx1 = TransactionDTOFaker.mockInstance(0);
         TransactionDTO trx2 = TransactionDTOFaker.mockInstance(1);
@@ -85,7 +85,7 @@ class RewardCalculatorMediatorServiceImplTest {
         TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
         ErrorNotifierService errorNotifierServiceMock = Mockito.mock(ErrorNotifierService.class);
 
-        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, TestUtils.objectMapper);
+        RewardCalculatorMediatorService rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(onboardedInitiativesService, userInitiativeCountersRepository, initiativesEvaluatorService, userInitiativeCountersUpdateService, transactionProcessedService, errorNotifierServiceMock, messageKeyedPreparationMapper, TestUtils.objectMapper);
 
         TransactionDTO trx1 = TransactionDTOFaker.mockInstance(0);
         Flux<Message<String>> trxFlux = Flux.just(trx1)

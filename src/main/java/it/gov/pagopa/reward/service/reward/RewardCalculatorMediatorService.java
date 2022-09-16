@@ -9,6 +9,6 @@ import reactor.core.publisher.Flux;
  * This component will take a {@link TransactionDTO} and will calculate the {@link RewardTransactionDTO}
  * */
 public interface RewardCalculatorMediatorService {
-    Flux<RewardTransactionDTO> execute(Flux<Message<String>> transactionDTO);
+    Flux<Message<RewardTransactionDTO>> execute(Flux<Message<String>> transactionDTO);
 
 }
