@@ -20,6 +20,7 @@ import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     public static final long TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT = 9L;
+    public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
 
     @Autowired
     private TransactionProcessedService transactionProcessedService;
@@ -63,6 +65,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     void testTransactionProcessor() throws JsonProcessingException {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
+        int duplicateTrx = Math.max(100, notValidTrx);
         long maxWaitingMs = 30000;
 
         publishRewardRules();
@@ -77,11 +80,15 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         trxs.add(objectMapper.writeValueAsString(trxDuplicated));
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        int i[]=new int[]{0};
+        int[] i=new int[]{0};
         trxs.forEach(p -> {
-            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(p), p);
-            if(i[0]%7==0){
-                publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, readUserId(p), p);
+            final String userId = Utils.readUserId(p);
+            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId,p);
+
+            // to test duplicate trx and their right processing order
+            if(i[0]<duplicateTrx){
+                i[0]++;
+                publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
         });
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
@@ -110,26 +117,20 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         System.out.printf("""
                         ************************
-                        Time spent to send %d (%d + %d) trx messages: %d millis
+                        Time spent to send %d (%d + %d + %d) trx messages: %d millis
                         Time spent to consume reward responses: %d millis
                         ************************
                         Test Completed in %d millis
                         ************************
                         """,
-                validTrx + notValidTrx,
+                validTrx + duplicateTrx + notValidTrx,
                 validTrx,
+                duplicateTrx,
                 notValidTrx,
                 timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
                 timeEnd - timePublishOnboardingStart
         );
-    }
-
-    private final Pattern userIdPatternMatch = Pattern.compile("\"userId\":\"([^\"]*)\"");
-
-    private String readUserId(String payload) {
-        final Matcher matcher = userIdPatternMatch.matcher(payload);
-        return matcher.find() ? matcher.group(1) : "";
     }
 
     private List<String> buildValidPayloads(int bias, int validOnboardings) {
@@ -269,7 +270,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         String hpan = rewardedTrx.getHpan();
         int biasRetrieve = Integer.parseInt(hpan.substring(4));
         useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
-
+        Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX));
     }
 
     //region useCases

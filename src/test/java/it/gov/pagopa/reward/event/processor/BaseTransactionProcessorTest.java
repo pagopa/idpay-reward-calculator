@@ -39,9 +39,7 @@ import java.util.stream.Collectors;
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
-
-        "logging.level.it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeServiceImpl=DEBUG",
-        "logging.level.it.gov.pagopa.reward.service.LockServiceImpl=TRACE",
+        "logging.level.it.gov.pagopa.reward.service.reward.TransactionProcessedServiceImpl=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {

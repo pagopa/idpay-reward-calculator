@@ -266,6 +266,6 @@ public abstract class BaseIntegrationTest {
         Assertions.assertNotNull(errorMessage.headers().lastHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE));
         Assertions.assertEquals(errorDescription, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_DESCRIPTION));
         Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
-        Assertions.assertEquals(errorMessage.value(), expectedPayload);
+        Assertions.assertEquals(expectedPayload, errorMessage.value());
     }
 }

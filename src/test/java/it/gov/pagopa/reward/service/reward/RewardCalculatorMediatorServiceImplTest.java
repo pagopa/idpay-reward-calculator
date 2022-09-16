@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -24,35 +25,40 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @ExtendWith(MockitoExtension.class)
 class RewardCalculatorMediatorServiceImplTest {
+
+    public static final int LOCK_SERVICE_BUKET_SIZE = 1000;
 
     @BeforeAll
     public static void setDefaultTimezone() {
         TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
     }
 
-    @Mock private TransactionProcessedService transactionProcessedService = Mockito.mock(TransactionProcessedServiceImpl.class);
+    @Mock private LockService lockServiceMock;
+    @Mock private TransactionProcessedService transactionProcessedServiceMock;
     @Mock private OperationTypeHandlerService operationTypeHandlerServiceMock;
     @Mock private TransactionValidatorService transactionValidatorServiceMock;
     @Mock private OnboardedInitiativesService onboardedInitiativesServiceMock;
     @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
 
-    private RewardCalculatorMediatorService rewardCalculatorMediatorService;
+    private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
 
     private final Transaction2RewardTransactionMapper rewardTransactionMapper = new Transaction2RewardTransactionMapper();
 
     @BeforeEach
     public void initMocks(){
         rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(
-                transactionProcessedService,
+                lockServiceMock,
+                transactionProcessedServiceMock,
                 operationTypeHandlerServiceMock,
                 transactionValidatorServiceMock,
                 onboardedInitiativesServiceMock,
@@ -61,19 +67,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 errorNotifierServiceMock,
                 TestUtils.objectMapper);
 
-        Mockito.when(transactionProcessedService.checkDuplicateTransactions(Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(0)));
-
-        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(Mockito.any())).thenAnswer(i-> {
-            final TransactionDTO trx = i.getArgument(0);
-            trx.setOperationTypeTranscoded(OperationType.CHARGE);
-            trx.setTrxChargeDate(trx.getTrxDate());
-            trx.setEffectiveAmount(trx.getAmount());
-            return Mono.just(trx);
-        });
-
-        Mockito.when(transactionValidatorServiceMock.validate(Mockito.any())).thenAnswer(i->i.getArgument(0));
-
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluate(Mockito.any(), Mockito.any())).thenAnswer(i->Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
     }
 
     private Flux<Message<String>> buildTrxFlux(TransactionDTO... trxs) {
@@ -103,26 +97,30 @@ class RewardCalculatorMediatorServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(5, result.size());
 
-        assertRejectionReasons(result, 0,null);
-        assertRejectionReasons(result, 1, "REJECTED");
-        assertRejectionReasons(result, 2, "INVALID_AMOUNT");
-        assertRejectionReasons(result, 3,null);
-        assertRejectionReasons(result, 4,null);
+        assertRejectionReasons(result, trx,null);
+        assertRejectionReasons(result, trxInvalidOpType, "REJECTED");
+        assertRejectionReasons(result, trxInvalidAmount, "INVALID_AMOUNT");
+        assertRejectionReasons(result, trxPartialRefund,null);
+        assertRejectionReasons(result, trxTotalRefund,null);
 
+        verifyLockAcquireReleaseCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund);
         verifyDuplicateCheckCalls(trx);
         verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund);
         verifyOnboardedInitiativeCalls(trx, trxPartialRefund);
         verifyInitiativeEvaluatorCalls(expectedInitiatives,trx, trxPartialRefund);
 
-        Mockito.verifyNoMoreInteractions(transactionProcessedService, operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock);
+        Mockito.verifyNoMoreInteractions(transactionProcessedServiceMock, operationTypeHandlerServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock, lockServiceMock);
 
         Mockito.verifyNoInteractions(errorNotifierServiceMock);
 
     }
 
-    private void assertRejectionReasons(List<RewardTransactionDTO> result, int index, String expectedRejectionReason) {
-        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), result.get(index).getRejectionReasons());
-        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", result.get(index).getStatus());
+    private void assertRejectionReasons(List<RewardTransactionDTO> result, TransactionDTO trx, String expectedRejectionReason) {
+        final RewardTransactionDTO rewardedTrx = result.stream()
+                .filter(r->r.getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
+                .findFirst().orElseThrow();
+        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getRejectionReasons());
+        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getStatus());
     }
 
     private TransactionDTO buildTrx(int i) {
@@ -132,6 +130,20 @@ class RewardCalculatorMediatorServiceImplTest {
     }
 
     private void mockUseCases(List<String> initiatives, TransactionDTO trxInvalidOpType, TransactionDTO trxInvalidAmount, TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund) {
+        Mockito.when(transactionProcessedServiceMock.checkDuplicateTransactions(Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(0)));
+
+        Mockito.when(operationTypeHandlerServiceMock.handleOperationType(Mockito.any())).thenAnswer(i-> {
+            final TransactionDTO trx = i.getArgument(0);
+            trx.setOperationTypeTranscoded(OperationType.CHARGE);
+            trx.setTrxChargeDate(trx.getTrxDate());
+            trx.setEffectiveAmount(trx.getAmount());
+            return Mono.just(trx);
+        });
+
+        Mockito.when(transactionValidatorServiceMock.validate(Mockito.any())).thenAnswer(i->i.getArgument(0));
+
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluate(Mockito.any(), Mockito.any())).thenAnswer(i->Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
+
         Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any()))
                 .thenReturn(Flux.fromIterable(initiatives));
 
@@ -166,9 +178,41 @@ class RewardCalculatorMediatorServiceImplTest {
         });
     }
 
+    private void verifyLockAcquireReleaseCalls(TransactionDTO... expectedTrxs) {
+        Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length)).getBuketSize();
+
+        final List<Integer> expectedLockIds = Arrays.stream(expectedTrxs).map(t -> rewardCalculatorMediatorService.calculateLockId(t.getUserId())).sorted().toList();
+
+        Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length*2)).getBuketSize();
+
+        Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length)).acquireLock(Mockito.anyInt());
+        final List<Integer> acquiredLockIds = Mockito.mockingDetails(lockServiceMock).getInvocations().stream()
+                .filter(i -> "acquireLock".equals(i.getMethod().getName()))
+                .map(i -> (Integer) i.getArgument(0))
+                .sorted()
+                .toList();
+
+        Assertions.assertEquals(
+                expectedLockIds,
+                acquiredLockIds
+        );
+
+        Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length)).releaseLock(Mockito.anyInt());
+        final List<Integer> releasedLocks = Mockito.mockingDetails(lockServiceMock).getInvocations().stream()
+                .filter(i -> "releaseLock".equals(i.getMethod().getName()))
+                .map(i -> (Integer) i.getArgument(0))
+                .sorted()
+                .toList();
+
+        Assertions.assertEquals(
+                expectedLockIds,
+                releasedLocks
+        );
+    }
+
     private void verifyDuplicateCheckCalls(TransactionDTO... expectedTrxs){
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(transactionProcessedService).checkDuplicateTransactions(t);
+            Mockito.verify(transactionProcessedServiceMock).checkDuplicateTransactions(t);
         }
     }
 
@@ -188,5 +232,16 @@ class RewardCalculatorMediatorServiceImplTest {
         for (TransactionDTO t : expectedTrxs) {
             Mockito.verify(initiativesEvaluatorFacadeServiceMock).evaluate(t, expectedInitiatives);
         }
+    }
+
+    @Test
+    void testTrxLockIdCalculation() {
+        final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        lockId2Count.forEach((lockId, count) -> {
+            Assertions.assertTrue(lockId < LOCK_SERVICE_BUKET_SIZE && lockId >= 0);
+            Assertions.assertTrue(count < 10, "LockId %d hit too times: %d".formatted(lockId, count));
+        });
     }
 }
