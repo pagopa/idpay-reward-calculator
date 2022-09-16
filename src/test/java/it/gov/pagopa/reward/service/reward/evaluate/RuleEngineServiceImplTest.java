@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.service.reward;
+package it.gov.pagopa.reward.service.reward.evaluate;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -15,6 +15,10 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.*;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl;
+import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
+import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;

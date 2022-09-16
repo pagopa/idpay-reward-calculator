@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,6 +41,11 @@ public class TestUtils {
                 },
                 f -> !excludedFieldsSet.contains(f.getName()));
 
+    }
+
+    /** it will create a BigDecimal with scale2 */
+    public static BigDecimal bigDecimalValue(double value) {
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.UNNECESSARY);
     }
 
     /**

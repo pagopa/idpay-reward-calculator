@@ -178,6 +178,17 @@ app:
       short-circuit-conditions: ${REWARD_RULE_SHORT_CIRCUIT:false}
   filter:
     mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
+  operationType:
+    # comma separated of the operation types related to charge operations
+    charge: ${OPERATION_TYPE_CHARGE:00}
+    # comma separated of the operation types related to refund operations
+    refund: ${OPERATION_TYPE_REFUND:01}
+  # A feature to guarantee the execution order of the trx having the same userId
+  trx-lock:
+    # the size of the locks bucket
+    bucket-size: ${TRX_LOCK_BUCKET_SIZE:1000}
+    # the maximum seconds to wait before to continue even if the lock is acquired
+    timeout: ${TRX_LOCK_SECONDS_TIMEOUT:180}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
 

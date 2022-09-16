@@ -1,22 +1,25 @@
 package it.gov.pagopa.reward.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
+@FieldNameConstants
 public class TransactionDTO {
     private String idTrxAcquirer;
 
@@ -62,5 +65,13 @@ public class TransactionDTO {
 
     private String userId;
 
-
+    //region calculated fields
+    private OperationType operationTypeTranscoded;
+    @Builder.Default
+    private List<String> rejectionReasons = new ArrayList<>();
+    private BigDecimal effectiveAmount;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private OffsetDateTime trxChargeDate;
+    private RefundInfo refundInfo;
+    //endregion
 }
