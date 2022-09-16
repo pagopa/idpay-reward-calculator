@@ -23,7 +23,5 @@ public class RewardTransactionDTO extends TransactionDTO {
     @Builder.Default
     private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 
-    private List<String> initiatives;
-
     private Map<String, Reward> rewards;
 }
