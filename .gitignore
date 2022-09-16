@@ -107,3 +107,4 @@ Desktop.ini
 .eslintcache
 
 /helm/charts/*
+/src/test/resources/secrets/*

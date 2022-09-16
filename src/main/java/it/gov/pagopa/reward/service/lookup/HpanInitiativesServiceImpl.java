@@ -1,7 +1,8 @@
 package it.gov.pagopa.reward.service.lookup;
 
-import it.gov.pagopa.reward.dto.HpanInitiativeDTO;
+import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.lookup.ops.AddHpanService;
 import it.gov.pagopa.reward.service.lookup.ops.DeleteHpanService;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
@@ -20,15 +21,15 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
     }
 
     @Override
-    public HpanInitiatives evaluate(HpanInitiativeDTO hpanInitiativeDTO, HpanInitiatives hpanRetrieved) {
-        return switch (hpanInitiativeDTO.getOperationType()) {
-            case HpanInitiativeConstants.ADD_INSTRUMENT -> addHpanService.execute(hpanRetrieved,hpanInitiativeDTO);
-            case HpanInitiativeConstants.DELETE_INSTRUMENT -> deleteHpanService.execute(hpanRetrieved, hpanInitiativeDTO);
-            default -> invalidOperationType(hpanInitiativeDTO);
+    public OnboardedInitiative evaluate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanRetrieved) {
+        return switch (hpanUpdateEvaluateDTO.getOperationType()) {
+            case HpanInitiativeConstants.ADD_INSTRUMENT -> addHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO);
+            case HpanInitiativeConstants.DELETE_INSTRUMENT -> deleteHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO);
+            default -> invalidOperationType(hpanUpdateEvaluateDTO);
         };
     }
-    private HpanInitiatives invalidOperationType(HpanInitiativeDTO hpanInitiativeDTO){
-        log.error("Error in evaluate hpan update %s .Cause: operation type not valid".formatted(hpanInitiativeDTO.getHpan()));
+    private OnboardedInitiative invalidOperationType(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO){
+        log.error("Error in evaluate hpan update %s .Cause: operation type not valid".formatted(hpanUpdateEvaluateDTO.getHpan()));
         return null;
     }
 }
