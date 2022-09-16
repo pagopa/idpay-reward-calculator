@@ -144,10 +144,6 @@ spring:
       uri: ${MONGODB_URI:mongodb://localhost:27017}
       database: ${MONGODB_DBNAME:idpay}
 
-management.endpoints:
-    jmx:
-      exposure.include: bindings
-
 logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
