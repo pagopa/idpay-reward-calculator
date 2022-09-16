@@ -186,7 +186,6 @@ public abstract class BaseIntegrationTest {
                 i++;
             }
         }
-
     }
 
     protected void consumeFromBeginning(Consumer<String, String> consumer) {

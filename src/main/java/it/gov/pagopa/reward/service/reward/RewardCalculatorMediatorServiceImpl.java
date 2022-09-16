@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 @Slf4j
@@ -62,7 +61,6 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                     }
                     return Pair.of(trx, lockId);
                 }))
-                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(this::execute);
     }
 

@@ -37,7 +37,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -327,7 +326,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                         saveUserInitiativeCounter(trx, InitiativeCounters.builder()
                                 .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
-                                .build(), INITIATIVE_ID_TRXCOUNT_BASED);
+                                .build());
                         return onboardTrxHpanAndIncreaseCounters(
                                 trx,
                                 INITIATIVE_ID_TRXCOUNT_BASED);
@@ -382,7 +381,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .monthlyCounters(new HashMap<>(Map.of("2021-12", Counters.builder().totalReward(BigDecimal.valueOf(1000)).build())))
                                 .yearlyCounters(new HashMap<>(Map.of("2021", Counters.builder().totalReward(BigDecimal.valueOf(10000)).build())))
                                 .build();
-                        saveUserInitiativeCounter(trx, initiativeRewardCounter, INITIATIVE_ID_REWARDLIMITS_BASED);
+                        saveUserInitiativeCounter(trx, initiativeRewardCounter);
 
                         final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
@@ -421,7 +420,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .initiativeId(INITIATIVE_ID_EXHAUSTED)
                                 .exhaustedBudget(true)
                                 .build();
-                        saveUserInitiativeCounter(trx, initiativeRewardCounter, INITIATIVE_ID_EXHAUSTED);
+                        saveUserInitiativeCounter(trx, initiativeRewardCounter);
 
                         final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
@@ -447,7 +446,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .initiativeId(INITIATIVE_ID_EXHAUSTING)
                                 .totalReward(BigDecimal.valueOf(999))
                                 .build();
-                        saveUserInitiativeCounter(trx, initiativeRewardCounter, INITIATIVE_ID_EXHAUSTING);
+                        saveUserInitiativeCounter(trx, initiativeRewardCounter);
 
                         final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
                                 trx,
@@ -488,7 +487,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().totalReward(BigDecimal.valueOf(isYearlyCapped ? 9999.2 : 9999)).build())))
                             .build();
 
-                    saveUserInitiativeCounter(trx, initialStateOfCounters, INITIATIVE_ID_REWARDLIMITS_BASED);
+                    saveUserInitiativeCounter(trx, initialStateOfCounters);
                     createUserCounter(trx).getInitiatives().put(INITIATIVE_ID_REWARDLIMITS_BASED, initialStateOfCounters);
 
                     return onboardTrxHpanAndIncreaseCounters(

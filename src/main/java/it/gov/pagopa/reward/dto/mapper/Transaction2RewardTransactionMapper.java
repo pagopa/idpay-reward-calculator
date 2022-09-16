@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.HashMap;
 import java.util.function.Function;
 
 @Service
@@ -23,6 +24,9 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
                             ? RewardConstants.REWARD_STATE_REWARDED
                             : RewardConstants.REWARD_STATE_REJECTED
             );
+
+            out.setRewards(new HashMap<>());
+            out.setInitiativeRejectionReasons(new HashMap<>());
         }
 
         return out;

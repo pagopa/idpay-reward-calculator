@@ -14,7 +14,6 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
-import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.LockServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -101,11 +99,11 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 .block();
     }
 
-    protected void saveUserInitiativeCounter(TransactionDTO trx, InitiativeCounters initiativeRewardCounter, String initiativeIdExhausted) {
+    protected void saveUserInitiativeCounter(TransactionDTO trx, InitiativeCounters initiativeRewardCounter) {
         userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
                 .userId(trx.getUserId())
                 .initiatives(new HashMap<>(Map.of(
-                        initiativeIdExhausted,
+                        initiativeRewardCounter.getInitiativeId(),
                         initiativeRewardCounter
                 )))
                 .build()).block();
