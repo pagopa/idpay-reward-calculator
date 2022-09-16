@@ -37,6 +37,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     private final String hpanUpdateServer;
     private final String hpanUpdateTopic;
 
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-splitter.type}") String rewardRuleBuilderMessagingServiceType,
@@ -65,12 +66,12 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.hpanUpdateTopic = hpanUpdateTopic;
 
         Hooks.onNextError((e, data) -> {
-            if ((e instanceof MessageHandlingException messageHandlingException) && (messageHandlingException.getMostSpecificCause() instanceof KafkaException || messageHandlingException.getMostSpecificCause() instanceof TimeoutException)) {
-                if (e.getMessage().contains(trxTopic) && data instanceof Message<?> message) {
-                    log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred evaluating transaction", e);
-                    notifyTransactionEvaluation(message, "Unexpected error occurred", true, e);
-                    return null;
-                }
+            if ((e instanceof MessageHandlingException messageHandlingException) &&
+                    (messageHandlingException.getMostSpecificCause() instanceof KafkaException || messageHandlingException.getMostSpecificCause() instanceof TimeoutException) &&
+                    e.getMessage().contains(trxTopic) && data instanceof Message<?> message) {
+                log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred evaluating transaction", e);
+                notifyTransactionEvaluation(message, "Unexpected error occurred", true, e);
+                return null;
             }
 
             return e;
