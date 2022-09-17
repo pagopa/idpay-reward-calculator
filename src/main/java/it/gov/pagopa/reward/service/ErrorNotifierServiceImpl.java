@@ -33,6 +33,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     private final String trxServer;
     private final String trxTopic;
 
+    private final String trxRewardedMessagingServiceType;
+    private final String trxRewardedServer;
+    private final String trxRewardedTopic;
+
     private final String hpanUpdateMessagingServiceType;
     private final String hpanUpdateServer;
     private final String hpanUpdateTopic;
@@ -48,6 +52,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers}") String trxServer,
                                     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}") String trxTopic,
 
+                                    @Value("${spring.cloud.stream.binders.kafka-idpay.type}") String trxRewardedMessagingServiceType,
+                                    @Value("${spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers}") String trxRewardedServer,
+                                    @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}") String trxRewardedTopic,
+
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.type}") String hpanUpdateMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateServer,
                                     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}") String hpanUpdateTopic) {
@@ -61,6 +69,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.trxServer = trxServer;
         this.trxTopic = trxTopic;
 
+        this.trxRewardedMessagingServiceType = trxRewardedMessagingServiceType;
+        this.trxRewardedServer = trxRewardedServer;
+        this.trxRewardedTopic = trxRewardedTopic;
+
         this.hpanUpdateMessagingServiceType = hpanUpdateMessagingServiceType;
         this.hpanUpdateServer = hpanUpdateServer;
         this.hpanUpdateTopic = hpanUpdateTopic;
@@ -68,9 +80,16 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         Hooks.onNextError((e, data) -> {
             if ((e instanceof MessageHandlingException messageHandlingException) &&
                     (messageHandlingException.getMostSpecificCause() instanceof KafkaException || messageHandlingException.getMostSpecificCause() instanceof TimeoutException) &&
-                    e.getMessage().contains(trxTopic) && data instanceof Message<?> message) {
-                log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred evaluating transaction", e);
-                notifyTransactionEvaluation(message, "Unexpected error occurred", true, e);
+                    e.getMessage().contains(trxRewardedTopic) && data instanceof Message<?> message) {
+                Object payloadObj = message.getPayload();
+                String payloadString;
+                if(payloadObj instanceof byte[] bytes){
+                    payloadString = new String(bytes);
+                } else {
+                    payloadString = payloadObj.toString();
+                }
+                log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", payloadString, e);
+                notifyRewardedTransaction(message, "An error occurred while publishing the transaction evaluation result", true, e);
                 return null;
             }
 
@@ -86,6 +105,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     @Override
     public void notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
         notify(trxMessagingServiceType, trxServer, trxTopic, message, description, retryable, exception);
+    }
+
+    @Override
+    public void notifyRewardedTransaction(Message<?> message, String description, boolean retryable, Throwable exception) {
+        notify(trxRewardedMessagingServiceType, trxRewardedServer, trxRewardedTopic, message, description, retryable, exception);
     }
 
     @Override

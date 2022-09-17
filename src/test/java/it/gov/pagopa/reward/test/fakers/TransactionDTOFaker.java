@@ -5,6 +5,7 @@ import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.*;
 import java.util.Locale;
 import java.util.Random;
@@ -57,7 +58,7 @@ public class TransactionDTOFaker {
                 .circuitType("CIRCUITTYPE%s".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%s".formatted(bias))
                 .correlationId("CORRELATIONID%s".formatted(bias))
-                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE))
+                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE).setScale(2, RoundingMode.UNNECESSARY))
                 .amountCurrency("AMOUNTCURRENCY%s".formatted(bias))
                 .mcc("MCC%s".formatted(bias))
                 .acquirerId("ACQUIRERID%s".formatted(bias))

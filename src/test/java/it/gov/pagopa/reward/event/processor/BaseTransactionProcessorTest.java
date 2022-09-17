@@ -65,6 +65,9 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     @AfterEach
     void clearData(){
         transactionProcessedRepository.deleteAll().block();
+        userInitiativeCountersRepository.deleteAll().block();
+        hpanInitiativesRepository.deleteAll().block();
+        droolsRuleRepository.deleteAll().block();
     }
 
     protected void publishRewardRules(List<InitiativeReward2BuildDTO> initiatives) {
