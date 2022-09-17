@@ -48,7 +48,7 @@ class TransactionProcessorPublishTimeoutTest extends BaseTransactionProcessorTes
         final ChannelInterceptor kafkaExceptionSimulator = new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                if(new String((byte[])message.getPayload()).contains("USERID0")){
+                if(new String((byte[])message.getPayload()).contains("USERID1")){
                     throw new MessageHandlingException(message, new KafkaException(topicRewardProcessorOutcome));
                 } else {
                     return message;
@@ -59,7 +59,8 @@ class TransactionProcessorPublishTimeoutTest extends BaseTransactionProcessorTes
 
         try {
             IntStream.range(0, 5).forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, null, TransactionDTOFaker.mockInstance(i)));
-            Awaitility.await().atMost(1, TimeUnit.SECONDS).await();
+            // let's wait some time on order to be sure that the consumer kafka should perform a new poll to fetch new messages
+            Awaitility.await().pollDelay(1, TimeUnit.SECONDS).until(()->true);
             IntStream.range(5, 7).forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, null, TransactionDTOFaker.mockInstance(i)));
 
             consumeMessages(topicRewardProcessorOutcome, 6, 10000);
