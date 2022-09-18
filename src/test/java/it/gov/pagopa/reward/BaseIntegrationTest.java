@@ -12,7 +12,9 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
@@ -116,7 +118,6 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.kafka.binder.zkNodes}")
     private String zkNodes;
 
-
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}")
     protected String topicRewardProcessorRequest;
     @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}")
@@ -127,6 +128,13 @@ public abstract class BaseIntegrationTest {
     protected String topicHpanInitiativeLookupConsumer;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
+
+    @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.group}")
+    protected String groupIdRewardProcessorRequest;
+    @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.group}")
+    protected String groupIdRewardRuleConsumer;
+    @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}")
+    protected String groupIdHpanInitiativeLookupConsumer;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
@@ -204,7 +212,7 @@ public abstract class BaseIntegrationTest {
 
     protected List<ConsumerRecord<String, String>> consumeMessages(String topic, int expectedNumber, long maxWaitingMs) {
         long startTime = System.currentTimeMillis();
-        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group")) {
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check")) {
 
             List<ConsumerRecord<String, String>> payloadConsumed = new ArrayList<>(expectedNumber);
             while (payloadConsumed.size() < expectedNumber) {
@@ -237,6 +245,30 @@ public abstract class BaseIntegrationTest {
         }
         ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
         template.send(record);
+    }
+
+    protected Map<TopicPartition, OffsetAndMetadata> getCommittedOffsets(String topic, String groupId){
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, groupId)) {
+            return consumer.committed(consumer.partitionsFor(topic).stream().map(p-> new TopicPartition(topic, p.partition())).collect(Collectors.toSet()));
+        }
+    }
+
+    protected Map<TopicPartition, OffsetAndMetadata> checkCommittedOffsets(String topic, String groupId, long expectedCommittedMessages){
+        final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
+        Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
+        return commits;
+    }
+
+    protected Map<TopicPartition, Long> getEndOffsets(String topic){
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check")) {
+            return consumer.endOffsets(consumer.partitionsFor(topic).stream().map(p-> new TopicPartition(topic, p.partition())).toList());
+        }
+    }
+
+    protected Map<TopicPartition, Long> checkPublishedOffsets(String topic, long expectedPublishedMessages){
+        Map<TopicPartition, Long> endOffsets = getEndOffsets(topic);
+        Assertions.assertEquals(expectedPublishedMessages, endOffsets.values().stream().mapToLong(x->x).sum());
+        return endOffsets;
     }
 
     protected static void waitFor(Callable<Boolean> test, Supplier<String> buildTestFailureMessage, int maxAttempts, int millisAttemptDelay) {

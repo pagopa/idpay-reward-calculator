@@ -22,6 +22,8 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -78,6 +80,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
         trxs.add(objectMapper.writeValueAsString(trxDuplicated));
 
+        long totalSendMessages = trxs.size()+duplicateTrx;
+
         long timePublishOnboardingStart = System.currentTimeMillis();
         int[] i=new int[]{0};
         trxs.forEach(p -> {
@@ -114,6 +118,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         checkErrorsPublished(notValidTrx, maxWaitingMs, errorUseCases);
 
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,totalSendMessages);
+        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, validTrx);
+
         System.out.printf("""
                         ************************
                         Time spent to send %d (%d + %d + %d) trx messages: %d millis
@@ -121,14 +128,19 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                         ************************
                         Test Completed in %d millis
                         ************************
+                        Source Topic Committed Offsets: %s
+                        Dest Topic Published Offsets: %s
+                        ************************
                         """,
-                validTrx + duplicateTrx + notValidTrx,
+                totalSendMessages,
                 validTrx,
                 duplicateTrx,
                 notValidTrx,
                 timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
-                timeEnd - timePublishOnboardingStart
+                timeEnd - timePublishOnboardingStart,
+                srcCommitOffsets,
+                destPublishedOffsets
         );
     }
 
