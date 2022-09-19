@@ -69,8 +69,6 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                 final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId) : null;
                 updateCounters(initiativeCounter, reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount());
                 updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, previousRewards, initiativeConfig);
-                updateCounters(initiativeCounter, reward, ruleEngineResult.getAmount());
-                updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, initiativeConfig);
                 /* set RewardCounters in RewardTransactionDTO object */
                 reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
             }

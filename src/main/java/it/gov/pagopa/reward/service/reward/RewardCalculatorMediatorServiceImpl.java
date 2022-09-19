@@ -37,7 +37,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final ObjectReader objectReader;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
-    public RewardCalculatorMediatorServiceImpl(LockService lockService, TransactionProcessedService transactionProcessedService, OperationTypeHandlerService operationTypeHandlerService, TransactionValidatorService transactionValidatorService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, Transaction2RewardTransactionMapper rewardTransactionMapper, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+    public RewardCalculatorMediatorServiceImpl(LockService lockService, TransactionProcessedService transactionProcessedService, OperationTypeHandlerService operationTypeHandlerService, TransactionValidatorService transactionValidatorService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, Transaction2RewardTransactionMapper rewardTransactionMapper, MessageKeyedPreparationMapper messageKeyedPreparationMapper, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.lockService = lockService;
         this.transactionProcessedService = transactionProcessedService;
         this.operationTypeHandlerService = operationTypeHandlerService;

@@ -50,7 +50,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private OnboardedInitiativesService onboardedInitiativesServiceMock;
     @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
-    @Mock private MessageKeyedPreparationMapper messageKeyedPreparationMapper
+    private final MessageKeyedPreparationMapper messageKeyedPreparationMapper = new MessageKeyedPreparationMapper();
 
     private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
 
@@ -66,6 +66,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 onboardedInitiativesServiceMock,
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransactionMapper,
+                messageKeyedPreparationMapper,
                 errorNotifierServiceMock,
                 TestUtils.objectMapper);
 
@@ -117,12 +118,12 @@ class RewardCalculatorMediatorServiceImplTest {
 
     }
 
-    private void assertRejectionReasons(List<RewardTransactionDTO> result, TransactionDTO trx, String expectedRejectionReason) {
-        final RewardTransactionDTO rewardedTrx = result.stream()
-                .filter(r->r.getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
+    private void assertRejectionReasons(List<Message<RewardTransactionDTO>> result, TransactionDTO trx, String expectedRejectionReason) {
+        final Message<RewardTransactionDTO> rewardedTrx = result.stream()
+                .filter(r->r.getPayload().getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
                 .findFirst().orElseThrow();
-        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getRejectionReasons());
-        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getStatus());
+        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getPayload().getRejectionReasons());
+        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getPayload().getStatus());
     }
 
     private TransactionDTO buildTrx(int i) {
