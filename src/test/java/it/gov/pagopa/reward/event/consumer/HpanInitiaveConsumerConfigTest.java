@@ -12,17 +12,19 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -72,8 +74,18 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
             Test Completed in %d millis
             ************************
             """,
-                updatedHpanNumbers+notValidMessages+concurrencyMessages, timeAfterSendHpanUpdateMessages-startTest,
+                hpanUpdatedEvents.size(),
+                timeAfterSendHpanUpdateMessages-startTest,
                 endTestWithoutAsserts-startTest
+        );
+
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicHpanInitiativeLookupConsumer, groupIdHpanInitiativeLookupConsumer,hpanUpdatedEvents.size());
+
+        System.out.printf("""
+                        Source Topic Committed Offsets: %s
+                        ************************
+                        """,
+                srcCommitOffsets
         );
     }
 

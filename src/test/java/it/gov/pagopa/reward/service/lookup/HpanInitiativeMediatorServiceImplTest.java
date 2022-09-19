@@ -15,6 +15,8 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
@@ -22,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 class HpanInitiativeMediatorServiceImplTest {
 
@@ -33,10 +36,11 @@ class HpanInitiativeMediatorServiceImplTest {
         ErrorNotifierService errorNotifierService=Mockito.mock(ErrorNotifierService.class);
         HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper = new HpanUpdateEvaluateDTO2HpanInitiativeMapper();
         HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper = new HpanUpdateBulk2SingleMapper();
-        HpanInitiativeMediatorService hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl(hpanInitiativesRepository, hpanInitiativesService, TestUtils.objectMapper,  errorNotifierService, hpanUpdateEvaluateDTO2HpanInitiativeMapper, hpanUpdateBulk2SingleMapper);
+        HpanInitiativeMediatorService hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl(0L, hpanInitiativesRepository, hpanInitiativesService, TestUtils.objectMapper,  errorNotifierService, hpanUpdateEvaluateDTO2HpanInitiativeMapper, hpanUpdateBulk2SingleMapper);
 
         //region input test
         String hpanValid = "HPAN_VALID";
+        Acknowledgment hpanInitiativeBulkDTOValidJsonAck = Mockito.mock(Acknowledgment.class);
         HpanInitiativeBulkDTO hpanInitiativeBulkDTOValidJson = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
                 .hpanList(List.of(hpanValid))
@@ -48,6 +52,7 @@ class HpanInitiativeMediatorServiceImplTest {
         Mockito.when(hpanInitiativesRepository.findById(hpanValid)).thenReturn(Mono.just(hpanInitiatives1));
 
         // Message without hpan
+        Acknowledgment hpanInitiativeBulkDTONotHpanListAck = Mockito.mock(Acknowledgment.class);
         HpanInitiativeBulkDTO hpanInitiativeBulkDTONotHpanList = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
                 .initiativeId("INITIATIVEID")
@@ -56,6 +61,7 @@ class HpanInitiativeMediatorServiceImplTest {
 
         //Message without date
         String hpanNotDate = "HPAN_NOT_DATE";
+        Acknowledgment hpanInitiativeBulkDTONotDateAck = Mockito.mock(Acknowledgment.class);
         HpanInitiativeBulkDTO hpanInitiativeBulkDTONotDate = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
                 .hpanList(List.of(hpanNotDate))
@@ -78,12 +84,14 @@ class HpanInitiativeMediatorServiceImplTest {
         UpdateResult updateResult = Mockito.mock(UpdateResult.class);
         Mockito.when(hpanInitiativesRepository.setInitiative(Mockito.anyString(), Mockito.any(OnboardedInitiative.class))).thenReturn(Mono.just(updateResult));
 
+        Acknowledgment notValidJsonAck = Mockito.mock(Acknowledgment.class);
+
         // When
         hpanInitiativeMediatorService.execute(Flux
-               .fromIterable(List.of(MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTOValidJson)).build(),
-                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotHpanList)).build(),
-                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotDate)).build(),
-                        MessageBuilder.withPayload("NOT VALID JSON").build()
+               .fromIterable(List.of(MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTOValidJson)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTOValidJsonAck)).build(),
+                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotHpanList)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTONotHpanListAck)).build(),
+                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotDate)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTONotDateAck)).build(),
+                        MessageBuilder.withPayload("NOT VALID JSON").copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, notValidJsonAck)).build()
                 )));
         // Then
         Mockito.verify(hpanInitiativesRepository,Mockito.times(2)).findById(Mockito.anyString());

@@ -5,22 +5,31 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
+import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.util.Optional;
+
 @Service
 @Slf4j
 public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediatorService{
+
+    private final Duration commitDelay;
+
     private final HpanInitiativesRepository hpanInitiativesRepository;
     private final HpanInitiativesService hpanInitiativesService;
     private final ErrorNotifierService errorNotifierService;
@@ -30,8 +39,16 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
 
     private final HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper;
 
+    public HpanInitiativeMediatorServiceImpl(
+            @Value("${spring.cloud.stream.kafka.bindings.hpanInitiativeConsumer-in-0.consumer.ackTime}") Long commitMillis,
+            HpanInitiativesRepository hpanInitiativesRepository,
+            HpanInitiativesService hpanInitiativesService,
+            ObjectMapper objectMapper,
+            ErrorNotifierService errorNotifierService,
+            HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
+            HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper) {
+        this.commitDelay=Duration.ofMillis(commitMillis);
 
-    public HpanInitiativeMediatorServiceImpl(HpanInitiativesRepository hpanInitiativesRepository, HpanInitiativesService hpanInitiativesService, ObjectMapper objectMapper, ErrorNotifierService errorNotifierService, HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper, HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper) {
         this.hpanInitiativesRepository = hpanInitiativesRepository;
         this.hpanInitiativesService = hpanInitiativesService;
         this.objectReader = objectMapper.readerFor(HpanInitiativeBulkDTO.class);
@@ -43,16 +60,26 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
     @Override
     public void execute(Flux<Message<String>> messageFlux) {
         messageFlux
-                .flatMap(this::execute,1)
+                .flatMapSequential(this::execute,1)
+
+                .buffer(commitDelay)
+                .doOnNext(p -> p.forEach(ack -> ack.ifPresent(Acknowledgment::acknowledge)))
+
                 .subscribe(updateResult -> log.debug("A change has occurred"));
     }
-    public Flux<UpdateResult> execute(Message<String> message) {
+    public Mono<Optional<Acknowledgment>> execute(Message<String> message) {
         long before = System.currentTimeMillis();
+        Optional<Acknowledgment> ackOpt = Optional.ofNullable(message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class));
+
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .flatMapMany(this::evaluate)
+                .collectList()
+                .then(Mono.just(ackOpt))
+                .defaultIfEmpty(ackOpt)
+
                 .onErrorResume(e ->  {errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", false, e);
-                    return Flux.empty();})
+                    return Mono.empty();})
                 .doFinally(s -> log.info("[PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before));
     }
 

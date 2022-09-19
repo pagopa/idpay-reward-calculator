@@ -10,6 +10,9 @@ import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieContainer;
@@ -19,11 +22,12 @@ import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
@@ -48,7 +52,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
         int[] expectedRules ={0};
         List<String> initiativePayloads = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validRules / 2, expectedRules));
-        initiativePayloads.addAll(IntStream.range(0, notValidRules).mapToObj(i -> errorUseCases.get(i).getFirst().get()).collect(Collectors.toList()));
+        initiativePayloads.addAll(IntStream.range(0, notValidRules).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         initiativePayloads.addAll(buildValidPayloads(errorUseCases.size() + (validRules / 2) + notValidRules, validRules / 2, expectedRules));
 
         long timeStart=System.currentTimeMillis();
@@ -66,22 +70,35 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
         checkErrorsPublished(notValidRules, maxWaitingMs, errorUseCases);
 
+        @SuppressWarnings("unchecked") Map<TopicPartition, OffsetAndMetadata>[] srcCommitOffsets = new Map[]{null};
+
+        Awaitility.await().atMost(Duration.ofSeconds(5)).until(() -> {
+            try{
+                srcCommitOffsets[0] = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size());
+                return true;
+            } catch (RuntimeException e){
+                return false;
+            }
+        });
+
         Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(2)).buildAll(); // +1 due to refresh at startup
         Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.any());
 
         System.out.printf("""
-            ************************
-            Time spent to send %d (%d + %d) messages (from start): %d millis
-            Time spent to assert drools rule count (from previous check): %d millis
-            Time spent to assert kie container rules' size (from previous check): %d millis
-            ************************
-            Test Completed in %d millis
-            ************************
-            The kieContainer has been built %d times
-            The %d initiative generated %d rules
-            ************************
-            """,
-                validRules + notValidRules,
+                        ************************
+                        Time spent to send %d (%d + %d) messages (from start): %d millis
+                        Time spent to assert drools rule count (from previous check): %d millis
+                        Time spent to assert kie container rules' size (from previous check): %d millis
+                        ************************
+                        Test Completed in %d millis
+                        ************************
+                        The kieContainer has been built %d times
+                        The %d initiative generated %d rules
+                        ************************
+                        Source Topic Committed Offsets: %s
+                        ************************
+                        """,
+                initiativePayloads.size(),
                 validRules,
                 notValidRules,
                 timePublishingEnd-timeStart,
@@ -90,7 +107,8 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                 timeEnd-timeStart,
                 Mockito.mockingDetails(kieContainerBuilderServiceSpy).getInvocations().stream()
                         .filter(i->i.getMethod().getName().equals("buildAll")).count()-1, // 1 is due on startup
-                validRules, expectedRules[0]
+                validRules, expectedRules[0],
+                srcCommitOffsets[0]
         );
     }
 

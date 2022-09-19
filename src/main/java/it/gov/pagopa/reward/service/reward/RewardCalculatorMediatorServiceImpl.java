@@ -44,7 +44,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final RewardNotifierService rewardNotifierService;
     private final ErrorNotifierService errorNotifierService;
 
-    private final long commitMillis;
+    private final Duration commitDelay;
 
     private final ObjectReader objectReader;
 
@@ -71,7 +71,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
         this.rewardNotifierService = rewardNotifierService;
         this.errorNotifierService = errorNotifierService;
-        this.commitMillis = commitMillis;
+        this.commitDelay = Duration.ofMillis(commitMillis);
 
         this.objectReader = objectMapper.readerFor(TransactionDTO.class);
     }
@@ -90,7 +90,8 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                             return new MutablePair<>(trx, lockId);
                         })
                         .flatMap(this::execute))
-                .buffer(Duration.ofMillis(commitMillis))
+
+                .buffer(commitDelay)
                 .subscribe(p -> p.forEach(ack -> ack.ifPresent(Acknowledgment::acknowledge)));
     }
 
@@ -115,9 +116,17 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 .flatMap(this::retrieveInitiativesAndEvaluate)
                 .doOnNext(lockReleaser)
                 .doOnNext(r -> {
-                    if (!rewardNotifierService.notify(r)) {
+                    Exception exception=null;
+                    try{
+                        if(!rewardNotifierService.notify(r)){
+                            exception = new IllegalStateException("Something gone wrong while reward notify");
+                        }
+                    } catch (Exception e){
+                        exception = e;
+                    }
+                    if (exception != null) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
-                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "An error occurred while publishing the transaction evaluation result", true, new IllegalStateException("Something gone wrong while reward notify"));
+                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "An error occurred while publishing the transaction evaluation result", true, exception);
                     }
                 })
                 .map(r -> ackOpt)
