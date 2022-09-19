@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.event.processor;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 @Configuration
 @Slf4j
@@ -36,7 +35,7 @@ public class TransactionProcessor implements ApplicationListener<RewardContextHo
      * Read from the topic ${KAFKA_TOPIC_RTD_TRX} and publish to topic ${KAFKA_TOPIC_REWARD_TRX}
      */
     @Bean
-    public Function<Flux<Message<String>>, Flux<RewardTransactionDTO>> trxProcessor() {
+    public Consumer<Flux<Message<String>>> trxProcessor() {
         return rewardCalculatorMediatorService::execute;
     }
 

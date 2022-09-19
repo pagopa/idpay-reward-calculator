@@ -18,6 +18,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -182,6 +183,7 @@ public abstract class BaseIntegrationTest {
         }
 
         Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(groupId, "true", kafkaBroker);
+        consumerProps.put("key.deserializer", StringDeserializer.class);
         DefaultKafkaConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
         Consumer<String, String> consumer = cf.createConsumer();
         kafkaBroker.consumeFromAnEmbeddedTopic(consumer, topic);
@@ -211,8 +213,12 @@ public abstract class BaseIntegrationTest {
     }
 
     protected List<ConsumerRecord<String, String>> consumeMessages(String topic, int expectedNumber, long maxWaitingMs) {
+        return consumeMessages(topic, "idpay-group-test-check", expectedNumber, maxWaitingMs);
+    }
+
+    protected List<ConsumerRecord<String, String>> consumeMessages(String topic, String groupId, int expectedNumber, long maxWaitingMs) {
         long startTime = System.currentTimeMillis();
-        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check")) {
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, groupId)) {
 
             List<ConsumerRecord<String, String>> payloadConsumed = new ArrayList<>(expectedNumber);
             while (payloadConsumed.size() < expectedNumber) {
