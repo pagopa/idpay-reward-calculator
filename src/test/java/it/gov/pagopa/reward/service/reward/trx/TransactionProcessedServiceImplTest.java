@@ -1,11 +1,11 @@
-package it.gov.pagopa.reward.service.reward;
+package it.gov.pagopa.reward.service.reward.trx;
 
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

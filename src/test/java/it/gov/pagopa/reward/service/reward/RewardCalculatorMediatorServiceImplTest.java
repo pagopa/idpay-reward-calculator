@@ -9,6 +9,8 @@ import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
+import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
+import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -64,7 +66,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 onboardedInitiativesServiceMock,
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransactionMapper,
-                errorNotifierServiceMock,
+                rewardNotifierService, errorNotifierServiceMock,
                 TestUtils.objectMapper);
 
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);

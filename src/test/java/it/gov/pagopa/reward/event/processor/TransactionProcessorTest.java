@@ -13,7 +13,7 @@ import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
+import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
@@ -118,18 +118,12 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         checkErrorsPublished(notValidTrx, maxWaitingMs, errorUseCases);
 
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,totalSendMessages);
-        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, validTrx);
-
         System.out.printf("""
                         ************************
                         Time spent to send %d (%d + %d + %d) trx messages: %d millis
                         Time spent to consume reward responses: %d millis
                         ************************
                         Test Completed in %d millis
-                        ************************
-                        Source Topic Committed Offsets: %s
-                        Dest Topic Published Offsets: %s
                         ************************
                         """,
                 totalSendMessages,
@@ -138,7 +132,17 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 notValidTrx,
                 timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
-                timeEnd - timePublishOnboardingStart,
+                timeEnd - timePublishOnboardingStart
+        );
+
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,totalSendMessages);
+        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, validTrx);
+
+        System.out.printf("""
+                        Source Topic Committed Offsets: %s
+                        Dest Topic Published Offsets: %s
+                        ************************
+                        """,
                 srcCommitOffsets,
                 destPublishedOffsets
         );

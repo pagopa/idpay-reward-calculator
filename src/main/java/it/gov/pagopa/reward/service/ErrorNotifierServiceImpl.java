@@ -2,15 +2,11 @@ package it.gov.pagopa.reward.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.kafka.common.errors.TimeoutException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.kafka.KafkaException;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Hooks;
 
 @Service
 @Slf4j
@@ -76,25 +72,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.hpanUpdateMessagingServiceType = hpanUpdateMessagingServiceType;
         this.hpanUpdateServer = hpanUpdateServer;
         this.hpanUpdateTopic = hpanUpdateTopic;
-
-        Hooks.onNextError((e, data) -> {
-            if ((e instanceof MessageHandlingException messageHandlingException) &&
-                    (messageHandlingException.getMostSpecificCause() instanceof KafkaException || messageHandlingException.getMostSpecificCause() instanceof TimeoutException) &&
-                    e.getMessage().contains(trxRewardedTopic) && data instanceof Message<?> message) {
-                Object payloadObj = message.getPayload();
-                String payloadString;
-                if(payloadObj instanceof byte[] bytes){
-                    payloadString = new String(bytes);
-                } else {
-                    payloadString = payloadObj.toString();
-                }
-                log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", payloadString, e);
-                notifyRewardedTransaction(message, "An error occurred while publishing the transaction evaluation result", true, e);
-                return null;
-            }
-
-            return e;
-        });
     }
 
     @Override
