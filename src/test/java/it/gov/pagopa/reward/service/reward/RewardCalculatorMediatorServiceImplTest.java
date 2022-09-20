@@ -282,7 +282,7 @@ class RewardCalculatorMediatorServiceImplTest {
         for (TransactionDTO t : expectedTrxs) {
             Mockito.verify(errorNotifierServiceMock).notifyRewardedTransaction(
                     Mockito.argThat(i -> t.getIdTrxAcquirer().equals(((RewardTransactionDTO) i.getPayload()).getIdTrxAcquirer())),
-                    Mockito.eq("An error occurred while publishing the transaction evaluation result"),
+                    Mockito.eq("[REWARD] An error occurred while publishing the transaction evaluation result"),
                     Mockito.eq(true),
                     Mockito.notNull());
         }
