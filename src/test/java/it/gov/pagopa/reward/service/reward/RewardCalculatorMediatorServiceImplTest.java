@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.dto.mapper.MessageKeyedPreparationMapper;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -49,6 +50,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private OnboardedInitiativesService onboardedInitiativesServiceMock;
     @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
+    private final MessageKeyedPreparationMapper messageKeyedPreparationMapper = new MessageKeyedPreparationMapper();
 
     private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
 
@@ -64,6 +66,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 onboardedInitiativesServiceMock,
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransactionMapper,
+                messageKeyedPreparationMapper,
                 errorNotifierServiceMock,
                 TestUtils.objectMapper);
 
@@ -91,7 +94,7 @@ class RewardCalculatorMediatorServiceImplTest {
         mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund);
 
         // When
-        List<RewardTransactionDTO> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
+        List<Message<RewardTransactionDTO>> result = rewardCalculatorMediatorService.execute(trxFlux).collectList().block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -115,12 +118,12 @@ class RewardCalculatorMediatorServiceImplTest {
 
     }
 
-    private void assertRejectionReasons(List<RewardTransactionDTO> result, TransactionDTO trx, String expectedRejectionReason) {
-        final RewardTransactionDTO rewardedTrx = result.stream()
-                .filter(r->r.getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
+    private void assertRejectionReasons(List<Message<RewardTransactionDTO>> result, TransactionDTO trx, String expectedRejectionReason) {
+        final Message<RewardTransactionDTO> rewardedTrx = result.stream()
+                .filter(r->r.getPayload().getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
                 .findFirst().orElseThrow();
-        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getRejectionReasons());
-        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getStatus());
+        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getPayload().getRejectionReasons());
+        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getPayload().getStatus());
     }
 
     private TransactionDTO buildTrx(int i) {

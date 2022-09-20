@@ -295,7 +295,7 @@ public class RewardRule2DroolsRuleServiceTest {
 
         expected.setInitiativeConfig(InitiativeConfig.builder()
                 .initiativeId(expected.getId())
-                .budget(BigDecimal.valueOf(10000L))
+                .beneficiaryBudget(BigDecimal.valueOf(477.32))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)
                 .monthlyThreshold(true)

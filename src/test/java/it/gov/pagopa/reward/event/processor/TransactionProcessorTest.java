@@ -240,6 +240,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                         .build())
                                 .general(InitiativeGeneralDTO.builder()
                                         .budget(BigDecimal.valueOf(1000))
+                                        .beneficiaryBudget(BigDecimal.valueOf(1000))
                                         .build())
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), null)

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class InitiativeConfig {
 
     private String initiativeId;
-    private BigDecimal budget;
+    private BigDecimal beneficiaryBudget;
     private LocalDate endDate;
     private boolean dailyThreshold;
     private boolean weeklyThreshold;

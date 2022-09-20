@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.mapper.MessageKeyedPreparationMapper;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -30,12 +31,13 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
     private final Transaction2RewardTransactionMapper rewardTransactionMapper;
+    private final MessageKeyedPreparationMapper messageKeyedPreparationMapper;
     private final ErrorNotifierService errorNotifierService;
 
     private final ObjectReader objectReader;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
-    public RewardCalculatorMediatorServiceImpl(LockService lockService, TransactionProcessedService transactionProcessedService, OperationTypeHandlerService operationTypeHandlerService, TransactionValidatorService transactionValidatorService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, Transaction2RewardTransactionMapper rewardTransactionMapper, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
+    public RewardCalculatorMediatorServiceImpl(LockService lockService, TransactionProcessedService transactionProcessedService, OperationTypeHandlerService operationTypeHandlerService, TransactionValidatorService transactionValidatorService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, Transaction2RewardTransactionMapper rewardTransactionMapper, MessageKeyedPreparationMapper messageKeyedPreparationMapper, ErrorNotifierService errorNotifierService, ObjectMapper objectMapper) {
         this.lockService = lockService;
         this.transactionProcessedService = transactionProcessedService;
         this.operationTypeHandlerService = operationTypeHandlerService;
@@ -43,13 +45,14 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.rewardTransactionMapper = rewardTransactionMapper;
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
+        this.messageKeyedPreparationMapper = messageKeyedPreparationMapper;
         this.errorNotifierService = errorNotifierService;
 
         this.objectReader = objectMapper.readerFor(TransactionDTO.class);
     }
 
     @Override
-    public Flux<RewardTransactionDTO> execute(Flux<Message<String>> messageFlux) {
+    public Flux<Message<RewardTransactionDTO>> execute(Flux<Message<String>> messageFlux) {
         return messageFlux
                 .flatMap(trx -> Mono.fromSupplier(() -> {
                     int lockId=-1;
@@ -64,7 +67,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 .flatMap(this::execute);
     }
 
-    public Mono<RewardTransactionDTO> execute(Pair<Message<String>, Integer> messageAndLockId) {
+    public Mono<Message<RewardTransactionDTO>> execute(Pair<Message<String>, Integer> messageAndLockId) {
         final long startTime = System.currentTimeMillis();
         final Message<String> message = messageAndLockId.getFirst();
 
@@ -74,6 +77,7 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 .flatMap(operationTypeHandlerService::handleOperationType)
                 .map(transactionValidatorService::validate)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
+                .mapNotNull(messageKeyedPreparationMapper)
 
                 .onErrorResume(e -> {
                     errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);
