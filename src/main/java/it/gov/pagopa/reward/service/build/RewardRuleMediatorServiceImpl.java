@@ -5,24 +5,21 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.utils.Utils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.List;
+import java.util.function.Consumer;
 
 @Service
-public class RewardRuleMediatorServiceImpl implements RewardRuleMediatorService {
+public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeReward2BuildDTO, DroolsRule> implements RewardRuleMediatorService {
 
     private final Duration commitDelay;
     private final Duration rewardRulesBuildDelayMinusCommit;
@@ -35,6 +32,7 @@ public class RewardRuleMediatorServiceImpl implements RewardRuleMediatorService 
 
     private final ObjectReader objectReader;
 
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardRuleMediatorServiceImpl(
             @Value("${spring.cloud.stream.kafka.bindings.rewardRuleConsumer-in-0.consumer.ackTime}") Long commitMillis,
             @Value("${app.reward-rule.build-delay-duration}") String rewardRulesBuildDelay,
@@ -61,47 +59,41 @@ public class RewardRuleMediatorServiceImpl implements RewardRuleMediatorService 
     }
 
     @Override
-    public void execute(Flux<Message<String>> initiativeBeneficiaryRuleDTOFlux) {
-        initiativeBeneficiaryRuleDTOFlux
-                .flatMapSequential(this::execute)
+    protected Duration getCommitDelay() {
+        return commitDelay;
+    }
 
-                .buffer(commitDelay)
-                .map(p -> p.stream()
-                        .map(ack2entity -> {
-                            ack2entity.getKey().ifPresent(Acknowledgment::acknowledge);
-                            return ack2entity.getValue();
-                        })
-                        .filter(Objects::nonNull)
-                        .toList()
-                )
-
+    @Override
+    protected void subscribeAfterCommits(Flux<List<DroolsRule>> afterCommits2subscribe) {
+        afterCommits2subscribe
                 .buffer(rewardRulesBuildDelayMinusCommit)
                 .flatMap(r -> kieContainerBuilderService.buildAll())
                 .subscribe(rewardContextHolderService::setRewardRulesKieContainer);
     }
 
-    private Mono<Pair<Optional<Acknowledgment>, DroolsRule>> execute(Message<String> message) {
-        Optional<Acknowledgment> ackOpt = Optional.ofNullable(message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class));
+    @Override
+    protected ObjectReader getObjectReader() {
+        return objectReader;
+    }
 
-        Pair<Optional<Acknowledgment>, DroolsRule> defaultResult = Pair.of(ackOpt, null);
+    @Override
+    protected Consumer<Throwable> onDeserializationError(Message<String> message) {
+        return e -> errorNotifierService.notifyRewardRuleBuilder(message, "[REWARD_RULE_BUILD] Unexpected JSON", true, e);
+    }
 
-        return Mono.just(message)
-                .mapNotNull(this::deserializeMessage)
+    @Override
+    protected void notifyError(Message<String> message, Throwable e) {
+        errorNotifierService.notifyRewardRuleBuilder(message, "[REWARD_RULE_BUILD] An error occurred handling initiative", true, e);
+    }
+
+    @Override
+    protected Mono<DroolsRule> execute(InitiativeReward2BuildDTO payload, Message<String> message) {
+        return Mono.just(payload)
                 .map(rewardRule2DroolsRuleService)
                 .flatMap(droolsRuleRepository::save)
                 .map(i -> {
                     rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig());
-                    return Pair.of(ackOpt, i);
-                })
-                .defaultIfEmpty(defaultResult)
-
-                .onErrorResume(e -> {
-                    errorNotifierService.notifyRewardRuleBuilder(message, "An error occurred handling initiative", true, e);
-                    return Mono.just(defaultResult);
+                    return i;
                 });
-    }
-
-    private InitiativeReward2BuildDTO deserializeMessage(Message<String> message) {
-        return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyRewardRuleBuilder(message, "Unexpected JSON", true, e));
     }
 }

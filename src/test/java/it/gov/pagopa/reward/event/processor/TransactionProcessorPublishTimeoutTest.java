@@ -11,9 +11,7 @@ import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.KafkaException;
-import org.apache.kafka.common.TopicPartition;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -25,7 +23,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.messaging.DirectWithAttributesChannel;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -70,18 +67,7 @@ class TransactionProcessorPublishTimeoutTest extends BaseTransactionProcessorTes
 
             Assertions.assertEquals(1, trxProcessorInChannel.getSubscriberCount());
 
-            final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest, 7);
-            final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, 6);
-
-            System.out.printf("""
-                        ************************
-                        Source Topic Committed Offsets: %s
-                        Dest Topic Published Offsets: %s
-                        ************************
-                        """,
-                    srcCommitOffsets,
-                    destPublishedOffsets
-            );
+            checkOffsets(7, 6);
         } finally {
             errorNotifierLogger.setLevel(errorNotifierLoggerLevel);
         }

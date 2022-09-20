@@ -79,12 +79,18 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 endTestWithoutAsserts-startTest
         );
 
+        long timeCommitCheckStart = System.currentTimeMillis();
         final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicHpanInitiativeLookupConsumer, groupIdHpanInitiativeLookupConsumer,hpanUpdatedEvents.size());
+        long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
+                        ************************
+                        Time occurred to check committed offset: %d millis
+                        ************************
                         Source Topic Committed Offsets: %s
                         ************************
                         """,
+                timeCommitCheckEnd - timeCommitCheckStart,
                 srcCommitOffsets
         );
     }
@@ -195,19 +201,19 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotHpan,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating hpan update", useCaseJsonNotHpan)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotHpan)
         ));
 
         String useCaseJsonNotDate = "{\"initiativeId\":\"id_1\",\"userId\":\"userid_1\", \"operationType\":\"ADD_INSTRUMENT\",\"hpan\":\"hpan\"}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotDate,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating hpan update", useCaseJsonNotDate)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotDate)
         ));
 
         String jsonNotValid = "{\"initiativeId\":\"id_2\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] Unexpected JSON", jsonNotValid)
         ));
     }
 

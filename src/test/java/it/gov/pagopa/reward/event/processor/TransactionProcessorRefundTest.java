@@ -15,8 +15,6 @@ import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -102,17 +100,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 timeEnd - timePublishOnboardingStart
         );
 
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,trxs.size());
-        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, trxs.size());
-
-        System.out.printf("""
-                        Source Topic Committed Offsets: %s
-                        Dest Topic Published Offsets: %s
-                        ************************
-                        """,
-                srcCommitOffsets,
-                destPublishedOffsets
-        );
+        checkOffsets(trxs.size(), trxs.size());
     }
 
     private List<TransactionDTO> buildTotalRefundRequests(int bias) {
@@ -168,7 +156,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     }
 
     //region total refund useCases
-    private static record CompleteRefundUseCase(
+    private record CompleteRefundUseCase(
             Function<Integer, List<TransactionDTO>> useCaseBuilder,
             Consumer<RewardTransactionDTO> chargeRewardVerifier,
             Consumer<RewardTransactionDTO> totalRefundVerifier,

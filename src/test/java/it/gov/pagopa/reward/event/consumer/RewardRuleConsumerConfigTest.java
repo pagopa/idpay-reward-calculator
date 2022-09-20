@@ -12,7 +12,6 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.KieContainer;
@@ -22,7 +21,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +68,6 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
         checkErrorsPublished(notValidRules, maxWaitingMs, errorUseCases);
 
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size());
-
         Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(1)).buildAll();
         Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(2)).build(Mockito.any()); // +1 due to refresh at startup
         Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.any());
@@ -87,8 +83,6 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                         The kieContainer has been built %d times
                         The %d initiative generated %d rules
                         ************************
-                        Source Topic Committed Offsets: %s
-                        ************************
                         """,
                 initiativePayloads.size(),
                 validRules,
@@ -99,7 +93,21 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                 timeEnd-timeStart,
                 Mockito.mockingDetails(kieContainerBuilderServiceSpy).getInvocations().stream()
                         .filter(i->i.getMethod().getName().equals("buildAll")).count()-1, // 1 is due on startup
-                validRules, expectedRules[0],
+                validRules, expectedRules[0]
+        );
+
+        long timeCommitCheckStart = System.currentTimeMillis();
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size());
+        long timeCommitCheckEnd = System.currentTimeMillis();
+
+        System.out.printf("""
+                        ************************
+                        Time occurred to check committed offset: %d millis
+                        ************************
+                        Source Topic Committed Offsets: %s
+                        ************************
+                        """,
+                timeCommitCheckEnd - timeCommitCheckStart,
                 srcCommitOffsets
         );
     }
@@ -151,13 +159,13 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotExpected = "{\"initiativeId\":\"id_0\",unexpectedStructure:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_RULE_BUILD] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
         String jsonNotValid = "{\"initiativeId\":\"id_1\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_RULE_BUILD] Unexpected JSON", jsonNotValid)
         ));
 
 
@@ -170,7 +178,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                     Mockito.doReturn(Mono.error(new RuntimeException("DUMMYEXCEPTION"))).when(droolsRuleRepositorySpy).save(Mockito.argThat(i->errorWhenSavingUseCaseId.equals(i.getId())));
                     return droolRuleSaveInError;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred handling initiative", droolRuleSaveInError)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_RULE_BUILD] An error occurred handling initiative", droolRuleSaveInError)
         ));
     }
 

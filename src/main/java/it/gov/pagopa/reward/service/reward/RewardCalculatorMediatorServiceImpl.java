@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -17,8 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
@@ -27,12 +26,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Optional;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMediatorService {
+public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<TransactionDTO, RewardTransactionDTO> implements RewardCalculatorMediatorService {
 
     private final LockService lockService;
     private final TransactionProcessedService transactionProcessedService;
@@ -77,27 +76,54 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
     }
 
     @Override
-    public void execute(Flux<Message<String>> messageFlux) {
-        messageFlux
-                .flatMapSequential(trx -> Mono.fromSupplier(() -> {
-                            int lockId = -1;
-                            String userId = Utils.readUserId(trx.getPayload());
-                            if (!StringUtils.isEmpty(userId)) {
-                                lockId = calculateLockId(userId);
-                                lockService.acquireLock(lockId);
-                                log.debug("[REWARD] [LOCK_ACQUIRED] trx having userId {} acquired lock having id {}", userId, lockId);
-                            }
-                            return new MutablePair<>(trx, lockId);
-                        })
-                        .flatMap(this::execute))
-
-                .buffer(commitDelay)
-                .subscribe(p -> p.forEach(ack -> ack.ifPresent(Acknowledgment::acknowledge)));
+    protected Duration getCommitDelay() {
+        return commitDelay;
     }
 
-    public Mono<Optional<Acknowledgment>> execute(Pair<Message<String>, Integer> messageAndLockId) {
+    @Override
+    protected void subscribeAfterCommits(Flux<List<RewardTransactionDTO>> afterCommits2subscribe) {
+        afterCommits2subscribe.subscribe(p -> log.debug("[REWARD] Processed offsets committed successfully"));
+    }
+
+    @Override
+    protected void notifyError(Message<String> message, Throwable e) {
+        errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] An error occurred evaluating transaction", true, e);
+    }
+
+    @Override
+    protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message) {
+        throw new IllegalStateException("Logic overridden");
+    }
+
+    @Override
+    protected Mono<RewardTransactionDTO> execute(Message<String> message) {
+        return Mono.fromSupplier(() -> {
+                    int lockId = -1;
+                    String userId = Utils.readUserId(message.getPayload());
+                    if (!StringUtils.isEmpty(userId)) {
+                        lockId = calculateLockId(userId);
+                        lockService.acquireLock(lockId);
+                        log.debug("[REWARD] [LOCK_ACQUIRED] trx having userId {} acquired lock having id {}", userId, lockId);
+                    }
+                    return new MutablePair<>(message, lockId);
+                })
+                .flatMap(this::executeAfterLock);
+    }
+
+    @Override
+    protected ObjectReader getObjectReader() {
+        return objectReader;
+    }
+
+    @Override
+    protected Consumer<Throwable> onDeserializationError(Message<String> message) {
+        return e -> errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
+    }
+
+    private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId) {
         final long startTime = System.currentTimeMillis();
         final Message<String> message = messageAndLockId.getKey();
+
         final Consumer<? super RewardTransactionDTO> lockReleaser = x -> {
             int lockId = messageAndLockId.getValue();
             if (lockId > -1) {
@@ -106,7 +132,6 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                 log.debug("[REWARD] [LOCK_RELEASED] released lock having id {}", lockId);
             }
         };
-        Optional<Acknowledgment> ackOpt = Optional.ofNullable(message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class));
 
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
@@ -129,22 +154,11 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
                         errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "An error occurred while publishing the transaction evaluation result", true, exception);
                     }
                 })
-                .map(r -> ackOpt)
-                .defaultIfEmpty(ackOpt)
-
-                .onErrorResume(e -> {
-                    errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);
-                    return Mono.just(ackOpt);
-                })
 
                 .doFinally(x -> {
                     lockReleaser.accept(null);
                     log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload());
                 });
-    }
-
-    private TransactionDTO deserializeMessage(Message<String> message) {
-        return Utils.deserializeMessage(message, objectReader, e -> errorNotifierService.notifyTransactionEvaluation(message, "Unexpected JSON", true, e));
     }
 
     public int calculateLockId(String userId) {

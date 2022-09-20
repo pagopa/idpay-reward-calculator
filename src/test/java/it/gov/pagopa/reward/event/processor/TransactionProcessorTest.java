@@ -22,8 +22,6 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -77,7 +75,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
         trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
+
         trxs.add(objectMapper.writeValueAsString(trxDuplicated));
+        int alreadyProcessed = 1;
 
         long totalSendMessages = trxs.size()+duplicateTrx;
 
@@ -119,7 +119,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         System.out.printf("""
                         ************************
-                        Time spent to send %d (%d + %d + %d) trx messages: %d millis
+                        Time spent to send %d (%d + %d + %d + %d) trx messages: %d millis
                         Time spent to consume reward responses: %d millis
                         ************************
                         Test Completed in %d millis
@@ -129,22 +129,14 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 validTrx,
                 duplicateTrx,
                 notValidTrx,
+                alreadyProcessed,
                 timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
                 timeEnd - timePublishOnboardingStart
         );
 
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,totalSendMessages);
-        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, validTrx);
 
-        System.out.printf("""
-                        Source Topic Committed Offsets: %s
-                        Dest Topic Published Offsets: %s
-                        ************************
-                        """,
-                srcCommitOffsets,
-                destPublishedOffsets
-        );
+        checkOffsets(totalSendMessages, validTrx);
     }
 
     private List<String> buildValidPayloads(int bias, int validOnboardings) {
@@ -635,13 +627,13 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         String useCaseJsonNotExpected = "{\"correlationId\":\"CORRELATIONID0\",unexpectedStructure:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
         String jsonNotValid = "{\"correlationId\":\"CORRELATIONID1\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", jsonNotValid)
         ));
 
         final String failingRuleEngineUserId = "FAILING_RULE_ENGINE";
@@ -655,7 +647,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(ruleEngineServiceSpy).applyRules(Mockito.argThat(i -> failingRuleEngineUserId.equals(i.getUserId())), Mockito.any(), Mockito.any());
                     return failingRuleEngineUseCase;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingRuleEngineUseCase)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingRuleEngineUseCase)
         ));
 
         final String failingCounterUpdateUserId = "FAILING_COUNTER_UPDATE";
@@ -669,7 +661,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i -> failingCounterUpdateUserId.equals(i.getUserId())));
                     return failingCounterUpdate;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingCounterUpdate)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingCounterUpdate)
         ));
     }
 
