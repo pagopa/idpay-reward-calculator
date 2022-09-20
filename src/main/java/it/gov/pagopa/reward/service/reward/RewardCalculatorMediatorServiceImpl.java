@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.mapper.MessageKeyedPreparationMapper;
 import it.gov.pagopa.reward.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
@@ -40,6 +41,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
     private final Transaction2RewardTransactionMapper rewardTransactionMapper;
+    private final MessageKeyedPreparationMapper messageKeyedPreparationMapper;
     private final RewardNotifierService rewardNotifierService;
     private final ErrorNotifierService errorNotifierService;
 
@@ -56,8 +58,10 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
             OnboardedInitiativesService onboardedInitiativesService,
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             Transaction2RewardTransactionMapper rewardTransactionMapper,
+            MessageKeyedPreparationMapper messageKeyedPreparationMapper,
             RewardNotifierService rewardNotifierService,
             ErrorNotifierService errorNotifierService,
+
             @Value("${spring.cloud.stream.kafka.bindings.trxProcessor-in-0.consumer.ackTime}") long commitMillis,
 
             ObjectMapper objectMapper) {
@@ -68,6 +72,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.rewardTransactionMapper = rewardTransactionMapper;
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
+        this.messageKeyedPreparationMapper = messageKeyedPreparationMapper;
         this.rewardNotifierService = rewardNotifierService;
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
@@ -139,6 +144,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                 .flatMap(operationTypeHandlerService::handleOperationType)
                 .map(transactionValidatorService::validate)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
+                .mapNotNull(messageKeyedPreparationMapper)
                 .doOnNext(lockReleaser)
                 .doOnNext(r -> {
                     Exception exception=null;

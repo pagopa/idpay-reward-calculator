@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -68,14 +69,16 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                 final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId) : null;
                 updateCounters(initiativeCounter, reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount());
                 updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, previousRewards, initiativeConfig);
+                /* set RewardCounters in RewardTransactionDTO object */
+                reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
             }
         });
     }
 
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
-        initiativeCounter.setExhaustedBudget(initiativeConfig.getBudget() !=null && initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
+        initiativeCounter.setExhaustedBudget(initiativeConfig.getBeneficiaryBudget() != null && initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBeneficiaryBudget()) > -1);
         if (initiativeCounter.isExhaustedBudget()) {
-            BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
+            BigDecimal newAccruedReward = initiativeConfig.getBeneficiaryBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
             reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);
             reward.setAccruedReward(newAccruedReward);
         }
@@ -119,5 +122,16 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, BigDecimal previousRewards, Reward initiativeReward) {
         updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), initiativeReward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount());
+    }
+
+    private RewardCounters mapRewardCounters(InitiativeCounters initiativeCounters, InitiativeConfig initiativeConfig) {
+        RewardCounters rewardCounters = new RewardCounters();
+        rewardCounters.setExhaustedBudget(initiativeCounters.isExhaustedBudget());
+        rewardCounters.setTrxNumber(initiativeCounters.getTrxNumber());
+        rewardCounters.setTotalReward(initiativeCounters.getTotalReward());
+        rewardCounters.setInitiativeBudget(initiativeConfig.getBeneficiaryBudget());
+        rewardCounters.setTotalAmount(initiativeCounters.getTotalAmount());
+
+        return rewardCounters;
     }
 }
