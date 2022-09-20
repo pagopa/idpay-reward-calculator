@@ -21,6 +21,8 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -273,9 +275,27 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Map<TopicPartition, OffsetAndMetadata> checkCommittedOffsets(String topic, String groupId, long expectedCommittedMessages){
-        final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
-        Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
-        return commits;
+        return checkCommittedOffsets(topic, groupId, expectedCommittedMessages, 10, 500);
+    }
+
+    // Cannot use directly Awaitlity cause the Callable condition is performed on separate thread, which will go into conflict with the consumer Kafka access
+    protected Map<TopicPartition, OffsetAndMetadata> checkCommittedOffsets(String topic, String groupId, long expectedCommittedMessages, int maxAttempts, int millisAttemptDelay){
+        RuntimeException lastException = null;
+        if(maxAttempts<=0){
+            maxAttempts=1;
+        }
+
+        for(;maxAttempts>0; maxAttempts--){
+            try {
+                final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
+                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
+                return commits;
+            } catch (RuntimeException e){
+                lastException = e;
+                wait(millisAttemptDelay, TimeUnit.MILLISECONDS);
+            }
+        }
+        throw lastException;
     }
 
     protected Map<TopicPartition, Long> getEndOffsets(String topic){
@@ -298,6 +318,14 @@ public abstract class BaseIntegrationTest {
                     .until(test);
         } catch (RuntimeException e) {
             Assertions.fail(buildTestFailureMessage.get(), e);
+        }
+    }
+
+    protected static void wait(long timeout, TimeUnit timeoutUnit) {
+        try{
+            Awaitility.await().atLeast(timeout, timeoutUnit).until(()->false);
+        } catch (ConditionTimeoutException ex){
+            // Do Nothing
         }
     }
 
