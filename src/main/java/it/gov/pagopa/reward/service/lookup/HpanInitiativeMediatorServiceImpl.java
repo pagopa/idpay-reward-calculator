@@ -79,7 +79,8 @@ public class HpanInitiativeMediatorServiceImpl implements HpanInitiativeMediator
                 .defaultIfEmpty(ackOpt)
 
                 .onErrorResume(e ->  {errorNotifierService.notifyHpanUpdateEvaluation(message, "An error occurred evaluating hpan update", false, e);
-                    return Mono.empty();})
+                    return Mono.just(ackOpt);})
+
                 .doFinally(s -> log.info("[PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before));
     }
 

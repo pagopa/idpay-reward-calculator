@@ -70,18 +70,10 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
         checkErrorsPublished(notValidRules, maxWaitingMs, errorUseCases);
 
-        @SuppressWarnings("unchecked") Map<TopicPartition, OffsetAndMetadata>[] srcCommitOffsets = new Map[]{null};
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size());
 
-        Awaitility.await().atMost(Duration.ofSeconds(5)).until(() -> {
-            try{
-                srcCommitOffsets[0] = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size());
-                return true;
-            } catch (RuntimeException e){
-                return false;
-            }
-        });
-
-        Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(2)).buildAll(); // +1 due to refresh at startup
+        Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(1)).buildAll();
+        Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(2)).build(Mockito.any()); // +1 due to refresh at startup
         Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.any());
 
         System.out.printf("""
@@ -108,7 +100,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                 Mockito.mockingDetails(kieContainerBuilderServiceSpy).getInvocations().stream()
                         .filter(i->i.getMethod().getName().equals("buildAll")).count()-1, // 1 is due on startup
                 validRules, expectedRules[0],
-                srcCommitOffsets[0]
+                srcCommitOffsets
         );
     }
 

@@ -134,8 +134,9 @@ public class RewardCalculatorMediatorServiceImpl implements RewardCalculatorMedi
 
                 .onErrorResume(e -> {
                     errorNotifierService.notifyTransactionEvaluation(message, "An error occurred evaluating transaction", true, e);
-                    return Mono.empty();
+                    return Mono.just(ackOpt);
                 })
+
                 .doFinally(x -> {
                     lockReleaser.accept(null);
                     log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload());

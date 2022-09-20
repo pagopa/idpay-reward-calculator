@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -45,10 +46,10 @@ public class RewardRuleMediatorServiceImpl implements RewardRuleMediatorService 
             ErrorNotifierService errorNotifierService,
 
             ObjectMapper objectMapper) {
-        this.commitDelay=Duration.ofMillis(commitMillis);
+        this.commitDelay = Duration.ofMillis(commitMillis);
 
-        Duration rewardRulesBuildDelayDuration= Duration.parse(rewardRulesBuildDelay).minusMillis(commitMillis);
-        rewardRulesBuildDelayMinusCommit = rewardRulesBuildDelayDuration.isNegative()? Duration.ZERO : rewardRulesBuildDelayDuration;
+        Duration rewardRulesBuildDelayDuration = Duration.parse(rewardRulesBuildDelay).minusMillis(commitMillis);
+        rewardRulesBuildDelayMinusCommit = rewardRulesBuildDelayDuration.isNegative() ? Duration.ZERO : rewardRulesBuildDelayDuration;
 
         this.rewardRule2DroolsRuleService = rewardRule2DroolsRuleService;
         this.droolsRuleRepository = droolsRuleRepository;
@@ -65,18 +66,24 @@ public class RewardRuleMediatorServiceImpl implements RewardRuleMediatorService 
                 .flatMapSequential(this::execute)
 
                 .buffer(commitDelay)
-                .mapNotNull(p -> p.stream().map(ack2entity -> {
-                    ack2entity.getKey().ifPresent(Acknowledgment::acknowledge);
-                    return ack2entity.getValue();
-                }))
+                .map(p -> p.stream()
+                        .map(ack2entity -> {
+                            ack2entity.getKey().ifPresent(Acknowledgment::acknowledge);
+                            return ack2entity.getValue();
+                        })
+                        .filter(Objects::nonNull)
+                        .toList()
+                )
 
                 .buffer(rewardRulesBuildDelayMinusCommit)
                 .flatMap(r -> kieContainerBuilderService.buildAll())
                 .subscribe(rewardContextHolderService::setRewardRulesKieContainer);
     }
 
-    private Mono<Pair<Optional<Acknowledgment>, DroolsRule>> execute(Message<String> message){
+    private Mono<Pair<Optional<Acknowledgment>, DroolsRule>> execute(Message<String> message) {
         Optional<Acknowledgment> ackOpt = Optional.ofNullable(message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class));
+
+        Pair<Optional<Acknowledgment>, DroolsRule> defaultResult = Pair.of(ackOpt, null);
 
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
@@ -86,11 +93,11 @@ public class RewardRuleMediatorServiceImpl implements RewardRuleMediatorService 
                     rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig());
                     return Pair.of(ackOpt, i);
                 })
-                .defaultIfEmpty(Pair.of(ackOpt, null))
+                .defaultIfEmpty(defaultResult)
 
-                .onErrorResume(e->{
+                .onErrorResume(e -> {
                     errorNotifierService.notifyRewardRuleBuilder(message, "An error occurred handling initiative", true, e);
-                    return Mono.empty();
+                    return Mono.just(defaultResult);
                 });
     }
 

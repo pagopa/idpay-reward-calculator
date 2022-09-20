@@ -127,7 +127,7 @@ spring:
               startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_RULE_REQUEST__ACK_MILLIS:1000}
+              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:1000}
               standardHeaders: ${KAFKA_REWARD_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
