@@ -146,7 +146,6 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 timeEnd - timePublishOnboardingStart
         );
 
-
         checkOffsets(totalSendMessages, validTrx);
     }
 

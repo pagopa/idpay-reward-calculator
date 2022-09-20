@@ -130,11 +130,21 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         }
     }
 
-    protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){
+    protected void checkOffsets(long expectedReadMessages, long expectedPublishedResults){
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages);
+        @SuppressWarnings("unchecked") final Map<TopicPartition, OffsetAndMetadata>[] srcCommitOffsets = new Map[]{null};
+        final Exception[] lastException = new Exception[]{null};
+        waitFor(() -> {
+            try{
+                srcCommitOffsets[0] = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages);
+                return true;
+            } catch (RuntimeException e){
+                lastException[0]=e;
+                return false;
+            }
+        },  () -> lastException[0].getMessage(), 10, 1000);
         long timeCommitChecked = System.currentTimeMillis();
-        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
+        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, expectedPublishedResults);
         long timePublishChecked = System.currentTimeMillis();
 
         System.out.printf("""
@@ -148,7 +158,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                         """,
                 timeCommitChecked - timeStart,
                 timePublishChecked - timeCommitChecked,
-                srcCommitOffsets,
+                srcCommitOffsets[0],
                 destPublishedOffsets
         );
     }
