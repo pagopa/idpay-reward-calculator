@@ -82,7 +82,7 @@ class RewardContextHolderServiceImplTest {
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
-                .budget(BigDecimal.valueOf(100))
+                .beneficiaryBudget(BigDecimal.valueOf(100))
                 .endDate(LocalDate.MAX)
                 .dailyThreshold(true)
                 .monthlyThreshold(false)

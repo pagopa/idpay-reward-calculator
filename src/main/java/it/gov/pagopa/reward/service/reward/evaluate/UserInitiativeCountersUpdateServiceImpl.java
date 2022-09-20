@@ -76,9 +76,9 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
-        initiativeCounter.setExhaustedBudget(initiativeConfig.getBudget() != null && initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBudget()) > -1);
+        initiativeCounter.setExhaustedBudget(initiativeConfig.getBeneficiaryBudget() != null && initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBeneficiaryBudget()) > -1);
         if (initiativeCounter.isExhaustedBudget()) {
-            BigDecimal newAccruedReward = initiativeConfig.getBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
+            BigDecimal newAccruedReward = initiativeConfig.getBeneficiaryBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
             reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);
             reward.setAccruedReward(newAccruedReward);
         }
@@ -129,7 +129,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         rewardCounters.setExhaustedBudget(initiativeCounters.isExhaustedBudget());
         rewardCounters.setTrxNumber(initiativeCounters.getTrxNumber());
         rewardCounters.setTotalReward(initiativeCounters.getTotalReward());
-        rewardCounters.setInitiativeBudget(initiativeConfig.getBudget());
+        rewardCounters.setInitiativeBudget(initiativeConfig.getBeneficiaryBudget());
         rewardCounters.setTotalAmount(initiativeCounters.getTotalAmount());
 
         return rewardCounters;

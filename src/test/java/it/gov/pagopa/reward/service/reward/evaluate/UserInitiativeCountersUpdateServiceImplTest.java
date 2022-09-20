@@ -10,7 +10,6 @@ import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
@@ -56,7 +55,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     public void configureMocks(){
         initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID1")
-                .budget(BigDecimal.valueOf(10000.00))
+                .beneficiaryBudget(BigDecimal.valueOf(10000.00))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)
                 .monthlyThreshold(true)
