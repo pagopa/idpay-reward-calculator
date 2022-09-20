@@ -174,7 +174,8 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // When
         try {
-            InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+            initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+            Assertions.fail("Expected exception");
         }catch (IllegalArgumentException actualException){
             Assertions.assertEquals("Frequency cannot be null",actualException.getMessage());
         }

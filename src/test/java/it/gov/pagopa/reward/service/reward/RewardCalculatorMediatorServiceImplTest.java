@@ -5,7 +5,6 @@ import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.dto.mapper.MessageKeyedPreparationMapper;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -59,7 +58,6 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private RewardNotifierService rewardNotifierServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
 
-    private final MessageKeyedPreparationMapper messageKeyedPreparationMapper = new MessageKeyedPreparationMapper();
     private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
 
     private final Transaction2RewardTransactionMapper rewardTransactionMapper = new Transaction2RewardTransactionMapper();
@@ -74,7 +72,6 @@ class RewardCalculatorMediatorServiceImplTest {
                 onboardedInitiativesServiceMock,
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransactionMapper,
-                messageKeyedPreparationMapper,
                 rewardNotifierServiceMock,
                 errorNotifierServiceMock,
                 500,
@@ -117,7 +114,7 @@ class RewardCalculatorMediatorServiceImplTest {
         // Then
         Awaitility.await().atMost(1, TimeUnit.SECONDS).until(() -> Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations().size() == 6);
 
-        List<Message<RewardTransactionDTO>> publishedRewards = Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations().stream().map(i -> i.getArgument(0, Message<RewardTransactionDTO>.class)).toList();
+        List<RewardTransactionDTO> publishedRewards = Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations().stream().map(i -> i.getArgument(0, RewardTransactionDTO.class)).toList();
         Assertions.assertNotNull(publishedRewards);
         Assertions.assertEquals(6, publishedRewards.size());
 
@@ -152,12 +149,12 @@ class RewardCalculatorMediatorServiceImplTest {
 
     }
 
-    private void assertRejectionReasons(List<Message<RewardTransactionDTO>> result, TransactionDTO trx, String expectedRejectionReason) {
-        final Message<RewardTransactionDTO> rewardedTrx = result.stream()
-                .filter(r->r.getPayload().getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
+    private void assertRejectionReasons(List<RewardTransactionDTO> result, TransactionDTO trx, String expectedRejectionReason) {
+        final RewardTransactionDTO rewardedTrx = result.stream()
+                .filter(r->r.getIdTrxAcquirer().equals(trx.getIdTrxAcquirer()))
                 .findFirst().orElseThrow();
-        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getPayload().getRejectionReasons());
-        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getPayload().getStatus());
+        Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getRejectionReasons());
+        Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getStatus());
     }
 
     private TransactionDTO buildTrx(int i) {

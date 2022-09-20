@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.service;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.utils.Utils;
-import lombok.AllArgsConstructor;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -26,7 +25,6 @@ import java.util.function.Consumer;
  */
 public abstract class BaseKafkaConsumer<T, R> {
 
-    @AllArgsConstructor
     record KafkaAcknowledgeResult<T> (Acknowledgment ack, T result){}
 
     /** It will ask the superclass to handle the messages, then sequentially it will acknowledge them */

@@ -104,7 +104,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         Assertions.assertEquals(validTrx+1, transactionProcessedRepository.count().block());
 
         for (ConsumerRecord<String, String> p : payloadConsumed) {
-            checkResponse(objectMapper.readValue(p.value(), RewardTransactionDTO.class));
+            RewardTransactionDTO payload = objectMapper.readValue(p.value(), RewardTransactionDTO.class);
+            checkResponse(payload);
+            Assertions.assertEquals(payload.getUserId(), p.key());
         }
 
         Assertions.assertEquals(

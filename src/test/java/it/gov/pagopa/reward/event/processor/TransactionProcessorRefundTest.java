@@ -83,7 +83,9 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         Assertions.assertEquals(trxs.size(), payloadConsumed.size());
 
         for (ConsumerRecord<String, String> p : payloadConsumed) {
-            checkResponse(objectMapper.readValue(p.value(), RewardTransactionDTO.class), completeRefundedTrxs);
+            RewardTransactionDTO payload = objectMapper.readValue(p.value(), RewardTransactionDTO.class);
+            checkResponse(payload, completeRefundedTrxs);
+            Assertions.assertEquals(payload.getUserId(), p.key());
         }
 
         System.out.printf("""
