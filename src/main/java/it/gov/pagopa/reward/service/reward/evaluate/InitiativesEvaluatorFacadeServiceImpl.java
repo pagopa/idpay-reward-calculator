@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,11 +58,16 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
     private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
         RewardTransactionDTO trxRewarded;
+        boolean isRefund = OperationType.REFUND.equals(trx.getOperationTypeTranscoded());
+
         if (BigDecimal.ZERO.compareTo(trx.getEffectiveAmount()) < 0) {
             trxRewarded = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
+            if (isRefund) {
+                handlePartialRefund(trxRewarded);
+            }
         } else {
             trxRewarded = rewardTransactionMapper.apply(trx);
-            if (OperationType.REFUND.equals(trx.getOperationTypeTranscoded())) {
+            if (isRefund) {
                 handleCompleteRefund(trx, trxRewarded);
             } else {
                 trxRewarded.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_INVALID_AMOUNT));
@@ -78,6 +85,20 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             trxRewarded.setRewards(trx.getRefundInfo().getPreviousRewards().entrySet().stream()
                     .map(e -> Pair.of(e.getKey(), new Reward(e.getValue().negate())))
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
+            trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
+        }
+    }
+//TODO test this
+    private void handlePartialRefund(RewardTransactionDTO trxRewarded) {
+        Map<String, BigDecimal> pastRewards = new HashMap<>(trxRewarded.getRefundInfo() != null ? trxRewarded.getRefundInfo().getPreviousRewards() : Collections.emptyMap());
+        trxRewarded.getRewards().forEach((initiativeId, r)-> {
+            BigDecimal pastReward = pastRewards.remove(initiativeId);
+            if(pastReward!=null){
+                r.setAccruedReward(r.getAccruedReward().subtract(pastReward));
+            }
+        });
+        pastRewards.forEach((initiativeId, reward2Reverse) ->trxRewarded.getRewards().put(initiativeId, new Reward(reward2Reverse.negate())));
+        if(trxRewarded.getRewards().size()>0){
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }
     }
