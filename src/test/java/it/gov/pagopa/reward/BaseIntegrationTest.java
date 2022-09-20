@@ -8,6 +8,7 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
+import it.gov.pagopa.reward.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,8 +22,11 @@ import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
@@ -112,6 +116,9 @@ public abstract class BaseIntegrationTest {
     protected DroolsRuleRepository droolsRuleRepository;
 
     @Autowired
+    protected StreamsHealthIndicator streamsHealthIndicator;
+
+    @Autowired
     protected ObjectMapper objectMapper;
 
     @Value("${spring.kafka.bootstrap-servers}")
@@ -175,6 +182,12 @@ public abstract class BaseIntegrationTest {
                         """,
                 mongoUrl,
                 "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes));
+    }
+
+    @Test
+    void testHealthIndicator(){
+        Health health = streamsHealthIndicator.health();
+        Assertions.assertEquals(Status.UP, health.getStatus());
     }
 
     protected Consumer<String, String> getEmbeddedKafkaConsumer(String topic, String groupId) {

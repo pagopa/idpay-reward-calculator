@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.config;
+package it.gov.pagopa.reward.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;

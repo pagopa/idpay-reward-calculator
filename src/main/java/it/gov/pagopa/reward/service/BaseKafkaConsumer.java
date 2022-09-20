@@ -3,8 +3,6 @@ package it.gov.pagopa.reward.service;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -28,13 +26,8 @@ import java.util.function.Consumer;
  */
 public abstract class BaseKafkaConsumer<T, R> {
 
-    @Data
     @AllArgsConstructor
-    @NoArgsConstructor
-    public static class KafkaAcknowledgeResult<T> {
-        private Acknowledgment ack;
-        private T result;
-    }
+    record KafkaAcknowledgeResult<T> (Acknowledgment ack, T result){}
 
     /** It will ask the superclass to handle the messages, then sequentially it will acknowledge them */
     public final void execute(Flux<Message<String>> initiativeBeneficiaryRuleDTOFlux) {
@@ -45,10 +38,10 @@ public abstract class BaseKafkaConsumer<T, R> {
                         .buffer(getCommitDelay())
                         .map(p -> p.stream()
                                 .map(ack2entity -> {
-                                    if (ack2entity.getAck() != null) {
-                                        ack2entity.getAck().acknowledge();
+                                    if (ack2entity.ack() != null) {
+                                        ack2entity.ack().acknowledge();
                                     }
-                                    return ack2entity.getResult();
+                                    return ack2entity.result();
                                 })
                                 .filter(Objects::nonNull)
                                 .toList()
