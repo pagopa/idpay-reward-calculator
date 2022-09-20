@@ -22,6 +22,7 @@ spring:
           group: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID:idpay-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-splitter
+          consumer.autoStartup: false
         trxProcessor-out-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -98,9 +99,9 @@ spring:
           trxProcessor-in-0:
             consumer:
               startOffset: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
-              autoCommitOffset: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
-              enableDlq: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
-              dlqName: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:10000}
               standardHeaders: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -110,12 +111,25 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          trxProcessor-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-transaction
+          errors-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-errors
+          # TODO remove me
+          trxProducer-out-0:
+            producer:
+              configuration:
+                client.id: trxProducer-simulateTrx
           rewardRuleConsumer-in-0:
             consumer:
               startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
-              autoCommitOffset: ${KAFKA_REWARD_RULE_REQUEST_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
-              enableDlq: ${KAFKA_REWARD_RULE_REQUEST_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
-              dlqName: ${KAFKA_REWARD_RULE_REQUEST_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:1000}
               standardHeaders: ${KAFKA_REWARD_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -128,9 +142,9 @@ spring:
           hpanInitiativeConsumer-in-0:
             consumer:
               startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
-              autoCommitOffset: ${KAFKA_HPAN_UPDATE_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
-              enableDlq: ${KAFKA_HPAN_UPDATE_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
-              dlqName: ${KAFKA_HPAN_UPDATE_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:10000}
               standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:

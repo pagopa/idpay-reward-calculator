@@ -2,8 +2,12 @@ package it.gov.pagopa.reward.utils;
 
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 
+import java.time.ZoneId;
+
 public final class RewardConstants {
     private RewardConstants(){}
+
+    public static final ZoneId ZONEID = ZoneId.of("Europe/Rome");
 
     //region initiative's build rejection reasons
     public static final String INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
@@ -39,7 +43,6 @@ public final class RewardConstants {
     //endregion
 
     //region reward evaluation rejection reasons
-    public static final String TRX_REJECTION_REASON_DUPLICATE = "DUPLICATE_TRX_EVENT";
     public static final String TRX_REJECTION_REASON_NO_INITIATIVE = "NO_ACTIVE_INITIATIVES";
     public static final String TRX_REJECTION_REASON_INVALID_OPERATION_TYPE = "INVALID_OPERATION_TYPE";
     public static final String TRX_REJECTION_REASON_INVALID_AMOUNT = "INVALID_AMOUNT";

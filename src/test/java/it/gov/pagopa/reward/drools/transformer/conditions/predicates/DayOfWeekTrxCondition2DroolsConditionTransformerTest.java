@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -72,7 +73,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
+        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, true);
     }
 
@@ -82,7 +83,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 7), LocalTime.of(0, 0));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
+        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, false);
     }
     //endregion
@@ -149,7 +150,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(12, 0));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
+        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, true);
     }
 
@@ -159,7 +160,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(11, 59));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime)));
+        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, false);
     }
     //endregion

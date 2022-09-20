@@ -17,6 +17,7 @@ public class Reward {
     private BigDecimal accruedReward;
     /** True, if the reward has been capped due to budget threshold */
     private boolean capped;
+
     /** True, if the reward has been capped due to daily threshold */
     private boolean dailyCapped;
     /** True, if the reward has been capped due to monthly threshold */
@@ -25,6 +26,7 @@ public class Reward {
     private boolean yearlyCapped;
     /** True, if the reward has been capped due to weekly threshold */
     private boolean weeklyCapped;
+
     /** Counters */
     private RewardCounters counters;
 

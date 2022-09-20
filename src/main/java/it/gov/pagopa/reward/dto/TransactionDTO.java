@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
@@ -11,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +68,7 @@ public class TransactionDTO {
     private String userId;
 
     //region calculated fields
+    private String id;
     private OperationType operationTypeTranscoded;
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
@@ -74,4 +77,21 @@ public class TransactionDTO {
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;
     //endregion
+
+
+    public String getId() {
+        if(this.id == null){
+            this.id = computeTrxId(this);
+        }
+        return id;
+    }
+
+    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    public static String computeTrxId(TransactionDTO trx) {
+        return trx.getIdTrxAcquirer()
+                .concat(trx.getAcquirerCode())
+                .concat(trx.getTrxDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime().format(DATETIME_FORMATTER))
+                .concat(trx.getOperationType())
+                .concat(trx.getAcquirerId());
+    }
 }

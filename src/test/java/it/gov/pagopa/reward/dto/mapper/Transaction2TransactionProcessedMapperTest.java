@@ -2,17 +2,18 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Map;
 
 class Transaction2TransactionProcessedMapperTest {
@@ -33,7 +34,7 @@ class Transaction2TransactionProcessedMapperTest {
     @Test
     void mapWithNotNullTransactionDTO(){
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.of(LocalDateTime.of(2000,1,1,23,59,57), ZoneId.of("Europe/Rome").getRules().getOffset(LocalDateTime.now()));
+        OffsetDateTime trxDate = OffsetDateTime.of(LocalDateTime.of(2000,1,1,23,59,57), RewardConstants.ZONEID.getRules().getOffset(LocalDateTime.now()));
         Map<String, Reward> rewards = Map.of(
                 "REWARDS0",
                 new Reward(BigDecimal.valueOf(100))
@@ -45,6 +46,7 @@ class Transaction2TransactionProcessedMapperTest {
         trx.setEffectiveAmount(trx.getAmount());
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setRewards(rewards);
+        trx.setId(TransactionDTO.computeTrxId(trx));
 
         String id = "IDTRXACQUIRER0ACQUIRERCODE020000101T22595700ACQUIRERID0";
 
@@ -62,8 +64,8 @@ class Transaction2TransactionProcessedMapperTest {
     }
 
     private void assertCommonFieldValues(RewardTransactionDTO trx, TransactionProcessed result) {
-        LocalDateTime trxDate = trx.getTrxDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();
-        final LocalDateTime trxChargeDate = trx.getTrxChargeDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();
+        LocalDateTime trxDate = trx.getTrxDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
+        final LocalDateTime trxChargeDate = trx.getTrxChargeDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
 
         Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());

@@ -3,9 +3,14 @@ package it.gov.pagopa.reward.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.Random;
 
@@ -50,14 +55,14 @@ public class TransactionDTOFaker {
                 .acquirerCode("ACQUIRERCODE%s".formatted(bias))
                 .trxDate(OffsetDateTime.of(
                         trxDateTime,
-                        ZoneId.of("Europe/Rome").getRules().getOffset(trxDateTime)
+                        RewardConstants.ZONEID.getRules().getOffset(trxDateTime)
                 ))
                 .hpan("HPAN%s".formatted(bias))
                 .operationType("00")
                 .circuitType("CIRCUITTYPE%s".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%s".formatted(bias))
                 .correlationId("CORRELATIONID%s".formatted(bias))
-                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE))
+                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE).setScale(2, RoundingMode.UNNECESSARY))
                 .amountCurrency("AMOUNTCURRENCY%s".formatted(bias))
                 .mcc("MCC%s".formatted(bias))
                 .acquirerId("ACQUIRERID%s".formatted(bias))

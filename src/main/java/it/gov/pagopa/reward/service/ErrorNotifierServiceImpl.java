@@ -29,10 +29,15 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     private final String trxServer;
     private final String trxTopic;
 
+    private final String trxRewardedMessagingServiceType;
+    private final String trxRewardedServer;
+    private final String trxRewardedTopic;
+
     private final String hpanUpdateMessagingServiceType;
     private final String hpanUpdateServer;
     private final String hpanUpdateTopic;
 
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-splitter.type}") String rewardRuleBuilderMessagingServiceType,
@@ -42,6 +47,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.type}") String trxMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers}") String trxServer,
                                     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}") String trxTopic,
+
+                                    @Value("${spring.cloud.stream.binders.kafka-idpay.type}") String trxRewardedMessagingServiceType,
+                                    @Value("${spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers}") String trxRewardedServer,
+                                    @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}") String trxRewardedTopic,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.type}") String hpanUpdateMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateServer,
@@ -55,6 +64,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.trxMessagingServiceType = trxMessagingServiceType;
         this.trxServer = trxServer;
         this.trxTopic = trxTopic;
+
+        this.trxRewardedMessagingServiceType = trxRewardedMessagingServiceType;
+        this.trxRewardedServer = trxRewardedServer;
+        this.trxRewardedTopic = trxRewardedTopic;
 
         this.hpanUpdateMessagingServiceType = hpanUpdateMessagingServiceType;
         this.hpanUpdateServer = hpanUpdateServer;
@@ -72,8 +85,13 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
+    public void notifyRewardedTransaction(Message<?> message, String description, boolean retryable, Throwable exception) {
+        notify(trxRewardedMessagingServiceType, trxRewardedServer, trxRewardedTopic, message, description, retryable, exception);
+    }
+
+    @Override
     public void notifyHpanUpdateEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(hpanUpdateMessagingServiceType, hpanUpdateServer,hpanUpdateTopic,message,description,retryable,exception);
+        notify(hpanUpdateMessagingServiceType, hpanUpdateServer, hpanUpdateTopic, message, description, retryable, exception);
     }
 
     @Override

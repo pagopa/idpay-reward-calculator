@@ -18,6 +18,8 @@ import it.gov.pagopa.reward.service.LockServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +31,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
 
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.reward.TransactionProcessedServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
@@ -65,6 +66,9 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     @AfterEach
     void clearData(){
         transactionProcessedRepository.deleteAll().block();
+        userInitiativeCountersRepository.deleteAll().block();
+        hpanInitiativesRepository.deleteAll().block();
+        droolsRuleRepository.deleteAll().block();
     }
 
     protected void publishRewardRules(List<InitiativeReward2BuildDTO> initiatives) {
@@ -92,7 +96,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                                             .endInterval(endInterval)
                                             .build()))
                                     .build())
-                            .collect(Collectors.toList()));
+                            .toList());
                     return hpan2initiative;
                 })
                 .flatMap(hpanInitiativesRepository::save)
@@ -124,5 +128,28 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         } else {
             Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())>0);
         }
+    }
+
+    protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){
+        long timeStart = System.currentTimeMillis();
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 10, 1000);
+        long timeCommitChecked = System.currentTimeMillis();
+        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
+        long timePublishChecked = System.currentTimeMillis();
+
+        System.out.printf("""
+                        ************************
+                        Time occurred to check committed offset: %d millis
+                        Time occurred to check published offset: %d millis
+                        ************************
+                        Source Topic Committed Offsets: %s
+                        Dest Topic Published Offsets: %s
+                        ************************
+                        """,
+                timeCommitChecked - timeStart,
+                timePublishChecked - timeCommitChecked,
+                srcCommitOffsets,
+                destPublishedOffsets
+        );
     }
 }

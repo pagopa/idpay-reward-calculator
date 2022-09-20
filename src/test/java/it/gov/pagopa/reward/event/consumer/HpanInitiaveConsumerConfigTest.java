@@ -12,17 +12,19 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -72,8 +74,24 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
             Test Completed in %d millis
             ************************
             """,
-                updatedHpanNumbers+notValidMessages+concurrencyMessages, timeAfterSendHpanUpdateMessages-startTest,
+                hpanUpdatedEvents.size(),
+                timeAfterSendHpanUpdateMessages-startTest,
                 endTestWithoutAsserts-startTest
+        );
+
+        long timeCommitCheckStart = System.currentTimeMillis();
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicHpanInitiativeLookupConsumer, groupIdHpanInitiativeLookupConsumer,hpanUpdatedEvents.size());
+        long timeCommitCheckEnd = System.currentTimeMillis();
+
+        System.out.printf("""
+                        ************************
+                        Time occurred to check committed offset: %d millis
+                        ************************
+                        Source Topic Committed Offsets: %s
+                        ************************
+                        """,
+                timeCommitCheckEnd - timeCommitCheckStart,
+                srcCommitOffsets
         );
     }
 
@@ -183,19 +201,19 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotHpan,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating hpan update", useCaseJsonNotHpan)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotHpan)
         ));
 
         String useCaseJsonNotDate = "{\"initiativeId\":\"id_1\",\"userId\":\"userid_1\", \"operationType\":\"ADD_INSTRUMENT\",\"hpan\":\"hpan\"}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotDate,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating hpan update", useCaseJsonNotDate)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotDate)
         ));
 
         String jsonNotValid = "{\"initiativeId\":\"id_2\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] Unexpected JSON", jsonNotValid)
         ));
     }
 

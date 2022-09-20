@@ -7,9 +7,10 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
-import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
-import it.gov.pagopa.reward.service.reward.TransactionProcessedServiceImpl;
+import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
+import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
     @BeforeAll
     public static void setDefaultTimezone() {
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
     }
 
     @Mock

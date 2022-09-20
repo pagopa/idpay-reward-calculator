@@ -9,19 +9,22 @@ import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.service.reward.TransactionProcessedService;
+import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
+import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.KafkaException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,14 +34,16 @@ import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -59,6 +64,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private RuleEngineService ruleEngineServiceSpy;
     @SpyBean
     private UserInitiativeCountersUpdateService userInitiativeCountersUpdateServiceSpy;
+    @SpyBean
+    private RewardNotifierService rewardNotifierServiceSpy;
 
     @Test
     void testTransactionProcessor() throws JsonProcessingException {
@@ -74,9 +81,13 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         transactionProcessedService.save(transaction2RewardTransactionMapper.apply(trxDuplicated)).block();
 
         List<String> trxs = new ArrayList<>(buildValidPayloads(errorUseCases.size(), validTrx / 2));
-        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).collect(Collectors.toList()));
+        trxs.addAll(IntStream.range(0, notValidTrx).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         trxs.addAll(buildValidPayloads(errorUseCases.size() + (validTrx / 2) + notValidTrx, validTrx / 2));
+
         trxs.add(objectMapper.writeValueAsString(trxDuplicated));
+        int alreadyProcessed = 1;
+
+        long totalSendMessages = trxs.size()+duplicateTrx;
 
         long timePublishOnboardingStart = System.currentTimeMillis();
         int[] i=new int[]{0};
@@ -98,10 +109,13 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;
         Assertions.assertEquals(validTrx, payloadConsumed.size());
-        Assertions.assertEquals(validTrx+1, transactionProcessedRepository.count().block());
+        Assertions.assertEquals(validTrx+3, // +1 due to pre-existent, +2 because stored in publish error useCases
+                transactionProcessedRepository.count().block());
 
         for (ConsumerRecord<String, String> p : payloadConsumed) {
-            checkResponse(objectMapper.readValue(p.value(), RewardTransactionDTO.class));
+            RewardTransactionDTO payload = objectMapper.readValue(p.value(), RewardTransactionDTO.class);
+            checkResponse(payload);
+            Assertions.assertEquals(payload.getUserId(), p.key());
         }
 
         Assertions.assertEquals(
@@ -116,20 +130,23 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         System.out.printf("""
                         ************************
-                        Time spent to send %d (%d + %d + %d) trx messages: %d millis
+                        Time spent to send %d (%d + %d + %d + %d) trx messages: %d millis
                         Time spent to consume reward responses: %d millis
                         ************************
                         Test Completed in %d millis
                         ************************
                         """,
-                validTrx + duplicateTrx + notValidTrx,
+                totalSendMessages,
                 validTrx,
                 duplicateTrx,
                 notValidTrx,
+                alreadyProcessed,
                 timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
                 timeEnd - timePublishOnboardingStart
         );
+
+        checkOffsets(totalSendMessages, validTrx);
     }
 
     private List<String> buildValidPayloads(int bias, int validOnboardings) {
@@ -275,7 +292,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     //region useCases
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
-    private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime));
+    private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
     private final Map<String, UserInitiativeCounters> expectedCounters = new HashMap<>();
     private final Map<String, BigDecimal> initiative2ExpectedReward = Map.of(
@@ -618,16 +635,18 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
 
     {
+        Transaction2RewardTransactionMapper transaction2RewardTransactionMapper = new Transaction2RewardTransactionMapper();
+
         String useCaseJsonNotExpected = "{\"correlationId\":\"CORRELATIONID0\",unexpectedStructure:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", useCaseJsonNotExpected)
         ));
 
         String jsonNotValid = "{\"correlationId\":\"CORRELATIONID1\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", jsonNotValid)
         ));
 
         final String failingRuleEngineUserId = "FAILING_RULE_ENGINE";
@@ -641,7 +660,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(ruleEngineServiceSpy).applyRules(Mockito.argThat(i -> failingRuleEngineUserId.equals(i.getUserId())), Mockito.any(), Mockito.any());
                     return failingRuleEngineUseCase;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingRuleEngineUseCase)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingRuleEngineUseCase)
         ));
 
         final String failingCounterUpdateUserId = "FAILING_COUNTER_UPDATE";
@@ -655,8 +674,44 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i -> failingCounterUpdateUserId.equals(i.getUserId())));
                     return failingCounterUpdate;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "An error occurred evaluating transaction", failingCounterUpdate)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingCounterUpdate)
         ));
+
+        final String failingRewardPublishingUserId = "FAILING_REWARD_PUBLISHING";
+        TransactionDTO failingRewardPublishing = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                .userId(failingRewardPublishingUserId)
+                .build();
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doReturn(false).when(rewardNotifierServiceSpy).notify(Mockito.argThat(i -> failingRewardPublishingUserId.equals(i.getUserId())));
+                    createUserCounter(failingRewardPublishing);
+                    return TestUtils.jsonSerializer(failingRewardPublishing);
+                },
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)))
+        ));
+
+        final String exceptionWhenRewardPublishUserId = "FAILING_REWARD_PUBLISHING_DUE_EXCEPTION";
+        TransactionDTO exceptionWhenRewardPublisj = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
+                .userId(exceptionWhenRewardPublishUserId)
+                .build();
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doThrow(new KafkaException()).when(rewardNotifierServiceSpy).notify(Mockito.argThat(i -> exceptionWhenRewardPublishUserId.equals(i.getUserId())));
+                    createUserCounter(exceptionWhenRewardPublisj);
+                    return TestUtils.jsonSerializer(exceptionWhenRewardPublisj);
+                },
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublisj)))
+        ));
+    }
+
+    private static RewardTransactionDTO trx2RejectedRewardNoInitiatives(Transaction2RewardTransactionMapper transaction2RewardTransactionMapper, TransactionDTO failingRewardDueExceptionPublishing) {
+        RewardTransactionDTO failingRewardPublishingDueExceptionNotifiedToError = transaction2RewardTransactionMapper.apply(failingRewardDueExceptionPublishing);
+        failingRewardPublishingDueExceptionNotifiedToError.setTrxChargeDate(failingRewardPublishingDueExceptionNotifiedToError.getTrxDate());
+        failingRewardPublishingDueExceptionNotifiedToError.setEffectiveAmount(failingRewardPublishingDueExceptionNotifiedToError.getAmount());
+        failingRewardPublishingDueExceptionNotifiedToError.setOperationTypeTranscoded(OperationType.CHARGE);
+        failingRewardPublishingDueExceptionNotifiedToError.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
+        failingRewardPublishingDueExceptionNotifiedToError.setStatus(RewardConstants.REWARD_STATE_REJECTED);
+        return failingRewardPublishingDueExceptionNotifiedToError;
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {

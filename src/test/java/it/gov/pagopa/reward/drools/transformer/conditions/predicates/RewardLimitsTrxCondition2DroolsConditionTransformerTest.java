@@ -5,12 +5,16 @@ import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +48,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
     }
 
     private void testRewardLimit(String rewardLimitsCondition, TransactionDroolsDTO transaction) {
-        transaction.setTrxDate(OffsetDateTime.of(TRX_DATE, ZoneId.of("Europe/Rome").getRules().getOffset(TRX_DATE)));
+        transaction.setTrxDate(OffsetDateTime.of(TRX_DATE, RewardConstants.ZONEID.getRules().getOffset(TRX_DATE)));
         transaction.setRewards(new HashMap<>(Map.of(
                 initiativeId, new Reward(BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))
         )));

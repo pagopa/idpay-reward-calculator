@@ -3,12 +3,12 @@ package it.gov.pagopa.reward.test.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.reward.config.JsonConfig;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,7 +21,7 @@ public class TestUtils {
     }
 
     static {
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
     }
 
     /**

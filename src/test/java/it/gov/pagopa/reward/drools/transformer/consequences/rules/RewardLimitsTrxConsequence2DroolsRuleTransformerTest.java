@@ -7,12 +7,16 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -149,7 +153,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     protected TransactionDroolsDTO getTransaction() {
         final TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime trxDateTime = LocalDateTime.of(LocalDate.of(2022, 3, 15), LocalTime.NOON);
-        trx.setTrxDate(OffsetDateTime.of(trxDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(trxDateTime)));
+        trx.setTrxDate(OffsetDateTime.of(trxDateTime, RewardConstants.ZONEID.getRules().getOffset(trxDateTime)));
         return trx;
     }
 

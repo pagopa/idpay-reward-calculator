@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.service.reward.ops;
 
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
