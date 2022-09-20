@@ -9,7 +9,10 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +32,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
 
     private TransactionDroolsDTO buildTrx() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setTrxDate(OffsetDateTime.of(TRX_DATE, ZoneId.of("Europe/Rome").getRules().getOffset(TRX_DATE)));
+        trx.setTrxDate(OffsetDateTime.of(TRX_DATE, RewardConstants.ZONEID.getRules().getOffset(TRX_DATE)));
         return trx;
     }
 

@@ -136,23 +136,23 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
 
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
+                .map(transactionValidatorService::validate)
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
-                .map(transactionValidatorService::validate)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
                 .doOnNext(lockReleaser)
                 .doOnNext(r -> {
                     Exception exception=null;
                     try{
                         if(!rewardNotifierService.notify(r)){
-                            exception = new IllegalStateException("Something gone wrong while reward notify");
+                            exception = new IllegalStateException("[REWARD] Something gone wrong while reward notify");
                         }
                     } catch (Exception e){
                         exception = e;
                     }
                     if (exception != null) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
-                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "An error occurred while publishing the transaction evaluation result", true, exception);
+                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, exception);
                     }
                 })
 

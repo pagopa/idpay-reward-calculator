@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
@@ -32,7 +33,6 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -46,7 +46,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
     @BeforeAll
     public static void setDefaultTimezone() {
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
     }
 
     @Mock private LockService lockServiceMock;

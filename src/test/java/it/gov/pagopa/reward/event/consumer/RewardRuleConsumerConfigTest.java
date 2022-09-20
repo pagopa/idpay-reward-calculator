@@ -69,7 +69,6 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         checkErrorsPublished(notValidRules, maxWaitingMs, errorUseCases);
 
         Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(1)).buildAll();
-        Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(2)).build(Mockito.any()); // +1 due to refresh at startup
         Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.any());
 
         System.out.printf("""

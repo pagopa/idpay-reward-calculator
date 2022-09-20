@@ -24,7 +24,7 @@ class TransactionProcessedServiceImplTest {
 
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 
-        Mockito.when(transactionProcessedRepositoryMock.findById(transactionProcessedService.computeTrxId(trx))).thenReturn(Mono.empty());
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.empty());
 
         // When
         TransactionDTO result = transactionProcessedService.checkDuplicateTransactions(trx).block();
@@ -42,7 +42,7 @@ class TransactionProcessedServiceImplTest {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 
         TransactionProcessed trxDuplicate = TransactionProcessedFaker.mockInstance(1);
-        Mockito.when(transactionProcessedRepositoryMock.findById(transactionProcessedService.computeTrxId(trx))).thenReturn(Mono.just(trxDuplicate));
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trxDuplicate));
 
         // When
         TransactionDTO result = transactionProcessedService.checkDuplicateTransactions(trx).block();

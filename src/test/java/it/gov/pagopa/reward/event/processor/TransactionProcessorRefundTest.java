@@ -14,12 +14,16 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -102,7 +106,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 timeEnd - timePublishOnboardingStart
         );
 
-        checkOffsets(trxs.size(), trxs.size());
+//        checkOffsets(trxs.size(), trxs.size()); heavy test removed because already performed in TransactionProcessorTest
     }
 
     private List<TransactionDTO> buildTotalRefundRequests(int bias) {
@@ -169,7 +173,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
 
     {
         final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
-        final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, ZoneId.of("Europe/Rome").getRules().getOffset(localDateTime));
+        final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
         // 0: Base use case
         totalRefundUseCases.add(new CompleteRefundUseCase(

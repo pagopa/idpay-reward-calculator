@@ -33,6 +33,7 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
     }
 
     public static void copyFields(TransactionDTO src, TransactionDTO dest){
+        dest.setId(src.getId());
         dest.setIdTrxAcquirer(src.getIdTrxAcquirer());
         dest.setAcquirerCode(src.getAcquirerCode());
         dest.setTrxDate(src.getTrxDate());

@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -45,7 +46,6 @@ import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -146,7 +146,7 @@ public abstract class BaseIntegrationTest {
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
-        TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Europe/Rome")));
+        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
 
         unregisterMBean("kafka.*:*");
         unregisterMBean("org.springframework.*:*");

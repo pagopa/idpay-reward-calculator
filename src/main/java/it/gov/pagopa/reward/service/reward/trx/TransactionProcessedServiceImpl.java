@@ -23,13 +23,8 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     }
 
     @Override
-    public String computeTrxId(TransactionDTO trx) {
-        return transaction2TransactionProcessedMapper.computeTrxId(trx);
-    }
-
-    @Override
     public Mono<TransactionDTO> checkDuplicateTransactions(TransactionDTO trx) {
-        return transactionProcessedRepository.findById(computeTrxId(trx))
+        return transactionProcessedRepository.findById(trx.getId())
                 .flatMap(result -> {
                     log.info("[DUPLICATE_TRX] Already processed transaction {}", result.getId());
                     return Mono.<TransactionDTO>error(new IllegalStateException("[DUPLICATE_TRX] Already processed transaction"));

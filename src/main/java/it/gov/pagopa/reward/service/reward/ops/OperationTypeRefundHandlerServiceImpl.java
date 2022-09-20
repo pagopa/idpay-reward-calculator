@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +72,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         if (trxCharge == null) {
             trx.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
         } else {
-            trx.setTrxChargeDate(OffsetDateTime.of(trxCharge.getTrxChargeDate(), ZoneId.of("Europe/Rome").getRules().getOffset(trxCharge.getTrxChargeDate())));
+            trx.setTrxChargeDate(OffsetDateTime.of(trxCharge.getTrxChargeDate(), RewardConstants.ZONEID.getRules().getOffset(trxCharge.getTrxChargeDate())));
             trx.setEffectiveAmount(effectiveAmount);
             trx.setRefundInfo(new RefundInfo());
             trx.getRefundInfo().setPreviousTrxs(pastTrxs);

@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,7 +14,6 @@ import reactor.core.publisher.Flux;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +56,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate");
         return hpanInitiativesRepository.findById(hpan)
                 .flatMapMany(initiativesForHpan -> {
-                    LocalDateTime trxDateTime = trxDate.atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime();
+                    LocalDateTime trxDateTime = trxDate.atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
                     List<String> initiatives = new ArrayList<>();
 
                     if (initiativesForHpan != null && initiativesForHpan.getOnboardedInitiatives() != null) {
