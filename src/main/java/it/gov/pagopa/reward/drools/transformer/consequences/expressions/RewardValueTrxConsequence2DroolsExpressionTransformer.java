@@ -21,6 +21,6 @@ public class RewardValueTrxConsequence2DroolsExpressionTransformer implements In
     }
 
     public static String applyPercentReward(DroolsRuleTemplateParam rewardPercentValueTemplateParam) {
-        return "$trx.getAmount().multiply(%s).setScale(2, java.math.RoundingMode.HALF_DOWN)".formatted(rewardPercentValueTemplateParam.getParam());
+        return "$trx.getEffectiveAmount().multiply(%s).setScale(2, java.math.RoundingMode.HALF_DOWN)".formatted(rewardPercentValueTemplateParam.getParam());
     }
 }

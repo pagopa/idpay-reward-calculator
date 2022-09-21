@@ -2,11 +2,10 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
-import it.gov.pagopa.reward.test.fakers.rule.RewardGroupsDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.test.fakers.rule.RewardGroupsDTOFaker;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardGroupsDTO> {
 
@@ -35,7 +34,7 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
-                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(($trx.getAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.1000"):($trx.getAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.2000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
+                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getEffectiveAmount().multiply(($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal("0"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal("5"))<=0)?new java.math.BigDecimal("0.1000"):($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal("10"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal("15"))<=0)?new java.math.BigDecimal("0.2000"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 """;
     }
@@ -43,7 +42,7 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     @Override
     protected TransactionDroolsDTO getTransaction() {
         TransactionDroolsDTO trx =new TransactionDroolsDTO();
-        trx.setAmount(BigDecimal.valueOf(11.25));
+        trx.setEffectiveAmount(BigDecimal.valueOf(11.25));
         return trx;
     }
 

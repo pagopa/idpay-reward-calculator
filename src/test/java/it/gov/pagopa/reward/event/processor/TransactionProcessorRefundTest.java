@@ -73,7 +73,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         ));
 
         List<TransactionDTO> trxs = new ArrayList<>(IntStream.range(0, totalRefundedTrxs).mapToObj(this::buildTotalRefundRequests).flatMap(List::stream).toList());
-        trxs.addAll(IntStream.range(0, partialRefundedTrxs).mapToObj(this::buildPartialRefundRequests).flatMap(List::stream).toList());
+        trxs.addAll(IntStream.range(totalRefundedTrxs, totalRefundedTrxs+partialRefundedTrxs).mapToObj(this::buildPartialRefundRequests).flatMap(List::stream).toList());
 
         trxs.forEach(t -> onboardHpan(t.getHpan(), t.getTrxDate().toLocalDateTime(), null, initiativeId));
 
@@ -114,278 +114,249 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     private List<TransactionDTO> buildTotalRefundRequests(int bias) {
         return totalRefundUseCases.get(bias % totalRefundUseCases.size()).useCaseBuilder().apply(bias);
     }
+
     private List<TransactionDTO> buildPartialRefundRequests(int bias) {
         return partialRefundUseCases.get(bias % partialRefundUseCases.size()).useCaseBuilder().apply(bias);
     }
 
     private void checkResponse(RewardTransactionDTO rewardedTrx, int completeRefundedTrxs) {
         String hpan = rewardedTrx.getHpan();
-        int biasRetrieve = Integer.parseInt(hpan.substring(4));
-        int bias = biasRetrieve % completeRefundedTrxs;
+        int bias = Integer.parseInt(hpan.substring(4));
+        boolean isTotalRefundUseCase = bias < completeRefundedTrxs;
 
         if (rewardedTrx.getOperationType().equals("00")) {
-            checkChargeOp(rewardedTrx, biasRetrieve < completeRefundedTrxs, bias);
+            checkChargeOp(rewardedTrx, isTotalRefundUseCase, bias);
         } else {
-            if (biasRetrieve < completeRefundedTrxs) {
-                checkTotalRefundOp(rewardedTrx, bias);
-            } else {
-                checkPartialRefundOp(rewardedTrx, bias);
-            }
+            checkRefundOp(rewardedTrx, isTotalRefundUseCase, bias);
         }
-        checkUserInitiativeCounter(rewardedTrx, biasRetrieve < completeRefundedTrxs, bias);
+        checkUserInitiativeCounter(rewardedTrx, isTotalRefundUseCase, bias);
     }
 
-    private void checkChargeOp(RewardTransactionDTO rewardedTrx, boolean totalRefundUseCase, int bias) {
+    private void checkChargeOp(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
         Assertions.assertEquals(OperationType.CHARGE, rewardedTrx.getOperationTypeTranscoded());
         Assertions.assertEquals(Collections.emptyList(), rewardedTrx.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), rewardedTrx.getInitiativeRejectionReasons());
         Assertions.assertEquals("REWARDED", rewardedTrx.getStatus());
-        if (totalRefundUseCase) {
-            totalRefundUseCases.get(bias % totalRefundUseCases.size()).chargeRewardVerifier().accept(rewardedTrx);
-        } else {
-            partialRefundUseCases.get(bias % partialRefundUseCases.size()).chargeRewardVerifier().accept(rewardedTrx);
-        }
+
+        List<RefundUseCase> refundUseCases = isTotalRefundUseCase ? totalRefundUseCases : partialRefundUseCases;
+        refundUseCases.get(bias % refundUseCases.size()).chargeRewardVerifier().accept(rewardedTrx);
     }
 
-    private void checkTotalRefundOp(RewardTransactionDTO rewardedTrx, int bias) {
+    private void checkRefundOp(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
         Assertions.assertEquals(OperationType.REFUND, rewardedTrx.getOperationTypeTranscoded());
         Assertions.assertEquals("REWARDED", rewardedTrx.getStatus());
-        totalRefundUseCases.get(bias % totalRefundUseCases.size()).totalRefundVerifier().accept(rewardedTrx);
+
+        List<RefundUseCase> refundUseCases = isTotalRefundUseCase ? totalRefundUseCases : partialRefundUseCases;
+        refundUseCases.get(bias % refundUseCases.size()).refundVerifier().accept(rewardedTrx);
     }
 
-    private void checkPartialRefundOp(RewardTransactionDTO rewardedTrx, int bias) {
-        Assertions.assertEquals(OperationType.REFUND, rewardedTrx.getOperationTypeTranscoded());
-        Assertions.assertEquals("REWARDED", rewardedTrx.getStatus());
-        partialRefundUseCases.get(bias % partialRefundUseCases.size()).partialRefundVerifier().accept(rewardedTrx);
-    }
-
-    private void checkUserInitiativeCounter(RewardTransactionDTO rewardedTrx, boolean totalRefundUseCase, int bias) {
+    private void checkUserInitiativeCounter(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
         final UserInitiativeCounters userInitiativeCounters = userInitiativeCountersRepository.findById(rewardedTrx.getUserId()).block();
         Assertions.assertNotNull(userInitiativeCounters);
         InitiativeCounters initiativeCounters = userInitiativeCounters.getInitiatives().get(initiativeId);
         Assertions.assertNotNull(initiativeCounters);
-        if (totalRefundUseCase) {// TODO if partial?
-            final int useCase = bias % totalRefundUseCases.size();
-            Assertions.assertEquals(
-                    totalRefundUseCases.get(useCase).expectedInitiativeCounterSupplier().get(),
-                    initiativeCounters,
-                    "Failed user initiative counter compare on user %s (case %s %d)"
-                            .formatted(rewardedTrx.getUserId(),
-                                    totalRefundUseCase? "TOTAL_REFUND" : "PARTIAL_REFUND",
-                                    useCase)
-            );
-        }
+
+        List<RefundUseCase> refundUseCases = isTotalRefundUseCase ? totalRefundUseCases : partialRefundUseCases;
+        final int useCase = bias % refundUseCases.size();
+        Assertions.assertEquals(
+                refundUseCases.get(useCase).expectedInitiativeCounterSupplier().get(),
+                initiativeCounters,
+                "Failed user initiative counter compare on user %s (case %s %d)"
+                        .formatted(rewardedTrx.getUserId(),
+                                isTotalRefundUseCase ? "TOTAL_REFUND" : "PARTIAL_REFUND",
+                                useCase)
+        );
     }
 
-    //region total refund useCases
-    private record TotalRefundUseCase(
+    private record RefundUseCase(
             Function<Integer, List<TransactionDTO>> useCaseBuilder,
             Consumer<RewardTransactionDTO> chargeRewardVerifier,
-            Consumer<RewardTransactionDTO> totalRefundVerifier,
+            Consumer<RewardTransactionDTO> refundVerifier,
             Supplier<InitiativeCounters> expectedInitiativeCounterSupplier) {
     }
 
-    private final List<TotalRefundUseCase> totalRefundUseCases = new ArrayList<>();
+    private static TransactionDTO buildChargeTrx(OffsetDateTime trxDate, Integer i) {
+        final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
+        trx.setTrxDate(trxDate);
+        trx.setAmount(TestUtils.bigDecimalValue(10));
+        return trx;
+    }
+
+    private static TransactionDTO buildRefundTrx(Integer i, TransactionDTO trx) {
+        final TransactionDTO partialRefund = TransactionDTOFaker.mockInstance(i);
+        partialRefund.setOperationType("01");
+        partialRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
+        return partialRefund;
+    }
+
+    //region total refund useCases
+    private final List<RefundUseCase> totalRefundUseCases = new ArrayList<>();
 
     {
         final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
         final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
         // 0: Base use case
-        totalRefundUseCases.add(new TotalRefundUseCase(
+        totalRefundUseCases.add(new RefundUseCase(
                 i -> {
-                    final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
-                    trx.setAmount(TestUtils.bigDecimalValue(10));
-                    trx.setTrxDate(trxDate);
-                    final TransactionDTO totalRefund = TransactionDTOFaker.mockInstance(i);
-                    totalRefund.setOperationType("01");
-                    totalRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
                     return List.of(trx, totalRefund);
                 },
-                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false),
-                () -> InitiativeCounters.builder()
-                        .initiativeId(initiativeId)
-                        .trxNumber(0L)
-                        .totalAmount(TestUtils.bigDecimalValue(0))
-                        .totalReward(TestUtils.bigDecimalValue(0))
-                        .dailyCounters(new HashMap<>(Map.of("2022-01-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .build()
-        ));
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false,1L, 10, 1, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false, 0L, 0, 0, false),
+                () -> buildSimpleFullTemporalInitiativeCounter(0L, 0, 0, trxDate))
+        );
 
         // 1: Counter already initiated
-        final InitiativeCounters useCaseCounterAlreadyInitiated_initialStateOfCounters = InitiativeCounters.builder()
-                .initiativeId(initiativeId)
-                .trxNumber(1L)
-                .totalAmount(TestUtils.bigDecimalValue(10))
-                .totalReward(TestUtils.bigDecimalValue(1))
-                .dailyCounters(new HashMap<>(Map.of("2022-01-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .build();
-        totalRefundUseCases.add(new TotalRefundUseCase(
+        final InitiativeCounters useCaseCounterAlreadyInitiated_initialStateOfCounters =
+                buildSimpleFullTemporalInitiativeCounter(1L, 10, 1, trxDate);
+        totalRefundUseCases.add(new RefundUseCase(
                 i -> {
-                    final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
-                    trx.setTrxDate(trxDate);
-                    trx.setAmount(TestUtils.bigDecimalValue(10));
-                    final TransactionDTO totalRefund = TransactionDTOFaker.mockInstance(i);
-                    totalRefund.setOperationType("01");
-                    totalRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
 
                     saveUserInitiativeCounter(trx, useCaseCounterAlreadyInitiated_initialStateOfCounters);
 
                     return List.of(trx, totalRefund);
                 },
-                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false),
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false,2L, 20, 2, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false, 1L, 10, 1, false),
                 () -> useCaseCounterAlreadyInitiated_initialStateOfCounters
         ));
 
-        // 2: Charge exhausting initiative budget
-        final InitiativeCounters useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters = InitiativeCounters.builder()
-                .initiativeId(initiativeId)
-                .trxNumber(1L)
-                .totalAmount(TestUtils.bigDecimalValue(10))
-                .totalReward(TestUtils.bigDecimalValue(9.1))
-                .dailyCounters(new HashMap<>(Map.of("2022-01-2", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .build();
-        totalRefundUseCases.add(new TotalRefundUseCase(
+        // 2: Charge reward limited initiative
+        final InitiativeCounters useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters =
+                buildSimpleFullTemporalInitiativeCounter(1L, 10, 9.1, trxDate.plusDays(1));
+        totalRefundUseCases.add(new RefundUseCase(
                 i -> {
-                    final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
-                    trx.setTrxDate(trxDate);
-                    trx.setAmount(TestUtils.bigDecimalValue(10));
-                    final TransactionDTO totalRefund = TransactionDTOFaker.mockInstance(i);
-                    totalRefund.setOperationType("01");
-                    totalRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
 
                     saveUserInitiativeCounter(trx, useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters);
 
                     return List.of(trx, totalRefund);
                 },
-                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.9), false),
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true,2L, 20, 10, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.9), false, 1L, 10, 9.1, false),
                 () -> {
                     useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build());
                     return useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters;
                 }
         ));
+
+        // 3: Charge exhausting initiative budget TODO
     }
     //endregion
 
 
     //region partial refund useCases
-    private record PartialRefundUseCase(
-            Function<Integer, List<TransactionDTO>> useCaseBuilder,
-            Consumer<RewardTransactionDTO> chargeRewardVerifier,
-            Consumer<RewardTransactionDTO> partialRefundVerifier,
-            Supplier<InitiativeCounters> expectedInitiativeCounterSupplier) {
-    }
-
-//TODO configure these
-    private final List<PartialRefundUseCase> partialRefundUseCases = new ArrayList<>();
+    private final List<RefundUseCase> partialRefundUseCases = new ArrayList<>();
 
     {
         final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
         final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
         // 0: Base use case
-        partialRefundUseCases.add(new PartialRefundUseCase(
+        partialRefundUseCases.add(new RefundUseCase(
                 i -> {
-                    final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
-                    trx.setAmount(TestUtils.bigDecimalValue(10));
-                    trx.setTrxDate(trxDate);
-                    final TransactionDTO totalRefund = TransactionDTOFaker.mockInstance(i);
-                    totalRefund.setOperationType("01");
-                    totalRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
-                    totalRefund.setAmount(trx.getAmount().subtract(BigDecimal.ONE));
-                    return List.of(trx, totalRefund);
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO partialRefund = buildRefundTrx(i, trx);
+                    partialRefund.setAmount(BigDecimal.ONE);
+                    return List.of(trx, partialRefund);
                 },
-                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false),
-                () -> InitiativeCounters.builder()
-                        .initiativeId(initiativeId)
-                        .trxNumber(0L)
-                        .totalAmount(TestUtils.bigDecimalValue(0))
-                        .totalReward(TestUtils.bigDecimalValue(0))
-                        .dailyCounters(new HashMap<>(Map.of("2022-01-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build())))
-                        .build()
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false,1L, 10, 1, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false),
+                () -> buildSimpleFullTemporalInitiativeCounter(1L, 9, 0.9, trxDate)
         ));
 
         // 1: Counter already initiated
-        final InitiativeCounters useCaseCounterAlreadyInitiated_initialStateOfCounters = InitiativeCounters.builder()
-                .initiativeId(initiativeId)
-                .trxNumber(1L)
-                .totalAmount(TestUtils.bigDecimalValue(10))
-                .totalReward(TestUtils.bigDecimalValue(1))
-                .dailyCounters(new HashMap<>(Map.of("2022-01-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(1)).build())))
-                .build();
-        partialRefundUseCases.add(new PartialRefundUseCase(
+        partialRefundUseCases.add(new RefundUseCase(
                 i -> {
-                    final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
-                    trx.setTrxDate(trxDate);
-                    trx.setAmount(TestUtils.bigDecimalValue(10));
-                    final TransactionDTO totalRefund = TransactionDTOFaker.mockInstance(i);
-                    totalRefund.setOperationType("01");
-                    totalRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
-                    totalRefund.setAmount(trx.getAmount());
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO partialRefund = buildRefundTrx(i, trx);
+                    partialRefund.setAmount(BigDecimal.ONE);
 
-                    saveUserInitiativeCounter(trx, useCaseCounterAlreadyInitiated_initialStateOfCounters);
+                    saveUserInitiativeCounter(trx,
+                            buildSimpleFullTemporalInitiativeCounter(1L, 10, 1, trxDate)
+                    );
 
-                    return List.of(trx, totalRefund);
+                    return List.of(trx, partialRefund);
                 },
-                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false),
-                () -> useCaseCounterAlreadyInitiated_initialStateOfCounters
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false,2L, 20, 2, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 2L, 19, 1.9, false),
+                () -> buildSimpleFullTemporalInitiativeCounter(2L, 19, 1.9, trxDate)
         ));
 
-        // 2: Charge exhausting initiative budget
-        final InitiativeCounters useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters = InitiativeCounters.builder()
-                .initiativeId(initiativeId)
-                .trxNumber(1L)
-                .totalAmount(TestUtils.bigDecimalValue(10))
-                .totalReward(TestUtils.bigDecimalValue(9.1))
-                .dailyCounters(new HashMap<>(Map.of("2022-01-2", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .yearlyCounters(new HashMap<>(Map.of("2022", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(10)).totalReward(TestUtils.bigDecimalValue(9.1)).build())))
-                .build();
-        partialRefundUseCases.add(new PartialRefundUseCase(
+        // 2: Charge reward limited initiative and refunded reward equal to limit
+        partialRefundUseCases.add(new RefundUseCase(
                 i -> {
-                    final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
-                    trx.setTrxDate(trxDate);
-                    trx.setAmount(TestUtils.bigDecimalValue(10));
-                    final TransactionDTO totalRefund = TransactionDTOFaker.mockInstance(i);
-                    totalRefund.setOperationType("01");
-                    totalRefund.setTrxDate(trx.getTrxDate().plusDays(i + 1));
-                    totalRefund.setAmount(trx.getAmount());
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO partialRefund = buildRefundTrx(i, trx);
+                    partialRefund.setAmount(BigDecimal.ONE);
 
-                    saveUserInitiativeCounter(trx, useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters);
+                    saveUserInitiativeCounter(trx, buildSimpleFullTemporalInitiativeCounter(1L, 10, 9.1, trxDate.plusDays(1)));
 
-                    return List.of(trx, totalRefund);
+                    return List.of(trx, partialRefund);
                 },
-                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.9), false),
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true,2L, 20, 10, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.ZERO, true, 2L, 19, 10, false),
                 () -> {
-                    useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build());
-                    return useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters;
+                    InitiativeCounters expectedCunter = buildSimpleFullTemporalInitiativeCounter(2L, 19, 10, trxDate.plusDays(1));
+                    expectedCunter.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(9)).totalReward(TestUtils.bigDecimalValue(0.9)).build());
+                    expectedCunter.getDailyCounters().get("2022-01-02").setTrxNumber(1L);
+                    expectedCunter.getDailyCounters().get("2022-01-02").setTotalAmount(TestUtils.bigDecimalValue(10));
+                    expectedCunter.getDailyCounters().get("2022-01-02").setTotalReward(TestUtils.bigDecimalValue(9.1));
+                    return expectedCunter;
                 }
         ));
+
+        // 3: Charge reward limited initiative and refunded reward under the limit
+        partialRefundUseCases.add(new RefundUseCase(
+                i -> {
+                    final TransactionDTO trx = buildChargeTrx(trxDate, i);
+                    final TransactionDTO partialRefund = buildRefundTrx(i, trx);
+                    partialRefund.setAmount(BigDecimal.valueOf(2));
+
+                    saveUserInitiativeCounter(trx, buildSimpleFullTemporalInitiativeCounter(1L, 10, 9.1, trxDate.plusDays(1)));
+
+                    return List.of(trx, partialRefund);
+                },
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true,2L, 20, 10, false),
+                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 2L, 18, 9.9, false),
+                () -> {
+                    InitiativeCounters expectedCunter = buildSimpleFullTemporalInitiativeCounter(2L, 18, 9.9, trxDate.plusDays(1));
+                    expectedCunter.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(8)).totalReward(TestUtils.bigDecimalValue(0.8)).build());
+                    expectedCunter.getDailyCounters().get("2022-01-02").setTrxNumber(1L);
+                    expectedCunter.getDailyCounters().get("2022-01-02").setTotalAmount(TestUtils.bigDecimalValue(10));
+                    expectedCunter.getDailyCounters().get("2022-01-02").setTotalReward(TestUtils.bigDecimalValue(9.1));
+                    return expectedCunter;
+                }
+        ));
+
+        // 4: Charge exhausting initiative budget TODO
+
+        // 5: partial refunds until total TODO
+
+        // 6: partial with reward not more present
+    }
+
+    private InitiativeCounters buildSimpleFullTemporalInitiativeCounter(long trxNumber, double totalAmount, double totalReward, OffsetDateTime trxDate) {
+        BigDecimal totalAmountBigDecimal = TestUtils.bigDecimalValue(totalAmount);
+        BigDecimal totalRewardBigDecimal = TestUtils.bigDecimalValue(totalReward);
+        return InitiativeCounters.builder()
+                .initiativeId(initiativeId)
+                .trxNumber(trxNumber)
+                .totalAmount(totalAmountBigDecimal)
+                .totalReward(totalRewardBigDecimal)
+                .dailyCounters(new HashMap<>(Map.of(dayFormatter.format(trxDate), Counters.builder().trxNumber(trxNumber).totalAmount(totalAmountBigDecimal).totalReward(totalRewardBigDecimal).build())))
+                .weeklyCounters(new HashMap<>(Map.of(weekFormatter.format(trxDate), Counters.builder().trxNumber(trxNumber).totalAmount(totalAmountBigDecimal).totalReward(totalRewardBigDecimal).build())))
+                .monthlyCounters(new HashMap<>(Map.of(monthlyFormatter.format(trxDate), Counters.builder().trxNumber(trxNumber).totalAmount(totalAmountBigDecimal).totalReward(totalRewardBigDecimal).build())))
+                .yearlyCounters(new HashMap<>(Map.of(yearFormatter.format(trxDate), Counters.builder().trxNumber(trxNumber).totalAmount(totalAmountBigDecimal).totalReward(totalRewardBigDecimal).build())))
+                .build();
     }
     //endregion
 }

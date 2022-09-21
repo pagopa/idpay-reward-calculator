@@ -36,7 +36,7 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(amount >= new java.math.BigDecimal("0") && amount <= new java.math.BigDecimal("10")))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(effectiveAmount >= new java.math.BigDecimal("0") && effectiveAmount <= new java.math.BigDecimal("10")))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_THRESHOLD_FAIL");
                 end
                 """;
@@ -45,23 +45,23 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     @Override
     protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setAmount(BigDecimal.valueOf(10.00));
+        trx.setEffectiveAmount(BigDecimal.valueOf(10.00));
         return List.of(() -> trx);
     }
 
     @Override
     protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx1 = new TransactionDroolsDTO();
-        trx1.setAmount(BigDecimal.valueOf(10.01));
+        trx1.setEffectiveAmount(BigDecimal.valueOf(10.01));
 
         TransactionDroolsDTO trx2 = new TransactionDroolsDTO();
-        trx2.setAmount(BigDecimal.valueOf(-0.01));
+        trx2.setEffectiveAmount(BigDecimal.valueOf(-0.01));
         return List.of(() -> trx1, () -> trx2);
     }
 
     @Override
     protected String toUseCase(TransactionDroolsDTO trx) {
-        return trx.getAmount().toString();
+        return trx.getEffectiveAmount().toString();
     }
 
     @Override

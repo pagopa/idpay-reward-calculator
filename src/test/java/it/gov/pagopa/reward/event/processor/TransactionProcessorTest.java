@@ -38,7 +38,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -313,7 +312,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                     .amount(BigDecimal.valueOf(5))
                                     .build(),
                             INITIATIVE_ID_THRESHOLD_BASED),
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_THRESHOLD_BASED, false)
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_THRESHOLD_BASED, false, 1L, 5, 0, false)
             ),
             // rewarded by dayOfWeek based initiative
             Pair.of(
@@ -323,7 +322,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                     .amount(BigDecimal.valueOf(50))
                                     .build(),
                             INITIATIVE_ID_DAYOFWEEK_BASED),
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_DAYOFWEEK_BASED, false)
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_DAYOFWEEK_BASED, false, 1L, 50, 0, false)
             ),
             // rewarded by MccFilter based initiative
             Pair.of(
@@ -333,7 +332,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                     .amount(BigDecimal.valueOf(60))
                                     .build(),
                             INITIATIVE_ID_MCC_BASED),
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_MCC_BASED, false)
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_MCC_BASED, false, 1, 60, 0, false)
             ),
             // rewarded by TrxCount based initiative
             Pair.of(
@@ -349,7 +348,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 trx,
                                 INITIATIVE_ID_TRXCOUNT_BASED);
                     },
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED, false)
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED, false, TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT+1, 70, 0, false)
             ),
             // rewarded by RewardLimits based initiative
             Pair.of(
@@ -358,7 +357,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                     .amount(BigDecimal.valueOf(8))
                                     .build(),
                             INITIATIVE_ID_REWARDLIMITS_BASED),
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED, false)
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED, false, 1, 8, 0, false)
             ),
             // rewarded by RewardLimits based initiative, daily capped
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.DAILY),
@@ -476,7 +475,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                         return trx;
                     },
                     evaluation -> {
-                        assertRewardedState(evaluation, INITIATIVE_ID_EXHAUSTING, true);
+                        assertRewardedState(evaluation, INITIATIVE_ID_EXHAUSTING, true, 1, 100, 999, true);
                         Reward reward = evaluation.getRewards().get(INITIATIVE_ID_EXHAUSTING);
                         TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(10), reward.getProvidedReward());
                         assertTrue(reward.isCapped());
@@ -514,7 +513,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 },
                 evaluation -> {
                     try {
-                        assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED, true);
+                        assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED, true, 1, 80, 0, false);
 
                         final Reward initiativeReward = evaluation.getRewards().get(INITIATIVE_ID_REWARDLIMITS_BASED);
 
@@ -539,13 +538,14 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         );
     }
 
-    private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, boolean expectedCap) {
-        assertRewardedState(evaluation, rewardedInitiativeId, initiative2ExpectedReward.get(rewardedInitiativeId), expectedCap);
+    private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double preCurrentTrxCounterTotalReward, boolean expectedCounterBudgetExhausted) {
+        BigDecimal expectedCounterTotalReward = initiative2ExpectedReward.get(rewardedInitiativeId);
+        assertRewardedState(evaluation, rewardedInitiativeId, expectedCounterTotalReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward.doubleValue() + preCurrentTrxCounterTotalReward, expectedCounterBudgetExhausted);
     }
 
     @Override
-    protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap) {
-        super.assertRewardedState(evaluation, rewardedInitiativeId, expectedReward, expectedCap);
+    protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
+        super.assertRewardedState(evaluation, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted);
         Assertions.assertNull(evaluation.getRewards().get(INITIATIVE_ID_EXPIRED));
     }
 
@@ -589,11 +589,6 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
         return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new HashMap<>()));
     }
-
-    private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
-    private final DateTimeFormatter monthlyFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    private final DateTimeFormatter yearFormatter = DateTimeFormatter.ofPattern("yyyy");
 
     private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
         updateCounters(counters, trx, expectedReward);

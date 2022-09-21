@@ -13,7 +13,7 @@ public class RewardGroupsTrxConsequence2DroolsExpressionTransformer implements I
                 new DroolsRuleTemplateParam(
                         "%s:java.math.BigDecimal.ZERO".formatted(
                                 trxConsequence.getRewardGroups().stream()
-                                        .map(rg -> "($trx.getAmount().compareTo(%s)>=0 && $trx.getAmount().compareTo(%s)<=0)?%s".formatted(
+                                        .map(rg -> "($trx.getEffectiveAmount().compareTo(%s)>=0 && $trx.getEffectiveAmount().compareTo(%s)<=0)?%s".formatted(
                                                         DroolsTemplateRuleUtils.toTemplateParam(rg.getFrom()),
                                                         DroolsTemplateRuleUtils.toTemplateParam(rg.getTo()),
                                                         RewardValueTrxConsequence2DroolsExpressionTransformer.rewardPercentValue2TemplateParam(rg.getRewardValue())

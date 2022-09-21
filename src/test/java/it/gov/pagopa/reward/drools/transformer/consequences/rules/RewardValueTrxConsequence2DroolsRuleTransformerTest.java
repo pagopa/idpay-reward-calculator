@@ -5,7 +5,6 @@ import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardValueDTO> {
 
@@ -34,7 +33,7 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
-                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getAmount().multiply(new java.math.BigDecimal("0.1225")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
+                then $trx.getRewards().put("agendaGroup", new it.gov.pagopa.reward.dto.Reward($trx.getEffectiveAmount().multiply(new java.math.BigDecimal("0.1225")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                 """;
     }
@@ -42,7 +41,7 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
     @Override
     protected TransactionDroolsDTO getTransaction() {
         TransactionDroolsDTO trx =new TransactionDroolsDTO();
-        trx.setAmount(BigDecimal.valueOf(11.25));
+        trx.setEffectiveAmount(BigDecimal.valueOf(11.25));
         return trx;
     }
 

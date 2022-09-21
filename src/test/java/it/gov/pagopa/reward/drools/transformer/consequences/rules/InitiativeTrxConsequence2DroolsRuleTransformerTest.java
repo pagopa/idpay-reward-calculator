@@ -36,7 +36,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
     }
 
     protected BigDecimal bigDecimalValue(double value) {
-        return BigDecimal.valueOf(value).setScale(2, RoundingMode.UNNECESSARY);
+        return toExpectedScale(BigDecimal.valueOf(value));
     }
 
     protected BigDecimal toExpectedScale(BigDecimal value) {

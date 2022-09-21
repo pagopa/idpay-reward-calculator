@@ -27,7 +27,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         Assertions.assertEquals("false", dayOfWeekCondition);
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setTrxDate(OffsetDateTime.now());
+        trx.setTrxChargeDate(OffsetDateTime.now());
         testRule(initiativeId, dayOfWeekCondition, trx, false);
 
         dayOfWeekDTO= new DayOfWeekDTO();
@@ -58,9 +58,9 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
         String dayOfWeekCondition = transformer.apply(initiativeId, dayOfWeekDTO);
 
         Assertions.assertEquals("(" +
-                        "(trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"MONDAY\"),java.time.DayOfWeek.valueOf(\"SATURDAY\")))" +
+                        "(trxChargeDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"MONDAY\"),java.time.DayOfWeek.valueOf(\"SATURDAY\")))" +
                         " || " +
-                        "(trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"THURSDAY\"),java.time.DayOfWeek.valueOf(\"SUNDAY\")))" +
+                        "(trxChargeDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"THURSDAY\"),java.time.DayOfWeek.valueOf(\"SUNDAY\")))" +
                         ")"
                 , dayOfWeekCondition);
 
@@ -73,7 +73,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, true);
     }
 
@@ -83,7 +83,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 7), LocalTime.of(0, 0));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, false);
     }
     //endregion
@@ -125,18 +125,18 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         Assertions.assertEquals("(" +
                         "("
-                        + "trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"MONDAY\"),java.time.DayOfWeek.valueOf(\"SATURDAY\"))"
+                        + "trxChargeDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"MONDAY\"),java.time.DayOfWeek.valueOf(\"SATURDAY\"))"
                         + " && "
                         + "("
-                        +    "(trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= java.time.LocalTime.of(3,23,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= java.time.LocalTime.of(5,37,0,0))"
+                        +    "(trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= java.time.LocalTime.of(3,23,0,0) && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= java.time.LocalTime.of(5,37,0,0))"
                         +    " || "
-                        +    "(trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= java.time.LocalTime.of(12,0,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= java.time.LocalTime.of(22,15,0,0))"
+                        +    "(trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= java.time.LocalTime.of(12,0,0,0) && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= java.time.LocalTime.of(22,15,0,0))"
                         + ")" +
                         ") || " +
                         "("
-                        + "trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"THURSDAY\"),java.time.DayOfWeek.valueOf(\"SUNDAY\"))"
+                        + "trxChargeDate.dayOfWeek in (java.time.DayOfWeek.valueOf(\"THURSDAY\"),java.time.DayOfWeek.valueOf(\"SUNDAY\"))"
                         + " && "
-                        + "((trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= java.time.LocalTime.of(0,0,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= java.time.LocalTime.of(23,59,59,999000000)))" +
+                        + "((trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= java.time.LocalTime.of(0,0,0,0) && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= java.time.LocalTime.of(23,59,59,999000000)))" +
                         ")" +
                         ")"
                 , dayOfWeekCondition);
@@ -150,7 +150,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(12, 0));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, true);
     }
 
@@ -160,7 +160,7 @@ class DayOfWeekTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
 
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(11, 59));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         testRule(initiativeId, dayOfWeekCondition, trx, false);
     }
     //endregion

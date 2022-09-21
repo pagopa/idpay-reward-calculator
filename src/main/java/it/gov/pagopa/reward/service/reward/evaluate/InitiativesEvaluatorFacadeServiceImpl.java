@@ -88,7 +88,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }
     }
-//TODO test this
+
     private void handlePartialRefund(RewardTransactionDTO trxRewarded) {
         Map<String, BigDecimal> pastRewards = new HashMap<>(trxRewarded.getRefundInfo() != null ? trxRewarded.getRefundInfo().getPreviousRewards() : Collections.emptyMap());
         trxRewarded.getRewards().forEach((initiativeId, r)-> {

@@ -3,6 +3,8 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
@@ -23,6 +25,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardLimitsDTO> {
+
+    private final BigDecimal PREVIOUS_REWARD = toExpectedScale(BigDecimal.ONE);
 
     private final RewardLimitsTrxConsequence2DroolsRuleTransformer transformer = new RewardLimitsTrxConsequence2DroolsRuleTransformer(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl());
 
@@ -48,7 +52,9 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
         YEARLY_NO_CAP,
         YEARLY_CAP,
         NO_COUNTER,
-        DISCARDED
+        DISCARDED,
+        REFUNDED_NO_PREVIOUS,
+        REFUNDED_WITH_PREVIOUS
     }
 
     public static final BigDecimal TRANSACTION_REWARD = BigDecimal.TEN;
@@ -95,10 +101,15 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(19));
                 expectedReward=toExpectedScale(TRANSACTION_REWARD);
             }
-            case YEARLY_CAP -> {
+            case YEARLY_CAP, REFUNDED_NO_PREVIOUS -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
                 rewardLimitsDTO.setRewardLimit(BigDecimal.ZERO);
                 expectedReward=bigDecimalValue(0);
+            }
+            case REFUNDED_WITH_PREVIOUS -> {
+                rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
+                rewardLimitsDTO.setRewardLimit(BigDecimal.ZERO);
+                expectedReward=PREVIOUS_REWARD;
             }
             case YEARLY_NO_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
@@ -129,7 +140,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                    it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("agendaGroup");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward()))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("agendaGroup")!=null ? $trx.getRefundInfo().getPreviousRewards().get("agendaGroup") : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.set%sCapped(true);
                          %s
@@ -153,7 +164,14 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     protected TransactionDroolsDTO getTransaction() {
         final TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime trxDateTime = LocalDateTime.of(LocalDate.of(2022, 3, 15), LocalTime.NOON);
-        trx.setTrxDate(OffsetDateTime.of(trxDateTime, RewardConstants.ZONEID.getRules().getOffset(trxDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(trxDateTime, RewardConstants.ZONEID.getRules().getOffset(trxDateTime)));
+        if(this.useCase.equals(USECASES.REFUNDED_NO_PREVIOUS) || this.useCase.equals(USECASES.REFUNDED_WITH_PREVIOUS)){
+            trx.setOperationTypeTranscoded(OperationType.REFUND);
+            if(this.useCase.equals(USECASES.REFUNDED_WITH_PREVIOUS)){
+                trx.setRefundInfo(new RefundInfo());
+                trx.getRefundInfo().setPreviousRewards(Map.of("agendaGroup", PREVIOUS_REWARD));
+            }
+        }
         return trx;
     }
 
@@ -264,6 +282,18 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
         super.testReward();
     }
 
+    @Test
+    void testRefundedNoPrevious() {
+        configureUseCase(USECASES.REFUNDED_NO_PREVIOUS);
+        super.testReward();
+    }
+
+    @Test
+    void testRefundedWithPrevious() {
+        configureUseCase(USECASES.REFUNDED_WITH_PREVIOUS);
+        super.testReward();
+    }
+
     @Override
     protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
         super.testRule(rule, trx, expectReward);
@@ -271,7 +301,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
             boolean expectedDailyCapped = useCase.name().contains("DAILY") && !useCase.name().contains("NO_CAP");
             boolean expectedWeeklyCapped = useCase.name().contains("WEEKLY") && !useCase.name().contains("NO_CAP");
             boolean expectedMonthlyCapped = useCase.name().contains("MONTHLY") && !useCase.name().contains("NO_CAP");
-            boolean expectedYearlyCapped = useCase.name().contains("YEARLY") && !useCase.name().contains("NO_CAP");
+            boolean expectedYearlyCapped = (useCase.name().contains("YEARLY") && !useCase.name().contains("NO_CAP") || useCase.equals(USECASES.REFUNDED_NO_PREVIOUS) || useCase.equals(USECASES.REFUNDED_WITH_PREVIOUS));
 
             assertCaps(trx, expectedDailyCapped, expectedWeeklyCapped, expectedMonthlyCapped, expectedYearlyCapped);
         }

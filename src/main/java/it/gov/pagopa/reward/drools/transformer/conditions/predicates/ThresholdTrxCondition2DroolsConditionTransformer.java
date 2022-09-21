@@ -17,7 +17,7 @@ public class ThresholdTrxCondition2DroolsConditionTransformer implements Initiat
                         checkDefinedThreshold(thresholdDTO.getTo(), thresholdDTO.isToIncluded(), "<")
                 ).filter(Objects::nonNull)
                 .map(op ->
-                        "amount %s %s".formatted(
+                        "effectiveAmount %s %s".formatted(
                                 op.getFirst(),
                                 DroolsTemplateRuleUtils.toTemplateParam(op.getSecond())
                         )

@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
@@ -56,11 +57,10 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         this.rewardContextHolderService = rewardContextHolderService;
     }
 
-
     @Override
     public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) {
         ruleEngineResult.getRewards().forEach((initiativeId, reward) -> {
-            if (isRewardedInitiative(reward) || isJustTrxCountRejection(ruleEngineResult, initiativeId)) {
+            if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || isJustTrxCountRejection(ruleEngineResult, initiativeId)) {
                 InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
                 InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
@@ -82,6 +82,14 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
             reward.setCapped(newAccruedReward.compareTo(reward.getAccruedReward()) != 0);
             reward.setAccruedReward(newAccruedReward);
         }
+    }
+
+    // capped rewards due to reward limit could bright to refund having reward 0, but the total amount would change
+    private boolean isRefundedReward(String initiativeId, RewardTransactionDTO ruleEngineResult) {
+        return OperationType.REFUND.equals(ruleEngineResult.getOperationTypeTranscoded()) &&
+                ruleEngineResult.getRefundInfo() != null &&
+                ruleEngineResult.getRefundInfo().getPreviousRewards() != null &&
+                ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId) != null;
     }
 
     private boolean isRewardedInitiative(Reward initiativeReward) {

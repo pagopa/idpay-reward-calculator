@@ -23,7 +23,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformer implements Initiat
     }
 
     private String dayConfig2DroolsCondition(DayOfWeekDTO.DayConfig dayConfig) {
-        return "(trxDate.dayOfWeek in (%s)%s)"
+        return "(trxChargeDate.dayOfWeek in (%s)%s)"
                 .formatted(
                         dayConfig.getDaysOfWeek().stream().map(d -> DroolsTemplateRuleUtils.toTemplateParam(d).getParam()).collect(Collectors.joining(",")),
                         CollectionUtils.isEmpty(dayConfig.getIntervals())
@@ -36,7 +36,7 @@ public class DayOfWeekTrxCondition2DroolsConditionTransformer implements Initiat
     }
 
     private String dayInterval2DroolsCondition(DayOfWeekDTO.Interval interval) {
-        return "(trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= %s && trxDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= %s)".formatted(
+        return "(trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() >= %s && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of(\"Europe/Rome\")).toLocalTime() <= %s)".formatted(
                 DroolsTemplateRuleUtils.toTemplateParam(interval.getStartTime()).getParam()
                 , DroolsTemplateRuleUtils.toTemplateParam(interval.getEndTime()).getParam()
         );
