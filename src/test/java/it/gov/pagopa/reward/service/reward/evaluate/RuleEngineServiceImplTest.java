@@ -135,7 +135,7 @@ class RuleEngineServiceImplTest {
 
         // when
         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(1)
-                .amount(BigDecimal.valueOf(11))
+                .effectiveAmount(BigDecimal.valueOf(11))
                 .mcc("MCC_0")
                 .build();
         RewardTransactionDTO result = ruleEngineService.applyRules(trx, rules.stream().map(DroolsRule::getId).collect(Collectors.toList()), new UserInitiativeCounters(trx.getUserId(), new HashMap<>()));
