@@ -10,7 +10,7 @@ public class RewardGroupsTrxCondition2DroolsConditionTransformer implements Init
     public String apply(String initiativeId, RewardGroupsDTO rewardGroups) {
         return "(%s)".formatted(rewardGroups.getRewardGroups().stream()
                 .map(rg ->
-                        "(amount >= %s && amount <= %s)".formatted(
+                        "(effectiveAmount >= %s && effectiveAmount <= %s)".formatted(
                                 DroolsTemplateRuleUtils.toTemplateParam(rg.getFrom()).getParam(),
                                 DroolsTemplateRuleUtils.toTemplateParam(rg.getTo()).getParam()
                         )

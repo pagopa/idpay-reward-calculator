@@ -39,7 +39,7 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(((trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf("WEDNESDAY")) && ((trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(0,45,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(2,0,0,0)))) || (trxDate.dayOfWeek in (java.time.DayOfWeek.valueOf("WEDNESDAY")) && ((trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(0,45,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(2,0,0,0)) || (trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(7,45,0,0) && trxDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(9,0,0,0)))))))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !(((trxChargeDate.dayOfWeek in (java.time.DayOfWeek.valueOf("WEDNESDAY")) && ((trxChargeDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(0,45,0,0) && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(2,0,0,0)))) || (trxChargeDate.dayOfWeek in (java.time.DayOfWeek.valueOf("WEDNESDAY")) && ((trxChargeDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(0,45,0,0) && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(2,0,0,0)) || (trxChargeDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() >= java.time.LocalTime.of(7,45,0,0) && trxChargeDate.atZoneSameInstant(java.time.ZoneId.of("Europe/Rome")).toLocalTime() <= java.time.LocalTime.of(9,0,0,0)))))))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_DAYOFWEEK_FAIL");
                 end
                 """;
@@ -49,7 +49,7 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 45));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         return List.of(() -> trx);
     }
 
@@ -57,7 +57,7 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 44));
-        trx.setTrxDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
         return List.of(() -> trx);
     }
 

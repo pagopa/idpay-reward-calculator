@@ -29,6 +29,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
@@ -42,6 +43,11 @@ import java.util.concurrent.Semaphore;
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
+
+    protected final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    protected final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
+    protected final DateTimeFormatter monthlyFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    protected final DateTimeFormatter yearFormatter = DateTimeFormatter.ofPattern("yyyy");
 
     @SpyBean
     protected RewardContextHolderService rewardContextHolderService;
@@ -113,7 +119,10 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 .build()).block();
     }
 
-    protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap) {
+    protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
+        assertRewardedState(evaluation, 1, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted);
+    }
+    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
         Assertions.assertFalse(evaluation.getRewards().isEmpty());
@@ -128,6 +137,13 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         } else {
             Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())>0);
         }
+
+        Assertions.assertEquals(expectedCounterTrxNumber, initiativeReward.getCounters().getTrxNumber());
+        Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalAmount), initiativeReward.getCounters().getTotalAmount());
+        Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalReward), initiativeReward.getCounters().getTotalReward());
+        Assertions.assertEquals(expectedCounterBudgetExhausted, initiativeReward.getCounters().isExhaustedBudget());
+
+        Assertions.assertEquals(expectedInitiativeRewarded, evaluation.getRewards().size());
     }
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){

@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 public class Reward {
     /** The ruleEngine reward calculated */
     private BigDecimal providedReward;
-    /** The effective reward after CAP evaluation */
+    /** The effective reward after CAP and REFUND evaluation */
     private BigDecimal accruedReward;
     /** True, if the reward has been capped due to budget threshold */
     private boolean capped;
