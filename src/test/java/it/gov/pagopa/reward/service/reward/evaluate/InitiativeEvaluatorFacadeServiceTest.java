@@ -62,23 +62,27 @@ class InitiativeEvaluatorFacadeServiceTest {
     void test() {
         // Given
         TransactionDTO trx = buildTrx(0);
+        TransactionDTO invalidTrx = buildTrx(1);
         TransactionDTO trxPartialRefund = buildTrx(3);
         TransactionDTO trxTotalRefund = buildTrx(4);
         TransactionDTO trxTotalRefundNoCharge = buildTrx(5);
-        List<TransactionDTO> trxs = List.of(trx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
+        List<TransactionDTO> trxs = List.of(trx, invalidTrx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
+
+        invalidTrx.setEffectiveAmount(invalidTrx.getAmount().negate());
 
         List<String> initiatives = List.of("INITIATIVE");
 
         mockUseCases(trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
 
         // When
-        List<RewardTransactionDTO> result = trxs.stream().map(t -> initiativesEvaluatorFacadeService.evaluate(t, initiatives).block()).toList();
+        @SuppressWarnings("ConstantConditions") List<RewardTransactionDTO> result = trxs.stream().map(t -> initiativesEvaluatorFacadeService.evaluate(t, initiatives).block()).toList();
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(4, result.size());
+        Assertions.assertEquals(trxs.size(), result.size());
 
         assertRejectionReasons(result, trx, null);
+        assertRejectionReasons(result, invalidTrx, "INVALID_AMOUNT");
         assertRejectionReasons(result, trxPartialRefund, null);
         assertRejectionReasons(result, trxTotalRefund, null);
         assertRejectionReasons(result, trxTotalRefundNoCharge, "NO_ACTIVE_INITIATIVES");
@@ -92,8 +96,8 @@ class InitiativeEvaluatorFacadeServiceTest {
 
         Mockito.verifyNoInteractions(errorNotifierServiceMock);
 
-        checkPartialRefundResult(result.get(1));
-        checkTotalRefundResult(result.get(2));
+        checkPartialRefundResult(result.get(2));
+        checkTotalRefundResult(result.get(3));
     }
 
     private void assertRejectionReasons(List<RewardTransactionDTO> result, TransactionDTO trx, String expectedRejectionReason) {
