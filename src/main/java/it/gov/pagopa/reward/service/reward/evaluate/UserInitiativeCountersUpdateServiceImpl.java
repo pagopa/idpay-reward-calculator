@@ -108,6 +108,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
             counters.setTotalAmount(counters.getTotalAmount().subtract(amount));
             if(BigDecimal.ZERO.compareTo(previousRewards.add(reward.getAccruedReward())) == 0){
                 counters.setTrxNumber(counters.getTrxNumber() - 1);
+                counters.setTotalAmount(counters.getTotalAmount().subtract(effectiveAmount));
             }
         }
         counters.setTotalReward(counters.getTotalReward().add(reward.getAccruedReward()));

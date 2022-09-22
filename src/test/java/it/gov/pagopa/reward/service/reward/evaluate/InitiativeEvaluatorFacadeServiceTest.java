@@ -127,6 +127,7 @@ class InitiativeEvaluatorFacadeServiceTest {
                 .thenAnswer(i -> {
                     RewardTransactionDTO reward = rewardTransactionMapper.apply(i.getArgument(0));
                     reward.setRewards(new HashMap<>(Map.of("INITIATIVE2PARTIALREVERSE", new Reward(BigDecimal.valueOf(9)))));
+                    reward.setInitiativeRejectionReasons(new HashMap<>(Map.of("INITIATIVE2REVERSE", List.of("NOT_MORE_REWARDED_FOR_SOME_REASON"))));
                     return reward;
                 });
 
@@ -171,6 +172,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     private void checkPartialRefundResult(RewardTransactionDTO rewardTransactionDTO) {
         Assertions.assertEquals(new Reward(BigDecimal.valueOf(9), BigDecimal.valueOf(-1), false), rewardTransactionDTO.getRewards().get("INITIATIVE2PARTIALREVERSE"));
         Assertions.assertEquals(new Reward(BigDecimal.valueOf(-1)), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
+        Assertions.assertEquals(Map.of("INITIATIVE2REVERSE", List.of("NOT_MORE_REWARDED_FOR_SOME_REASON")), rewardTransactionDTO.getInitiativeRejectionReasons());
     }
 
     private void checkTotalRefundResult(RewardTransactionDTO rewardTransactionDTO) {

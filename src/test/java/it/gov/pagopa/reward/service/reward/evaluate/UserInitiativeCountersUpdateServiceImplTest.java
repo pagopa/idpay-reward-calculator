@@ -388,13 +388,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Reward reward1 = new Reward(BigDecimal.valueOf(-1000));
         Reward reward2 = new Reward(BigDecimal.valueOf(2000));
+        Reward reward3 = new Reward(BigDecimal.valueOf(-2000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.REFUND)
                 .trxDate(TRX_DATE.plusDays(1))
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(99))
                 .effectiveAmount(BigDecimal.valueOf(1))
-                .rewards(Map.of("INITIATIVEID1", reward1, "INITIATIVEID2", reward2))
+                .rewards(Map.of("INITIATIVEID1", reward1, "INITIATIVEID2", reward2, "INITIATIVEID3", reward3))
                 .refundInfo(RefundInfo.builder()
                         .previousRewards(Map.of("INITIATIVEID1", BigDecimal.valueOf(2000), "INITIATIVEID3", BigDecimal.valueOf(2000)))
                         .build())
@@ -406,7 +407,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
                 "USERID",
-                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+                new HashMap<>(Map.of(
+                        "INITIATIVEID1", initiativeCounters,
+                        "INITIATIVEID3", createInitiativeCounter("INITIATIVEID3", 1L, 100, 2000)
+                ))
         );
 
         // When
@@ -424,6 +428,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
         assertEquals(BigDecimal.valueOf(2000), reward2.getAccruedReward());
         assertFalse(reward2.isCapped());
         checkTemporaleCounters(initiativeCounters2, 1L, 2000, 1);
+
+        //reward3
+        InitiativeCounters initiativeCounters3 = userInitiativeCounters.getInitiatives().get("INITIATIVEID3");
+        checkCounters(initiativeCounters3, 0L, 0, 0);
     }
 
     private void checkTemporaleCounters(InitiativeCounters initiativeCounters, long expectedTrxCount, int expectedTotalReward, int expectedTotalAmount) {

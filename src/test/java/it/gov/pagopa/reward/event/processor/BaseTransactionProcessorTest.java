@@ -120,6 +120,9 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     }
 
     protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
+        assertRewardedState(evaluation, 1, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted);
+    }
+    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
         Assertions.assertFalse(evaluation.getRewards().isEmpty());
@@ -140,7 +143,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalReward), initiativeReward.getCounters().getTotalReward());
         Assertions.assertEquals(expectedCounterBudgetExhausted, initiativeReward.getCounters().isExhaustedBudget());
 
-        Assertions.assertEquals(1, evaluation.getRewards().size());
+        Assertions.assertEquals(expectedInitiativeRewarded, evaluation.getRewards().size());
     }
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){

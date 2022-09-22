@@ -97,7 +97,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                 r.setAccruedReward(r.getAccruedReward().subtract(pastReward));
             }
         });
-        pastRewards.forEach((initiativeId, reward2Reverse) ->trxRewarded.getRewards().put(initiativeId, new Reward(reward2Reverse.negate())));
+        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(reward2Reverse.negate())));
         if(trxRewarded.getRewards().size()>0){
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }

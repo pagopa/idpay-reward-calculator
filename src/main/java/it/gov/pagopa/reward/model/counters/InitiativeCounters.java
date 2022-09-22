@@ -12,6 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
+@ToString(callSuper = true)
 public class InitiativeCounters extends Counters {
     @Id
     private String initiativeId;
