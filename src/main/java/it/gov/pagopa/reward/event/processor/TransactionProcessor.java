@@ -50,9 +50,11 @@ public class TransactionProcessor implements ApplicationListener<RewardContextHo
 
     @Override
     public void onApplicationEvent(RewardContextHolderServiceImpl.RewardContextHolderReadyEvent event) {
-        synchronized (this) {
-            contextReady = true;
-            bindingsLifecycleController.changeState(TRX_PROCESSOR_BINDING_NAME, BindingsLifecycleController.State.STARTED);
+        if(!contextReady) {
+            synchronized (this) {
+                contextReady = true;
+                bindingsLifecycleController.changeState(TRX_PROCESSOR_BINDING_NAME, BindingsLifecycleController.State.STARTED);
+            }
         }
     }
 }

@@ -50,7 +50,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         //TODO store in cache
     }
 
-    @Scheduled(fixedRateString = "${app.reward-rule.cache.refresh-ms-rate}")
+    @Scheduled(initialDelayString = "${app.reward-rule.cache.refresh-ms-rate}", fixedRateString = "${app.reward-rule.cache.refresh-ms-rate}")
     public void refreshKieContainer(){
         refreshKieContainer(x -> log.trace("Refreshed KieContainer"));
     }
