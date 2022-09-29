@@ -62,7 +62,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected LockServiceImpl lockService;
 
     @AfterEach
-    void checkLockBuquet() throws NoSuchFieldException, IllegalAccessException {
+    void checkLockBouquet() throws NoSuchFieldException, IllegalAccessException {
         final Field locksField = LockServiceImpl.class.getDeclaredField("locks");
         locksField.setAccessible(true);
         @SuppressWarnings("unchecked") Map<Integer, Semaphore> locks = (Map<Integer, Semaphore>)locksField.get(lockService);
