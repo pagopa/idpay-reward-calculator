@@ -47,7 +47,8 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
         this.commitDelay = Duration.ofMillis(commitMillis);
 
         Duration rewardRulesBuildDelayDuration = Duration.parse(rewardRulesBuildDelay).minusMillis(commitMillis);
-        rewardRulesBuildDelayMinusCommit = rewardRulesBuildDelayDuration.isNegative() ? Duration.ZERO : rewardRulesBuildDelayDuration;
+        Duration defaultDurationDelay = Duration.ofMillis(2L);
+        rewardRulesBuildDelayMinusCommit = defaultDurationDelay.compareTo(rewardRulesBuildDelayDuration) >= 0 ? defaultDurationDelay : rewardRulesBuildDelayDuration;
 
         this.rewardRule2DroolsRuleService = rewardRule2DroolsRuleService;
         this.droolsRuleRepository = droolsRuleRepository;
@@ -91,9 +92,6 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
         return Mono.just(payload)
                 .map(rewardRule2DroolsRuleService)
                 .flatMap(droolsRuleRepository::save)
-                .map(i -> {
-                    rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig());
-                    return i;
-                });
+                .doOnNext(i -> rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig()));
     }
 }
