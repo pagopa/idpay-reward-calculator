@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 @Slf4j
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
-        "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativeMediatorServiceImpl=INFO",
+        "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativeMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativesServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.AddHpanServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
@@ -201,24 +201,24 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotHpan,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotHpan)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotHpan, "userid_0")
         ));
 
         String useCaseJsonNotDate = "{\"initiativeId\":\"id_1\",\"userId\":\"userid_1\", \"operationType\":\"ADD_INSTRUMENT\",\"hpan\":\"hpan\"}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotDate,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotDate)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", useCaseJsonNotDate, "userid_1")
         ));
 
         String jsonNotValid = "{\"initiativeId\":\"id_2\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] Unexpected JSON", jsonNotValid, "")
         ));
     }
 
-    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(topicHpanInitiativeLookupConsumer, errorMessage, errorDescription, expectedPayload);
+    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
+        checkErrorMessageHeaders(topicHpanInitiativeLookupConsumer, errorMessage, errorDescription, expectedPayload, expectedKey);
     }
     //endregion
 

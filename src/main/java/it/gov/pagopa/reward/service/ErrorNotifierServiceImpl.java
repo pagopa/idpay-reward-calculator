@@ -4,9 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
 
 @Service
 @Slf4j
@@ -107,6 +110,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
         addExceptionInfo(errorMessage, "rootCause", ExceptionUtils.getRootCause(exception));
         addExceptionInfo(errorMessage, "cause", exception.getCause());
+
+        byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_MESSAGE_KEY, byte[].class);
+        if(receivedKey!=null){
+            errorMessage.setHeader(KafkaHeaders.MESSAGE_KEY, new String(receivedKey, StandardCharsets.UTF_8));
+        }
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {
             log.error("[ERROR_NOTIFIER] Something gone wrong while notifying error");

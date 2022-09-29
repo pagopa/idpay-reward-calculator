@@ -62,7 +62,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected LockServiceImpl lockService;
 
     @AfterEach
-    void checkLockBuquet() throws NoSuchFieldException, IllegalAccessException {
+    void checkLockBouquet() throws NoSuchFieldException, IllegalAccessException {
         final Field locksField = LockServiceImpl.class.getDeclaredField("locks");
         locksField.setAccessible(true);
         @SuppressWarnings("unchecked") Map<Integer, Semaphore> locks = (Map<Integer, Semaphore>)locksField.get(lockService);
@@ -148,7 +148,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 10, 1000);
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 20, 1000);
         long timeCommitChecked = System.currentTimeMillis();
         final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
         long timePublishChecked = System.currentTimeMillis();
