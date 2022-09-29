@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -55,6 +56,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     private Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
         log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate");
         return hpanInitiativesRepository.findById(hpan)
+                .publishOn(Schedulers.newBoundedElastic(100, Integer.MAX_VALUE, "blockingInitiativeRetrieve")) // TODO to remove when not more blocking retrieving initiative
                 .flatMapMany(initiativesForHpan -> {
                     LocalDateTime trxDateTime = trxDate.atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
                     List<String> initiatives = new ArrayList<>();

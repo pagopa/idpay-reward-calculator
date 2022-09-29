@@ -124,6 +124,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
 
     private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId) {
         final long startTime = System.currentTimeMillis();
+        final boolean[] logged = new boolean[]{false};
         final Message<String> message = messageAndLockId.getKey();
 
         final Consumer<? super Signal<RewardTransactionDTO>> lockReleaser = x -> {
@@ -146,15 +147,19 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                 .doOnNext(r -> {
                     try {
                         if (!rewardNotifierService.notify(r)) {
-                           throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
+                            throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
                         }
                     } catch (Exception e) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
                         errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
                     }
                 })
-                .doOnEach(x ->
-                        log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload())
+                .doOnEach(x -> {
+                            if (!logged[0]) {
+                                logged[0] = true;
+                                log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload());
+                            }
+                        }
                 );
     }
 

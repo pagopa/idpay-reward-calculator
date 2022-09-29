@@ -12,8 +12,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 @Service
@@ -21,7 +22,7 @@ import java.util.function.Consumer;
 public class RewardContextHolderServiceImpl implements RewardContextHolderService {
 
     private final KieContainerBuilderService kieContainerBuilderService;
-    private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
+    private final Map<String, InitiativeConfig> initiativeId2Config=new ConcurrentHashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
 
     private KieContainer kieContainer;
@@ -77,7 +78,8 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
-        DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block();
+        DroolsRule droolsRule;
+        droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10)); // TODO remove this block!
         if (droolsRule==null){
             log.error("cannot find initiative having id %s".formatted(initiativeId));
             return null;
