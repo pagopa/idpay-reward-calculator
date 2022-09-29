@@ -182,7 +182,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(topicRewardRuleConsumer, errorMessage, errorDescription, expectedPayload);
+        checkErrorMessageHeaders(topicRewardRuleConsumer, errorMessage, errorDescription, expectedPayload, null);
     }
     //endregion
 }

@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
@@ -151,7 +150,6 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                         }
                     } catch (Exception e) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
-                        message.getHeaders().put(KafkaHeaders.MESSAGE_KEY, r.getUserId());
                         errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
                     }
                 })

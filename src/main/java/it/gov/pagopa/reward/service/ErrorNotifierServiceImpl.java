@@ -108,13 +108,13 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
                 .setHeader(ERROR_MSG_HEADER_RETRYABLE, retryable)
                 .setHeader(ERROR_MSG_HEADER_STACKTRACE, ExceptionUtils.getStackTrace(exception));
 
+        addExceptionInfo(errorMessage, "rootCause", ExceptionUtils.getRootCause(exception));
+        addExceptionInfo(errorMessage, "cause", exception.getCause());
+
         byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_MESSAGE_KEY, byte[].class);
         if(receivedKey!=null){
             errorMessage.setHeader(KafkaHeaders.MESSAGE_KEY, new String(receivedKey, StandardCharsets.UTF_8));
         }
-
-        addExceptionInfo(errorMessage, "rootCause", ExceptionUtils.getRootCause(exception));
-        addExceptionInfo(errorMessage, "cause", exception.getCause());
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {
             log.error("[ERROR_NOTIFIER] Something gone wrong while notifying error");

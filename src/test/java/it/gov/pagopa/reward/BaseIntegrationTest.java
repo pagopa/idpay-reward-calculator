@@ -347,10 +347,10 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(srcTopic, errorMessage, errorDescription, expectedPayload, true);
+    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
+        checkErrorMessageHeaders(srcTopic, errorMessage, errorDescription, expectedPayload, expectedKey, true);
     }
-    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, boolean expectRetryHeader) {
+    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader) {
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
@@ -360,5 +360,6 @@ public abstract class BaseIntegrationTest {
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
         }
         Assertions.assertEquals(expectedPayload, errorMessage.value());
+        Assertions.assertEquals(expectedKey, errorMessage.key());
     }
 }
