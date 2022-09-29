@@ -70,7 +70,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     void testTransactionProcessor() throws JsonProcessingException {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
-        int duplicateTrx = Math.max(100, notValidTrx);
+        int duplicateTrx = Math.min(100, validTrx/2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
         long maxWaitingMs = 30000;
 
         publishRewardRules();
@@ -286,7 +286,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         String hpan = rewardedTrx.getHpan();
         int biasRetrieve = Integer.parseInt(hpan.substring(4));
         useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
-        Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX));
+        Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
     }
 
     //region useCases

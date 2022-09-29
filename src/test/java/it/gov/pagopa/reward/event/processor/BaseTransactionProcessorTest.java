@@ -85,6 +85,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         });
 
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
+        initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())));
     }
 
     protected void onboardHpan(String hpan, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
