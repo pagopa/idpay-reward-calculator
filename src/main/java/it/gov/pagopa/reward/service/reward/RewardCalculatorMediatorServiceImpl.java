@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Signal;
 
 import java.time.Duration;
 import java.util.List;
@@ -125,7 +126,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
         final long startTime = System.currentTimeMillis();
         final Message<String> message = messageAndLockId.getKey();
 
-        final Consumer<? super RewardTransactionDTO> lockReleaser = x -> {
+        final Consumer<? super Signal<RewardTransactionDTO>> lockReleaser = x -> {
             int lockId = messageAndLockId.getValue();
             if (lockId > -1) {
                 lockService.releaseLock(lockId);
@@ -140,14 +141,15 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
-                .doOnNext(lockReleaser)
+                .doOnEach(lockReleaser)
+
                 .doOnNext(r -> {
-                    Exception exception=null;
-                    try{
-                        if(!rewardNotifierService.notify(r)){
+                    Exception exception = null;
+                    try {
+                        if (!rewardNotifierService.notify(r)) {
                             exception = new IllegalStateException("[REWARD] Something gone wrong while reward notify");
                         }
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         exception = e;
                     }
                     if (exception != null) {
@@ -155,11 +157,9 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                         errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, exception);
                     }
                 })
-
-                .doFinally(x -> {
-                    lockReleaser.accept(null);
-                    log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload());
-                });
+                .doOnEach(x ->
+                        log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload())
+                );
     }
 
     public int calculateLockId(String userId) {

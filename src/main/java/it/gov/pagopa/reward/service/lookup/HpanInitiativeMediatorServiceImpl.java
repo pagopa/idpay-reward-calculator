@@ -88,9 +88,9 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         return Mono.just(payload)
                 .flatMapMany(this::evaluate)
                 .collectList()
-                .then(Mono.just(payload))
+                .doOnEach(s -> log.info("[PERFORMANCE_LOG] [HPAN_INITIATIVE_OP] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before))
 
-                .doFinally(s -> log.info("[HPAN_INITIATIVE_OP] [PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before));
+                .then(Mono.just(payload));
     }
 
     private Flux<UpdateResult> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
