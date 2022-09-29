@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.build;
 
-
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
@@ -10,8 +9,9 @@ import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -47,8 +47,6 @@ class RewardRuleMediatorServiceImplTest {
 
     private final KieContainer newKieContainerBuilt = Mockito.mock(KieContainer.class);
 
-    private RewardRuleMediatorService rewardRuleMediatorService;
-
     @BeforeEach
     void setUp() {
         Mockito.when(rewardRule2DroolsRuleService.apply(Mockito.any())).thenAnswer(invocation -> {
@@ -69,14 +67,16 @@ class RewardRuleMediatorServiceImplTest {
         Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(newKieContainerBuilt));
     }
 
-    @Test
-    void testSuccessfulCommitLessThanRulesBuildDelay(){
+    @ParameterizedTest
+    @ValueSource(longs = {800,1000,1010})
+    void testSuccessful(long commitDelay){
+
         // given
         int N = 10;
         List<InitiativeReward2BuildDTO> initiatives = IntStream.range(0, N).mapToObj(InitiativeReward2BuildDTOFaker::mockInstance).collect(Collectors.toList());
         Flux<Message<String>> inputFlux = Flux.fromIterable(initiatives).map(TestUtils::jsonSerializer).map(MessageBuilder::withPayload).map(MessageBuilder::build);
 
-        rewardRuleMediatorService = new RewardRuleMediatorServiceImpl(1000L,
+        RewardRuleMediatorService rewardRuleMediatorService = new RewardRuleMediatorServiceImpl(commitDelay,
                 "PT1S",
                 rewardRule2DroolsRuleService,
                 droolsRuleRepository,
@@ -84,37 +84,10 @@ class RewardRuleMediatorServiceImplTest {
                 rewardContextHolderService,
                 errorNotifierService,
                 TestUtils.objectMapper);
-        // when
+        // When
         rewardRuleMediatorService.execute(inputFlux);
 
-        // then
-        checkAssertions(N, initiatives);
-    }
-
-    @Test
-    void testSuccessfulCommitGreaterThanRulesBuildDelay(){
-        // given
-        int N = 10;
-        List<InitiativeReward2BuildDTO> initiatives = IntStream.range(0, N).mapToObj(InitiativeReward2BuildDTOFaker::mockInstance).collect(Collectors.toList());
-        Flux<Message<String>> inputFlux = Flux.fromIterable(initiatives).map(TestUtils::jsonSerializer).map(MessageBuilder::withPayload).map(MessageBuilder::build);
-
-        rewardRuleMediatorService = new RewardRuleMediatorServiceImpl(1010L,
-                "PT1S",
-                rewardRule2DroolsRuleService,
-                droolsRuleRepository,
-                kieContainerBuilderService,
-                rewardContextHolderService,
-                errorNotifierService,
-                TestUtils.objectMapper);
-
-        // when
-        rewardRuleMediatorService.execute(inputFlux);
-
-        // then
-        checkAssertions(N, initiatives);
-    }
-
-    private void checkAssertions(int N, List<InitiativeReward2BuildDTO> initiatives) {
+        // Then
         Mockito.verify(rewardRule2DroolsRuleService, Mockito.times(N)).apply(Mockito.any());
         initiatives.forEach(i -> {
             Mockito.verify(rewardRule2DroolsRuleService).apply(i);
