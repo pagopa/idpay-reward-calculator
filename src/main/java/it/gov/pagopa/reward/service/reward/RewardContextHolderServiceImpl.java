@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.kie.api.runtime.KieContainer;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,12 +25,13 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final KieContainerBuilderService kieContainerBuilderService;
     private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
-
+    private final ReactiveRedisTemplate<String, KieContainer> reactiveRedisTemplate;
     private KieContainer kieContainer;
 
-    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher) {
+    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher, ReactiveRedisTemplate<String, KieContainer> reactiveRedisTemplate) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
+        this.reactiveRedisTemplate = reactiveRedisTemplate;
         refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
     }
 
@@ -47,7 +50,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     @Override
     public void setRewardRulesKieContainer(KieContainer kieContainer) {
         this.kieContainer=kieContainer;
-        //TODO store in cache
+        reactiveRedisTemplate.opsForValue().set("reward_rule", kieContainer).subscribe(x -> log.debug("Saving KieContainer in cache"));
     }
 
     @Scheduled(initialDelayString = "${app.reward-rule.cache.refresh-ms-rate}", fixedRateString = "${app.reward-rule.cache.refresh-ms-rate}")
@@ -55,12 +58,17 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         refreshKieContainer(x -> log.trace("Refreshed KieContainer"));
     }
 
-    //TODO use cache
-    public void refreshKieContainer(Consumer<? super KieContainer> subscriber){
+    public void refreshKieContainer(Consumer<? super KieContainer> subscriber) {
+        reactiveRedisTemplate.opsForValue().get("reward_rule")
+                .switchIfEmpty(refreshKieContainerCacheMiss())
+
+                .subscribe(subscriber);
+    }
+
+    private Mono<KieContainer> refreshKieContainerCacheMiss() {
         log.trace("Refreshing KieContainer");
         final Flux<DroolsRule> droolsRuleFlux = droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig()));
-
-        kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieContainer).subscribe(subscriber);
+        return kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieContainer);
     }
 
     //endregion
@@ -77,7 +85,10 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
+        log.debug("[CACHE_MISS] Cannot find locally initiativeId {}", initiativeId);
+        long startTime = System.currentTimeMillis();
         DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block();
+        log.info("[PERFORMANCE_LOG] Time spent fetching initiativeId: {} ms", System.currentTimeMillis() - startTime);
         if (droolsRule==null){
             log.error("cannot find initiative having id %s".formatted(initiativeId));
             return null;

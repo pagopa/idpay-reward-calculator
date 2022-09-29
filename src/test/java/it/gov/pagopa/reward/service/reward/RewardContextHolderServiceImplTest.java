@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.config.RedisConfig;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
@@ -14,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,6 +29,7 @@ class RewardContextHolderServiceImplTest {
     @Mock private KieContainerBuilderService kieContainerBuilderServiceMock;
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
     @Mock private ApplicationEventPublisher applicationEventPublisherMock;
+    @Mock private ReactiveRedisTemplate<String, KieContainer> reactiveRedisTemplateMock;
 
     private RewardContextHolderService rewardContextHolderService;
 
@@ -36,7 +40,7 @@ class RewardContextHolderServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
         Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieContainer));
 
-        rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock);
+        rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock);
     }
 
     @Test
