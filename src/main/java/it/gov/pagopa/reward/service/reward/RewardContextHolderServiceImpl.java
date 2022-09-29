@@ -79,9 +79,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
 
     private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
         DroolsRule droolsRule;
-        synchronized (this){
-            droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10)); // TODO remove this block!
-        }
+        droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10)); // TODO remove this block!
         if (droolsRule==null){
             log.error("cannot find initiative having id %s".formatted(initiativeId));
             return null;
