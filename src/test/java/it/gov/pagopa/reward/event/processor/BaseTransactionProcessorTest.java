@@ -148,7 +148,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 10, 1000);
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 20, 1000);
         long timeCommitChecked = System.currentTimeMillis();
         final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
         long timePublishChecked = System.currentTimeMillis();
