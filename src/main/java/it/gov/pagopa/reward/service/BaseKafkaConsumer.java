@@ -85,7 +85,7 @@ public abstract class BaseKafkaConsumer<T, R> {
     }
 
     /** to perform some operation at the end of business logic execution, thus before to wait for commit. As default, it will perform an INFO logging with performance time */
-    @SuppressWarnings("sonar:S1172")
+    @SuppressWarnings("sonar:S1172") // suppressing unused parameters
     protected void doFinally(Message<String> message, R r, Map<String, Object> ctx) {
         Long startTime = (Long)ctx.get(CONTEXT_KEY_START_TIME);
         String msgId = (String)ctx.get(CONTEXT_KEY_MSG_ID);
