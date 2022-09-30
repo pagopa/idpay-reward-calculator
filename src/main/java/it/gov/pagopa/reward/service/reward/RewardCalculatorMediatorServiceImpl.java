@@ -28,6 +28,7 @@ import reactor.core.publisher.Signal;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Service
@@ -93,12 +94,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
     }
 
     @Override
-    protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message) {
+    protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
         throw new IllegalStateException("Logic overridden");
     }
 
     @Override
-    protected Mono<RewardTransactionDTO> execute(Message<String> message) {
+    protected Mono<RewardTransactionDTO> execute(Message<String> message, Map<String, Object> ctx) {
         return Mono.fromSupplier(() -> {
                     int lockId = -1;
                     String userId = Utils.readUserId(message.getPayload());
@@ -109,7 +110,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                     }
                     return new MutablePair<>(message, lockId);
                 })
-                .flatMap(this::executeAfterLock);
+                .flatMap(m -> executeAfterLock(m, ctx));
     }
 
     @Override
@@ -122,9 +123,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
         return e -> errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
     }
 
-    private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId) {
-        final long startTime = System.currentTimeMillis();
-        final boolean[] logged = new boolean[]{false};
+    private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId, Map<String, Object> ctx) {
         final Message<String> message = messageAndLockId.getKey();
 
         final Consumer<? super Signal<RewardTransactionDTO>> lockReleaser = x -> {
@@ -135,6 +134,8 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                 log.debug("[REWARD] [LOCK_RELEASED] released lock having id {}", lockId);
             }
         };
+
+        ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());
 
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
@@ -153,14 +154,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
                         errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
                     }
-                })
-                .doOnEach(x -> {
-                            if (!logged[0]) {
-                                logged[0] = true;
-                                log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload());
-                            }
-                        }
-                );
+                });
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "REWARD";
     }
 
     public int calculateLockId(String userId) {

@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Service
@@ -82,15 +83,17 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     @Override
-    protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message) {
-        long before = System.currentTimeMillis();
-
+    protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
                 .flatMapMany(this::evaluate)
                 .collectList()
-                .doOnEach(s -> log.info("[PERFORMANCE_LOG] [HPAN_INITIATIVE_OP] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before))
 
                 .then(Mono.just(payload));
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "HPAN_INITIATIVE_OP";
     }
 
     private Flux<UpdateResult> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
