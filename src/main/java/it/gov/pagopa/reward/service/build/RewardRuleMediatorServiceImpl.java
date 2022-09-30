@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Service
@@ -88,10 +89,20 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     }
 
     @Override
-    protected Mono<DroolsRule> execute(InitiativeReward2BuildDTO payload, Message<String> message) {
+    protected Mono<DroolsRule> execute(InitiativeReward2BuildDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
                 .map(rewardRule2DroolsRuleService)
                 .flatMap(droolsRuleRepository::save)
                 .doOnNext(i -> rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig()));
+    }
+
+    @Override
+    protected void doFinally(Message<String> message, DroolsRule r, Map<String, Object> ctx) {
+        // Do nothing, we are not interested in log performance here
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "REWARD_RULE_BUILD";
     }
 }

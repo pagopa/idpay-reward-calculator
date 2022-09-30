@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 public class OperationTypeChargeHandlerServiceImpl implements OperationTypeChargeHandlerService {
     @Override
     public Mono<TransactionDTO> handleChargeOperation(TransactionDTO trx) {
-        log.debug("[REWARD] Recognized a CHARGE operation");
+        log.debug("[REWARD] Recognized a CHARGE operation {}", trx.getId());
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
         trx.setEffectiveAmount(trx.getAmount());

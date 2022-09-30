@@ -30,7 +30,8 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
                     return Mono.<TransactionDTO>error(new IllegalStateException("[DUPLICATE_TRX] Already processed transaction"));
                 })
                 .defaultIfEmpty(trx)
-                .onErrorResume(e -> Mono.empty());
+                .onErrorResume(e -> Mono.empty())
+                .doOnNext(x -> log.trace("[REWARD] Duplicate check successful ended: {}", trx.getId()));
     }
 
     @Override

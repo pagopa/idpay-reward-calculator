@@ -31,7 +31,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
 
     @Override
     public Mono<TransactionDTO> handleRefundOperation(TransactionDTO trx) {
-        log.debug("[REWARD] Recognized a REFUND operation");
+        log.debug("[REWARD] Recognized a REFUND operation {}", trx.getId());
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         if (!StringUtils.hasText(trx.getCorrelationId())) {
             trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_INVALID_REFUND);
@@ -52,6 +52,8 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
     }
 
     private TransactionDTO evaluatePastTransactions(TransactionDTO trx, List<TransactionProcessed> pastTrxs) {
+        log.trace("[REWARD] Retrieved correlated trxs {} {}", pastTrxs.size(), trx.getId());
+
         TransactionProcessed trxCharge = null;
         BigDecimal effectiveAmount = trx.getAmount().negate();
         Map<String, BigDecimal> pastRewards = new HashMap<>();

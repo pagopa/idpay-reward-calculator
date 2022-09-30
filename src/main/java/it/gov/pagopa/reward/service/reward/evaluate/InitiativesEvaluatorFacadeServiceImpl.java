@@ -41,6 +41,8 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
     @Override
     public Mono<RewardTransactionDTO> evaluate(TransactionDTO trx, List<String> initiatives) {
+        log.trace("[REWARD] Initiative fetched, retrieving counter: {}", trx.getId());
+
         final String userId = trx.getUserId();
 
         return userInitiativeCountersRepository.findById(userId)
@@ -51,12 +53,16 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                                     userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), rewardedTrx);
 
                                     return transactionProcessedService.save(rewardedTrx)
+                                            .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", trx.getId()))
                                             .then(userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst()))
+                                            .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", trx.getId()))
                                             .then(Mono.just(rewardedTrx));
                                 });
     }
 
     private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+        log.trace("[REWARD] Counter retrieved, evaluating initiatives: {} - {}", trx.getId(), initiatives.size());
+
         RewardTransactionDTO trxRewarded;
         boolean isRefund = OperationType.REFUND.equals(trx.getOperationTypeTranscoded());
 
