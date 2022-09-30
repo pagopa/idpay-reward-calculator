@@ -124,6 +124,8 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
     }
 
     private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId, Map<String, Object> ctx) {
+        log.trace("[REWARD] Received payload: {}", messageAndLockId.getKey().getPayload());
+
         final Message<String> message = messageAndLockId.getKey();
 
         final Consumer<? super Signal<RewardTransactionDTO>> lockReleaser = x -> {
@@ -172,7 +174,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                     .collectList()
                     .flatMap(initiatives -> initiativesEvaluatorFacadeService.evaluate(trx, initiatives));
         } else {
-            log.trace("[REWARD] [REWARD_KO] Transaction discarded: {}", trx.getRejectionReasons());
+            log.trace("[REWARD] [REWARD_KO] Transaction discarded: {} - {}", trx.getId(), trx.getRejectionReasons());
             return Mono.just(rewardTransactionMapper.apply(trx));
         }
     }
