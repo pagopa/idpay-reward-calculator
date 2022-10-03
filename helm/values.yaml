@@ -29,7 +29,6 @@ microservice-chart:
 
   ingress:
     create: true
-    host: "dev01.idpay.internal.dev.cstar.pagopa.it"
     path: /idpay/reward/(.*)
 
   serviceAccount:
@@ -68,7 +67,6 @@ microservice-chart:
       KAFKA_RTD_BROKER: kafka_broker_rtd
 
   envSecret:
-    aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
     MONGODB_URI: mongodb-connection-string
     KAFKA_RTD_SASL_JAAS_CONFIG: evh-rtd-trx-rtd-trx-consumer-jaas-config
