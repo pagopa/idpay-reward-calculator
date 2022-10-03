@@ -1,63 +1,19 @@
 microservice-chart:
-  namespace: "idpay"
-  nameOverride: ""
-  fullnameOverride: ""
-
   image:
-    repository: cstardcommonarc.azurecr.io/idpayrewardcalculator
-    tag: 0.0.1
+    repository: cstardcommonacr.azurecr.io/idpayrewardcalculator
+    tag: latest
     pullPolicy: Always
 
-  livenessProbe:
-    httpGet:
-      path: /status/live
-      port: 8080
-    initialDelaySeconds: 60
-    failureThreshold: 6
-    periodSeconds: 10
-
-  readinessProbe:
-    httpGet:
-      path: /status/ready
-      port: 8080
-    initialDelaySeconds: 60
-    failureThreshold: 6
-    periodSeconds: 10
-
-  deployment:
-    create: true
-
-  service:
-    create: true
-    type: ClusterIP
-    port: 8080
-
   ingress:
-    create: true
     host: "dev01.idpay.internal.dev.cstar.pagopa.it"
-    path: /idpay/onboarding/(.*)
-
-  serviceAccount:
-    create: false
-    annotations: {}
-    name: ""
-
-  podAnnotations: {}
-
-  podSecurityContext:
-    seccompProfile:
-      type: RuntimeDefault
-
-  securityContext:
-    allowPrivilegeEscalation: false
 
   resources:
     requests:
       memory: "256Mi"
-      cpu: "40m"
+      cpu: "500m"
     limits:
-      memory: "256Mi"
-      cpu: "150m"
+      memory: "4Gi"
+      cpu: "500m"
 
 #  autoscaling:
 #    enable: true
@@ -79,17 +35,8 @@ microservice-chart:
 #          metricAggregationType: Count
 #          targetValue: "30"
 
-  envConfig:
-    APP: idpay-reward-calculator
-    KAFKA_REWARD_SASL_MECHANISM: PLAIN
-    KAFKA_REWARD_SECURITY_PROTOCOL: SASL_SSL
-
   envSecret:
     aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
-    MONGODB_URI: mongodb-connection-string
-    EVH-CONNECTION-RTD-TRX: evh-rtd-trx-rtd-trx-consumer-key
-    EVH-CONNECTION-REWARD-RESPONSE: evh-idpay-reward-response-producer-key
-
 
   keyvault:
     name: "cstar-d-idpay-kv"
@@ -100,3 +47,6 @@ microservice-chart:
   # tolerations: []
 
   # affinity: {}
+
+  envConfig:
+    JAVA_TOOL_OPTIONS: "-Xms128m -Xmx4g -Djava.util.concurrent.ForkJoinPool.common.parallelism=7 -Dio.netty.eventLoopThreads=100 -javaagent:/app/applicationinsights-agent.jar -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=3002 -Dcom.sun.management.jmxremote.rmi.port=3003 -Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
