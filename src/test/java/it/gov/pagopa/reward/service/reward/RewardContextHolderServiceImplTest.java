@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.config.RedisConfig;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
@@ -14,9 +13,10 @@ import org.kie.api.runtime.KieContainer;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,7 +29,8 @@ class RewardContextHolderServiceImplTest {
     @Mock private KieContainerBuilderService kieContainerBuilderServiceMock;
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
     @Mock private ApplicationEventPublisher applicationEventPublisherMock;
-    @Mock private ReactiveRedisTemplate<String, KieContainer> reactiveRedisTemplateMock;
+    @Mock private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplateMock;
+    @Value("${spring.redis.enabled}") private boolean isRedisCacheEnabled;
 
     private RewardContextHolderService rewardContextHolderService;
 
@@ -39,6 +40,9 @@ class RewardContextHolderServiceImplTest {
     void init(){
         Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
         Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieContainer));
+        if (isRedisCacheEnabled) {
+            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(SerializationUtils.serialize(expectedKieContainer)));
+        }
 
         rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock);
     }

@@ -1,26 +1,23 @@
 package it.gov.pagopa.reward.config;
 
-import org.kie.api.runtime.KieContainer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
+@ConditionalOnProperty(prefix = "spring.redis", name = "enabled", havingValue = "true")
 public class RedisConfig {
 
     @Bean
-    public ReactiveRedisTemplate<String, KieContainer> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
-        StringRedisSerializer keySerializer = new StringRedisSerializer();
-        Jackson2JsonRedisSerializer<KieContainer> valueSerializer =
-                new Jackson2JsonRedisSerializer<>(KieContainer.class);
-        RedisSerializationContext.RedisSerializationContextBuilder<String, KieContainer> builder =
-                RedisSerializationContext.newSerializationContext(keySerializer);
-        RedisSerializationContext<String, KieContainer> context =
-                builder.value(valueSerializer).build();
+    public ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
+        RedisSerializationContext.RedisSerializationContextBuilder<String, byte[]> builder =
+                RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
+        RedisSerializationContext<String, byte[]> context =
+                builder.build();
         return new ReactiveRedisTemplate<>(factory, context);
     }
 
