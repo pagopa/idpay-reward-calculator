@@ -30,15 +30,15 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final DroolsRuleRepository droolsRuleRepository;
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     private KieBase kieBase;
-    @Value("${spring.redis.enabled}")
-    private boolean isRedisCacheEnabled;
+    private final boolean isRedisCacheEnabled;
 
     public static final String CACHE_ID_REWARD_CONTEXT_HOLDER = "reward_rule";
 
-    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher, @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate) {
+    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher, @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate, @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
+        this.isRedisCacheEnabled = isRedisCacheEnabled;
         refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
     }
 

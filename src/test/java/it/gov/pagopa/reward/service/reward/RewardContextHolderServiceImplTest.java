@@ -44,7 +44,7 @@ class RewardContextHolderServiceImplTest {
             Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(SerializationUtils.serialize(expectedKieBase)));
         }
 
-        rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock);
+        rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock, isRedisCacheEnabled);
     }
 
     @Test
