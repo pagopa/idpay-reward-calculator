@@ -117,10 +117,10 @@ spring:
             producer:
               configuration:
                 client.id: trxProcessor-transaction
-                connections.max.idle.ms: ${KAFKA_RTD_PROD_CONNECTION_MAX_IDLE_TIME:180000}
-                retry.backoff.ms: ${KAFKA_RTD_PROD_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
-                linger.ms: ${KAFKA_RTD_PROD_LINGER_MS:${KAFKA_LINGER_MS:2}}
-                batch.size: ${KAFKA_RTD_PROD_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+                connections.max.idle.ms: ${KAFKA_REWARD_RESPONSE_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_REWARD_RESPONSE_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_REWARD_RESPONSE_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_REWARD_RESPONSE_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
           errors-out-0:
             producer:
               configuration:
