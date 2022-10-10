@@ -8,7 +8,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 @TestConfiguration
-//@Order(Ordered.HIGHEST_PRECEDENCE)
 public class EmbeddedRedisTestConfiguration {
     private final RedisServer redisServer;
 

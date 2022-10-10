@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
-import org.kie.api.runtime.KieContainer;
+import org.kie.api.KieBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEvent;
@@ -29,7 +29,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
-    private KieContainer kieContainer;
+    private KieBase kieBase;
     @Value("${spring.redis.enabled}")
     private boolean isRedisCacheEnabled;
 
@@ -50,15 +50,15 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
 
     //region kieContainer holder
     @Override
-    public KieContainer getRewardRulesKieContainer() {
-        return kieContainer;
+    public KieBase getRewardRulesKieBase() {
+        return kieBase;
     }
 
     @Override
-    public void setRewardRulesKieContainer(KieContainer kieContainer) {
-        this.kieContainer=kieContainer;
+    public void setRewardRulesKieBase(KieBase kieBase) {
+        this.kieBase = kieBase;
         if (isRedisCacheEnabled) {
-            reactiveRedisTemplate.opsForValue().set(CACHE_ID_REWARD_CONTEXT_HOLDER, SerializationUtils.serialize(kieContainer)).subscribe(x -> log.debug("Saving KieContainer in cache"));
+            reactiveRedisTemplate.opsForValue().set(CACHE_ID_REWARD_CONTEXT_HOLDER, SerializationUtils.serialize(kieBase)).subscribe(x -> log.debug("Saving KieContainer in cache"));
         }
     }
 
@@ -67,11 +67,11 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         refreshKieContainer(x -> log.trace("Refreshed KieContainer"));
     }
 
-    public void refreshKieContainer(Consumer<? super KieContainer> subscriber) {
+    public void refreshKieContainer(Consumer<? super KieBase> subscriber) {
         if (isRedisCacheEnabled) {
             reactiveRedisTemplate.opsForValue().get(CACHE_ID_REWARD_CONTEXT_HOLDER)
-                    .map(c -> (KieContainer) SerializationUtils.deserialize(c))
-                    .doOnNext(c -> this.kieContainer = c)
+                    .map(c -> (KieBase) SerializationUtils.deserialize(c))
+                    .doOnNext(c -> this.kieBase = c)
                     .switchIfEmpty(refreshKieContainerCacheMiss())
                     .subscribe(subscriber);
         } else {
@@ -79,10 +79,10 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         }
     }
 
-    private Mono<KieContainer> refreshKieContainerCacheMiss() {
+    private Mono<KieBase> refreshKieContainerCacheMiss() {
         log.trace("Refreshing KieContainer");
         final Flux<DroolsRule> droolsRuleFlux = droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig()));
-        return kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieContainer);
+        return kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieBase);
     }
 
     //endregion

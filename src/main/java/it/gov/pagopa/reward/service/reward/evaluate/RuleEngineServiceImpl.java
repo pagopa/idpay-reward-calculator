@@ -43,7 +43,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         TransactionDroolsDTO trx = transaction2TransactionDroolsMapper.apply(transaction);
 
         if(!initiatives.isEmpty()){
-            StatelessKieSession statelessKieSession = rewardContextHolderService.getRewardRulesKieContainer().newStatelessKieSession();
+            StatelessKieSession statelessKieSession = rewardContextHolderService.getRewardRulesKieBase().newStatelessKieSession();
 
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());

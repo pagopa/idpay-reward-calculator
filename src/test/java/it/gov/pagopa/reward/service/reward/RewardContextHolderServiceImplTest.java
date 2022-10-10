@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.kie.api.runtime.KieContainer;
+import org.kie.api.KieBase;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,14 +34,14 @@ class RewardContextHolderServiceImplTest {
 
     private RewardContextHolderService rewardContextHolderService;
 
-    private final KieContainer expectedKieContainer = Mockito.mock(KieContainer.class);
+    private final KieBase expectedKieBase = Mockito.mock(KieBase.class);
 
     @BeforeEach
     void init(){
         Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
-        Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieContainer));
+        Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieBase));
         if (isRedisCacheEnabled) {
-            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(SerializationUtils.serialize(expectedKieContainer)));
+            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(SerializationUtils.serialize(expectedKieBase)));
         }
 
         rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock);
@@ -50,11 +50,11 @@ class RewardContextHolderServiceImplTest {
     @Test
     void getKieContainer() {
         // When
-        KieContainer result = rewardContextHolderService.getRewardRulesKieContainer();
+        KieBase result = rewardContextHolderService.getRewardRulesKieBase();
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertSame(expectedKieContainer, result);
+        Assertions.assertSame(expectedKieBase, result);
     }
 
     @Test

@@ -68,7 +68,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
         afterCommits2subscribe
                 .buffer(rewardRulesBuildDelayMinusCommit)
                 .flatMap(r -> kieContainerBuilderService.buildAll())
-                .subscribe(rewardContextHolderService::setRewardRulesKieContainer);
+                .subscribe(rewardContextHolderService::setRewardRulesKieBase);
     }
 
     @Override

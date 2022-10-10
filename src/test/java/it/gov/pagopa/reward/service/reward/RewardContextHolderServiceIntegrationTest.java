@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.config.EmbeddedRedisTestConfiguration;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
@@ -8,10 +9,23 @@ import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.ReflectionUtils;
+import reactor.core.publisher.Flux;
 
+import java.lang.reflect.Field;
+
+@TestPropertySource(
+        properties = {
+                "spring.redis.enabled=true",
+        }
+)
+@ContextConfiguration(classes = EmbeddedRedisTestConfiguration.class)
 class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -25,17 +39,21 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
 
     @Test
-    void testKieContainerBuildWithRedisCache() {
+    void testKieBuildWithRedisCache() {
 
-        RewardContextHolderService rewardContextHolderService = new RewardContextHolderServiceImpl(
+        RewardContextHolderServiceImpl rewardContextHolderService = new RewardContextHolderServiceImpl(
                 kieContainerBuilderServiceMock,
                 droolsRuleRepositoryMock,
                 applicationEventPublisherMock,
                 reactiveRedisTemplateMock
         );
 
-        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        // Assert the starting built rule size is 0
+        int startingRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
 
+        Assertions.assertEquals(0, startingRuleBuiltSize);
+
+        // Build a valid KieBase that produces a rule of size 1, assert KieBase is null after Reflection
         DroolsRule dr = new DroolsRule();
         dr.setId("NAME");
         dr.setName("RULE");
@@ -44,7 +62,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
                                 
                 rule "%s"
                 agenda-group "%s"
-                when $trx
+                when "$trx = " + TransactionDTO.class.getName()
                 then $trx.setRejectionReasons(List.of("OK"));
                 end
                 """.formatted(
@@ -53,8 +71,19 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
                         dr.getName()
                 )
         );
+        KieBase kieBaseMock = kieContainerBuilderServiceMock.build(Flux.just(dr)).block();
+        rewardContextHolderService.setRewardRulesKieBase(kieBaseMock);
+        Field kieBaseField = ReflectionUtils.findField(RewardContextHolderServiceImpl.class, "kieBase");
+        kieBaseField.setAccessible(true);
+        kieBaseField.set(rewardContextHolderService, null);
 
-        Assertions.assertEquals(0, ruleBuiltSize);
+        Assertions.assertNull(rewardContextHolderService.getRewardRulesKieBase());
+
+        // Refresh KieBase and assert the built rules has expected size
+        rewardContextHolderService.refreshKieContainer();
+        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+
+        Assertions.assertEquals(1, ruleBuiltSize);
     }
 
 }

@@ -73,7 +73,6 @@ import java.util.stream.StreamSupport;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
-//@ContextConfiguration(classes = EmbeddedRedisTestConfiguration.class)
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.trxProcessor-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
@@ -112,6 +111,11 @@ import static org.awaitility.Awaitility.await;
                 "logging.level.org.mongodb.driver=WARN",
                 "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
                 "spring.mongodb.embedded.version=4.0.21",
+                //endregion
+
+                //region redis
+                "spring.redis.host=localhost",
+                "spring.redis.port=6379",
                 //endregion
         })
 @AutoConfigureDataMongo

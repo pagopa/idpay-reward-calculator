@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
@@ -32,7 +33,7 @@ public class KieContainerBuilderServiceImplTest {
 
         Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.empty());
         // When
-        KieContainer result = kieContainerBuilderService.buildAll().block();
+        KieBase result = kieContainerBuilderService.buildAll().block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -61,15 +62,15 @@ public class KieContainerBuilderServiceImplTest {
         Mockito.when(droolsRuleRepository.findAll()).thenReturn(Flux.just(dr1));
 
         // When
-        KieContainer kieContainer = kieContainerBuilderService.buildAll().block();
-        Assertions.assertNotNull(kieContainer);
+        KieBase kieBase = kieContainerBuilderService.buildAll().block();
+        Assertions.assertNotNull(kieBase);
         Mockito.verify(droolsRuleRepository).findAll();
 
-        Assertions.assertEquals(1, getRuleBuiltSize(kieContainer));
+        Assertions.assertEquals(1, getRuleBuiltSize(kieBase));
     }
 
-    public static int getRuleBuiltSize(KieContainer kieContainer) {
-        KiePackage kiePackage = kieContainer.getKieBase().getKiePackage(KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE);
+    public static int getRuleBuiltSize(KieBase kieBase) {
+        KiePackage kiePackage = kieBase.getKiePackage(KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE);
         return kiePackage != null
                 ? kiePackage.getRules().size()
                 : 0;
