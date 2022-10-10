@@ -67,6 +67,9 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getPar(), result.getPar());
         Assertions.assertSame(trx.getRejectionReasons(), result.getRejectionReasons());
         Assertions.assertSame(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertSame(trx.getUserId(), result.getUserId());
+        Assertions.assertSame(trx.getMaskedPan(), result.getMaskedPan());
+        Assertions.assertSame(trx.getBrandLogo(), result.getBrandLogo());
     }
 
 }

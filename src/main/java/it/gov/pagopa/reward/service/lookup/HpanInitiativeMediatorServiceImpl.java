@@ -102,7 +102,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     private Flux<HpanUpdateEvaluateDTO> initializingHpanInitiativeDTO(HpanInitiativeBulkDTO dto) {
-        return Flux.fromIterable(dto.getHpanList().stream().map(hpan -> hpanUpdateBulk2SingleMapper.apply(dto, hpan)).toList());
+        return Flux.fromIterable(dto.getInfoList().stream().map(infoHpan -> hpanUpdateBulk2SingleMapper.apply(dto, infoHpan)).toList());
     }
 
     private Mono<UpdateResult> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -41,9 +42,14 @@ class HpanInitiativeMediatorServiceImplTest {
         //region input test
         String hpanValid = "HPAN_VALID";
         Acknowledgment hpanInitiativeBulkDTOValidJsonAck = Mockito.mock(Acknowledgment.class);
+
+        PaymentMethodInfoDTO infoHpan = PaymentMethodInfoDTO.builder()
+                .hpan(hpanValid)
+                .maskedPan("MASKEDPAN")
+                .brandLogo("BRANDLOGO").build();
         HpanInitiativeBulkDTO hpanInitiativeBulkDTOValidJson = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
-                .hpanList(List.of(hpanValid))
+                .infoList(List.of(infoHpan))
                 .initiativeId("INITIATIVEID")
                 .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
                 .operationDate(LocalDateTime.now().plusDays(10L)).build();
@@ -62,9 +68,14 @@ class HpanInitiativeMediatorServiceImplTest {
         //Message without date
         String hpanNotDate = "HPAN_NOT_DATE";
         Acknowledgment hpanInitiativeBulkDTONotDateAck = Mockito.mock(Acknowledgment.class);
+
+        PaymentMethodInfoDTO infoHpanNotDate = PaymentMethodInfoDTO.builder()
+                .hpan(hpanNotDate)
+                .maskedPan("MASKEDPAN")
+                .brandLogo("BRANDLOGO").build();
         HpanInitiativeBulkDTO hpanInitiativeBulkDTONotDate = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
-                .hpanList(List.of(hpanNotDate))
+                .infoList(List.of(infoHpanNotDate))
                 .initiativeId("INITIATIVEID")
                 .operationType(HpanInitiativeConstants.ADD_INSTRUMENT).build();
 

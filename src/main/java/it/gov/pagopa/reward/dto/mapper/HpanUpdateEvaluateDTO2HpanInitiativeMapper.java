@@ -15,6 +15,8 @@ public class HpanUpdateEvaluateDTO2HpanInitiativeMapper implements Function<Hpan
         if (hpanUpdateEvaluateDTO.getOperationType().equals(HpanInitiativeConstants.ADD_INSTRUMENT)){
             out = new HpanInitiatives();
             out.setHpan(hpanUpdateEvaluateDTO.getHpan());
+            out.setMaskedPan(hpanUpdateEvaluateDTO.getMaskedPan());
+            out.setBrandLogo(hpanUpdateEvaluateDTO.getBrandLogo());
             out.setUserId(hpanUpdateEvaluateDTO.getUserId());
         }
         return out;

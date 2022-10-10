@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.event.consumer;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
+import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -185,12 +186,18 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private List<String> buildConcurrencyMessages(int concurrencyMessagesNumber){
-        return IntStream.range(1, concurrencyMessagesNumber+1).mapToObj(i -> HpanInitiativeBulkDTO.builder()
-                .userId("USERID_CONCURRENCY")
-                .initiativeId("INITIATIVEID_%d".formatted(i))
-                .hpanList(List.of("HPAN_CONCURRENCY"))
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
-                .operationDate(LocalDateTime.of(2022, 9, 15, 10, 45, 30)).build())
+        return IntStream.range(1, concurrencyMessagesNumber+1).mapToObj(i -> {
+                    PaymentMethodInfoDTO infoHpanConcurrency = PaymentMethodInfoDTO.builder()
+                            .hpan("HPAN_CONCURRENCY")
+                            .maskedPan("MASKEDPAN_CONCURRENCY")
+                            .brandLogo("BRANDLOGO_CONCURRENCY").build();
+                    return HpanInitiativeBulkDTO.builder()
+                            .userId("USERID_CONCURRENCY")
+                            .initiativeId("INITIATIVEID_%d".formatted(i))
+                            .infoList(List.of(infoHpanConcurrency))
+                            .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                            .operationDate(LocalDateTime.of(2022, 9, 15, 10, 45, 30)).build();
+                })
                 .map(TestUtils::jsonSerializer)
                 .toList();
     }
