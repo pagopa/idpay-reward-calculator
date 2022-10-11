@@ -36,7 +36,9 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         String hpan = "hpan_prova";
         HpanInitiatives hpanInitiativesFirst = HpanInitiatives.builder()
                 .userId("USERID")
-                .hpan(hpan).build();
+                .hpan(hpan)
+                .maskedPan("MASKED_PAN")
+                .brandLogo("BRAND_LOGO").build();
 
         List<OnboardedInitiative> onboardedInitiativeList = new ArrayList<>();
 
@@ -115,13 +117,20 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
     @Test
     void createIfNotExistConcurrency() {
         String hpan = "hpan_prova";
+        String maskedPan = "MASKEDPAN_CONCURRENCY";
+        String brandLogo = "BRANDLOGO_CONCURRENCY";
         String userId = "USERID_CONCURRENCY";
 
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
         final List<Future<UpdateResult>> tasks = IntStream.range(0, 2)
                 .mapToObj(i -> executorService.submit(() -> {
-                    HpanInitiatives hpanInitiatives = HpanInitiatives.builder().hpan(hpan).userId(userId).build();
+                    HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                            .hpan(hpan)
+                            .maskedPan(maskedPan)
+                            .brandLogo(brandLogo)
+                            .userId(userId)
+                            .build();
                     return hpanInitiativesAtomicOpsRepositoryImpl.createIfNotExist(hpanInitiatives).block();
                 })).toList();
 
@@ -174,8 +183,11 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         onboardedInitiativeList.add(onboardedInitiativeBase2);
 
 
-        HpanInitiatives hpanInitiatives = HpanInitiatives.builder().userId("USERID")
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID")
                 .hpan(hpan)
+                .maskedPan("MASKEDPAN")
+                .brandLogo("BRANDLOGO")
                 .onboardedInitiatives(onboardedInitiativeList).build();
 
         hpanInitiativesRepository.save(hpanInitiatives).block();

@@ -29,7 +29,6 @@ microservice-chart:
 
   ingress:
     create: true
-    host: "dev01.idpay.internal.dev.cstar.pagopa.it"
     path: /idpay/reward/(.*)
 
   serviceAccount:
@@ -48,7 +47,7 @@ microservice-chart:
 
   envConfig:
     MONGODB_DBNAME: "idpay"
-    APPLICATIONINSIGHTS_ROLE_NAME: "idpaytimeline"
+    APPLICATIONINSIGHTS_ROLE_NAME: "idpayrewardcalculator"
     APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: "OFF"
     APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED: "false"
     CACHE_REFRESH_MS_RATE: "31536000000"
@@ -68,7 +67,6 @@ microservice-chart:
       KAFKA_RTD_BROKER: kafka_broker_rtd
 
   envSecret:
-    aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
     #    APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
     MONGODB_URI: mongodb-connection-string
     KAFKA_RTD_SASL_JAAS_CONFIG: evh-rtd-trx-rtd-trx-consumer-jaas-config
@@ -78,3 +76,4 @@ microservice-chart:
     KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG: evh-idpay-transaction-user-id-splitter-idpay-transaction-user-id-splitter-consumer-jaas-config-idpay-01
     KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG: evh-idpay-hpan-update-idpay-hpan-update-consumer-jaas-config-idpay-01
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
+    REDIS_URL: idpay-redis-00-primary-connection-string

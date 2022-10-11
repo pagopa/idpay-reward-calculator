@@ -40,6 +40,7 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
@@ -62,7 +63,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected LockServiceImpl lockService;
 
     @AfterEach
-    void checkLockBuquet() throws NoSuchFieldException, IllegalAccessException {
+    void checkLockBouquet() throws NoSuchFieldException, IllegalAccessException {
         final Field locksField = LockServiceImpl.class.getDeclaredField("locks");
         locksField.setAccessible(true);
         @SuppressWarnings("unchecked") Map<Integer, Semaphore> locks = (Map<Integer, Semaphore>)locksField.get(lockService);
@@ -85,6 +86,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         });
 
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
+        initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())));
     }
 
     protected void onboardHpan(String hpan, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
@@ -148,7 +150,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 10, 1000);
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 20, 1000);
         long timeCommitChecked = System.currentTimeMillis();
         final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
         long timePublishChecked = System.currentTimeMillis();

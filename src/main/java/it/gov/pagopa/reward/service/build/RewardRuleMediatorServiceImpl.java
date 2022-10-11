@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Service
@@ -47,7 +48,8 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
         this.commitDelay = Duration.ofMillis(commitMillis);
 
         Duration rewardRulesBuildDelayDuration = Duration.parse(rewardRulesBuildDelay).minusMillis(commitMillis);
-        rewardRulesBuildDelayMinusCommit = rewardRulesBuildDelayDuration.isNegative() ? Duration.ZERO : rewardRulesBuildDelayDuration;
+        Duration defaultDurationDelay = Duration.ofMillis(2L);
+        rewardRulesBuildDelayMinusCommit = defaultDurationDelay.compareTo(rewardRulesBuildDelayDuration) >= 0 ? defaultDurationDelay : rewardRulesBuildDelayDuration;
 
         this.rewardRule2DroolsRuleService = rewardRule2DroolsRuleService;
         this.droolsRuleRepository = droolsRuleRepository;
@@ -87,13 +89,20 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     }
 
     @Override
-    protected Mono<DroolsRule> execute(InitiativeReward2BuildDTO payload, Message<String> message) {
+    protected Mono<DroolsRule> execute(InitiativeReward2BuildDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
                 .map(rewardRule2DroolsRuleService)
                 .flatMap(droolsRuleRepository::save)
-                .map(i -> {
-                    rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig());
-                    return i;
-                });
+                .doOnNext(i -> rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig()));
+    }
+
+    @Override
+    protected void doFinally(Message<String> message, DroolsRule r, Map<String, Object> ctx) {
+        // Do nothing, we are not interested in log performance here
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "REWARD_RULE_BUILD";
     }
 }

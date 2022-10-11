@@ -70,7 +70,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     void testTransactionProcessor() throws JsonProcessingException {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
-        int duplicateTrx = Math.max(100, notValidTrx);
+        int duplicateTrx = Math.min(100, validTrx/2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
         long maxWaitingMs = 30000;
 
         publishRewardRules();
@@ -286,7 +286,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         String hpan = rewardedTrx.getHpan();
         int biasRetrieve = Integer.parseInt(hpan.substring(4));
         useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
-        Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX));
+        Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
     }
 
     //region useCases
@@ -635,13 +635,13 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         String useCaseJsonNotExpected = "{\"correlationId\":\"CORRELATIONID0\",unexpectedStructure:0}";
         errorUseCases.add(Pair.of(
                 () -> useCaseJsonNotExpected,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", useCaseJsonNotExpected)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", useCaseJsonNotExpected, null)
         ));
 
         String jsonNotValid = "{\"correlationId\":\"CORRELATIONID1\",invalidJson";
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", jsonNotValid)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] Unexpected JSON", jsonNotValid, null)
         ));
 
         final String failingRuleEngineUserId = "FAILING_RULE_ENGINE";
@@ -655,7 +655,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(ruleEngineServiceSpy).applyRules(Mockito.argThat(i -> failingRuleEngineUserId.equals(i.getUserId())), Mockito.any(), Mockito.any());
                     return failingRuleEngineUseCase;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingRuleEngineUseCase)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingRuleEngineUseCase, failingRuleEngineUserId)
         ));
 
         final String failingCounterUpdateUserId = "FAILING_COUNTER_UPDATE";
@@ -669,7 +669,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(userInitiativeCountersUpdateServiceSpy).update(Mockito.any(), Mockito.argThat(i -> failingCounterUpdateUserId.equals(i.getUserId())));
                     return failingCounterUpdate;
                 },
-                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingCounterUpdate)
+                errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD] An error occurred evaluating transaction", failingCounterUpdate, failingCounterUpdateUserId)
         ));
 
         final String failingRewardPublishingUserId = "FAILING_REWARD_PUBLISHING";
@@ -682,20 +682,20 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     createUserCounter(failingRewardPublishing);
                     return TestUtils.jsonSerializer(failingRewardPublishing);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)))
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)), failingRewardPublishingUserId)
         ));
 
         final String exceptionWhenRewardPublishUserId = "FAILING_REWARD_PUBLISHING_DUE_EXCEPTION";
-        TransactionDTO exceptionWhenRewardPublisj = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
+        TransactionDTO exceptionWhenRewardPublish = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
                 .userId(exceptionWhenRewardPublishUserId)
                 .build();
         errorUseCases.add(Pair.of(
                 () -> {
                     Mockito.doThrow(new KafkaException()).when(rewardNotifierServiceSpy).notify(Mockito.argThat(i -> exceptionWhenRewardPublishUserId.equals(i.getUserId())));
-                    createUserCounter(exceptionWhenRewardPublisj);
-                    return TestUtils.jsonSerializer(exceptionWhenRewardPublisj);
+                    createUserCounter(exceptionWhenRewardPublish);
+                    return TestUtils.jsonSerializer(exceptionWhenRewardPublish);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublisj)))
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId)
         ));
     }
 
@@ -709,8 +709,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         return failingRewardPublishingDueExceptionNotifiedToError;
     }
 
-    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(topicRewardProcessorRequest, errorMessage, errorDescription, expectedPayload);
+    private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
+        checkErrorMessageHeaders(topicRewardProcessorRequest, errorMessage, errorDescription, expectedPayload, expectedKey);
     }
     //endregion
 }

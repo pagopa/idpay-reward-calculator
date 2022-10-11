@@ -2,14 +2,18 @@ package it.gov.pagopa.reward.service;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.utils.Utils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -23,7 +27,13 @@ import java.util.function.Consumer;
  * @param <T> The type of the message to read and deserialize
  * @param <R> The type of the message resulted
  */
+@Slf4j
 public abstract class BaseKafkaConsumer<T, R> {
+
+    /** Key used inside the {@link Context} to store the startTime */
+    protected static final String CONTEXT_KEY_START_TIME = "START_TIME";
+    /** Key used inside the {@link Context} to store a msg identifier used for logging purpose */
+    protected static final String CONTEXT_KEY_MSG_ID = "MSG_ID";
 
     record KafkaAcknowledgeResult<T> (Acknowledgment ack, T result){}
 
@@ -58,21 +68,42 @@ public abstract class BaseKafkaConsumer<T, R> {
         Acknowledgment ack = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
         KafkaAcknowledgeResult<R> defaultAck = new KafkaAcknowledgeResult<>(ack, null);
 
-        return execute(message)
+        Map<String, Object> ctx=new HashMap<>();
+        ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());
+        ctx.put(CONTEXT_KEY_MSG_ID, message.getPayload());
+
+        return execute(message, ctx)
                 .map(r -> new KafkaAcknowledgeResult<>(ack, r))
                 .defaultIfEmpty(defaultAck)
 
                 .onErrorResume(e -> {
                     notifyError(message, e);
                     return Mono.just(defaultAck);
-                });
+                })
+                .doOnNext(r -> doFinally(message, r.result, ctx))
+                ;
     }
 
-    /** It will deserialize the message and then call the {@link #execute(Object, Message)} method */
-    protected Mono<R> execute(Message<String> message){
+    /** to perform some operation at the end of business logic execution, thus before to wait for commit. As default, it will perform an INFO logging with performance time */
+    @SuppressWarnings("sonar:S1172") // suppressing unused parameters
+    protected void doFinally(Message<String> message, R r, Map<String, Object> ctx) {
+        Long startTime = (Long)ctx.get(CONTEXT_KEY_START_TIME);
+        String msgId = (String)ctx.get(CONTEXT_KEY_MSG_ID);
+        if(startTime != null){
+            log.info("[PERFORMANCE_LOG] [{}] Time occurred to perform business logic: {} ms {}", getFlowName(), System.currentTimeMillis() - startTime, msgId);
+        }
+    }
+
+    /** Name used for logging purpose */
+    protected String getFlowName() {
+        return getClass().getSimpleName();
+    }
+
+    /** It will deserialize the message and then call the {@link #execute(Object, Message, Map)} method */
+    protected Mono<R> execute(Message<String> message, Map<String, Object> ctx){
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
-                .flatMap(payload->execute(payload, message));
+                .flatMap(payload->execute(payload, message, ctx));
     }
 
     /** The {@link ObjectReader} to use in order to deserialize the input message */
@@ -83,7 +114,7 @@ public abstract class BaseKafkaConsumer<T, R> {
     protected abstract void notifyError(Message<String> message, Throwable e);
 
     /** The function invoked in order to process the current message */
-    protected abstract Mono<R> execute(T payload, Message<String> message);
+    protected abstract Mono<R> execute(T payload, Message<String> message, Map<String, Object> ctx);
 
     /** It will read and deserialize {@link Message#getPayload()} using the given {@link #getObjectReader()} */
     protected T deserializeMessage(Message<String> message) {

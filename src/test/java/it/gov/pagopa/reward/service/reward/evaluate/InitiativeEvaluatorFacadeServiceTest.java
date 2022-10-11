@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.dto.Reward;
 import it.gov.pagopa.reward.dto.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
@@ -47,6 +48,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     private InitiativesEvaluatorFacadeServiceImpl initiativesEvaluatorFacadeService;
 
     private final Transaction2RewardTransactionMapper rewardTransactionMapper = new Transaction2RewardTransactionMapper();
+    private final Transaction2TransactionProcessedMapper reward2ProcessedMapper = new Transaction2TransactionProcessedMapper();
 
     @BeforeEach
     public void initMocks() {
@@ -118,7 +120,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     }
 
     private void mockUseCases(TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund, TransactionDTO trxTotalRefundNoCharge) {
-        Mockito.when(transactionProcessedService.save(Mockito.any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+        Mockito.when(transactionProcessedService.save(Mockito.any())).thenAnswer(i -> Mono.just(reward2ProcessedMapper.apply(i.getArgument(0))));
 
         Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.<String>any())).thenReturn(Mono.empty());
         Mockito.when(userInitiativeCountersRepositoryMock.save(Mockito.any())).thenReturn(Mono.empty());

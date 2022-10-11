@@ -1,10 +1,6 @@
 server:
   port: ${REWARD_CALCULATOR_PORT:8080}
 
-reactor:
-  bufferSize:
-    small: ${REACTOR_BUFFER_SIZE:256}
-
 spring:
   application:
     name: idpay-reward-calculator
@@ -52,7 +48,8 @@ spring:
           environment:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
-              configuration.sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG:}
+              configuration:
+                sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG:}
         kafka-idpay:
           type: kafka
           environment:
@@ -66,26 +63,31 @@ spring:
           environment:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_REWARD_RULE_REQUEST_BROKER:${KAFKA_BROKER:}}
-              configuration.sasl.jaas.config: ${KAFKA_REWARD_RULE_REQUEST_SASL_JAAS_CONFIG:}
+              configuration:
+                sasl.jaas.config: ${KAFKA_REWARD_RULE_REQUEST_SASL_JAAS_CONFIG:}
         kafka-errors:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
-              configuration.sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
+              configuration:
+                sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
         kafka-idpay-hpan-update:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_HPAN_UPDATE_BROKER:${KAFKA_BROKER:}}
-              configuration.sasl.jaas.config: ${KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG:}
+              configuration:
+                sasl.jaas.config: ${KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG:}
         #TODO remove me
         kafka-rtd-producer:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
               brokers: ${KAFKA_RTD_BROKER:${KAFKA_BROKER:}}
-              configuration.sasl.jaas.config: ${KAFKA_RTD_PROD_SASL_JAAS_CONFIG:}
+              configuration:
+                sasl.jaas.config: ${KAFKA_RTD_PROD_SASL_JAAS_CONFIG:}
       kafka:
         binder:
           auto-create-topics: false
@@ -115,10 +117,10 @@ spring:
             producer:
               configuration:
                 client.id: trxProcessor-transaction
-                connections.max.idle.ms: ${KAFKA_RTD_PROD_CONNECTION_MAX_IDLE_TIME:180000}
-                retry.backoff.ms: ${KAFKA_RTD_PROD_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
-                linger.ms: ${KAFKA_RTD_PROD_LINGER_MS:${KAFKA_LINGER_MS:2}}
-                batch.size: ${KAFKA_RTD_PROD_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+                connections.max.idle.ms: ${KAFKA_REWARD_RESPONSE_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_REWARD_RESPONSE_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_REWARD_RESPONSE_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_REWARD_RESPONSE_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
           errors-out-0:
             producer:
               configuration:
@@ -166,9 +168,17 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017}
       database: ${MONGODB_DBNAME:idpay}
+      # custom configured properties
+      config:
+        connectionPool:
+          maxSize: ${MONGODB_CONNECTIONPOOL_MAX_SIZE:100}
+          minSize: ${MONGODB_CONNECTIONPOOL_MIN_SIZE:10}
+          maxWaitTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_WAIT_MS:120000}
+          maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
+          maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:0}
+          maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
   redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
+    url: ${REDIS_URL:localhost:6379}
     enabled: ${REDIS_CACHE_ENABLED:false}
 
 logging:
@@ -176,6 +186,7 @@ logging:
     root: ${LOG_LEVEL_ROOT:INFO}
     it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
     it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
+    it.gov.pagopa.reward.service.BaseKafkaConsumer: ${LOG_LEVEL_BASE_KAFKA_CONSUMER:INFO}
     org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
     org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
     org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}

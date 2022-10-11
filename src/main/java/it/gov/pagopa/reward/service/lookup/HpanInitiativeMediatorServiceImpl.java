@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Service
@@ -82,15 +83,17 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     @Override
-    protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message) {
-        long before = System.currentTimeMillis();
-
+    protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
                 .flatMapMany(this::evaluate)
                 .collectList()
-                .then(Mono.just(payload))
 
-                .doFinally(s -> log.info("[HPAN_INITIATIVE_OP] [PERFORMANCE_LOG] Time for elaborate a Hpan update: {} ms", System.currentTimeMillis() - before));
+                .then(Mono.just(payload));
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "HPAN_INITIATIVE_OP";
     }
 
     private Flux<UpdateResult> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
@@ -99,7 +102,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     private Flux<HpanUpdateEvaluateDTO> initializingHpanInitiativeDTO(HpanInitiativeBulkDTO dto) {
-        return Flux.fromIterable(dto.getHpanList().stream().map(hpan -> hpanUpdateBulk2SingleMapper.apply(dto, hpan)).toList());
+        return Flux.fromIterable(dto.getInfoList().stream().map(infoHpan -> hpanUpdateBulk2SingleMapper.apply(dto, infoHpan)).toList());
     }
 
     private Mono<UpdateResult> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {

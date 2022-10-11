@@ -60,14 +60,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
             long after=System.currentTimeMillis();
 
-            log.info("[PERFORMANCE_LOG] - Time between before and after fireAllRules %d ms with transactionId: {idTrxAcquirer: %s, acquirerCode: %s, trxDate: %s}".formatted(after-before, transaction.getIdTrxAcquirer(),transaction.getAcquirerCode(),transaction.getTrxDate()));
-
-            if(log.isDebugEnabled()){
-                log.debug("Time between before and after fireAllRules: {} ms", after-before);
-            }
-
-            log.debug("Send message prepared: {}", trx);
-            log.info("Transaction evaluated  ({}) and resulted into rewards:({}), initiativeRejectionReason:{}", "%s-%s".formatted(trx.getHpan(), trx.getTrxDate()), trx.getRewards(), trx.getInitiativeRejectionReasons());
+            log.info("[PERFORMANCE_LOG] [REWARD] [RULE_ENGINE] - Time between before and after fireAllRules {} ms transaction evaluated  ({}) and resulted into rewards:({}), initiativeRejectionReason:{}",
+                    after-before, trx.getId(), trx.getRewards(), trx.getInitiativeRejectionReasons());
         }else {
             trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE);
         }

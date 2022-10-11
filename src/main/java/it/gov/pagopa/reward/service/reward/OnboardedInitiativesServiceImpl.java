@@ -8,8 +8,10 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +19,8 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
@@ -52,9 +56,11 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         return BigDecimal.ZERO.compareTo(value) < 0;
     }
 
+    private final ExecutorService initiativeRetrieveExecutor = Executors.newFixedThreadPool(100, new BasicThreadFactory.Builder().namingPattern("blockingInitiativeRetrieve-%d").build());
     private Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
-        log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate");
+        log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate: {} - {}", hpan, trxDate);
         return hpanInitiativesRepository.findById(hpan)
+                .publishOn(Schedulers.fromExecutorService(initiativeRetrieveExecutor, "blockingInitiativeRetrieve"))
                 .flatMapMany(initiativesForHpan -> {
                     LocalDateTime trxDateTime = trxDate.atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
                     List<String> initiatives = new ArrayList<>();

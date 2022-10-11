@@ -1,11 +1,11 @@
 microservice-chart:
   image:
-    repository: cstardcommonacr.azurecr.io/idpayrewardcalculator
+    repository: cstarucommonacr.azurecr.io/idpayrewardcalculator
     tag: latest
     pullPolicy: Always
 
   ingress:
-    host: "dev01.idpay.internal.dev.cstar.pagopa.it"
+    host: "uat01.idpay.internal.uat.cstar.pagopa.it"
 
   resources:
     requests:
@@ -36,10 +36,10 @@ microservice-chart:
 #          targetValue: "30"
 
   envSecret:
-    aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
+    aks-api-url: cstar-u-weu-uat01-aks-apiserver-url
 
   keyvault:
-    name: "cstar-d-idpay-kv"
+    name: "cstar-u-idpay-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
 
   # nodeSelector: {}

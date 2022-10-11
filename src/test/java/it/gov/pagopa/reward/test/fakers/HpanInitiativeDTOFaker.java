@@ -6,13 +6,14 @@ public class HpanInitiativeDTOFaker {
     public static HpanUpdateEvaluateDTO.HpanUpdateEvaluateDTOBuilder mockInstanceBuilder(Integer bias){
         return HpanUpdateEvaluateDTO.builder()
                 .hpan("HPAN_%d".formatted(bias))
+                .maskedPan("MASKEDPAM_%d".formatted(bias))
+                .brandLogo("BRANDLOGO_%d".formatted(bias))
                 .userId("USERID_%d".formatted(bias))
                 .initiativeId("INITIATIVE_%d".formatted(bias));
     }
     public static HpanUpdateEvaluateDTO mockInstance(Integer bias){
         mockInstanceBuilder(bias).build();
-        HpanUpdateEvaluateDTO out = mockInstanceBuilder(bias).build();
-        return out;
+        return mockInstanceBuilder(bias).build();
     }
 
 }

@@ -17,8 +17,9 @@ import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 @Service
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 public class RewardContextHolderServiceImpl implements RewardContextHolderService {
 
     private final KieContainerBuilderService kieContainerBuilderService;
-    private final Map<String, InitiativeConfig> initiativeId2Config=new HashMap<>();
+    private final Map<String, InitiativeConfig> initiativeId2Config=new ConcurrentHashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     private KieBase kieBase;
@@ -101,7 +102,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
         log.debug("[CACHE_MISS] Cannot find locally initiativeId {}", initiativeId);
         long startTime = System.currentTimeMillis();
-        DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block();
+        DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10));
         log.info("[PERFORMANCE_LOG] Time spent fetching initiativeId: {} ms", System.currentTimeMillis() - startTime);
         if (droolsRule==null){
             log.error("cannot find initiative having id %s".formatted(initiativeId));

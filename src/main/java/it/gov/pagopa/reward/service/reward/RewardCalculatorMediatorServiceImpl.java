@@ -24,9 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Signal;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Service
@@ -92,12 +94,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
     }
 
     @Override
-    protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message) {
+    protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
         throw new IllegalStateException("Logic overridden");
     }
 
     @Override
-    protected Mono<RewardTransactionDTO> execute(Message<String> message) {
+    protected Mono<RewardTransactionDTO> execute(Message<String> message, Map<String, Object> ctx) {
         return Mono.fromSupplier(() -> {
                     int lockId = -1;
                     String userId = Utils.readUserId(message.getPayload());
@@ -108,7 +110,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                     }
                     return new MutablePair<>(message, lockId);
                 })
-                .flatMap(this::executeAfterLock);
+                .flatMap(m -> executeAfterLock(m, ctx));
     }
 
     @Override
@@ -121,11 +123,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
         return e -> errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
     }
 
-    private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId) {
-        final long startTime = System.currentTimeMillis();
+    private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId, Map<String, Object> ctx) {
+        log.trace("[REWARD] Received payload: {}", messageAndLockId.getKey().getPayload());
+
         final Message<String> message = messageAndLockId.getKey();
 
-        final Consumer<? super RewardTransactionDTO> lockReleaser = x -> {
+        final Consumer<? super Signal<RewardTransactionDTO>> lockReleaser = x -> {
             int lockId = messageAndLockId.getValue();
             if (lockId > -1) {
                 lockService.releaseLock(lockId);
@@ -134,32 +137,31 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
             }
         };
 
+        ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());
+
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .map(transactionValidatorService::validate)
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
-                .doOnNext(lockReleaser)
-                .doOnNext(r -> {
-                    Exception exception=null;
-                    try{
-                        if(!rewardNotifierService.notify(r)){
-                            exception = new IllegalStateException("[REWARD] Something gone wrong while reward notify");
-                        }
-                    } catch (Exception e){
-                        exception = e;
-                    }
-                    if (exception != null) {
-                        log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
-                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, exception);
-                    }
-                })
+                .doOnEach(lockReleaser)
 
-                .doFinally(x -> {
-                    lockReleaser.accept(null);
-                    log.info("[PERFORMANCE_LOG] [REWARD] - Time between before and after evaluate message {} ms with payload: {}", System.currentTimeMillis() - startTime, message.getPayload());
+                .doOnNext(r -> {
+                    try {
+                        if (!rewardNotifierService.notify(r)) {
+                            throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
+                        }
+                    } catch (Exception e) {
+                        log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
+                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
+                    }
                 });
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "REWARD";
     }
 
     public int calculateLockId(String userId) {
@@ -172,7 +174,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                     .collectList()
                     .flatMap(initiatives -> initiativesEvaluatorFacadeService.evaluate(trx, initiatives));
         } else {
-            log.trace("[REWARD] [REWARD_KO] Transaction discarded: {}", trx.getRejectionReasons());
+            log.trace("[REWARD] [REWARD_KO] Transaction discarded: {} - {}", trx.getId(), trx.getRejectionReasons());
             return Mono.just(rewardTransactionMapper.apply(trx));
         }
     }
