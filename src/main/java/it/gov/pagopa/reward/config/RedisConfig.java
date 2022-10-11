@@ -14,10 +14,9 @@ public class RedisConfig {
 
     @Bean
     public ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory) {
-        RedisSerializationContext.RedisSerializationContextBuilder<String, byte[]> builder =
-                RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
-        RedisSerializationContext<String, byte[]> context =
-                builder.build();
+        RedisSerializationContext<String, byte[]> context = RedisSerializationContext.<String, byte[]>newSerializationContext(new StringRedisSerializer())
+                        .value(RedisSerializationContext.SerializationPair.byteArray())
+                        .build();
         return new ReactiveRedisTemplate<>(factory, context);
     }
 
