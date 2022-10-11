@@ -193,6 +193,10 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Consumer<String, String> getEmbeddedKafkaConsumer(String topic, String groupId) {
+        return getEmbeddedKafkaConsumer(topic, groupId, true);
+    }
+
+    protected Consumer<String, String> getEmbeddedKafkaConsumer(String topic, String groupId, boolean attachToBroker) {
         if (!kafkaBroker.getTopics().contains(topic)) {
             kafkaBroker.addTopics(topic);
         }
@@ -201,7 +205,9 @@ public abstract class BaseIntegrationTest {
         consumerProps.put("key.deserializer", StringDeserializer.class);
         DefaultKafkaConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
         Consumer<String, String> consumer = cf.createConsumer();
-        kafkaBroker.consumeFromAnEmbeddedTopic(consumer, topic);
+        if(attachToBroker){
+            kafkaBroker.consumeFromAnEmbeddedTopic(consumer, topic);
+        }
         return consumer;
     }
 
@@ -269,7 +275,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Map<TopicPartition, OffsetAndMetadata> getCommittedOffsets(String topic, String groupId){
-        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, groupId)) {
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, groupId, false)) {
             return consumer.committed(consumer.partitionsFor(topic).stream().map(p-> new TopicPartition(topic, p.partition())).collect(Collectors.toSet()));
         }
     }
@@ -290,8 +296,8 @@ public abstract class BaseIntegrationTest {
                 final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
                 Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
                 return commits;
-            } catch (RuntimeException e){
-                lastException = e;
+            } catch (Throwable e){
+                lastException = new RuntimeException(e);
                 wait(millisAttemptDelay, TimeUnit.MILLISECONDS);
             }
         }
@@ -299,7 +305,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Map<TopicPartition, Long> getEndOffsets(String topic){
-        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check")) {
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check", false)) {
             return consumer.endOffsets(consumer.partitionsFor(topic).stream().map(p-> new TopicPartition(topic, p.partition())).toList());
         }
     }
