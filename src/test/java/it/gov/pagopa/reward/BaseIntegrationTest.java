@@ -305,7 +305,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Map<TopicPartition, Long> getEndOffsets(String topic){
-        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check")) {
+        try (Consumer<String, String> consumer = getEmbeddedKafkaConsumer(topic, "idpay-group-test-check", false)) {
             return consumer.endOffsets(consumer.partitionsFor(topic).stream().map(p-> new TopicPartition(topic, p.partition())).toList());
         }
     }
