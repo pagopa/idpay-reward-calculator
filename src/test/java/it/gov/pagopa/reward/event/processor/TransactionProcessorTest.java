@@ -581,7 +581,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     }
 
     private UserInitiativeCounters onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
-        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime(), initiativeIds);
+        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
 
         return createUserCounter(trx);
     }
