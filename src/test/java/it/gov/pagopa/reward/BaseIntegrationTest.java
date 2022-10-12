@@ -102,8 +102,7 @@ import static org.awaitility.Awaitility.await;
                 //endregion
 
                 //region redis
-                "spring.redis.host=localhost",
-                "spring.redis.port=6379",
+                "spring.redis.url=redis://@localhost:6379",
                 //endregion
         })
 @AutoConfigureDataMongo
@@ -151,11 +150,8 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}")
     protected String groupIdHpanInitiativeLookupConsumer;
 
-    @Value("${spring.redis.host}")
-    protected String redisHost;
-    @Value("${spring.redis.port}")
-    protected int redisPort;
-
+    @Value("${spring.redis.url}")
+    protected String redisUrl;
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
@@ -195,7 +191,7 @@ public abstract class BaseIntegrationTest {
                         """,
                 mongoUrl,
                 "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes),
-                "%s:%s".formatted(redisHost, redisPort));
+                redisUrl);
     }
 
     @Test

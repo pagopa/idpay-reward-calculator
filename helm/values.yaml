@@ -76,4 +76,5 @@ microservice-chart:
     KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG: evh-idpay-transaction-user-id-splitter-idpay-transaction-user-id-splitter-consumer-jaas-config-idpay-01
     KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG: evh-idpay-hpan-update-idpay-hpan-update-consumer-jaas-config-idpay-01
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
-    REDIS_URL: idpay-redis-00-primary-connection-string
+    REDIS_CONNECTION_URL: idpay-redis-00-primary-connection-url
+
