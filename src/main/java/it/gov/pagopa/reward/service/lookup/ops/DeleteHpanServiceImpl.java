@@ -39,9 +39,9 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
         if(activeTimeIntervalsList != null) {
             ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
             if (lastActiveInterval != null) {
-                if (!hpanUpdateEvaluateDTO.getEvaluationDate().isBefore(lastActiveInterval.getStartInterval())){
-                        if (lastActiveInterval.getEndInterval() == null) {
-                            LocalDateTime endInterval = hpanUpdateEvaluateDTO.getEvaluationDate().with(LocalTime.MAX);
+                LocalDateTime endInterval = hpanUpdateEvaluateDTO.getEvaluationDate().plusDays(1).with(LocalTime.MIN);
+                if (endInterval.isAfter(lastActiveInterval.getStartInterval())){
+                    if (lastActiveInterval.getEndInterval() == null) {
                             lastActiveInterval.setEndInterval(endInterval);
                             onboardedInitiative.setLastEndInterval(endInterval);
 
@@ -49,6 +49,15 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                         }
                         log.error("Unexpected use case, the initiative for this hpan not have an active interval open. Source message: {}", hpanUpdateEvaluateDTO);
                         return null;
+                }else if(endInterval.equals(lastActiveInterval.getStartInterval())){
+                    log.debug("[DELETED_HPAN] deleting interval before its start: {} , {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
+                    activeTimeIntervalsList.remove(lastActiveInterval);
+                    LocalDateTime newLastEndInterval = null;
+                    if(!activeTimeIntervalsList.isEmpty()){
+                        newLastEndInterval = activeTimeIntervalsList.get(activeTimeIntervalsList.size()-1).getEndInterval();
+                    }
+                    onboardedInitiative.setLastEndInterval(newLastEndInterval);
+                    return onboardedInitiative;
                 }
                 log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanUpdateEvaluateDTO);
                 return null;

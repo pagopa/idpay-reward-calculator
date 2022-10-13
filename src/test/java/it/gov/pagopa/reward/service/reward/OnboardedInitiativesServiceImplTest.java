@@ -48,6 +48,10 @@ class OnboardedInitiativesServiceImplTest {
     }
 
     @Test
+    void getChargeInitiativesWhenEndEnd(){
+        testChargeInitiative(LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), false);
+    }
+    @Test
     void getChargeInitiativesWhenFutureEndEnd(){
         testChargeInitiative(LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
     }

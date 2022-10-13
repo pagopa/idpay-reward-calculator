@@ -87,7 +87,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         for (int i = timeIntervals.size()-1; i>=0;i--) {
             LocalDateTime start = timeIntervals.get(i).getStartInterval();
             LocalDateTime end = timeIntervals.get(i).getEndInterval();
-            if (!trxDate.isBefore(start) && (end == null || !trxDate.isAfter(end))) {
+            if (!trxDate.isBefore(start) && (end == null || trxDate.isBefore(end))) {
                 return true;
             }
         }
