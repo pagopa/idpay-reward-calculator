@@ -28,35 +28,45 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                                 .setOnInsert(HpanInitiatives.Fields.userId, hpanInitiatives.getUserId())
                                 .setOnInsert(HpanInitiatives.Fields.hpan, hpanInitiatives.getHpan()),
                         HpanInitiatives.class).onErrorResume(e -> {
-                            if (e instanceof DuplicateKeyException) {
-                                return Mono.just(UpdateResult.acknowledged(1, 0L, null));
-                            } else {
-                                return Mono.error(e);
-                            }
-                        });
+                    if (e instanceof DuplicateKeyException) {
+                        return Mono.just(UpdateResult.acknowledged(1, 0L, null));
+                    } else {
+                        return Mono.error(e);
+                    }
+                });
     }
 
     @Override
     public Mono<UpdateResult> setInitiative(String hpan, OnboardedInitiative onboardedInitiative) {
-        return mongoTemplate
-                .updateFirst(
-                        Query.query(Criteria.where(HpanInitiatives.Fields.hpan).is(hpan)
-                                .and(FIELD_INITIATIVE_ID).ne(onboardedInitiative.getInitiativeId())),
-                        new Update().push(HpanInitiatives.Fields.onboardedInitiatives, onboardedInitiative),
-                        HpanInitiatives.class)
-                .flatMap(ur -> {
-                    if (ur.getModifiedCount() > 0) {
-                        return Mono.just(ur);
-                    } else {
-                        return mongoTemplate
-                        .updateFirst(
-                                Query.query(
-                                        Criteria.where(HpanInitiatives.Fields.hpan).is(hpan)
-                                                .and(FIELD_INITIATIVE_ID).is(onboardedInitiative.getInitiativeId())),
-                                new Update()
-                                        .set("%s.$".formatted(HpanInitiatives.Fields.onboardedInitiatives), onboardedInitiative),
-                                HpanInitiatives.class);
-                    }
-                });
+        if (onboardedInitiative.getActiveTimeIntervals().isEmpty()) {
+            return mongoTemplate
+                    .updateFirst(
+                            Query.query(Criteria.where(HpanInitiatives.Fields.hpan).is(hpan)),
+                            new Update()
+                                    .pull(HpanInitiatives.Fields.onboardedInitiatives,
+                                            Query.query(Criteria.where(OnboardedInitiative.Fields.initiativeId).is(onboardedInitiative.getInitiativeId()))),
+                            HpanInitiatives.class);
+        } else {
+            return mongoTemplate
+                    .updateFirst(
+                            Query.query(Criteria.where(HpanInitiatives.Fields.hpan).is(hpan)
+                                    .and(FIELD_INITIATIVE_ID).ne(onboardedInitiative.getInitiativeId())),
+                            new Update().push(HpanInitiatives.Fields.onboardedInitiatives, onboardedInitiative),
+                            HpanInitiatives.class)
+                    .flatMap(ur -> {
+                        if (ur.getModifiedCount() > 0) {
+                            return Mono.just(ur);
+                        } else {
+                            return mongoTemplate
+                                    .updateFirst(
+                                            Query.query(
+                                                    Criteria.where(HpanInitiatives.Fields.hpan).is(hpan)
+                                                            .and(FIELD_INITIATIVE_ID).is(onboardedInitiative.getInitiativeId())),
+                                            new Update()
+                                                    .set("%s.$".formatted(HpanInitiatives.Fields.onboardedInitiatives), onboardedInitiative),
+                                            HpanInitiatives.class);
+                        }
+                    });
+        }
     }
 }
