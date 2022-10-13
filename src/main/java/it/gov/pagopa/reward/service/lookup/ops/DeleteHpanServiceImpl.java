@@ -52,6 +52,11 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                 }else if(endInterval.equals(lastActiveInterval.getStartInterval())){
                     log.debug("[DELETED_HPAN] deleting interval before its start: {} , {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
                     activeTimeIntervalsList.remove(lastActiveInterval);
+                    LocalDateTime newLastEndInterval = null;
+                    if(!activeTimeIntervalsList.isEmpty()){
+                        newLastEndInterval = activeTimeIntervalsList.get(activeTimeIntervalsList.size()-1).getEndInterval();
+                    }
+                    onboardedInitiative.setLastEndInterval(newLastEndInterval);
                     return onboardedInitiative;
                 }
                 log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanUpdateEvaluateDTO);

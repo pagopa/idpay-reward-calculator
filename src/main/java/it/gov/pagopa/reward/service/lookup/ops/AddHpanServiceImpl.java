@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class AddHpanServiceImpl implements AddHpanService {
                 .initiativeId(hpanUpdateEvaluateDTO.getInitiativeId())
                 .status("ACCEPTED")
                 .acceptanceDate(startInterval)
-                .activeTimeIntervals(List.of(initializeInterval(startInterval)))
+                .activeTimeIntervals(new ArrayList<>(List.of(initializeInterval(startInterval))))
                 .build();
     }
 
