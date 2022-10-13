@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.kie.api.KieBase;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,27 +33,29 @@ class RewardContextHolderServiceImplTest {
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
     @Mock private ApplicationEventPublisher applicationEventPublisherMock;
     @Mock private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplateMock;
-    private final boolean isRedisCacheEnabled = true;
-
+    @Mock private ReactiveValueOperations<String, byte[]> redisValueOps;
     private RewardContextHolderService rewardContextHolderService;
 
-    private final KieBase expectedKieBase = Mockito.mock(KieBase.class);
+    private final KieBase expectedKieBase = Mockito.mock(KieBase.class); // TODO create actual KieBase
 
-    @BeforeEach
-    void init(){
+    void init(boolean isRedisCacheEnabled){
         Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
         Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieBase));
         if (isRedisCacheEnabled) {
             byte[] expectedKieBaseSerialized = SerializationUtils.serialize(expectedKieBase);
             Assertions.assertNotNull(expectedKieBaseSerialized);
-            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(expectedKieBaseSerialized));
+            Mockito.when(redisValueOps.get(Mockito.anyString())).thenReturn(Mono.just(expectedKieBaseSerialized));
         }
 
         rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock, isRedisCacheEnabled);
     }
 
-    @Test
-    void getKieContainer() {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void getKieContainer(boolean isRedisCacheEnabled) {
+        // Given
+        init(isRedisCacheEnabled);
+
         // When
         KieBase result = rewardContextHolderService.getRewardRulesKieBase();
 
@@ -59,8 +64,11 @@ class RewardContextHolderServiceImplTest {
         Assertions.assertSame(expectedKieBase, result);
     }
 
-    @Test
-    void testNotRetrieveInitiativeConfig(){
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testNotRetrieveInitiativeConfig(boolean isRedisCacheEnabled){
+        init(isRedisCacheEnabled);
+
         String initiativeId="INITIATIVE-ID";
         Mockito.when(droolsRuleRepositoryMock.findById(Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
@@ -72,8 +80,11 @@ class RewardContextHolderServiceImplTest {
         Mockito.verify(droolsRuleRepositoryMock).findById(Mockito.same(initiativeId));
     }
 
-    @Test
-    void testRetrieveInitiativeConfig(){
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testRetrieveInitiativeConfig(boolean isRedisCacheEnabled){
+        init(isRedisCacheEnabled);
+
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = Mockito.mock(InitiativeConfig.class);
         DroolsRule droolsRule = DroolsRule.builder().initiativeConfig(initiativeConfig).build();
@@ -87,8 +98,11 @@ class RewardContextHolderServiceImplTest {
         Mockito.verify(droolsRuleRepositoryMock).findById(Mockito.same(initiativeId));
     }
 
-    @Test
-    void testSetInitiativeConfig(){
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void testSetInitiativeConfig(boolean isRedisCacheEnabled){
+        init(isRedisCacheEnabled);
+
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
