@@ -30,7 +30,7 @@ class RewardContextHolderServiceImplTest {
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
     @Mock private ApplicationEventPublisher applicationEventPublisherMock;
     @Mock private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplateMock;
-    @Value("${spring.redis.enabled}") private boolean isRedisCacheEnabled;
+    private final boolean isRedisCacheEnabled = true;
 
     private RewardContextHolderService rewardContextHolderService;
 
@@ -41,7 +41,9 @@ class RewardContextHolderServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
         Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieBase));
         if (isRedisCacheEnabled) {
-            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(SerializationUtils.serialize(expectedKieBase)));
+            byte[] expectedKieBaseSerialized = SerializationUtils.serialize(expectedKieBase);
+            Assertions.assertNotNull(expectedKieBaseSerialized);
+            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(expectedKieBaseSerialized));
         }
 
         rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock, isRedisCacheEnabled);

@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.service.build;
 
 import it.gov.pagopa.reward.model.DroolsRule;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.KieContainer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

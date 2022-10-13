@@ -30,10 +30,10 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final Map<String, InitiativeConfig> initiativeId2Config=new ConcurrentHashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
-    private KieBase kieBase;
     private final boolean isRedisCacheEnabled;
+    public static final String REWARD_CONTEXT_HOLDER_CACHE_NAME = "reward_rule";
 
-    public static final String CACHE_ID_REWARD_CONTEXT_HOLDER = "reward_rule";
+    private KieBase kieBase;
 
     public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher, @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate, @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled) {
         this.kieContainerBuilderService =kieContainerBuilderService;
@@ -58,8 +58,14 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     @Override
     public void setRewardRulesKieBase(KieBase kieBase) {
         this.kieBase = kieBase;
+
         if (isRedisCacheEnabled) {
-            reactiveRedisTemplate.opsForValue().set(CACHE_ID_REWARD_CONTEXT_HOLDER, SerializationUtils.serialize(kieBase)).subscribe(x -> log.debug("Saving KieContainer in cache"));
+            byte[] kieBaseSerialized = SerializationUtils.serialize(kieBase);
+            if (kieBaseSerialized != null) {
+                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> log.debug("Saving KieContainer in cache"));
+            } else {
+                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.debug("Clearing KieContainer in cache"));
+            }
         }
     }
 
@@ -70,7 +76,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
 
     public void refreshKieContainer(Consumer<? super KieBase> subscriber) {
         if (isRedisCacheEnabled) {
-            reactiveRedisTemplate.opsForValue().get(CACHE_ID_REWARD_CONTEXT_HOLDER)
+            reactiveRedisTemplate.opsForValue().get(REWARD_CONTEXT_HOLDER_CACHE_NAME)
                     .map(c -> (KieBase) SerializationUtils.deserialize(c))
                     .doOnNext(c -> this.kieBase = c)
                     .switchIfEmpty(refreshKieContainerCacheMiss())
@@ -103,7 +109,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         log.debug("[CACHE_MISS] Cannot find locally initiativeId {}", initiativeId);
         long startTime = System.currentTimeMillis();
         DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10));
-        log.info("[PERFORMANCE_LOG] Time spent fetching initiativeId: {} ms", System.currentTimeMillis() - startTime);
+        log.info("[CACHE_MISS] [PERFORMANCE_LOG] Time spent fetching initiativeId: {} ms", System.currentTimeMillis() - startTime);
         if (droolsRule==null){
             log.error("cannot find initiative having id %s".formatted(initiativeId));
             return null;

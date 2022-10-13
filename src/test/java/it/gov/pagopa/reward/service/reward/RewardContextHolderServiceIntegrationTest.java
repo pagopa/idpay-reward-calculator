@@ -80,7 +80,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         KieBase kieBase = kieContainerBuilderService.build(Flux.just(dr)).block();
         rewardContextHolderService.setRewardRulesKieBase(kieBase);
         waitFor(
-                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.CACHE_ID_REWARD_CONTEXT_HOLDER).block()) != null,
+                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
                 ()->"KieBase not saved in cache",
                 10,
                 500
@@ -103,7 +103,6 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         );
 
         int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
-
         Assertions.assertEquals(1, ruleBuiltSize);
 
         // Execute rule and assert transaction has the expected rejection reason
@@ -111,6 +110,29 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         RewardTransactionDTO result = executeRules(trxMock);
 
         Assertions.assertEquals(List.of("OK"), result.getRejectionReasons());
+
+        // Set a null kieBase
+        rewardContextHolderService.setRewardRulesKieBase(null);
+        waitFor(
+                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) == null,
+                ()->"KieBase not saved in cache",
+                10,
+                500
+        );
+
+        rewardContextHolderService.refreshKieContainer();
+        waitFor(
+                ()-> (reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
+                ()-> "KieBase is null",
+                10,
+                500
+        );
+
+        KieBase resultKieBase = rewardContextHolderService.getRewardRulesKieBase();
+        Assertions.assertNotNull(resultKieBase);
+
+        int resultRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        Assertions.assertEquals(0, resultRuleBuiltSize);
     }
 
     private RewardTransactionDTO executeRules(TransactionDTO trx) {

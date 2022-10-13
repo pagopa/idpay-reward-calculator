@@ -100,10 +100,6 @@ import static org.awaitility.Awaitility.await;
                 "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
                 "spring.mongodb.embedded.version=4.0.21",
                 //endregion
-
-                //region redis
-                "spring.redis.url=redis://@localhost:6379",
-                //endregion
         })
 @AutoConfigureDataMongo
 public abstract class BaseIntegrationTest {
@@ -152,6 +148,7 @@ public abstract class BaseIntegrationTest {
 
     @Value("${spring.redis.url}")
     protected String redisUrl;
+
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
