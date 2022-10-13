@@ -310,6 +310,7 @@ class DeleteHpanServiceImplTest {
         Assertions.assertEquals(2, result1.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval= result1.getActiveTimeIntervals().get(result1.getActiveTimeIntervals().size() - 1);
         Assertions.assertNotNull(lastInterval.getEndInterval());
+        Assertions.assertEquals(lastInterval.getEndInterval(), result1.getLastEndInterval());
 
         // When adding again
         AddHpanService addHpanService = new AddHpanServiceImpl();
@@ -320,6 +321,7 @@ class DeleteHpanServiceImplTest {
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
         Assertions.assertEquals(expectedDateTime, lastInterval2.getStartInterval());
         Assertions.assertNull(lastInterval2.getEndInterval());
+        Assertions.assertNull(result2.getLastEndInterval());
 
         // When deleting again
         OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
@@ -328,7 +330,9 @@ class DeleteHpanServiceImplTest {
         Assertions.assertEquals(2, result3.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval3= result3.getActiveTimeIntervals().get(result3.getActiveTimeIntervals().size() - 1);
         Assertions.assertNotNull(lastInterval3.getEndInterval());
+        Assertions.assertEquals(lastInterval3.getEndInterval(), result3.getLastEndInterval());
     }
+
     @Test
     void testActivationDeletionSameDayNoInitialInitiatives() {
         // Given
