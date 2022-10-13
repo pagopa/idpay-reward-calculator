@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -28,9 +29,10 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
     private HpanInitiativesAtomicOpsRepositoryImpl hpanInitiativesAtomicOpsRepositoryImpl;
 
     @AfterEach
-    void clearData(){
+    void clearData() {
         hpanInitiativesRepository.deleteById("hpan_prova").block();
     }
+
     @Test
     void createIfNotExist() {
         String hpan = "hpan_prova";
@@ -78,12 +80,12 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
         final List<Future<UpdateResult>> tasks = IntStream.range(1, 3)
                 .mapToObj(i -> OnboardedInitiative.builder()
-                            .initiativeId("INITIATIVE_%d".formatted(i))
-                            .acceptanceDate(now.minusDays(10L))
-                            .status("ACCEPTED")
-                            .activeTimeIntervals(activeIntervalList).build()
+                        .initiativeId("INITIATIVE_%d".formatted(i))
+                        .acceptanceDate(now.minusDays(10L))
+                        .status("ACCEPTED")
+                        .activeTimeIntervals(activeIntervalList).build()
                 )
-                .map(oi -> executorService.submit(() -> hpanInitiativesAtomicOpsRepositoryImpl.setInitiative(hpan,oi).block())).toList();
+                .map(oi -> executorService.submit(() -> hpanInitiativesAtomicOpsRepositoryImpl.setInitiative(hpan, oi).block())).toList();
 
         tasks.forEach(updateResultFuture -> {
             try {
@@ -97,7 +99,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         HpanInitiatives result = hpanInitiativesRepository.findById(hpan).block();
         Assertions.assertNotNull(result);
         result.getOnboardedInitiatives().forEach(onboardedInitiative ->
-            Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size()));
+                Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size()));
 
         //set another initiative
         List<ActiveTimeInterval> activeTimeIntervalList2 = List.of(ActiveTimeInterval.builder().startInterval(now).build());
@@ -111,7 +113,22 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         Assertions.assertEquals(1, onboardedInitiativeResult2.getActiveTimeIntervals().size());
         Assertions.assertEquals(activeTimeIntervalList2, onboardedInitiativeResult2.getActiveTimeIntervals());
 
+        // testing removing initiatives due not active intervals
+        removeInitiative("ANOTHER_INITIATIVE", hpan, List.of("INITIATIVE_1", "INITIATIVE_2"));
+        removeInitiative("INITIATIVE_2", hpan, List.of("INITIATIVE_1"));
+        removeInitiative("INITIATIVE_1", hpan, Collections.emptyList());
+    }
 
+    private void removeInitiative(String initiative2remove, String hpan, List<String> expectedInitiatives) {
+        OnboardedInitiative removedInitiative2 = OnboardedInitiative.builder()
+                .initiativeId(initiative2remove)
+                .activeTimeIntervals(Collections.emptyList())
+                .build();
+        hpanInitiativesAtomicOpsRepositoryImpl.setInitiative(hpan, removedInitiative2).block();
+
+        HpanInitiatives result = hpanInitiativesRepository.findById(hpan).block();
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedInitiatives, result.getOnboardedInitiatives().stream().map(OnboardedInitiative::getInitiativeId).toList());
     }
 
     @Test
@@ -146,7 +163,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         HpanInitiatives result = hpanInitiativesRepository.findById(hpan).block();
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result, "onboardedInitiatives");
-        Assertions.assertEquals(userId,result.getUserId());
+        Assertions.assertEquals(userId, result.getUserId());
         Assertions.assertEquals(hpan, result.getHpan());
     }
 
