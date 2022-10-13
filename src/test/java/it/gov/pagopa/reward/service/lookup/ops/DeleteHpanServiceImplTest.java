@@ -277,8 +277,6 @@ class DeleteHpanServiceImplTest {
 
         HpanUpdateEvaluateDTO request = new HpanUpdateEvaluateDTO();
         request.setHpan(hpanInitiatives.getHpan());
-        request.setMaskedPan(hpanInitiatives.getMaskedPan());
-        request.setBrandLogo(hpanInitiatives.getBrandLogo());
         request.setInitiativeId(initiativeId);
         request.setUserId(hpanInitiatives.getUserId());
         request.setEvaluationDate(elabDateTime);
@@ -328,8 +326,6 @@ class DeleteHpanServiceImplTest {
 
         HpanUpdateEvaluateDTO request = new HpanUpdateEvaluateDTO();
         request.setHpan(hpanInitiatives.getHpan());
-        request.setMaskedPan(hpanInitiatives.getMaskedPan());
-        request.setBrandLogo(hpanInitiatives.getBrandLogo());
         request.setInitiativeId(initiativeId);
         request.setUserId(hpanInitiatives.getUserId());
         request.setEvaluationDate(elabDateTime);
