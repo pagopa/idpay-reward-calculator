@@ -4,18 +4,17 @@ import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
+import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.kie.api.KieBase;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
@@ -32,19 +31,21 @@ class RewardContextHolderServiceImplTest {
     @Mock private KieContainerBuilderService kieContainerBuilderServiceMock;
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
     @Mock private ApplicationEventPublisher applicationEventPublisherMock;
-    @Mock private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplateMock;
-    @Mock private ReactiveValueOperations<String, byte[]> redisValueOps;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplateMock;
     private RewardContextHolderService rewardContextHolderService;
 
-    private final KieBase expectedKieBase = Mockito.mock(KieBase.class); // TODO create actual KieBase
+    private final KieBase expectedKieBase = new KieContainerBuilderServiceImpl(droolsRuleRepositoryMock).build(Flux.empty()).block();
 
     void init(boolean isRedisCacheEnabled){
+        Assertions.assertNotNull(expectedKieBase);
+
         Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
         Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any())).thenReturn(Mono.just(expectedKieBase));
+
         if (isRedisCacheEnabled) {
             byte[] expectedKieBaseSerialized = SerializationUtils.serialize(expectedKieBase);
             Assertions.assertNotNull(expectedKieBaseSerialized);
-            Mockito.when(redisValueOps.get(Mockito.anyString())).thenReturn(Mono.just(expectedKieBaseSerialized));
+            Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(expectedKieBaseSerialized));
         }
 
         rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock, isRedisCacheEnabled);
@@ -61,7 +62,9 @@ class RewardContextHolderServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertSame(expectedKieBase, result);
+        if (!isRedisCacheEnabled) {
+            Assertions.assertSame(expectedKieBase, result);
+        }
     }
 
     @ParameterizedTest
