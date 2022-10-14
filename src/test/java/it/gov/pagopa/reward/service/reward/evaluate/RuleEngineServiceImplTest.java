@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kie.api.KieBase;
 import org.kie.api.command.Command;
-import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.StatelessKieSession;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -63,10 +63,10 @@ class RuleEngineServiceImplTest {
         TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
         Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
 
-        KieContainer kieContainer = Mockito.mock(KieContainer.class);
-        Mockito.when(rewardContextHolderService.getRewardRulesKieContainer()).thenReturn(kieContainer);
+        KieBase kieBase = Mockito.mock(KieBase.class);
+        Mockito.when(rewardContextHolderService.getRewardRulesKieBase()).thenReturn(kieBase);
         StatelessKieSession statelessKieSession = Mockito.mock(StatelessKieSession.class);
-        Mockito.when(kieContainer.newStatelessKieSession()).thenReturn(statelessKieSession);
+        Mockito.when(kieBase.newStatelessKieSession()).thenReturn(statelessKieSession);
 
         RewardTransactionDTO rewardTrxDto = Mockito.mock(RewardTransactionDTO.class);
         Mockito.when(transactionDroolsDTO2RewardTransactionMapper.apply(Mockito.same(rewardTrx))).thenReturn(rewardTrxDto);
@@ -76,7 +76,7 @@ class RuleEngineServiceImplTest {
 
         // Then
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
-        Mockito.verify(rewardContextHolderService).getRewardRulesKieContainer();
+        Mockito.verify(rewardContextHolderService).getRewardRulesKieBase();
         Mockito.verify(statelessKieSession).execute(Mockito.any(Command.class));
         Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));
     }
@@ -101,9 +101,9 @@ class RuleEngineServiceImplTest {
         ruleEngineService.applyRules(trx, initiatives, counters);
 
         // Then
-        Mockito.verify(rewardContextHolderService,Mockito.never()).getRewardRulesKieContainer();
+        Mockito.verify(rewardContextHolderService,Mockito.never()).getRewardRulesKieBase();
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
-        Mockito.verify(rewardContextHolderService, Mockito.never()).getRewardRulesKieContainer();
+        Mockito.verify(rewardContextHolderService, Mockito.never()).getRewardRulesKieBase();
         Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));
     }
 
@@ -127,7 +127,7 @@ class RuleEngineServiceImplTest {
         );
 
         RewardContextHolderService rewardContextHolderServiceMock = Mockito.mock(RewardContextHolderServiceImpl.class);
-        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieContainer()).thenReturn(kieContainerBuilder.build(Flux.fromIterable(rules)).block());
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieBase()).thenReturn(kieContainerBuilder.build(Flux.fromIterable(rules)).block());
 
         RuleEngineConfig ruleEngineConfig = new RuleEngineConfig();
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);

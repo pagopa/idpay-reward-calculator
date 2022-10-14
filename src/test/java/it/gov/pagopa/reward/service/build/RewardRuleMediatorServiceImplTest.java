@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.kie.api.KieBase;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -45,7 +46,7 @@ class RewardRuleMediatorServiceImplTest {
     @Mock
     private ErrorNotifierService errorNotifierService;
 
-    private final KieContainer newKieContainerBuilt = Mockito.mock(KieContainer.class);
+    private final KieBase newKieBaseBuilt = Mockito.mock(KieBase.class);
 
     @BeforeEach
     void setUp() {
@@ -64,7 +65,7 @@ class RewardRuleMediatorServiceImplTest {
         });
 
         Mockito.when(droolsRuleRepository.save(Mockito.any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(newKieContainerBuilt));
+        Mockito.when(kieContainerBuilderService.buildAll()).thenReturn(Mono.just(newKieBaseBuilt));
     }
 
     @ParameterizedTest
@@ -95,7 +96,7 @@ class RewardRuleMediatorServiceImplTest {
         });
 
         Mockito.verify(kieContainerBuilderService, Mockito.atLeast(1)).buildAll();
-        Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.same(newKieContainerBuilt));
+        Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieBase(Mockito.same(newKieBaseBuilt));
         Mockito.verifyNoInteractions(errorNotifierService);
     }
 }

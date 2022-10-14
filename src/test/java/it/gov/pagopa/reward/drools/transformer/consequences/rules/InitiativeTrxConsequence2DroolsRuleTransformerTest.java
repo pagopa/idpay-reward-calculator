@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
@@ -81,8 +82,8 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
 
     protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
         cleanRewards(trx);
-        KieContainer kieContainer = buildRule(rule);
-        executeRule(trx, kieContainer);
+        KieBase kieBase = buildRule(rule);
+        executeRule(trx, kieBase);
         Assertions.assertEquals(dummyReward.get("DUMMYINITIATIVE"), trx.getRewards().get("DUMMYINITIATIVE"));
         Assertions.assertEquals(
                 expectReward
@@ -96,7 +97,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         trx.getRewards().putAll(dummyReward);
     }
 
-    protected KieContainer buildRule(String rule) {
+    protected KieBase buildRule(String rule) {
         DroolsRule dr = new DroolsRule();
         dr.setId("agendaGroup");
         dr.setName("ruleName");
@@ -116,8 +117,8 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         }
     }
 
-    protected void executeRule(TransactionDroolsDTO trx, KieContainer kieContainer) {
-        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, false, getCounters(), kieContainer);
+    protected void executeRule(TransactionDroolsDTO trx, KieBase kieBase) {
+        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, false, getCounters(), kieBase);
     }
 
     protected UserInitiativeCounters getCounters() {
