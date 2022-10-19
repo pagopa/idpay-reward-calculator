@@ -51,6 +51,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardCalculatorMediatorServiceImpl(
+            @Value("${spring.application.name}") String applicationName,
             LockService lockService,
             TransactionProcessedService transactionProcessedService,
             OperationTypeHandlerService operationTypeHandlerService,
@@ -64,6 +65,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
             @Value("${spring.cloud.stream.kafka.bindings.trxProcessor-in-0.consumer.ackTime}") long commitMillis,
 
             ObjectMapper objectMapper) {
+        super(applicationName);
         this.lockService = lockService;
         this.transactionProcessedService = transactionProcessedService;
         this.operationTypeHandlerService = operationTypeHandlerService;
