@@ -14,6 +14,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
@@ -44,6 +45,11 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private RewardContextHolderService rewardContextHolderService;
     @SpyBean
     private DroolsRuleRepository droolsRuleRepositorySpy;
+
+    @AfterEach
+    void cleanData(){
+        droolsRuleRepositorySpy.deleteAll().block();
+    }
 
     @Test
     void testRewardRuleBuilding(){

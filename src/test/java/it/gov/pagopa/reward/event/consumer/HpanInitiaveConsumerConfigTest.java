@@ -17,6 +17,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,11 @@ import java.util.stream.IntStream;
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
+
+    @AfterEach
+    void cleanData(){
+        hpanInitiativesRepository.deleteAll().block();
+    }
     @Test
     void hpanInitiativeConsumer() {
         int dbElementsNumbers = 20;
