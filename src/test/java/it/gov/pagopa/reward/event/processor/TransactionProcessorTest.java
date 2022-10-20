@@ -687,7 +687,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     createUserCounter(failingRewardPublishing);
                     return TestUtils.jsonSerializer(failingRewardPublishing);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome,"", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)), failingRewardPublishingUserId)
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome,"", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)), failingRewardPublishingUserId, false, false)
         ));
 
         final String exceptionWhenRewardPublishUserId = "FAILING_REWARD_PUBLISHING_DUE_EXCEPTION";
@@ -700,7 +700,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     createUserCounter(exceptionWhenRewardPublish);
                     return TestUtils.jsonSerializer(exceptionWhenRewardPublish);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, "", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId)
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, "", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId,false,false)
         ));
     }
 
