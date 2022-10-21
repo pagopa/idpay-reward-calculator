@@ -105,3 +105,6 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
+
+/helm/charts/*
+/src/test/resources/secrets/*

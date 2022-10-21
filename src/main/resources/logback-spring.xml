@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="appName"
+                    source="spring.application.name"/>
+
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [${appName:-}] %-5level [%15.15t] [%-40.40logger{39}] - %msg%n"/>
+    <property name="FILE_LOG_PATTERN"
+              value="${CONSOLE_LOG_PATTERN}"/>
+
+    <appender name="STDOUT"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <encoder
+                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC_STDOUT"
+              class="ch.qos.logback.classic.AsyncAppender">
+        <neverBlock>true</neverBlock>
+        <queueSize>20000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="STDOUT"/>
+    </appender>
+
+    <if condition='"TRUE".equalsIgnoreCase("${ENABLE_FILE_APPENDER}")'>
+        <then>
+            <property name="LOG_FILE"
+                      value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/spring.log}"/>
+            <include resource="org/springframework/boot/logging/logback/file-appender.xml"/>
+
+            <appender name="ASYNC_FILE"
+                      class="ch.qos.logback.classic.AsyncAppender">
+                <neverBlock>true</neverBlock>
+                <queueSize>20000</queueSize>
+                <discardingThreshold>0</discardingThreshold>
+                <appender-ref ref="FILE"/>
+            </appender>
+
+            <root level="INFO">
+                <appender-ref ref="ASYNC_FILE"/>
+            </root>
+        </then>
+    </if>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_STDOUT"/>
+    </root>
+
+</configuration>

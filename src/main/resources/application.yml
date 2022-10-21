@@ -1,76 +1,229 @@
+server:
+  port: ${REWARD_CALCULATOR_PORT:8080}
+
 spring:
   application:
     name: idpay-reward-calculator
+  jmx.enabled: true
   config:
     activate:
       on-profile: default
   cloud:
     stream:
       function:
-        definition: trxProcessor
+        definition: trxProcessor;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
-          destination: ${KAFKA_TOPIC_RTD_TRX:}
-          group: ${KAFKA_IDPAY_GROUP:}
-          content-type: ${KAFKA_CONTENT_TYPE:}
-          binder: kafka-rtd
+          destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
+          group: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID:idpay-consumer-group}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-splitter
+          consumer.autoStartup: false
         trxProcessor-out-0:
-          destination: ${KAFKA_TOPIC_REWARD_TRX:}
-          content-type: ${KAFKA_CONTENT_TYPE:}
+          destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay
-#        trxConsumerReward-in-0:
-#          destination: ${KAFKA_REWARD_TOPIC_REWARD_TRX:}
-#          group: ${KAFKA_IDPAY_GROUP:}
-#          content-type: ${KAFKA_CONTENT_TYPE:}
-#          binder: ${KAFKA_BINDER:}
-#        trxProducer-out-0:
-#          destination: ${KAFKA_REWARD_TOPIC_RTD_TRX:}
-#          content-type: ${KAFKA_CONTENT_TYPE:}
-#          binder: ${KAFKA_BINDER:}
+        rewardRuleConsumer-in-0:
+          destination: ${KAFKA_REWARD_RULE_REQUEST_TOPIC:idpay-rule-update}
+          group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-rule
+        hpanInitiativeConsumer-in-0:
+          destination: ${KAFKA_HPAN_UPDATE_TOPIC:idpay-hpan-update}
+          group: ${KAFKA_HPAN_UPDATE_GROUP_ID:idpay-hpan-update-consumer-group}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-hpan-update
+        errors-out-0:
+          destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-errors
+        # TODO remove me
+        trxProducer-out-0:
+          destination: ${KAFKA_RTD_TOPIC:rtd-trx}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-rtd-producer
       binders:
-        kafka-rtd:
+        kafka-idpay-splitter:
           type: kafka
           environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_RTD:}
-                      configuration.sasl.jaas.config: ${EVH_CONNECTION_RTD_TRX:}
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG:}
         kafka-idpay:
           type: kafka
           environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_REWARD_CALCULATOR_RESPONSE:}
-                      configuration.sasl.jaas.config: ${EVH_CONNECTION_REWARD_CALCULATOR_RESPONSE:}
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_REWARD_RESPONSE_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_REWARD_RESPONSE_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
+        kafka-idpay-rule:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_REWARD_RULE_REQUEST_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_REWARD_RULE_REQUEST_SASL_JAAS_CONFIG:}
+        kafka-errors:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
+        kafka-idpay-hpan-update:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_HPAN_UPDATE_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG:}
+        #TODO remove me
+        kafka-rtd-producer:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_RTD_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_RTD_PROD_SASL_JAAS_CONFIG:}
       kafka:
         binder:
-          auto-create-topics: ${KAFKA_REWARD_BINDER_AUTO_CREATE_TOPIC}
+          auto-create-topics: false
           configuration:
-            heartbeat.interval.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_HEARTBEAT_INTERVAL_MS:}
-            session.timeout.ms: ${KAFKA_REWARD_BINDER_CONFIGURATION_SESSION_TIMEOUT_MS:}
-            sasl:
-              mechanism: ${KAFKA_REWARD_SASL_MECHANISM:}
-            security:
-              protocol: ${KAFKA_REWARD_SECURITY_PROTOCOL:}
-          consumerProperties:
-            key:
-              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
-            value:
-              deserializer: ${KAFKA_DESERIALIZER_TYPE:}
-            socket:
-              connection:
-                setup:
-                  timeout:
-                    max:
-                      ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MAX_MS:}
-                    ms: ${KAFKA_REWARD_CONNECTION_TIMEOUT_MS:}
-            connections:
-              max:
-                idle:
-                  ms: ${KAFKA_REWARD_CONNECTIONS_MAX_IDLE_MS:}
+            heartbeat.interval.ms: ${KAFKA_CONFIG_HEARTBEAT_INTERVAL_MS:30000}
+            session.timeout.ms: ${KAFKA_CONFIG_SESSION_TIMEOUT_MS:60000}
+            request.timeout.ms: ${KAFKA_CONFIG_REQUEST_TIMEOUT_MS:60000}
+            sasl.mechanism: ${KAFKA_CONFIG_SASL_MECHANISM:PLAIN}
+            security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
+        bindings:
+          trxProcessor-in-0:
+            consumer:
+              startOffset: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:10000}
+              standardHeaders: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              configuration:
+                max.poll:
+                  records: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          trxProcessor-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-transaction
+                connections.max.idle.ms: ${KAFKA_REWARD_RESPONSE_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_REWARD_RESPONSE_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_REWARD_RESPONSE_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_REWARD_RESPONSE_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+          errors-out-0:
+            producer:
+              configuration:
+                client.id: trxProcessor-errors
+                connections.max.idle.ms: ${KAFKA_ERRORS_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_ERRORS_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_ERRORS_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_ERRORS_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+          # TODO remove me
+          trxProducer-out-0:
+            producer:
+              configuration:
+                client.id: trxProducer-simulateTrx
+          rewardRuleConsumer-in-0:
+            consumer:
+              startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:1000}
+              standardHeaders: ${KAFKA_REWARD_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              configuration:
+                max.poll:
+                  records: ${KAFKA_REWARD_RULE_REQUEST_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_REWARD_RULE_REQUEST_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          hpanInitiativeConsumer-in-0:
+            consumer:
+              startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:10000}
+              standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              configuration:
+                max.poll:
+                  records: ${KAFKA_HPAN_UPDATE_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_HPAN_UPDATE_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_HPAN_UPDATE_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:300000}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017}
+      database: ${MONGODB_DBNAME:idpay}
+      # custom configured properties
+      config:
+        connectionPool:
+          maxSize: ${MONGODB_CONNECTIONPOOL_MAX_SIZE:100}
+          minSize: ${MONGODB_CONNECTIONPOOL_MIN_SIZE:10}
+          maxWaitTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_WAIT_MS:120000}
+          maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
+          maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:0}
+          maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
+    it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
+    it.gov.pagopa.reward.service.BaseKafkaConsumer: ${LOG_LEVEL_BASE_KAFKA_CONSUMER:INFO}
+    org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
+    org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}
+    org.springframework.cloud: ${LOG_LEVEL_SPRING_CLOUD:WARN}
+    org.springframework.data: ${LOG_LEVEL_SPRING_DATA:INFO}
+    org.springframework.hateoas: ${LOG_LEVEL_SPRING_HATEOAS:INFO}
+    org.springframework.boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
+    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:INFO}
+    org.springframework.batch: ${LOG_LEVEL_SPRING_BATCH:INFO}
+    io.swagger: ${LOG_LEVEL_IO_SWAGGER:WARN}
+    javax.persistence: ${LOG_LEVEL_JAVAX_PERSISTENCE:INFO}
+    org.hibernate: ${LOG_LEVEL_ORG_HIBERNATE:INFO}
+    org.kie: ${LOG_LEVEL_ORG_KIE:WARN}
+    org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
+    org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
+
+app:
+  reward-rule:
+    # if true, it will try to build each rule singularly, but this will take more time
+    online-syntax-check: ${REWARD_RULE_BUILD_ONLINE_SYNTAX_CHECK:false}
+    # the delay after which it will fetch all the rules and compile them
+    build-delay-duration: ${REWARD_RULE_BUILD_DELAY_DURATION:PT1S} # each second
+    # The milliseconds rate after which to fetch from cache a new instance of the benefiricaryRilekieContainer
+    cache.refresh-ms-rate: ${CACHE_REFRESH_MS_RATE:10000}
+    rule-engine:
+      # if exit immediately at the first condition failed
+      short-circuit-conditions: ${REWARD_RULE_SHORT_CIRCUIT:false}
+  filter:
+    mccExcluded: ${MCC_EXCLUDED:4784,6010,6011,7995,9222,9311}
+  operationType:
+    # comma separated of the operation types related to charge operations
+    charge: ${OPERATION_TYPE_CHARGE:00}
+    # comma separated of the operation types related to refund operations
+    refund: ${OPERATION_TYPE_REFUND:01}
+  # A feature to guarantee the execution order of the trx having the same userId
+  trx-lock:
+    # the size of the locks bucket
+    bucket-size: ${TRX_LOCK_BUCKET_SIZE:1000}
+    # the maximum seconds to wait before to continue even if the lock is acquired
+    timeout: ${TRX_LOCK_SECONDS_TIMEOUT:180}
+  threads:
+    schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
+

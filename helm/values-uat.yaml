@@ -1,0 +1,52 @@
+microservice-chart:
+  image:
+    repository: cstarucommonacr.azurecr.io/idpayrewardcalculator
+    tag: latest
+    pullPolicy: Always
+
+  ingress:
+    host: "uat01.idpay.internal.uat.cstar.pagopa.it"
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "500m"
+
+#  autoscaling:
+#    enable: true
+#    minReplica: 1
+#    maxReplica: 2
+#    pollingInterval: 30 # seconds
+#    cooldownPeriod: 300 # seconds
+#    triggers:
+#      - type: azure-monitor
+#        metadata:
+#          tenantId: 7788edaf-0346-4068-9d79-c868aed15b3d
+#          subscriptionId: ac17914c-79bf-48fa-831e-1359ef74c1d5
+#          resourceGroupName: dvopla-d-sec-rg
+#          resourceURI: Microsoft.KeyVault/vaults/dvopla-d-neu-kv
+#          metricName: ServiceApiHit
+#          # metricNamespace: Microsoft.KeyVault/vaults
+#          # metricFilter: namespace eq 'default'
+#          # metricAggregationInterval: "-1:1:0"
+#          metricAggregationType: Count
+#          targetValue: "30"
+
+  envSecret:
+    aks-api-url: cstar-u-weu-uat01-aks-apiserver-url
+
+  keyvault:
+    name: "cstar-u-idpay-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+
+  # nodeSelector: {}
+
+  # tolerations: []
+
+  # affinity: {}
+
+  envConfig:
+    JAVA_TOOL_OPTIONS: "-Xms128m -Xmx4g -Djava.util.concurrent.ForkJoinPool.common.parallelism=7 -Dio.netty.eventLoopThreads=100 -javaagent:/app/applicationinsights-agent.jar -agentlib:jdwp=transport=dt_socket,server=y,address=8001,suspend=n -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=3002 -Dcom.sun.management.jmxremote.rmi.port=3003 -Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
