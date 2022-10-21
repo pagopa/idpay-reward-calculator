@@ -39,7 +39,9 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     private final HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper;
 
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public HpanInitiativeMediatorServiceImpl(
+            @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.hpanInitiativeConsumer-in-0.consumer.ackTime}") Long commitMillis,
             HpanInitiativesRepository hpanInitiativesRepository,
             HpanInitiativesService hpanInitiativesService,
@@ -47,6 +49,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             ErrorNotifierService errorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
             HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper) {
+        super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
 
         this.hpanInitiativesRepository = hpanInitiativesRepository;

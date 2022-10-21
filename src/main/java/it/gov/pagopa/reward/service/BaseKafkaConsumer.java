@@ -10,6 +10,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,12 @@ public abstract class BaseKafkaConsumer<T, R> {
     protected static final String CONTEXT_KEY_START_TIME = "START_TIME";
     /** Key used inside the {@link Context} to store a msg identifier used for logging purpose */
     protected static final String CONTEXT_KEY_MSG_ID = "MSG_ID";
+
+    private final String applicationName;
+
+    protected BaseKafkaConsumer(String applicationName) {
+        this.applicationName = applicationName;
+    }
 
     record KafkaAcknowledgeResult<T> (Acknowledgment ack, T result){}
 
@@ -67,6 +74,12 @@ public abstract class BaseKafkaConsumer<T, R> {
     private Mono<KafkaAcknowledgeResult<R>> executeAcknowledgeAware(Message<String> message) {
         Acknowledgment ack = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
         KafkaAcknowledgeResult<R> defaultAck = new KafkaAcknowledgeResult<>(ack, null);
+
+        byte[] retryingApplicationName = message.getHeaders().get(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, byte[].class);
+        if(retryingApplicationName != null && !new String(retryingApplicationName, StandardCharsets.UTF_8).equals(this.applicationName)){
+            log.info("[{}] Discarding message due to other application retry ({}): {}", getFlowName(), retryingApplicationName, message.getPayload());
+            return Mono.just(defaultAck);
+        }
 
         Map<String, Object> ctx=new HashMap<>();
         ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());

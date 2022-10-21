@@ -35,6 +35,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardRuleMediatorServiceImpl(
+            @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.rewardRuleConsumer-in-0.consumer.ackTime}") Long commitMillis,
             @Value("${app.reward-rule.build-delay-duration}") String rewardRulesBuildDelay,
 
@@ -45,6 +46,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
             ErrorNotifierService errorNotifierService,
 
             ObjectMapper objectMapper) {
+        super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
 
         Duration rewardRulesBuildDelayDuration = Duration.parse(rewardRulesBuildDelay).minusMillis(commitMillis);
