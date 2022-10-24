@@ -50,6 +50,9 @@ microservice-chart:
     APPLICATIONINSIGHTS_ROLE_NAME: "idpayrewardcalculator"
     APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: "OFF"
     APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED: "false"
+    KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID: "idpay-reward-calculator-consumer-group"
+    KAFKA_REWARD_RULE_GROUP_ID: "idpay-reward-calculator-rule-consumer-group"
+    KAFKA_HPAN_UPDATE_GROUP_ID: "idpay-reward-calculator-hpan-update-consumer-group"
 
   envConfigMapExternals:
     idpay-common:
