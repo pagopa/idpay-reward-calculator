@@ -74,7 +74,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
         int duplicateTrx = Math.min(100, validTrx/2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
-        long maxWaitingMs = 30000;
+        long maxWaitingMs = 60000;
 
         publishRewardRules();
 
