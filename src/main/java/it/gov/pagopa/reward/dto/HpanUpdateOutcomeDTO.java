@@ -9,14 +9,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class HpanInitiativeBulkDTO {
-    private String userId;
+public class HpanUpdateOutcomeDTO {
     private String initiativeId;
-    private List<PaymentMethodInfoDTO> infoList;
+    private String userId;
+    private List<String> hpanList;
+    private List<String> rejectedHpanList;
     private String operationType;
-    private LocalDateTime operationDate;
-    private String channel;
+    private LocalDateTime timestamp;
 }

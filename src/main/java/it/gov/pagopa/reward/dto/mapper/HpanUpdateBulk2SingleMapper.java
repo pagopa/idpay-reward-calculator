@@ -3,15 +3,15 @@ package it.gov.pagopa.reward.dto.mapper;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
+import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.function.BiFunction;
 
 @Service
-public class HpanUpdateBulk2SingleMapper implements BiFunction<HpanInitiativeBulkDTO, PaymentMethodInfoDTO, HpanUpdateEvaluateDTO> {
+public class HpanUpdateBulk2SingleMapper implements TriFunction<HpanInitiativeBulkDTO, PaymentMethodInfoDTO, LocalDateTime, HpanUpdateEvaluateDTO> {
     @Override
-    public HpanUpdateEvaluateDTO apply(HpanInitiativeBulkDTO hpanInitiativeBulkDTO, PaymentMethodInfoDTO infoHpan) {
+    public HpanUpdateEvaluateDTO apply(HpanInitiativeBulkDTO hpanInitiativeBulkDTO, PaymentMethodInfoDTO infoHpan, LocalDateTime evaluationDate) {
         HpanUpdateEvaluateDTO output = new HpanUpdateEvaluateDTO();
 
         output.setUserId(hpanInitiativeBulkDTO.getUserId());
@@ -20,7 +20,7 @@ public class HpanUpdateBulk2SingleMapper implements BiFunction<HpanInitiativeBul
         output.setMaskedPan(infoHpan.getMaskedPan());
         output.setBrandLogo(infoHpan.getBrandLogo());
         output.setOperationType(hpanInitiativeBulkDTO.getOperationType());
-        output.setEvaluationDate(LocalDateTime.now());
+        output.setEvaluationDate(evaluationDate);
 
         return output;
     }

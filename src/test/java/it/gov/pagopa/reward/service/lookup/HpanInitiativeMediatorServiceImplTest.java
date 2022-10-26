@@ -22,7 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -38,20 +37,23 @@ import java.util.Map;
 class HpanInitiativeMediatorServiceImplTest {
 
     @Mock
-    HpanInitiativesRepository hpanInitiativesRepositoryMock;
+    private HpanInitiativesRepository hpanInitiativesRepositoryMock;
     @Mock
-    HpanInitiativesService hpanInitiativesServiceMock;
+    private HpanInitiativesService hpanInitiativesServiceMock;
     @Mock
-    ErrorNotifierService errorNotifierServiceMock;
+    private ErrorNotifierService errorNotifierServiceMock;
     @Mock
-    HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapperMock;
-    @Mock
-    HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapperMock;
+    private HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapperMock;
 
-    HpanInitiativeMediatorService hpanInitiativeMediatorService;
+    @Mock
+    private HpanUpdateNotifierService hpanUpdateNotifierServiceMock;
+    @Mock
+    private HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapperMock;
+
+    private HpanInitiativeMediatorService hpanInitiativeMediatorService;
     @BeforeEach
     void setUp(){
-        hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl("appName",0L, hpanInitiativesRepositoryMock, hpanInitiativesServiceMock, TestUtils.objectMapper, errorNotifierServiceMock, hpanUpdateEvaluateDTO2HpanInitiativeMapperMock, hpanUpdateBulk2SingleMapperMock);
+        hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl("appName",0L, hpanInitiativesRepositoryMock, hpanInitiativesServiceMock, hpanUpdateNotifierServiceMock, TestUtils.objectMapper, errorNotifierServiceMock, hpanUpdateEvaluateDTO2HpanInitiativeMapperMock, hpanUpdateBulk2SingleMapperMock);
     }
     @Test
     void execute(){
@@ -68,7 +70,7 @@ class HpanInitiativeMediatorServiceImplTest {
                 .userId("USERID_HPAN_VALID")
                 .infoList(List.of(infoHpan))
                 .initiativeId("INITIATIVEID_HPAN_VALID")
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .operationDate(LocalDateTime.now().plusDays(10L)).build();
 
         HpanUpdateEvaluateDTO hpanUpdateValidHpan = HpanUpdateEvaluateDTO.builder()
@@ -80,7 +82,7 @@ class HpanInitiativeMediatorServiceImplTest {
                 .operationType(hpanInitiativeBulkDTOValidJson.getOperationType())
                 .evaluationDate(LocalDateTime.now())
                 .build();
-        Mockito.when(hpanUpdateBulk2SingleMapperMock.apply(hpanInitiativeBulkDTOValidJson,infoHpan)).thenReturn(hpanUpdateValidHpan);
+        Mockito.when(hpanUpdateBulk2SingleMapperMock.apply(Mockito.eq(hpanInitiativeBulkDTOValidJson),Mockito.eq(infoHpan),Mockito.any())).thenReturn(hpanUpdateValidHpan); //TODO
 
         HpanInitiatives hpanInitiatives1 = HpanInitiativesFaker.mockInstance(1);
         hpanInitiatives1.setHpan(hpanValid);
@@ -92,7 +94,7 @@ class HpanInitiativeMediatorServiceImplTest {
         HpanInitiativeBulkDTO hpanInitiativeBulkDTONotHpanList = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
                 .initiativeId("INITIATIVEID")
-                .operationType(HpanInitiativeConstants.DELETE_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
                 .operationDate(LocalDateTime.now().plusDays(10L)).build();
 
         //Message without date
@@ -107,7 +109,7 @@ class HpanInitiativeMediatorServiceImplTest {
                 .userId("USERID_HPAN_NOT_DATE")
                 .infoList(List.of(infoHpanNotDate))
                 .initiativeId("INITIATIVEID_HPAN_NOT_DATE")
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT).build();
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT).build();
 
         HpanUpdateEvaluateDTO hpanUpdateNotDate = HpanUpdateEvaluateDTO.builder()
                 .userId(hpanInitiativeBulkDTONotDate.getUserId())
@@ -118,7 +120,7 @@ class HpanInitiativeMediatorServiceImplTest {
                 .operationType(hpanInitiativeBulkDTONotDate.getOperationType())
                 .evaluationDate(LocalDateTime.now())
                 .build();
-        Mockito.when(hpanUpdateBulk2SingleMapperMock.apply(hpanInitiativeBulkDTONotDate,infoHpanNotDate)).thenReturn(hpanUpdateNotDate);
+        Mockito.when(hpanUpdateBulk2SingleMapperMock.apply(Mockito.eq(hpanInitiativeBulkDTONotDate),Mockito.eq(infoHpanNotDate), Mockito.any())).thenReturn(hpanUpdateNotDate); //TODO
 
         HpanInitiatives hpanInitiatives2 = HpanInitiativesFaker.mockInstance(2);
         hpanInitiatives2.setHpan(hpanNotDate);
@@ -161,10 +163,10 @@ class HpanInitiativeMediatorServiceImplTest {
     void otherApplicationRetryTest(){
         // Given
         HpanInitiativeBulkDTO initiative1 = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(1)
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .operationDate(LocalDateTime.now()).build();
         HpanInitiativeBulkDTO initiative2 = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(2)
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .operationDate(LocalDateTime.now()).build();
 
 

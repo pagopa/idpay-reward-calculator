@@ -2,15 +2,17 @@ package it.gov.pagopa.reward.service.lookup;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
+import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.reward.RewardNotifierServiceImpl;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -33,6 +38,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     private final HpanInitiativesRepository hpanInitiativesRepository;
     private final HpanInitiativesService hpanInitiativesService;
     private final ErrorNotifierService errorNotifierService;
+    private final HpanUpdateNotifierService hpanUpdateNotifierService;
     private final ObjectReader objectReader;
 
     private final HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper;
@@ -45,6 +51,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             @Value("${spring.cloud.stream.kafka.bindings.hpanInitiativeConsumer-in-0.consumer.ackTime}") Long commitMillis,
             HpanInitiativesRepository hpanInitiativesRepository,
             HpanInitiativesService hpanInitiativesService,
+            HpanUpdateNotifierService hpanUpdateNotifierService,
             ObjectMapper objectMapper,
             ErrorNotifierService errorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
@@ -54,6 +61,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
         this.hpanInitiativesRepository = hpanInitiativesRepository;
         this.hpanInitiativesService = hpanInitiativesService;
+        this.hpanUpdateNotifierService = hpanUpdateNotifierService;
         this.objectReader = objectMapper.readerFor(HpanInitiativeBulkDTO.class);
         this.errorNotifierService = errorNotifierService;
         this.hpanUpdateEvaluateDTO2HpanInitiativeMapper = hpanUpdateEvaluateDTO2HpanInitiativeMapper;
@@ -87,9 +95,38 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message, Map<String, Object> ctx) {
+        LocalDateTime evaluationDate = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
         return Mono.just(payload)
-                .flatMapMany(this::evaluate)
+                .flatMapMany(bulk -> this.evaluate(bulk,evaluationDate))
                 .collectList()
+
+                //restituire gli hpan modificati map into dto ed inviare l'esito se channel  diverso a Payment Manager
+                /*TODO
+                *  create a mapper
+                * check if we want a flatmap with mapper followed to notifier or map and send only with channel condition*/
+                .doOnNext(list -> {
+                    if(!payload.getChannel().equals(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)){
+                        List<String> hpanRejected = new ArrayList<>(payload.getInfoList().stream().map(PaymentMethodInfoDTO::getHpan).toList());
+                        hpanRejected.removeAll(list);
+                        HpanUpdateOutcomeDTO outcome = HpanUpdateOutcomeDTO.builder()
+                            .initiativeId(payload.getInitiativeId())
+                            .userId(payload.getUserId())
+                            .hpanList(list)
+                            .rejectedHpanList(hpanRejected)
+                            .operationType(payload.getOperationType())
+                            .timestamp(evaluationDate)
+                            .build();
+                        try {
+                            if (!hpanUpdateNotifierService.notify(outcome)) {
+                                throw new IllegalStateException("[HPAN_INITIATIVE_OUTCOME] Something gone wrong while hpan update notify");
+                            }
+                        } catch (Exception e) {
+                            log.error("[UNEXPECTED_HPAN_INITIATIVE_OUTCOME] Unexpected error occurred publishing rewarded transaction: {}", outcome);
+                            errorNotifierService.notifyHpanUpdateOutcome(HpanUpdateNotifierServiceImpl.buildMessage(outcome), "[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome", true, e);
+                        }
+                    }
+                })
+
 
                 .then(Mono.just(payload));
     }
@@ -99,24 +136,25 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         return "HPAN_INITIATIVE_OP";
     }
 
-    private Flux<UpdateResult> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
-        return initializingHpanInitiativeDTO(hpanInitiativeBulkDTO)
+    private Flux<String> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO, LocalDateTime evaluationDate) {
+        return initializingHpanInitiativeDTO(hpanInitiativeBulkDTO, evaluationDate)
                 .flatMap(this::findAndModify);
     }
 
-    private Flux<HpanUpdateEvaluateDTO> initializingHpanInitiativeDTO(HpanInitiativeBulkDTO dto) {
-        return Flux.fromIterable(dto.getInfoList().stream().map(infoHpan -> hpanUpdateBulk2SingleMapper.apply(dto, infoHpan)).toList());
+    private Flux<HpanUpdateEvaluateDTO> initializingHpanInitiativeDTO(HpanInitiativeBulkDTO dto, LocalDateTime evaluationDate) {
+        return Flux.fromIterable(dto.getInfoList().stream().map(infoHpan -> hpanUpdateBulk2SingleMapper.apply(dto, infoHpan, evaluationDate)).toList());
     }
 
-    private Mono<UpdateResult> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
+    private Mono<String> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
         return hpanInitiativesRepository.findById(hpanUpdateEvaluateDTO.getHpan())
                 .switchIfEmpty(Mono.defer(() -> getNewHpanInitiatives(hpanUpdateEvaluateDTO)))
                 .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives))
-                .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi));
+                .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
+                .flatMap(ur -> Mono.just(hpanUpdateEvaluateDTO.getHpan()));
     }
 
     private Mono<HpanInitiatives> getNewHpanInitiatives(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
-        if (hpanUpdateEvaluateDTO.getOperationType().equals(HpanInitiativeConstants.ADD_INSTRUMENT)) {
+        if (hpanUpdateEvaluateDTO.getOperationType().equals(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)) {
             HpanInitiatives createHpanInitiatives = hpanUpdateEvaluateDTO2HpanInitiativeMapper.apply(hpanUpdateEvaluateDTO);
             return hpanInitiativesRepository
                     .createIfNotExist(createHpanInitiatives)

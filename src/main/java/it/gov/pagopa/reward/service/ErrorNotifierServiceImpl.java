@@ -40,12 +40,15 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     private final String trxRewardedMessagingServiceType;
     private final String trxRewardedServer;
     private final String trxRewardedTopic;
-    private final String trxRewardedGroup;
 
     private final String hpanUpdateMessagingServiceType;
     private final String hpanUpdateServer;
     private final String hpanUpdateTopic;
     private final String hpanUpdateGroup;
+
+    private final String hpanUpdateOutcomeMessagingServiceType;
+    private final String hpanUpdateOutcomeServer;
+    private final String hpanUpdateOutcomeTopic;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
@@ -64,12 +67,15 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
                                     @Value("${spring.cloud.stream.binders.kafka-idpay.type}") String trxRewardedMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers}") String trxRewardedServer,
                                     @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}") String trxRewardedTopic,
-                                    @Value("") String trxRewardedGroup,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.type}") String hpanUpdateMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateServer,
                                     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}") String hpanUpdateTopic,
-                                    @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}") String hpanUpdateGroup) {
+                                    @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}") String hpanUpdateGroup,
+
+                                    @Value("${spring.cloud.stream.binders.kafka-hpan-update-outcome.type}") String hpanUpdateOutcomeMessagingServiceType,
+                                    @Value("spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers") String hpanUpdateOutcomeServer,
+                                    @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}") String hpanUpdateOutcomeTopic) {
         this.streamBridge = streamBridge;
         this.applicationName = applicationName;
 
@@ -86,12 +92,15 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.trxRewardedMessagingServiceType = trxRewardedMessagingServiceType;
         this.trxRewardedServer = trxRewardedServer;
         this.trxRewardedTopic = trxRewardedTopic;
-        this.trxRewardedGroup = trxRewardedGroup;
 
         this.hpanUpdateMessagingServiceType = hpanUpdateMessagingServiceType;
         this.hpanUpdateServer = hpanUpdateServer;
         this.hpanUpdateTopic = hpanUpdateTopic;
         this.hpanUpdateGroup = hpanUpdateGroup;
+
+        this.hpanUpdateOutcomeMessagingServiceType = hpanUpdateOutcomeMessagingServiceType;
+        this.hpanUpdateOutcomeServer = hpanUpdateOutcomeServer;
+        this.hpanUpdateOutcomeTopic = hpanUpdateOutcomeTopic;
     }
 
     @Override
@@ -106,7 +115,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
     @Override
     public void notifyRewardedTransaction(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(trxRewardedMessagingServiceType, trxRewardedServer, trxRewardedTopic,trxRewardedGroup, message, description, retryable, false, exception);
+        notify(trxRewardedMessagingServiceType, trxRewardedServer, trxRewardedTopic,null, message, description, retryable, false, exception);
     }
 
     @Override
@@ -115,10 +124,14 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
+    public void notifyHpanUpdateOutcome(Message<?> message, String description, boolean retryable, Throwable exception) {
+        notify(hpanUpdateOutcomeMessagingServiceType, hpanUpdateOutcomeServer, hpanUpdateOutcomeTopic,null, message, description, retryable, false, exception);
+    }
+
+    @Override
     public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
-                .setHeader(ERROR_MSG_HEADER_GROUP, group)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
                 .setHeader(ERROR_MSG_HEADER_SRC_SERVER, srcServer)
                 .setHeader(ERROR_MSG_HEADER_SRC_TOPIC, srcTopic)
@@ -136,6 +149,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
         if (resendApplication){
             errorMessage.setHeader(ERROR_MSG_HEADER_APPLICATION_NAME, applicationName);
+            errorMessage.setHeader(ERROR_MSG_HEADER_GROUP, group);
         }
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {

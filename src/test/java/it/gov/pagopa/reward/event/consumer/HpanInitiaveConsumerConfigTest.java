@@ -190,7 +190,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         return IntStream.range(start, end)
                 .mapToObj(i -> HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
                         .operationDate(LocalDateTime.now().plusDays(10L))
-                        .operationType(i%2 == 0 ? HpanInitiativeConstants.ADD_INSTRUMENT : HpanInitiativeConstants.DELETE_INSTRUMENT).build())
+                        .operationType(i%2 == 0 ? HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT : HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT).build())
                 .map(TestUtils::jsonSerializer)
                 .toList();
     }
@@ -205,7 +205,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                             .userId("USERID_CONCURRENCY")
                             .initiativeId("INITIATIVEID_%d".formatted(i))
                             .infoList(List.of(infoHpanConcurrency))
-                            .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                            .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                             .operationDate(LocalDateTime.of(2022, 9, 15, 10, 45, 30)).build();
                 })
                 .map(TestUtils::jsonSerializer)
