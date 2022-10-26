@@ -19,7 +19,6 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -51,6 +50,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardCalculatorMediatorServiceImpl(
+            @Value("${spring.application.name}") String applicationName,
             LockService lockService,
             TransactionProcessedService transactionProcessedService,
             OperationTypeHandlerService operationTypeHandlerService,
@@ -64,6 +64,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
             @Value("${spring.cloud.stream.kafka.bindings.trxProcessor-in-0.consumer.ackTime}") long commitMillis,
 
             ObjectMapper objectMapper) {
+        super(applicationName);
         this.lockService = lockService;
         this.transactionProcessedService = transactionProcessedService;
         this.operationTypeHandlerService = operationTypeHandlerService;
@@ -154,7 +155,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
                         }
                     } catch (Exception e) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
-                        errorNotifierService.notifyRewardedTransaction(new GenericMessage<>(r, message.getHeaders()), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
+                        errorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
                     }
                 });
     }

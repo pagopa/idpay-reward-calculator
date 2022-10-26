@@ -15,7 +15,7 @@ import java.util.List;
 public class HpanInitiativeBulkDTO {
     private String userId;
     private String initiativeId;
-    private List<String> hpanList;
+    private List<PaymentMethodInfoDTO> infoList;
     private String operationType;
     private LocalDateTime operationDate;
 }

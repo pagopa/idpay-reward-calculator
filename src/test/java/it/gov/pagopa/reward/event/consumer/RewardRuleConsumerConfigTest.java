@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -12,15 +13,18 @@ import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.KieContainer;
+import org.kie.api.KieBase;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +46,11 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     @SpyBean
     private DroolsRuleRepository droolsRuleRepositorySpy;
 
+    @AfterEach
+    void cleanData(){
+        droolsRuleRepositorySpy.deleteAll().block();
+    }
+
     @Test
     void testRewardRuleBuilding(){
         int validRules=100; // use even number
@@ -55,6 +64,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
         long timeStart=System.currentTimeMillis();
         initiativePayloads.forEach(i->publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
+        publishIntoEmbeddedKafka(topicRewardRuleConsumer, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
         long countSaved = waitForDroolsRulesStored(validRules);
@@ -69,7 +79,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         checkErrorsPublished(notValidRules, maxWaitingMs, errorUseCases);
 
         Mockito.verify(kieContainerBuilderServiceSpy, Mockito.atLeast(1)).buildAll();
-        Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieContainer(Mockito.any());
+        Mockito.verify(rewardContextHolderService, Mockito.atLeast(1)).setRewardRulesKieBase(Mockito.any());
 
         System.out.printf("""
                         ************************
@@ -96,7 +106,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size());
+        Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardRuleConsumer, groupIdRewardRuleConsumer, initiativePayloads.size()+1);  // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -143,11 +153,11 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     }
 
     public static int getRuleBuiltSize(RewardContextHolderService rewardContextHolderServiceSpy) {
-        KieContainer kieContainer = rewardContextHolderServiceSpy.getRewardRulesKieContainer();
-        if (kieContainer == null) {
+        KieBase kieBase = rewardContextHolderServiceSpy.getRewardRulesKieBase();
+        if (kieBase == null) {
             return 0;
         } else {
-            return KieContainerBuilderServiceImplTest.getRuleBuiltSize(kieContainer);
+            return KieContainerBuilderServiceImplTest.getRuleBuiltSize(kieBase);
         }
     }
 
@@ -182,7 +192,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
-        checkErrorMessageHeaders(topicRewardRuleConsumer, errorMessage, errorDescription, expectedPayload, null);
+        checkErrorMessageHeaders(topicRewardRuleConsumer, groupIdRewardRuleConsumer, errorMessage, errorDescription, expectedPayload, null);
     }
     //endregion
 }

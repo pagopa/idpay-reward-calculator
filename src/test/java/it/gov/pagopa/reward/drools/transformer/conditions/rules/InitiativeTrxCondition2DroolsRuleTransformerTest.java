@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
@@ -97,8 +98,8 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
             expectedInitiativeRejectionReasons = expectRejectionReason && !shortCircuited ? Map.of("agendaGroup", List.of("DUMMYREJECTION", getExpectedRejectionReason())) : dummyRejectionMap;
         }
-        KieContainer kieContainer = buildRule(rule);
-        executeRule(trx, shortCircuited, kieContainer);
+        KieBase kieBase = buildRule(rule);
+        executeRule(trx, shortCircuited, kieBase);
         Assertions.assertEquals(
                 expectedInitiativeRejectionReasons
                 , trx.getInitiativeRejectionReasons()
@@ -111,7 +112,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
         return trx.toString();
     }
 
-    protected KieContainer buildRule(String rule) {
+    protected KieBase buildRule(String rule) {
         DroolsRule dr = new DroolsRule();
         dr.setId("agendaGroup");
         dr.setName("ruleName");
@@ -131,14 +132,14 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
         }
     }
 
-    protected void executeRule(TransactionDroolsDTO trx, boolean shortCircuited, KieContainer kieContainer) {
+    protected void executeRule(TransactionDroolsDTO trx, boolean shortCircuited, KieBase kieBase) {
         UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
         InitiativeCounters initiativeCounters = getInitiativeCounters();
         if(initiativeCounters!=null){
             counters.getInitiatives().put("agendaGroup", initiativeCounters);
         }
 
-        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, shortCircuited, counters, kieContainer);
+        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, shortCircuited, counters, kieBase);
     }
 
     protected InitiativeCounters getInitiativeCounters(){

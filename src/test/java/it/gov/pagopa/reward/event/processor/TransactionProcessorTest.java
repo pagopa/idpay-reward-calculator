@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
@@ -25,6 +26,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.KafkaException;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -34,6 +36,7 @@ import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -71,7 +74,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         int validTrx = 1000; // use even number
         int notValidTrx = errorUseCases.size();
         int duplicateTrx = Math.min(100, validTrx/2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
-        long maxWaitingMs = 30000;
+        long maxWaitingMs = 60000;
 
         publishRewardRules();
 
@@ -100,6 +103,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
         });
+        // to test trx sent from other application
+        publishIntoEmbeddedKafka(topicRewardProcessorRequest, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
@@ -145,7 +150,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 timeEnd - timePublishOnboardingStart
         );
 
-        checkOffsets(totalSendMessages, validTrx);
+        checkOffsets(totalSendMessages+1, validTrx); // +1 due to other applicationName useCase
     }
 
     private List<String> buildValidPayloads(int bias, int validOnboardings) {
@@ -682,7 +687,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     createUserCounter(failingRewardPublishing);
                     return TestUtils.jsonSerializer(failingRewardPublishing);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)), failingRewardPublishingUserId)
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome,"", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)), failingRewardPublishingUserId, false, false)
         ));
 
         final String exceptionWhenRewardPublishUserId = "FAILING_REWARD_PUBLISHING_DUE_EXCEPTION";
@@ -695,7 +700,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     createUserCounter(exceptionWhenRewardPublish);
                     return TestUtils.jsonSerializer(exceptionWhenRewardPublish);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId)
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, "", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId,false,false)
         ));
     }
 
@@ -710,7 +715,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     }
 
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
-        checkErrorMessageHeaders(topicRewardProcessorRequest, errorMessage, errorDescription, expectedPayload, expectedKey);
+        checkErrorMessageHeaders(topicRewardProcessorRequest, groupIdRewardProcessorRequest, errorMessage, errorDescription, expectedPayload, expectedKey);
     }
     //endregion
 }

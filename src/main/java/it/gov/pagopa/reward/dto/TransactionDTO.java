@@ -65,8 +65,6 @@ public class TransactionDTO {
 
     private String par;
 
-    private String userId;
-
     //region calculated fields
     private String id;
     private OperationType operationTypeTranscoded;
@@ -76,6 +74,12 @@ public class TransactionDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;
+    //endregion
+
+    //region fields added by splitter
+    private String userId;
+    private String brandLogo;
+    private String maskedPan;
     //endregion
 
 

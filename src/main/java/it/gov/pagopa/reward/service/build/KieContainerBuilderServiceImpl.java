@@ -4,6 +4,7 @@ package it.gov.pagopa.reward.service.build;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
@@ -30,13 +31,13 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
     }
 
     @Override
-    public Mono<KieContainer> buildAll() {
+    public Mono<KieBase> buildAll() {
         log.info("Fetching and building all the initiatives");
         return build(droolsRuleRepository.findAll());
     }
 
     @Override
-    public Mono<KieContainer> build(Flux<DroolsRule> rules) {
+    public Mono<KieBase> build(Flux<DroolsRule> rules) {
         KieServices kieServices = KieServices.Factory.get();
         KieFileSystem kieFileSystem = KieServices.get().newKieFileSystem();
 
@@ -53,18 +54,18 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
                     }
 
                     KieModule kieModule = kieBuilder.getKieModule();
-                    KieContainer newKieContainer = kieServices.newKieContainer(kieModule.getReleaseId());
+                    KieBase newKieBase = kieServices.newKieContainer(kieModule.getReleaseId()).getKieBase();
 
                     log.info("Build completed");
                     if (log.isDebugEnabled()) {
-                        KiePackage kiePackage = newKieContainer.getKieBase().getKiePackage(RULES_BUILT_PACKAGE);
+                        KiePackage kiePackage = newKieBase.getKiePackage(RULES_BUILT_PACKAGE);
                         log.debug("The container now will contain the following rules inside %s package: %s".formatted(
                                 RULES_BUILT_PACKAGE,
                                 kiePackage != null
                                         ? kiePackage.getRules().stream().map(Rule::getId).toList()
                                         : "0"));
                     }
-                    return newKieContainer;
+                    return newKieBase;
                 }));
     }
 }

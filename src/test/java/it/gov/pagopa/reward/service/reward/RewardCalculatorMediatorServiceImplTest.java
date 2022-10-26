@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
@@ -65,6 +66,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @BeforeEach
     public void initMocks() {
         rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(
+                "appName",
                 lockServiceMock,
                 transactionProcessedServiceMock,
                 operationTypeHandlerServiceMock,
@@ -76,8 +78,6 @@ class RewardCalculatorMediatorServiceImplTest {
                 errorNotifierServiceMock,
                 500,
                 TestUtils.objectMapper);
-
-        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
     }
 
     private Pair<List<Acknowledgment>, Flux<Message<String>>> buildTrxFlux(TransactionDTO... trxs) {
@@ -107,6 +107,8 @@ class RewardCalculatorMediatorServiceImplTest {
         List<String> expectedInitiatives = List.of("INITIATIVE");
 
         mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicated);
+
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         // When
         rewardCalculatorMediatorService.execute(trxFluxAndAckMocks.getValue());
@@ -290,6 +292,8 @@ class RewardCalculatorMediatorServiceImplTest {
 
     @Test
     void testTrxLockIdCalculation() {
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
                 .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
@@ -297,5 +301,24 @@ class RewardCalculatorMediatorServiceImplTest {
             Assertions.assertTrue(lockId < LOCK_SERVICE_BUKET_SIZE && lockId >= 0);
             Assertions.assertTrue(count < 10, "LockId %d hit too times: %d".formatted(lockId, count));
         });
+    }
+
+    @Test
+    void otherApplicationRetryTest(){
+        // Given
+        TransactionDTO trx1 = TransactionDTOFaker.mockInstance(1);
+        TransactionDTO trx2 = TransactionDTOFaker.mockInstance(2);
+
+        Flux<Message<String>> msgs = Flux.just(trx1, trx2)
+                .map(TestUtils::jsonSerializer)
+                .map(MessageBuilder::withPayload)
+                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .map(MessageBuilder::build);
+
+        // When
+        rewardCalculatorMediatorService.execute(msgs);
+
+        // Then
+        Mockito.verifyNoInteractions(lockServiceMock, transactionProcessedServiceMock, operationTypeHandlerServiceMock, transactionValidatorServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock,rewardNotifierServiceMock,errorNotifierServiceMock);
     }
 }

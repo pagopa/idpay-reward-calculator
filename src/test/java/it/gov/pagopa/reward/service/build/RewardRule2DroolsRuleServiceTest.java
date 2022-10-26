@@ -22,15 +22,18 @@ import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.kie.api.command.Command;
-import org.kie.api.runtime.KieContainer;
 import org.kie.internal.command.CommandFactory;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RewardRule2DroolsRuleServiceTest {
 
@@ -305,7 +308,7 @@ public class RewardRule2DroolsRuleServiceTest {
         Assertions.assertEquals(expected, result);
     }
 
-    private KieContainer buildRule(DroolsRule dr) {
+    private KieBase buildRule(DroolsRule dr) {
         try {
             return new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();
         } catch (RuntimeException e) {
@@ -316,23 +319,23 @@ public class RewardRule2DroolsRuleServiceTest {
 
 
     private void executeRule(DroolsRule dr) {
-        KieContainer kieContainer = buildRule(dr);
+        KieBase kieBase = buildRule(dr);
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
-        executeRule(dr.getId(), trx, false, null, kieContainer);
+        executeRule(dr.getId(), trx, false, null, kieBase);
         Assertions.assertEquals(
                 Map.of(
                         dr.getId(), List.of("TRX_RULE_THRESHOLD_FAIL", "TRX_RULE_DAYOFWEEK_FAIL")
                 ), trx.getInitiativeRejectionReasons());
 
         trx.setInitiativeRejectionReasons(new HashMap<>());
-        executeRule(dr.getId(), trx, true, null, kieContainer);
+        executeRule(dr.getId(), trx, true, null, kieBase);
         Assertions.assertEquals(
                 Map.of(
                         dr.getId(), List.of("TRX_RULE_THRESHOLD_FAIL")
                 ), trx.getInitiativeRejectionReasons());
     }
 
-    public static void executeRule(String initiativeId, TransactionDroolsDTO trx, boolean shortCircuited, UserInitiativeCounters counters, KieContainer kieContainer) {
+    public static void executeRule(String initiativeId, TransactionDroolsDTO trx, boolean shortCircuited, UserInitiativeCounters counters, KieBase kieBase) {
         RuleEngineConfig ruleEngineConfig = new RuleEngineConfig();
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
 
@@ -347,6 +350,6 @@ public class RewardRule2DroolsRuleServiceTest {
                 CommandFactory.newInsert(trx),
                 new AgendaGroupSetFocusCommand(initiativeId)
         );
-        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+        kieBase.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
     }
 }
