@@ -125,10 +125,10 @@ class RewardRuleMediatorServiceImplTest {
         Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));
 
         HpanInitiativeBulkDTO initiative1 = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(1)
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .operationDate(LocalDateTime.now()).build();
         HpanInitiativeBulkDTO initiative2 = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(2)
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .operationDate(LocalDateTime.now()).build();
 
 
