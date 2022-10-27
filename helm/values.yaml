@@ -65,7 +65,7 @@ microservice-chart:
       KAFKA_ERRORS_BROKER: kafka_broker
       KAFKA_ERRORS_TOPIC: idpay_error_topic
       KAFKA_HPAN_UPDATE_TOPIC: idpay_hpan_update_topic
-      #KAFKA_HPAN_UPDATE_OUTCOME_TOPIC: idpay_hpan_update_outcome_topic ??
+      KAFKA_HPAN_UPDATE_OUTCOME_TOPIC: idpay_hpan_update_outcome_topic
     rtd-eventhub:
       KAFKA_RTD_BROKER: kafka_broker_rtd
 
