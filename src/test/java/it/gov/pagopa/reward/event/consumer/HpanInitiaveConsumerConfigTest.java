@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
+import it.gov.pagopa.reward.service.lookup.HpanUpdateNotifierService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -22,13 +23,16 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,6 +54,9 @@ import java.util.stream.IntStream;
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
+
+    @SpyBean
+    private HpanUpdateNotifierService hpanUpdateNotifierServiceSpy;
 
     @AfterEach
     void cleanData(){
@@ -309,6 +316,68 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         errorUseCases.add(Pair.of(
                 () -> jsonNotValid,
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[HPAN_INITIATIVE_OP] Unexpected JSON", jsonNotValid, "")
+        ));
+
+        final String failingHpanUpdateOutcomePublishingUserId = "FAILING_HPAN_UPDATE_OUTCOME_PUBLISHING";
+        PaymentMethodInfoDTO infoFailingHpanUpdatePublishing = PaymentMethodInfoDTO.builder()
+                .hpan("HPAN_%s".formatted(failingHpanUpdateOutcomePublishingUserId))
+                .maskedPan("MASKEDPAN_%s".formatted(failingHpanUpdateOutcomePublishingUserId))
+                .brandLogo("BRANDLOGO_%s".formatted(failingHpanUpdateOutcomePublishingUserId))
+                .build();
+        HpanInitiativeBulkDTO hpanBulkErrorPublishedNotPaymentManagerChannel = HpanInitiativeBulkDTO.builder()
+                .initiativeId("id_%d".formatted(errorUseCases.size()))
+                .userId(failingHpanUpdateOutcomePublishingUserId)
+                .infoList(List.of(infoFailingHpanUpdatePublishing))
+                .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
+                .channel("CHANNEL_FAILING_PUBLISHED")
+                .build();
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doReturn(false).when(hpanUpdateNotifierServiceSpy).notify(Mockito.argThat(i -> failingHpanUpdateOutcomePublishingUserId.equals(i.getUserId())));
+                    return TestUtils.jsonSerializer(hpanBulkErrorPublishedNotPaymentManagerChannel);
+                },
+                errorMessage -> {
+                    HpanUpdateOutcomeDTO expectedFailingHpanUpdateOutcomePublishing = HpanUpdateOutcomeDTO.builder()
+                            .initiativeId(hpanBulkErrorPublishedNotPaymentManagerChannel.getInitiativeId())
+                            .userId(hpanBulkErrorPublishedNotPaymentManagerChannel.getUserId())
+                            .hpanList(new ArrayList<>())
+                            .rejectedHpanList(List.of(infoFailingHpanUpdatePublishing.getHpan()))
+                            .operationType(hpanBulkErrorPublishedNotPaymentManagerChannel.getOperationType())
+                            .timestamp(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L))
+                            .build();
+                    checkErrorMessageHeaders(topicHpanUpdateOutcome,null, errorMessage,"[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome",TestUtils.jsonSerializer(expectedFailingHpanUpdateOutcomePublishing),null,false,false);
+                }
+        ));
+
+        final String failingExceptionHpanUpdateOutcomePublishingUserId = "FAILING_HPAN_UPDATE_OUTCOME_PUBLISHING_DUE_EXCEPTION";
+        PaymentMethodInfoDTO infoFailingExceptionHpanUpdatePublishing = PaymentMethodInfoDTO.builder()
+                .hpan("HPAN_%s".formatted(failingExceptionHpanUpdateOutcomePublishingUserId))
+                .maskedPan("MASKEDPAN_%s".formatted(failingExceptionHpanUpdateOutcomePublishingUserId))
+                .brandLogo("BRANDLOGO_%s".formatted(failingExceptionHpanUpdateOutcomePublishingUserId))
+                .build();
+        HpanInitiativeBulkDTO hpanBulkErrorPublishedExceptionNotPaymentManagerChannel = HpanInitiativeBulkDTO.builder()
+                .initiativeId("id_%d".formatted(errorUseCases.size()))
+                .userId(failingExceptionHpanUpdateOutcomePublishingUserId)
+                .infoList(List.of(infoFailingExceptionHpanUpdatePublishing))
+                .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
+                .channel("CHANNEL_FAILING_EXCEPTION_PUBLISHED")
+                .build();
+        errorUseCases.add(Pair.of(
+                () -> {
+                    Mockito.doReturn(false).when(hpanUpdateNotifierServiceSpy).notify(Mockito.argThat(i -> failingExceptionHpanUpdateOutcomePublishingUserId.equals(i.getUserId())));
+                    return TestUtils.jsonSerializer(hpanBulkErrorPublishedExceptionNotPaymentManagerChannel);
+                },
+                errorMessage -> {
+                    HpanUpdateOutcomeDTO expectedFailingHpanUpdateOutcomePublishing = HpanUpdateOutcomeDTO.builder()
+                            .initiativeId(hpanBulkErrorPublishedExceptionNotPaymentManagerChannel.getInitiativeId())
+                            .userId(hpanBulkErrorPublishedExceptionNotPaymentManagerChannel.getUserId())
+                            .hpanList(new ArrayList<>())
+                            .rejectedHpanList(List.of(infoFailingExceptionHpanUpdatePublishing.getHpan()))
+                            .operationType(hpanBulkErrorPublishedExceptionNotPaymentManagerChannel.getOperationType())
+                            .timestamp(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L))
+                            .build();
+                    checkErrorMessageHeaders(topicHpanUpdateOutcome,null, errorMessage,"[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome",TestUtils.jsonSerializer(expectedFailingHpanUpdateOutcomePublishing),null,false,false);
+                }
         ));
     }
 
