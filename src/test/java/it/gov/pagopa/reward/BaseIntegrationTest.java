@@ -68,6 +68,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO remove me
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -93,6 +94,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO remove me
                 //endregion
 
@@ -139,6 +141,8 @@ public abstract class BaseIntegrationTest {
     protected String topicHpanInitiativeLookupConsumer;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
+    @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}")
+    protected String topicHpanUpdateOutcome;
 
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.group}")
     protected String groupIdRewardProcessorRequest;
@@ -384,8 +388,8 @@ public abstract class BaseIntegrationTest {
     protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
         if(expectedAppNameHeader) {
             Assertions.assertEquals("idpay-reward-calculator", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+            Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         }
-        Assertions.assertEquals(group, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
@@ -395,6 +399,8 @@ public abstract class BaseIntegrationTest {
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
         }
         Assertions.assertEquals(expectedPayload, errorMessage.value());
-        Assertions.assertEquals(expectedKey, errorMessage.key());
+        if(expectedKey!=null) {
+            Assertions.assertEquals(expectedKey, errorMessage.key());
+        }
     }
 }

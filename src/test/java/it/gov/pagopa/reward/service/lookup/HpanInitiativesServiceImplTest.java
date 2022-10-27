@@ -26,7 +26,7 @@ class HpanInitiativesServiceImplTest {
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(1);
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanInitiativeDTOFaker.mockInstanceBuilder(1)
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .evaluationDate(LocalDateTime.now())
                 .build();
 
@@ -54,7 +54,7 @@ class HpanInitiativesServiceImplTest {
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(1);
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanInitiativeDTOFaker.mockInstanceBuilder(1)
-                .operationType(HpanInitiativeConstants.DELETE_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
                 .evaluationDate(LocalDateTime.now())
                 .build();
 
