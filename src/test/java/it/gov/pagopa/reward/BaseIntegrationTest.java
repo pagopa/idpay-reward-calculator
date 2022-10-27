@@ -68,6 +68,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO remove me
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -93,6 +94,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO remove me
                 //endregion
 
@@ -139,6 +141,8 @@ public abstract class BaseIntegrationTest {
     protected String topicHpanInitiativeLookupConsumer;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
+    @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}")
+    protected String topicHpanUpdateOutcome;
 
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.group}")
     protected String groupIdRewardProcessorRequest;

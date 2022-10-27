@@ -3,16 +3,15 @@ package it.gov.pagopa.reward.service.lookup;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
-import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
-import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
+import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
+import it.gov.pagopa.reward.dto.mapper.HpanList2HpanUpdateOutcomeDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.BaseKafkaConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
-import it.gov.pagopa.reward.service.reward.RewardNotifierServiceImpl;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -42,8 +40,8 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     private final ObjectReader objectReader;
 
     private final HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper;
-
     private final HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper;
+    private final HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public HpanInitiativeMediatorServiceImpl(
@@ -55,7 +53,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             ObjectMapper objectMapper,
             ErrorNotifierService errorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
-            HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper) {
+            HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper, HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper) {
         super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
 
@@ -66,6 +64,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         this.errorNotifierService = errorNotifierService;
         this.hpanUpdateEvaluateDTO2HpanInitiativeMapper = hpanUpdateEvaluateDTO2HpanInitiativeMapper;
         this.hpanUpdateBulk2SingleMapper = hpanUpdateBulk2SingleMapper;
+        this.hpanList2HpanUpdateOutcomeDTOMapper = hpanList2HpanUpdateOutcomeDTOMapper;
     }
 
     @Override
@@ -99,23 +98,9 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         return Mono.just(payload)
                 .flatMapMany(bulk -> this.evaluate(bulk,evaluationDate))
                 .collectList()
-
-                //restituire gli hpan modificati map into dto ed inviare l'esito se channel  diverso a Payment Manager
-                /*TODO
-                *  create a mapper
-                * check if we want a flatmap with mapper followed to notifier or map and send only with channel condition*/
-                .doOnNext(list -> {
+                .doOnNext(hpanList -> {
                     if(!payload.getChannel().equals(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)){
-                        List<String> hpanRejected = new ArrayList<>(payload.getInfoList().stream().map(PaymentMethodInfoDTO::getHpan).toList());
-                        hpanRejected.removeAll(list);
-                        HpanUpdateOutcomeDTO outcome = HpanUpdateOutcomeDTO.builder()
-                            .initiativeId(payload.getInitiativeId())
-                            .userId(payload.getUserId())
-                            .hpanList(list)
-                            .rejectedHpanList(hpanRejected)
-                            .operationType(payload.getOperationType())
-                            .timestamp(evaluationDate)
-                            .build();
+                        HpanUpdateOutcomeDTO outcome = hpanList2HpanUpdateOutcomeDTOMapper.apply(hpanList, payload, evaluationDate);
                         try {
                             if (!hpanUpdateNotifierService.notify(outcome)) {
                                 throw new IllegalStateException("[HPAN_INITIATIVE_OUTCOME] Something gone wrong while hpan update notify");

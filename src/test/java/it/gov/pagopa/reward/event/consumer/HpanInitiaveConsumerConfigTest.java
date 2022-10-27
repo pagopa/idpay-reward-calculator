@@ -1,7 +1,9 @@
 package it.gov.pagopa.reward.event.consumer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
+import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -28,6 +30,7 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -54,8 +57,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
     @Test
     void hpanInitiativeConsumer() {
-        int dbElementsNumbers = 20;
-        int updatedHpanNumbers = 100;
+        int dbElementsNumbers = 200;
+        int updatedHpanNumbers = 1000;
         int notValidMessages = errorUseCases.size();
         int concurrencyMessages = 2;
         long maxWaitingMs = 30000;
@@ -66,18 +69,20 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         hpanUpdatedEvents.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
         hpanUpdatedEvents.addAll(buildValidPayloads(dbElementsNumbers,updatedHpanNumbers));
         hpanUpdatedEvents.addAll(buildConcurrencyMessages(concurrencyMessages));
+        hpanUpdatedEvents.addAll(buildValidPayloadsNotPaymentManagerChennel(0,dbElementsNumbers));
 
         long startTest = System.currentTimeMillis();
         hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, readUserId(e),e));
         publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
-        waitForDB(dbElementsNumbers+1+((updatedHpanNumbers-dbElementsNumbers)/2));
+        waitForDB(dbElementsNumbers+1+((updatedHpanNumbers-dbElementsNumbers)/2)+dbElementsNumbers);
         long endTestWithoutAsserts = System.currentTimeMillis();
 
         checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
         checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
         checkConcurrencyMessages();
+        checkHpanUpdatePublished(dbElementsNumbers,maxWaitingMs);
 
         System.out.printf("""
             ************************
@@ -147,6 +152,35 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 }
             }
         });
+
+        //region Check for whit Payment Manager Channel
+        List<Mono<HpanInitiatives>> closeIntervalsChannelPaymentManager = IntStream.range(0, dbElementsNumbers /2).mapToObj(i -> hpanInitiativesRepository.findById("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%s".formatted(i))).toList();
+        closeIntervalsChannelPaymentManager.forEach(hpanInitiativesMono -> {
+            HpanInitiatives hpanInitiativeResult= hpanInitiativesMono.block();
+            assert hpanInitiativeResult != null;
+            if(Integer.parseInt(hpanInitiativeResult.getHpan().substring(33))%2 == 0) {
+                Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
+                Assertions.assertEquals(3, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            }
+            else {
+                Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
+                Assertions.assertEquals(2, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            }
+        });
+
+        List<Mono<HpanInitiatives>> openIntervalsChannelPaymentManager = IntStream.range(dbElementsNumbers /2, dbElementsNumbers).mapToObj(i -> hpanInitiativesRepository.findById("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%s".formatted(i))).toList();
+        openIntervalsChannelPaymentManager.forEach(hpanInitiativesMono -> {
+            HpanInitiatives hpanInitiativeResult= hpanInitiativesMono.block();
+            assert hpanInitiativeResult != null;
+            if(Integer.parseInt(hpanInitiativeResult.getHpan().substring(33))%2 == 0) {
+                Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
+                Assertions.assertEquals(3, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            }else {
+                Assertions.assertEquals(1, hpanInitiativeResult.getOnboardedInitiatives().size());
+                Assertions.assertEquals(2, hpanInitiativeResult.getOnboardedInitiatives().get(0).getActiveTimeIntervals().size());
+            }
+        });
+        //endregion
     }
 
     void initializeDB(int requestElements){
@@ -158,9 +192,11 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 .mapToObj(HpanInitiativesFaker::mockInstance)
                 .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
         initializeConcurrencyCase();
-        waitForDB(requestElements+1);
+        initializeChannelManagementChannel(requestElements);
+        waitForDB(requestElements+1+requestElements);
 
     }
+
     private void initializeConcurrencyCase(){
         List<OnboardedInitiative> onboardedInitiatives = new ArrayList<>();
         LocalDateTime start = LocalDateTime.of(2022,9,5,0,0);
@@ -180,6 +216,25 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 .onboardedInitiatives(onboardedInitiatives).build();
         hpanInitiativesRepository.save(hpanInitiatives).subscribe(h -> log.info("saved hpan: {}", h.getHpan()));
     }
+
+    private void initializeChannelManagementChannel(int requestElements) {
+        int initiativesWithCloseIntervals = requestElements/2;
+        IntStream.range(0, initiativesWithCloseIntervals).
+                mapToObj(i -> {
+                    HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(i);
+                    hpanInitiatives.setHpan("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(i));
+                    return hpanInitiatives;
+                })
+                .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
+        IntStream.range(initiativesWithCloseIntervals, requestElements)
+                .mapToObj(i -> {
+                    HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(i);
+                    hpanInitiatives.setHpan("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(i));
+                    return hpanInitiatives;
+                })
+                .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
+    }
+
     private void waitForDB(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
@@ -190,7 +245,28 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         return IntStream.range(start, end)
                 .mapToObj(i -> HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
                         .operationDate(LocalDateTime.now().plusDays(10L))
-                        .operationType(i%2 == 0 ? HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT : HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT).build())
+                        .operationType(i%2 == 0 ? HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT : HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
+                        .channel(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)
+                        .build())
+                .map(TestUtils::jsonSerializer)
+                .toList();
+    }
+
+    private Collection<String> buildValidPayloadsNotPaymentManagerChennel(int start, int end) {
+        return IntStream.range(start, end)
+                .mapToObj(i -> {
+                    PaymentMethodInfoDTO info = PaymentMethodInfoDTO.builder()
+                            .hpan("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(i))
+                            .maskedPan("MASKEDPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(i))
+                            .brandLogo("BRANDLOGO_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(i))
+                            .build();
+                    return HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
+                            .operationDate(LocalDateTime.now())
+                            .operationType(i % 2 == 0 ? HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT : HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
+                            .channel("ANOTHER_CHANNEL")
+                            .infoList(List.of(info))
+                            .build();
+                })
                 .map(TestUtils::jsonSerializer)
                 .toList();
     }
@@ -206,7 +282,9 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                             .initiativeId("INITIATIVEID_%d".formatted(i))
                             .infoList(List.of(infoHpanConcurrency))
                             .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
-                            .operationDate(LocalDateTime.of(2022, 9, 15, 10, 45, 30)).build();
+                            .operationDate(LocalDateTime.of(2022, 9, 15, 10, 45, 30))
+                            .channel(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)
+                            .build();
                 })
                 .map(TestUtils::jsonSerializer)
                 .toList();
@@ -248,6 +326,43 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
 
         onboardedInitiatives.forEach(onboardedInitiative ->
                 Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size()));
+    }
+
+    private void checkHpanUpdatePublished(int updatedHpanNumbers, long maxWaitingMs) {
+        List<ConsumerRecord<String, String>> consumerRecords = consumeMessages(topicHpanUpdateOutcome, updatedHpanNumbers, maxWaitingMs);
+        Assertions.assertEquals(updatedHpanNumbers,consumerRecords.size());
+        consumerRecords.forEach(cr -> {
+            try {
+                HpanUpdateOutcomeDTO hpanUpdateOutcomeDTO = objectMapper.readValue(cr.value(), HpanUpdateOutcomeDTO.class);
+                Assertions.assertNotNull(hpanUpdateOutcomeDTO);
+                TestUtils.checkNotNullFields(hpanUpdateOutcomeDTO);
+
+                int bias = Integer.parseInt(hpanUpdateOutcomeDTO.getUserId().substring(7));
+
+                Assertions.assertNotNull(hpanUpdateOutcomeDTO.getHpanList());
+                if(bias<updatedHpanNumbers/2){
+                    if(bias%2==0){
+                        Assertions.assertEquals(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT, hpanUpdateOutcomeDTO.getOperationType());
+                        Assertions.assertTrue(hpanUpdateOutcomeDTO.getHpanList().contains("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(bias)));
+                        Assertions.assertEquals(0, hpanUpdateOutcomeDTO.getRejectedHpanList().size());
+                    }else {
+                        Assertions.assertEquals(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT, hpanUpdateOutcomeDTO.getOperationType());
+                        Assertions.assertEquals(0, hpanUpdateOutcomeDTO.getHpanList().size());
+                        Assertions.assertTrue(hpanUpdateOutcomeDTO.getRejectedHpanList().contains("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(bias)));
+                    }
+                }else {
+                    if(bias%2==0){
+                        Assertions.assertEquals(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT, hpanUpdateOutcomeDTO.getOperationType());
+                    } else {
+                        Assertions.assertEquals(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT, hpanUpdateOutcomeDTO.getOperationType());
+                    }
+                    Assertions.assertTrue(hpanUpdateOutcomeDTO.getHpanList().contains("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(bias)));
+                    Assertions.assertEquals(0, hpanUpdateOutcomeDTO.getRejectedHpanList().size());
+                }
+            } catch (JsonProcessingException e) {
+                Assertions.fail();
+            }
+        });
     }
 
     private final Pattern userIdPatternMatch = Pattern.compile("\"userId\":\"([^\"]*)\"");
