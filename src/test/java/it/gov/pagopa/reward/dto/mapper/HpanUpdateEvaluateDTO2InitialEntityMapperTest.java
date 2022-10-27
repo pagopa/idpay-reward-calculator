@@ -19,7 +19,7 @@ class HpanUpdateEvaluateDTO2InitialEntityMapperTest {
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanInitiativeDTOFaker.mockInstanceBuilder(1)
                 .evaluationDate(LocalDateTime.now())
-                .operationType(HpanInitiativeConstants.ADD_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .build();
 
         // When
@@ -37,7 +37,7 @@ class HpanUpdateEvaluateDTO2InitialEntityMapperTest {
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanInitiativeDTOFaker.mockInstanceBuilder(1)
                 .evaluationDate(LocalDateTime.now())
-                .operationType(HpanInitiativeConstants.DELETE_INSTRUMENT)
+                .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
                 .build();
 
         // When
