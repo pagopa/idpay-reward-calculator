@@ -53,7 +53,8 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             ObjectMapper objectMapper,
             ErrorNotifierService errorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
-            HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper, HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper) {
+            HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper,
+            HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper) {
         super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
 
@@ -135,7 +136,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
                 .switchIfEmpty(Mono.defer(() -> getNewHpanInitiatives(hpanUpdateEvaluateDTO)))
                 .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives))
                 .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
-                .flatMap(ur -> Mono.just(hpanUpdateEvaluateDTO.getHpan()));
+                .map(ur -> hpanUpdateEvaluateDTO.getHpan());
     }
 
     private Mono<HpanInitiatives> getNewHpanInitiatives(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
