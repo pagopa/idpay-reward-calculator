@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.dto;
+package it.gov.pagopa.reward.dto.trx;
 
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import lombok.AllArgsConstructor;
@@ -11,6 +11,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Reward {
+    private String initiativeId;
+    private String organizationId;
+
     /** The ruleEngine reward calculated */
     private BigDecimal providedReward;
     /** The effective reward after CAP and REFUND evaluation */
@@ -30,19 +33,17 @@ public class Reward {
     /** Counters */
     private RewardCounters counters;
 
-    public Reward(BigDecimal reward){
-        this.providedReward=reward;
-        this.accruedReward=reward;
-        this.capped=false;
+    public Reward(String initiativeId, String organizationId, BigDecimal reward){
+        this(initiativeId, organizationId, reward, reward, false);
     }
 
-    public Reward(BigDecimal providedReward, BigDecimal accruedReward){
-        this.providedReward=providedReward;
-        this.accruedReward=accruedReward;
-        this.capped=providedReward.compareTo(accruedReward)!=0;
+    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward){
+        this(initiativeId, organizationId, providedReward, accruedReward, providedReward.compareTo(accruedReward)!=0);
     }
 
-    public Reward(BigDecimal providedReward, BigDecimal accruedReward, boolean capped){
+    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward, boolean capped){
+        this.initiativeId=initiativeId;
+        this.organizationId=organizationId;
         this.providedReward=providedReward;
         this.accruedReward=accruedReward;
         this.capped=capped;

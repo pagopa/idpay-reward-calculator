@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
@@ -46,6 +46,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
      */
     private final InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(1, Collections.emptySet(), RewardValueDTO.class)
             .initiativeId(initiativeId)
+            .initiativeName("NAME_"+initiativeId)
+            .organizationId("ORGANIZATIONID_"+initiativeId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(LocalDate.MIN)
@@ -80,6 +82,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
      */
     private final InitiativeReward2BuildDTO initiative2totalRefund = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(1, Collections.emptySet(), RewardValueDTO.class)
             .initiativeId(initiative2totalRefundId)
+            .initiativeName("NAME_"+initiative2totalRefundId)
+            .organizationId("ORGANIZATIONID_"+initiative2totalRefundId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(LocalDate.MIN)

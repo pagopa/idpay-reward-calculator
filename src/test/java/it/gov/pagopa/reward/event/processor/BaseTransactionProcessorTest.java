@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.event.processor;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
@@ -133,6 +133,8 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         final Reward initiativeReward = evaluation.getRewards().get(rewardedInitiativeId);
         Assertions.assertNotNull(initiativeReward);
 
+        Assertions.assertEquals(rewardedInitiativeId, initiativeReward.getInitiativeId());
+        Assertions.assertEquals("ORGANIZATIONID_" + rewardedInitiativeId, initiativeReward.getOrganizationId());
         TestUtils.assertBigDecimalEquals(expectedReward, initiativeReward.getAccruedReward());
         if (!expectedCap) {
             TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());

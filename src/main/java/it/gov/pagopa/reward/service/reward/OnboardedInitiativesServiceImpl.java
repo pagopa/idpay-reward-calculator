@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -42,7 +42,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
             if(trx.getRefundInfo() != null){
                 return Flux.fromIterable(trx.getRefundInfo()
                         .getPreviousRewards().entrySet().stream()
-                        .filter(r-> isPositive(r.getValue()))
+                        .filter(r-> isPositive(r.getValue().getAccruedReward()))
                         .map(Map.Entry::getKey).toList());
             } else {
                 log.trace("[REWARD] [REWARD_KO] Recognized REFUND operation without previous rewards");

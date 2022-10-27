@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -37,7 +37,7 @@ class Transaction2TransactionProcessedMapperTest {
         OffsetDateTime trxDate = OffsetDateTime.of(LocalDateTime.of(2000,1,1,23,59,57), RewardConstants.ZONEID.getRules().getOffset(LocalDateTime.now()));
         Map<String, Reward> rewards = Map.of(
                 "REWARDS0",
-                new Reward(BigDecimal.valueOf(100))
+                new Reward("REWARDS0", "ORGANIZATION0", BigDecimal.valueOf(100))
         );
 
         RewardTransactionDTO trx = transaction2RewardTransactionMapper.apply(TransactionDTOFaker.mockInstance(0));

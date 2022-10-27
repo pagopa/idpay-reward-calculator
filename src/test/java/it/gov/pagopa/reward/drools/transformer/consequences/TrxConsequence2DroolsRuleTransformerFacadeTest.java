@@ -54,8 +54,8 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
     }
 
     private <T extends InitiativeTrxConsequence> void test(T trxConsequence, InitiativeTrxConsequence2DroolsRuleTransformer<T> mock) {
-        transformer.apply("AGENDAGROUP", "RULENAME", trxConsequence);
-        Mockito.verify(mock).apply(Mockito.eq("AGENDAGROUP"), Mockito.eq("RULENAME"), Mockito.same(trxConsequence));
+        transformer.apply("INITIATIVEID", "ORGANIZATIONID", "RULENAME", trxConsequence);
+        Mockito.verify(mock).apply(Mockito.eq("INITIATIVEID"), Mockito.eq("ORGANIZATIONID"), Mockito.eq("RULENAME"), Mockito.same(trxConsequence));
 
         Mockito.verifyNoMoreInteractions(mock);
         mocks.stream()
@@ -82,7 +82,7 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
     void testNotHandled() {
         InitiativeTrxConsequence notHandledTrxConsequence = new InitiativeTrxConsequence() {};
         try {
-            transformer.apply("AGENDAGROUP", "RULENAME", notHandledTrxConsequence);
+            transformer.apply("INITIATIVEID", "ORGANIZATIONID", "RULENAME", notHandledTrxConsequence);
             Assertions.fail("Exception expected");
         } catch (IllegalStateException e) {
             // Do nothing
@@ -91,7 +91,7 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
 
     @Test
     void testNull() {
-        String result = transformer.apply("AGENDAGROUP", "RULENAME", null);
+        String result = transformer.apply("INITIATIVEID", "ORGANIZATIONID", "RULENAME", null);
         Assertions.assertEquals("", result);
     }
 

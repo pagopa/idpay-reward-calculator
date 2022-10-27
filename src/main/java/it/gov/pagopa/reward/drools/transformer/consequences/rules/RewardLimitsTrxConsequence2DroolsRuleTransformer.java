@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacade;
-import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -26,16 +26,17 @@ public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitia
     }
 
     @Override
-    public String apply(String agendaGroup, String ruleNamePrefix, RewardLimitsDTO trxConsequence) {
+    public String apply(String initiativeId, String organizationId, String ruleNamePrefix, RewardLimitsDTO trxConsequence) {
         return initiativeTrxConsequenceRuleBuild(
-                agendaGroup,
+                initiativeId,
+                organizationId,
                 "%s-%s".formatted(ruleNamePrefix, trxConsequence.getFrequency()),
                 trxConsequence
         );
     }
 
     @Override
-    protected String buildConsequences(String initiativeId, RewardLimitsDTO trxConsequence) {
+    protected String buildConsequences(String initiativeId, String organizationId, RewardLimitsDTO trxConsequence) {
         return """
                 %s
                    %s reward = $trx.getRewards().get("%s");

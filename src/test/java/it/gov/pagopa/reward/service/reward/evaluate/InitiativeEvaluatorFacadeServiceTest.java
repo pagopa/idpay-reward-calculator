@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
@@ -132,7 +132,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(trxPartialReverse), Mockito.any(), Mockito.any()))
                 .thenAnswer(i -> {
                     RewardTransactionDTO reward = rewardTransactionMapper.apply(i.getArgument(0));
-                    reward.setRewards(new HashMap<>(Map.of("INITIATIVE2PARTIALREVERSE", new Reward(BigDecimal.valueOf(9)))));
+                    reward.setRewards(new HashMap<>(Map.of("INITIATIVE2PARTIALREVERSE", new Reward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", BigDecimal.valueOf(9)))));
                     reward.setInitiativeRejectionReasons(new HashMap<>(Map.of("INITIATIVE2REVERSE", List.of("NOT_MORE_REWARDED_FOR_SOME_REASON"))));
                     return reward;
                 });
@@ -140,7 +140,9 @@ class InitiativeEvaluatorFacadeServiceTest {
         trxPartialReverse.setOperationTypeTranscoded(OperationType.REFUND);
         trxPartialReverse.setEffectiveAmount(trxPartialReverse.getAmount());
         trxPartialReverse.setRefundInfo(new RefundInfo());
-        trxPartialReverse.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2PARTIALREVERSE", BigDecimal.TEN, "INITIATIVE2REVERSE", BigDecimal.ONE));
+        trxPartialReverse.getRefundInfo().setPreviousRewards(Map.of(
+                "INITIATIVE2PARTIALREVERSE", new RefundInfo.PreviousReward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", BigDecimal.TEN),
+                "INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
 
         trxTotalRefundNoCharge.setOperationTypeTranscoded(OperationType.REFUND);
         trxTotalRefundNoCharge.setEffectiveAmount(BigDecimal.ZERO);
@@ -148,7 +150,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         trxTotalRefund.setOperationTypeTranscoded(OperationType.REFUND);
         trxTotalRefund.setEffectiveAmount(BigDecimal.ZERO);
         trxTotalRefund.setRefundInfo(new RefundInfo());
-        trxTotalRefund.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
+        trxTotalRefund.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
     }
 
     private void verifyUserInitiativeCounterFindByIdCalls(TransactionDTO... expectedTrxs) {
@@ -176,12 +178,12 @@ class InitiativeEvaluatorFacadeServiceTest {
     }
 
     private void checkPartialRefundResult(RewardTransactionDTO rewardTransactionDTO) {
-        Assertions.assertEquals(new Reward(BigDecimal.valueOf(9), BigDecimal.valueOf(-1), false), rewardTransactionDTO.getRewards().get("INITIATIVE2PARTIALREVERSE"));
-        Assertions.assertEquals(new Reward(BigDecimal.valueOf(-1)), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
+        Assertions.assertEquals(new Reward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", BigDecimal.valueOf(9), BigDecimal.valueOf(-1), false), rewardTransactionDTO.getRewards().get("INITIATIVE2PARTIALREVERSE"));
+        Assertions.assertEquals(new Reward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.valueOf(-1)), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
         Assertions.assertEquals(Map.of("INITIATIVE2REVERSE", List.of("NOT_MORE_REWARDED_FOR_SOME_REASON")), rewardTransactionDTO.getInitiativeRejectionReasons());
     }
 
     private void checkTotalRefundResult(RewardTransactionDTO rewardTransactionDTO) {
-        Assertions.assertEquals(new Reward(BigDecimal.valueOf(-1)), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
+        Assertions.assertEquals(new Reward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.valueOf(-1)), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
     }
 }

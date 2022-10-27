@@ -1,9 +1,10 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
@@ -89,21 +90,21 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         } else {
             trxRewarded.setRewards(trx.getRefundInfo().getPreviousRewards().entrySet().stream()
-                    .map(e -> Pair.of(e.getKey(), new Reward(e.getValue().negate())))
+                    .map(e -> Pair.of(e.getKey(), new Reward(e.getKey(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward().negate())))
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }
     }
 
     private void handlePartialRefund(RewardTransactionDTO trxRewarded) {
-        Map<String, BigDecimal> pastRewards = new HashMap<>(trxRewarded.getRefundInfo() != null ? trxRewarded.getRefundInfo().getPreviousRewards() : Collections.emptyMap());
+        Map<String, RefundInfo.PreviousReward> pastRewards = new HashMap<>(trxRewarded.getRefundInfo() != null ? trxRewarded.getRefundInfo().getPreviousRewards() : Collections.emptyMap());
         trxRewarded.getRewards().forEach((initiativeId, r)-> {
-            BigDecimal pastReward = pastRewards.remove(initiativeId);
+            RefundInfo.PreviousReward pastReward = pastRewards.remove(initiativeId);
             if(pastReward!=null){
-                r.setAccruedReward(r.getAccruedReward().subtract(pastReward));
+                r.setAccruedReward(r.getAccruedReward().subtract(pastReward.getAccruedReward()));
             }
         });
-        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(reward2Reverse.negate())));
+        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), reward2Reverse.getAccruedReward().negate())));
         if(trxRewarded.getRewards().size()>0){
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }

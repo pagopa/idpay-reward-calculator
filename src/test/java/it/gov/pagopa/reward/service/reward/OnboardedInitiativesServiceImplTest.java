@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -188,7 +188,7 @@ class OnboardedInitiativesServiceImplTest {
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmount(BigDecimal.ZERO);
         trx.setRefundInfo(new RefundInfo());
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
 
         // When
         List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
@@ -205,7 +205,7 @@ class OnboardedInitiativesServiceImplTest {
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmount(BigDecimal.ZERO);
         trx.setRefundInfo(new RefundInfo());
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ZERO));
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ZERO)));
 
         // When
         List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();

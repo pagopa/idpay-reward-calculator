@@ -58,6 +58,7 @@ public final class InitiativeReward2BuildDTOFaker {
 
         out.initiativeId("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
+        out.organizationId("ORGANIZATIONID_%s".formatted(bias));
 
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
@@ -118,6 +119,7 @@ public final class InitiativeReward2BuildDTOFaker {
 
         out.setInitiativeId(fakeValuesService.bothify("?????"));
         out.setInitiativeName(fakeValuesService.bothify("?????"));
+        out.setOrganizationId(fakeValuesService.bothify("?????"));
 
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),

@@ -16,5 +16,12 @@ import java.util.Map;
 @Builder
 public class RefundInfo {
     private List<TransactionProcessed> previousTrxs;
-    private Map<String, BigDecimal> previousRewards;
+    private Map<String, PreviousReward> previousRewards;
+
+    @Data @AllArgsConstructor @NoArgsConstructor
+    public static class PreviousReward {
+        private String initiativeId;
+        private String organizationId;
+        private BigDecimal accruedReward;
+    }
 }

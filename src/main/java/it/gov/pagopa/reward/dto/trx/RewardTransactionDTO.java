@@ -1,9 +1,8 @@
-package it.gov.pagopa.reward.dto;
+package it.gov.pagopa.reward.dto.trx;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
