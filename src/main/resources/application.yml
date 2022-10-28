@@ -183,7 +183,7 @@ spring:
       config:
         connectionPool:
           maxSize: ${MONGODB_CONNECTIONPOOL_MAX_SIZE:100}
-          minSize: ${MONGODB_CONNECTIONPOOL_MIN_SIZE:10}
+          minSize: ${MONGODB_CONNECTIONPOOL_MIN_SIZE:5}
           maxWaitTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_WAIT_MS:120000}
           maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
