@@ -52,7 +52,6 @@ class RewardRuleMediatorServiceImplTest {
     private ErrorNotifierService errorNotifierServiceMock;
 
     private final KieBase newKieBaseBuiltMock = Mockito.mock(KieBase.class);
-    private RewardRuleMediatorService rewardRuleMediatorService;
 
     void testSetUp() {
         Mockito.when(rewardRule2DroolsRuleServiceMock.apply(Mockito.any())).thenAnswer(invocation -> {
@@ -66,7 +65,8 @@ class RewardRuleMediatorServiceImplTest {
                             .weeklyThreshold(true)
                             .monthlyThreshold(false)
                             .yearlyThreshold(false)
-                            .build());
+                            .build(),
+                    LocalDateTime.now());
         });
         Mockito.when(droolsRuleRepositoryMock.save(Mockito.any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));

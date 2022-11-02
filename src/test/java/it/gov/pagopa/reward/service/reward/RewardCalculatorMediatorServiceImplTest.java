@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
@@ -204,7 +204,7 @@ class RewardCalculatorMediatorServiceImplTest {
             t.setOperationTypeTranscoded(OperationType.REFUND);
             t.setEffectiveAmount(t.getAmount());
             t.setRefundInfo(new RefundInfo());
-            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
+            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
             return Mono.just(t);
         });
 
@@ -213,7 +213,7 @@ class RewardCalculatorMediatorServiceImplTest {
             t.setOperationTypeTranscoded(OperationType.REFUND);
             t.setEffectiveAmount(BigDecimal.ZERO);
             t.setRefundInfo(new RefundInfo());
-            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
+            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
             return Mono.just(t);
         });
     }

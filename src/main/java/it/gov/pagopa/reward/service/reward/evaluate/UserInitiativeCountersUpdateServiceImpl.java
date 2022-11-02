@@ -1,8 +1,9 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
@@ -18,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
@@ -66,7 +68,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                         .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
 
                 evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
-                final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId) : null;
+                final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedReward).orElse(null) : null;
                 updateCounters(initiativeCounter, reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount());
                 updateTemporalCounters(initiativeCounter, reward, ruleEngineResult, previousRewards, initiativeConfig);
                 /* set RewardCounters in RewardTransactionDTO object */
@@ -109,6 +111,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
             if(BigDecimal.ZERO.compareTo(previousRewards.add(reward.getAccruedReward())) == 0){
                 counters.setTrxNumber(counters.getTrxNumber() - 1);
                 counters.setTotalAmount(counters.getTotalAmount().subtract(effectiveAmount));
+                reward.setCompleteRefund(true);
             }
         }
         counters.setTotalReward(counters.getTotalReward().add(reward.getAccruedReward()));

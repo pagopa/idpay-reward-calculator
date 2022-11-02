@@ -1,7 +1,8 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
@@ -119,14 +120,19 @@ class OperationTypeRefundHandlerServiceTest {
                         .trxDate(LocalDateTime.MIN)
                         .trxChargeDate(LocalDateTime.MIN)
                         .amount(BigDecimal.TEN).effectiveAmount(BigDecimal.TEN)
-                        .rewards(Map.of("INITIATIVE1", new Reward(BigDecimal.ONE), "INITIATIVE2", new Reward(BigDecimal.ONE), "INITIATIVE3", new Reward(BigDecimal.ONE)))
+                        .rewards(Map.of(
+                                "INITIATIVE1", new Reward("INITIATIVE1","ORGANIZATION", BigDecimal.ONE),
+                                "INITIATIVE2", new Reward("INITIATIVE2","ORGANIZATION", BigDecimal.ONE),
+                                "INITIATIVE3", new Reward("INITIATIVE3","ORGANIZATION", BigDecimal.ONE)))
                         .build(),
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.REFUND)
                         .trxDate(LocalDateTime.MAX)
                         .trxChargeDate(LocalDateTime.MIN)
                         .amount(BigDecimal.ONE).effectiveAmount(BigDecimal.valueOf(9))
-                        .rewards(Map.of("INITIATIVE1", new Reward(BigDecimal.valueOf(-0.5)), "INITIATIVE3", new Reward(BigDecimal.valueOf(-1))))
+                        .rewards(Map.of(
+                                "INITIATIVE1", new Reward("INITIATIVE1","ORGANIZATION", BigDecimal.valueOf(-0.5)),
+                                "INITIATIVE3", new Reward("INITIATIVE3","ORGANIZATION", BigDecimal.valueOf(-1))))
                         .build()
         );
 
@@ -150,7 +156,9 @@ class OperationTypeRefundHandlerServiceTest {
 
         Assertions.assertEquals(expectedPreviousTrxs, result.getRefundInfo().getPreviousTrxs());
         Assertions.assertEquals(
-                Map.of("INITIATIVE1", scaleBigDecimal(BigDecimal.valueOf(0.5)), "INITIATIVE2", scaleBigDecimal(BigDecimal.ONE))
+                Map.of(
+                        "INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", scaleBigDecimal(BigDecimal.valueOf(0.5))),
+                        "INITIATIVE2", new RefundInfo.PreviousReward("INITIATIVE2", "ORGANIZATION", scaleBigDecimal(BigDecimal.ONE)))
                 , result.getRefundInfo().getPreviousRewards());
     }
 

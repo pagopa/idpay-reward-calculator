@@ -6,14 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.math.BigDecimal;
-
 @Data
 @NoArgsConstructor
 @SuperBuilder
 public class InitiativeReward2BuildDTO {
     private String initiativeId;
     private String initiativeName;
+    private String organizationId;
     private InitiativeGeneralDTO general;
     private InitiativeRewardRule rewardRule;
     private InitiativeTrxConditions trxRule;

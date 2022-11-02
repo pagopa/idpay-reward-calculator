@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;

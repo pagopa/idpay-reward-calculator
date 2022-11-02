@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
 import com.mongodb.assertions.Assertions;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 

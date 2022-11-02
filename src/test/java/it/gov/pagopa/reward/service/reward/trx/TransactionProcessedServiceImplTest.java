@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;

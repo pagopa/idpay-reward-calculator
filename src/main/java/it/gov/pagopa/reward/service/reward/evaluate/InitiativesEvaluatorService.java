@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 
 import java.util.List;

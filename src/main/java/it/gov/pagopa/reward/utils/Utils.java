@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
 import java.util.function.Consumer;
@@ -22,7 +22,7 @@ public final class Utils {
     }
 
     private static final String PAYLOAD_FIELD_USER_ID = "\"%s\"".formatted(TransactionDTO.Fields.userId);
-    /** It will read userId field from {@link it.gov.pagopa.reward.dto.TransactionDTO} payload */
+    /** It will read userId field from {@link TransactionDTO} payload */
     public static String readUserId(String payload) {
         int userIdIndex = payload.indexOf(PAYLOAD_FIELD_USER_ID);
         if(userIdIndex>-1){

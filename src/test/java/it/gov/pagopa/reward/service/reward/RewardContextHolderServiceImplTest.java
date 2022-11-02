@@ -17,7 +17,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -109,6 +108,8 @@ class RewardContextHolderServiceImplTest {
         String initiativeId="INITIATIVE-ID";
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
+                .initiativeName("NAME")
+                .organizationId("ORGANIZATIONID")
                 .beneficiaryBudget(BigDecimal.valueOf(100))
                 .endDate(LocalDate.MAX)
                 .dailyThreshold(true)

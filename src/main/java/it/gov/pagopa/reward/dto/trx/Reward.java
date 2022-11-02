@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.dto;
+package it.gov.pagopa.reward.dto.trx;
 
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import lombok.AllArgsConstructor;
@@ -11,6 +11,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Reward {
+    private String initiativeId;
+    private String organizationId;
+
     /** The ruleEngine reward calculated */
     private BigDecimal providedReward;
     /** The effective reward after CAP and REFUND evaluation */
@@ -27,24 +30,31 @@ public class Reward {
     /** True, if the reward has been capped due to weekly threshold */
     private boolean weeklyCapped;
 
+    /** True if it's a refunding reward */
+    private boolean refund;
+    /** True if it's a complete refunding reward */
+    private boolean completeRefund;
+
     /** Counters */
     private RewardCounters counters;
 
-    public Reward(BigDecimal reward){
-        this.providedReward=reward;
-        this.accruedReward=reward;
-        this.capped=false;
+    public Reward(String initiativeId, String organizationId, BigDecimal reward){
+        this(initiativeId, organizationId, reward, false);
+    }
+    public Reward(String initiativeId, String organizationId, BigDecimal reward, boolean refund){
+        this(initiativeId, organizationId, reward, reward, false, refund);
     }
 
-    public Reward(BigDecimal providedReward, BigDecimal accruedReward){
-        this.providedReward=providedReward;
-        this.accruedReward=accruedReward;
-        this.capped=providedReward.compareTo(accruedReward)!=0;
+    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward){
+        this(initiativeId, organizationId, providedReward, accruedReward, providedReward.compareTo(accruedReward)!=0, false);
     }
 
-    public Reward(BigDecimal providedReward, BigDecimal accruedReward, boolean capped){
+    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward, boolean capped, boolean refund){
+        this.initiativeId=initiativeId;
+        this.organizationId=organizationId;
         this.providedReward=providedReward;
         this.accruedReward=accruedReward;
         this.capped=capped;
+        this.refund = refund;
     }
 }

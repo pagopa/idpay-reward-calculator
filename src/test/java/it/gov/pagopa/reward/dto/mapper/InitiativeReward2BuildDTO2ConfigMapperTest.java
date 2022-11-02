@@ -31,6 +31,8 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(initiative.getInitiativeId(), result.getInitiativeId());
+        Assertions.assertEquals(initiative.getInitiativeName(), result.getInitiativeName());
+        Assertions.assertEquals(initiative.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(initiative.getGeneral().getEndDate(), result.getEndDate());
         Assertions.assertEquals(initiative.getGeneral().getBeneficiaryBudget(), result.getBeneficiaryBudget());
 
