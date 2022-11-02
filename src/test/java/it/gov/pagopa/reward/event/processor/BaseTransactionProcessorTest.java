@@ -122,9 +122,9 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     }
 
     protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
-        assertRewardedState(evaluation, 1, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted);
+        assertRewardedState(evaluation, 1, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, false);
     }
-    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
+    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isCompleteRefund) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
         Assertions.assertFalse(evaluation.getRewards().isEmpty());
@@ -146,6 +146,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalAmount), initiativeReward.getCounters().getTotalAmount());
         Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalReward), initiativeReward.getCounters().getTotalReward());
         Assertions.assertEquals(expectedCounterBudgetExhausted, initiativeReward.getCounters().isExhaustedBudget());
+        Assertions.assertEquals(isCompleteRefund, initiativeReward.isCompleteRefund());
 
         Assertions.assertEquals(expectedInitiativeRewarded, evaluation.getRewards().size());
     }
