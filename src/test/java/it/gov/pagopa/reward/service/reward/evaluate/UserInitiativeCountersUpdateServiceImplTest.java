@@ -81,7 +81,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1", "ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1", "ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
@@ -119,7 +119,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testUpdateCounters() {
         // Given
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
@@ -180,8 +180,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
     void testWithUnrewardedInitiative() {
         // Given
         Map<String, Reward> rewardMock = Map.of(
-                "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false),
-                "3", new Reward("3","ORGANIZATION", BigDecimal.ZERO, BigDecimal.ZERO, false));
+                "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false),
+                "3", new Reward("3","ORGANIZATION", BigDecimal.ZERO, BigDecimal.ZERO, false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
@@ -223,8 +223,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Given
         Map<String, Reward> rewardMock = Map.of(
-                "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(0), false),
-                "3", new Reward("3","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(50), false)
+                "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(0), false, false),
+                "3", new Reward("3","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(50), false, false)
         );
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
@@ -274,7 +274,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
@@ -305,7 +305,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
@@ -336,7 +336,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
@@ -367,7 +367,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
-        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)

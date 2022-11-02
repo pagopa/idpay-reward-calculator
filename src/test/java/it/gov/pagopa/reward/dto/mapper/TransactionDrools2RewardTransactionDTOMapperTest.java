@@ -35,9 +35,9 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
         trx.setRefundInfo(new RefundInfo());
 
-        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", BigDecimal.ZERO, BigDecimal.ZERO, false)));
-        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", BigDecimal.TEN, BigDecimal.ZERO, true)));
-        trx.setRewards(Map.of("INITIATIVE3", new Reward("INITIATIVE3", "ORGANIZATION3", BigDecimal.TEN, BigDecimal.ONE, true)));
+        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", BigDecimal.ZERO, BigDecimal.ZERO, false, false)));
+        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", BigDecimal.TEN, BigDecimal.ZERO, true, false)));
+        trx.setRewards(Map.of("INITIATIVE3", new Reward("INITIATIVE3", "ORGANIZATION3", BigDecimal.TEN, BigDecimal.ONE, true, false)));
 
         trx.setInitiatives(new ArrayList<>());
 
@@ -58,8 +58,8 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     void testWithNoRewards() {
         // Given
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
-        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", BigDecimal.ZERO, BigDecimal.ZERO, false)));
-        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", BigDecimal.TEN, BigDecimal.ZERO, true)));
+        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", BigDecimal.ZERO, BigDecimal.ZERO, false, false)));
+        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", BigDecimal.TEN, BigDecimal.ZERO, true, false)));
 
         // When
         RewardTransactionDTO result = transactionDroolsDTO2RewardTransactionMapper.apply(trx);
@@ -73,7 +73,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     void testWithRejectionReasons() {
         // Given
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
-        trx.setRewards(Map.of("INITIATIVE", new Reward("INITIATIVE", "ORGANIZATION", BigDecimal.TEN, BigDecimal.ONE, true)));
+        trx.setRewards(Map.of("INITIATIVE", new Reward("INITIATIVE", "ORGANIZATION", BigDecimal.TEN, BigDecimal.ONE, true, false)));
         trx.setRejectionReasons(List.of("REJECTION"));
 
         // When

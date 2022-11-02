@@ -90,7 +90,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         } else {
             trxRewarded.setRewards(trx.getRefundInfo().getPreviousRewards().entrySet().stream()
-                    .map(e -> Pair.of(e.getKey(), new Reward(e.getKey(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward().negate())))
+                    .map(e -> Pair.of(e.getKey(), new Reward(e.getKey(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward().negate(), true)))
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }
@@ -103,8 +103,9 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             if(pastReward!=null){
                 r.setAccruedReward(r.getAccruedReward().subtract(pastReward.getAccruedReward()));
             }
+            r.setRefund(true);
         });
-        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), reward2Reverse.getAccruedReward().negate())));
+        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), reward2Reverse.getAccruedReward().negate(), true)));
         if(trxRewarded.getRewards().size()>0){
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         }

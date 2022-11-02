@@ -30,25 +30,31 @@ public class Reward {
     /** True, if the reward has been capped due to weekly threshold */
     private boolean weeklyCapped;
 
-    /** True if is the trx has not more reward for the current initiative */
-    private boolean isCompleteRefund;
+    /** True if it's a refunding reward */
+    private boolean refund;
+    /** True if it's a complete refunding reward */
+    private boolean completeRefund;
 
     /** Counters */
     private RewardCounters counters;
 
     public Reward(String initiativeId, String organizationId, BigDecimal reward){
-        this(initiativeId, organizationId, reward, reward, false);
+        this(initiativeId, organizationId, reward, false);
+    }
+    public Reward(String initiativeId, String organizationId, BigDecimal reward, boolean refund){
+        this(initiativeId, organizationId, reward, reward, false, refund);
     }
 
     public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward){
-        this(initiativeId, organizationId, providedReward, accruedReward, providedReward.compareTo(accruedReward)!=0);
+        this(initiativeId, organizationId, providedReward, accruedReward, providedReward.compareTo(accruedReward)!=0, false);
     }
 
-    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward, boolean capped){
+    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward, boolean capped, boolean refund){
         this.initiativeId=initiativeId;
         this.organizationId=organizationId;
         this.providedReward=providedReward;
         this.accruedReward=accruedReward;
         this.capped=capped;
+        this.refund = refund;
     }
 }
