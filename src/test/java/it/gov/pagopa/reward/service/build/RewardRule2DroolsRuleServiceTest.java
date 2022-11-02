@@ -307,6 +307,8 @@ public class RewardRule2DroolsRuleServiceTest {
                 .yearlyThreshold(true)
                 .build());
 
+        expected.setUpdateDate(result.getUpdateDate());
+
         Assertions.assertEquals(expected, result);
     }
 

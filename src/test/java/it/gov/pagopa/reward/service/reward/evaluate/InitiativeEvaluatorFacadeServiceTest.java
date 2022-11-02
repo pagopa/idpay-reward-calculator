@@ -167,7 +167,11 @@ class InitiativeEvaluatorFacadeServiceTest {
 
     private void verifyTransactionProcessedSaveCalls(TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(transactionProcessedService).save(rewardTransactionMapper.apply(t));
+            Mockito.verify(transactionProcessedService).save(Mockito.argThat(o -> {
+                RewardTransactionDTO arg = rewardTransactionMapper.apply(t);
+                arg.setElaborationDateTime(o.getElaborationDateTime());
+                return o.equals(arg);
+            }));
         }
     }
 
