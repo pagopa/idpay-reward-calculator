@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.dto.trx;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,4 +22,7 @@ public class RewardTransactionDTO extends TransactionDTO {
     private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 
     private Map<String, Reward> rewards;
+
+    @Builder.Default
+    private LocalDateTime elaborationDateTime = LocalDateTime.now();
 }

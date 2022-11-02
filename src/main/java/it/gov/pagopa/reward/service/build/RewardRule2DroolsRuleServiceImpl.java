@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -55,6 +56,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                 buildRules(out.getId(), out.getName(), initiative))
         );
+        out.setUpdateDate(LocalDateTime.now());
 
         if (onlineSyntaxCheck) {
             log.debug("Checking if the rule has valid syntax. id: %s".formatted(initiative.getInitiativeId()));
