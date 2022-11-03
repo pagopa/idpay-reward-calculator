@@ -2,9 +2,9 @@ package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
@@ -175,6 +175,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         Stream.of(
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(0, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_THRESHOLD_BASED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_THRESHOLD_BASED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_THRESHOLD_BASED)
                                 .trxRule(InitiativeTrxConditions.builder()
                                         .threshold(ThresholdDTO.builder()
                                                 .from(BigDecimal.valueOf(5))
@@ -187,6 +189,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(1, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_DAYOFWEEK_BASED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_DAYOFWEEK_BASED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_DAYOFWEEK_BASED)
                                 .trxRule(InitiativeTrxConditions.builder()
                                         .daysOfWeek(new DayOfWeekDTO(List.of(
                                                 DayOfWeekDTO.DayConfig.builder()
@@ -200,6 +204,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(2, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_MCC_BASED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_MCC_BASED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_MCC_BASED)
                                 .trxRule(InitiativeTrxConditions.builder()
                                         .mccFilter(MccFilterDTO.builder()
                                                 .allowedList(true)
@@ -211,6 +217,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                         .build())
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(4, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_TRXCOUNT_BASED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxRule(InitiativeTrxConditions.builder()
                                         .trxCount(TrxCountDTO.builder()
                                                 .from(10L)
@@ -220,10 +229,11 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .rewardRule(RewardValueDTO.builder()
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
-                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(3, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_REWARDLIMITS_BASED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_REWARDLIMITS_BASED)
                                 .trxRule(InitiativeTrxConditions.builder()
                                         .rewardLimits(List.of(
                                                 RewardLimitsDTO.builder()
@@ -250,12 +260,16 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(5, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_EXHAUSTED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_EXHAUSTED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_EXHAUSTED)
                                 .rewardRule(RewardValueDTO.builder()
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), RewardValueDTO.class)
                                 .initiativeId(INITIATIVE_ID_EXHAUSTING)
+                                .initiativeName("NAME_"+INITIATIVE_ID_EXHAUSTING)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_EXHAUSTING)
                                 .rewardRule(RewardValueDTO.builder()
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
@@ -266,6 +280,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .build(),
                         InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), null)
                                 .initiativeId(INITIATIVE_ID_EXPIRED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_EXPIRED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_EXPIRED)
                                 .rewardRule(RewardValueDTO.builder()
                                         .rewardValue(BigDecimal.TEN)
                                         .build())

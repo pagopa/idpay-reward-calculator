@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
-import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
@@ -50,7 +50,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
     private void testRewardLimit(String rewardLimitsCondition, TransactionDroolsDTO transaction) {
         transaction.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, RewardConstants.ZONEID.getRules().getOffset(TRX_DATE)));
         transaction.setRewards(new HashMap<>(Map.of(
-                initiativeId, new Reward(BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))
+                initiativeId, new Reward(initiativeId, "ORGANIZATION_"+initiativeId, BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))
         )));
 
         totalReward = rewardLimit.subtract(BigDecimal.ONE);

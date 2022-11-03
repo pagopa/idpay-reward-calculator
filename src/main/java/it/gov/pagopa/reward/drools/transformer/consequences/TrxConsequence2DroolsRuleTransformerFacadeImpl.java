@@ -23,18 +23,18 @@ public class TrxConsequence2DroolsRuleTransformerFacadeImpl implements TrxConseq
     }
 
     @Override
-    public String apply(String agendaGroup, String ruleNamePrefix, InitiativeTrxConsequence trxConsequence) {
+    public String apply(String initiativeId, String organizationId, String ruleNamePrefix, InitiativeTrxConsequence trxConsequence) {
         if(trxConsequence == null){
             return "";
         }
         else if(trxConsequence instanceof RewardValueDTO rewardValueDTO){
-            return rewardValueTrxConsequenceTransformer.apply(agendaGroup, ruleNamePrefix, rewardValueDTO);
+            return rewardValueTrxConsequenceTransformer.apply(initiativeId, organizationId, ruleNamePrefix, rewardValueDTO);
         }
         else if(trxConsequence instanceof RewardGroupsDTO rewardGroupsDTO){
-            return rewardGroupsTrxConsequenceTransformer.apply(agendaGroup, ruleNamePrefix, rewardGroupsDTO);
+            return rewardGroupsTrxConsequenceTransformer.apply(initiativeId, organizationId, ruleNamePrefix, rewardGroupsDTO);
         }
         else if(trxConsequence instanceof RewardLimitsDTO rewardLimitsDTO){
-            return rewardLimitsTrxConsequenceTransformer.apply(agendaGroup, ruleNamePrefix, rewardLimitsDTO);
+            return rewardLimitsTrxConsequenceTransformer.apply(initiativeId, organizationId, ruleNamePrefix, rewardLimitsDTO);
         }
 
         throw new IllegalStateException("InitiativeTrxConsequence not handled: %s".formatted(trxConsequence.getClass().getName()));

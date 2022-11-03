@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
 import lombok.AllArgsConstructor;

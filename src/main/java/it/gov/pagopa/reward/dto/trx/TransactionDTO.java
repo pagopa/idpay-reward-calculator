@@ -1,7 +1,6 @@
-package it.gov.pagopa.reward.dto;
+package it.gov.pagopa.reward.dto.trx;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;

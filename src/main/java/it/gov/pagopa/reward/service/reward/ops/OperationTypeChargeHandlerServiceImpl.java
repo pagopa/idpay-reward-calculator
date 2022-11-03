@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

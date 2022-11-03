@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 

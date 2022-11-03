@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -47,6 +47,6 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
     private boolean isExhausted2Reverse(TransactionDTO trx, String initiativeId) {
         return OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) &&
                 trx.getRefundInfo()!=null &&
-                BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId))<0;
+                BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward())<0;
     }
 }

@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacade;
-import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
@@ -23,15 +23,16 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
     protected abstract String getTrxConsequenceRuleName();
 
     @Override
-    public String apply(String agendaGroup, String ruleNamePrefix, T trxConsequence) {
+    public String apply(String initiativeId, String organizationId, String ruleNamePrefix, T trxConsequence) {
         return initiativeTrxConsequenceRuleBuild(
-                agendaGroup,
+                initiativeId,
+                organizationId,
                 ruleNamePrefix,
                 trxConsequence
         );
     }
 
-    protected String initiativeTrxConsequenceRuleBuild(String initiativeId, String ruleName, T trxConsequence) {
+    protected String initiativeTrxConsequenceRuleBuild(String initiativeId, String organizationId, String ruleName, T trxConsequence) {
         return """
                                 
                 rule "%s-%s"
@@ -58,15 +59,18 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 initiativeId,
                 buildConsequences(
                         initiativeId,
+                        organizationId,
                         trxConsequence
                 )
         );
     }
 
-    protected String buildConsequences(String initiativeId, T trxConsequence) {
-        return "$trx.getRewards().put(\"%s\", new %s(%s));".formatted(
+    protected String buildConsequences(String initiativeId, String organizationId, T trxConsequence) {
+        return "$trx.getRewards().put(\"%s\", new %s(\"%s\",\"%s\",%s));".formatted(
                 initiativeId,
                 Reward.class.getName(),
+                initiativeId,
+                organizationId,
                 trxConsequence2DroolsRewardExpressionTransformerFacade.apply(initiativeId, trxConsequence)
         );
     }

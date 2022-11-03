@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import org.junit.jupiter.api.Assertions;

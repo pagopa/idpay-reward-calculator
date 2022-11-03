@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.controller.producer;
 
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Sinks;
 

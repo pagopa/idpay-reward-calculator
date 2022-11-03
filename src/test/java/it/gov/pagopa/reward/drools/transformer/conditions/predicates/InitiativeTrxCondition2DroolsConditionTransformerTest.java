@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,6 +67,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
                 dr.getId(),
                 buildCondition(rewardCondition),
                 testName));
+        dr.setUpdateDate(LocalDateTime.now());
 
         try{
             return new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();

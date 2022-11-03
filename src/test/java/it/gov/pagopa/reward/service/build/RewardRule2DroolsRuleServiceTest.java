@@ -203,7 +203,7 @@ public class RewardRule2DroolsRuleServiceTest {
                    $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("ID_0_ssx", new it.gov.pagopa.reward.model.counters.InitiativeCounters("ID_0_ssx"))
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
-                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.Reward($trx.getEffectiveAmount().multiply(new java.math.BigDecimal("0.0023")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
+                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.trx.Reward("ID_0_ssx","ORGANIZATIONID_0",$trx.getEffectiveAmount().multiply(new java.math.BigDecimal("0.0023")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                                 
                 rule "ID_0_ssx-NAME_0_vnj-DAILY-REWARDLIMITS-CAP"
@@ -215,10 +215,10 @@ public class RewardRule2DroolsRuleServiceTest {
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
                 then\s
-                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   it.gov.pagopa.reward.dto.trx.Reward reward = $trx.getRewards().get("ID_0_ssx");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("10").subtract($initiativeCounters.getDailyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx") : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("10").subtract($initiativeCounters.getDailyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.setDailyCapped(true);
                          reward.setWeeklyCapped(false);
@@ -237,10 +237,10 @@ public class RewardRule2DroolsRuleServiceTest {
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
                 then\s
-                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   it.gov.pagopa.reward.dto.trx.Reward reward = $trx.getRewards().get("ID_0_ssx");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("70").subtract($initiativeCounters.getWeeklyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx") : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("70").subtract($initiativeCounters.getWeeklyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.setWeeklyCapped(true);
                          reward.setDailyCapped(false);
@@ -259,10 +259,10 @@ public class RewardRule2DroolsRuleServiceTest {
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
                 then\s
-                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   it.gov.pagopa.reward.dto.trx.Reward reward = $trx.getRewards().get("ID_0_ssx");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("300").subtract($initiativeCounters.getMonthlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx") : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("300").subtract($initiativeCounters.getMonthlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.setMonthlyCapped(true);
                          reward.setDailyCapped(false);
@@ -281,10 +281,10 @@ public class RewardRule2DroolsRuleServiceTest {
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval($trx.getInitiativeRejectionReasons().get("ID_0_ssx") == null)
                 then\s
-                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("ID_0_ssx");
+                   it.gov.pagopa.reward.dto.trx.Reward reward = $trx.getRewards().get("ID_0_ssx");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("3650").subtract($initiativeCounters.getYearlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx") : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("ID_0_ssx").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("3650").subtract($initiativeCounters.getYearlyCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx")!=null ? $trx.getRefundInfo().getPreviousRewards().get("ID_0_ssx").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.setYearlyCapped(true);
                          reward.setDailyCapped(false);
@@ -298,12 +298,16 @@ public class RewardRule2DroolsRuleServiceTest {
 
         expected.setInitiativeConfig(InitiativeConfig.builder()
                 .initiativeId(expected.getId())
+                .initiativeName("NAME_0_vnj")
+                .organizationId("ORGANIZATIONID_0")
                 .beneficiaryBudget(BigDecimal.valueOf(477.32))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)
                 .monthlyThreshold(true)
                 .yearlyThreshold(true)
                 .build());
+
+        expected.setUpdateDate(result.getUpdateDate());
 
         Assertions.assertEquals(expected, result);
     }

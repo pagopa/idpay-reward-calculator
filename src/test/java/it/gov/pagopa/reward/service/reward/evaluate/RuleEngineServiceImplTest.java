@@ -3,9 +3,9 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.dto.mapper.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
@@ -148,7 +148,7 @@ class RuleEngineServiceImplTest {
         Assertions.assertEquals("REWARDED", result.getStatus());
 
         Assertions.assertEquals(Map.of(
-                "ID_2_sga", new Reward(BigDecimal.valueOf(0.08))
+                "ID_2_sga", new Reward("ID_2_sga", "ORGANIZATIONID_2", BigDecimal.valueOf(0.08))
         ), result.getRewards());
     }
 }

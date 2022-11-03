@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
-import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
@@ -130,17 +130,17 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                                 
                 rule "ruleName-%s-REWARDLIMITS-CAP"
                 salience -2
-                agenda-group "agendaGroup"
+                agenda-group "initiativeId"
                 when
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
-                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
+                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("initiativeId", new it.gov.pagopa.reward.model.counters.InitiativeCounters("initiativeId"))
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
-                   eval($trx.getInitiativeRejectionReasons().get("agendaGroup") == null)
+                   eval($trx.getInitiativeRejectionReasons().get("initiativeId") == null)
                 then\s
-                   it.gov.pagopa.reward.dto.Reward reward = $trx.getRewards().get("agendaGroup");
+                   it.gov.pagopa.reward.dto.trx.Reward reward = $trx.getRewards().get("initiativeId");
                    if(reward != null){
                       java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("agendaGroup").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("agendaGroup")!=null ? $trx.getRefundInfo().getPreviousRewards().get("agendaGroup") : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
+                      reward.setAccruedReward($trx.getRewards().get("initiativeId").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("initiativeId")!=null ? $trx.getRefundInfo().getPreviousRewards().get("initiativeId").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
                       if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
                          reward.set%sCapped(true);
                          %s
@@ -169,7 +169,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
             trx.setOperationTypeTranscoded(OperationType.REFUND);
             if(this.useCase.equals(USECASES.REFUNDED_WITH_PREVIOUS)){
                 trx.setRefundInfo(new RefundInfo());
-                trx.getRefundInfo().setPreviousRewards(Map.of("agendaGroup", PREVIOUS_REWARD));
+                trx.getRefundInfo().setPreviousRewards(Map.of("initiativeId", new RefundInfo.PreviousReward("initiativeId", "organizationId", PREVIOUS_REWARD)));
             }
         }
         return trx;
@@ -180,7 +180,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     protected void cleanRewards(TransactionDroolsDTO trx) {
         super.cleanRewards(trx);
         if (!useCase.equals(USECASES.DISCARDED)) {
-            trx.getRewards().put("agendaGroup", new Reward(TRANSACTION_REWARD));
+            trx.getRewards().put("initiativeId", new Reward("initiativeId", "organizationId", TRANSACTION_REWARD));
         }
     }
 
@@ -190,7 +190,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
             return null;
         } else {
             UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
-            counters.getInitiatives().put("agendaGroup", InitiativeCounters.builder()
+            counters.getInitiatives().put("initiativeId", InitiativeCounters.builder()
                     .dailyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03-15", Counters.builder()
@@ -309,7 +309,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     }
 
     private void assertCaps(TransactionDroolsDTO trx, boolean expectedDailyCapped, boolean expectedWeeklyCapped, boolean expectedMonthlyCapped, boolean expectedYearlyCapped) {
-        final Reward reward = trx.getRewards().get("agendaGroup");
+        final Reward reward = trx.getRewards().get("initiativeId");
 
         Assertions.assertEquals(expectedDailyCapped, reward.isDailyCapped());
         Assertions.assertEquals(expectedWeeklyCapped, reward.isWeeklyCapped());
