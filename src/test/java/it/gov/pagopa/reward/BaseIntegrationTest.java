@@ -395,7 +395,7 @@ public abstract class BaseIntegrationTest {
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
         Assertions.assertNotNull(errorMessage.headers().lastHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE));
-        Assertions.assertEquals(normalizeErrorPayload(errorDescription), normalizeErrorPayload(TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_DESCRIPTION)));
+        Assertions.assertEquals(errorDescription, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_DESCRIPTION));
         if(expectRetryHeader){
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
         }
@@ -405,12 +405,7 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    /** to replace some runtime dependant values, such as timestamps */
-    protected String normalizeErrorPayload(String errorDescription) {
-        return errorDescription;
-    }
-
     private String removeElaborationDateTime(String payload){
-        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}):[0-9]{2}\\.?[0-9]*\"", "$1\"");
+        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
     }
 }
