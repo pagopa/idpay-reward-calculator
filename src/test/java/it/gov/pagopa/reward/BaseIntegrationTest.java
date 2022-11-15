@@ -406,6 +406,6 @@ public abstract class BaseIntegrationTest {
     }
 
     private String removeElaborationDateTime(String payload){
-        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}):[0-9]{2}\\.?[0-9]*\"", "$1\"");
+        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
     }
 }
