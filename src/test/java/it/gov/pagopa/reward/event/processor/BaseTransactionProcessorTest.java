@@ -1,10 +1,10 @@
 package it.gov.pagopa.reward.event.processor;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -173,5 +173,10 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 srcCommitOffsets,
                 destPublishedOffsets
         );
+    }
+
+    @Override
+    protected String normalizeErrorPayload(String errorDescription) {
+        return errorDescription.replaceAll("\"elaborationDateTime\":\"([^:]+:)[^\"]\"", "\"elaborationDateTime\":\"$1:XX\"");
     }
 }
