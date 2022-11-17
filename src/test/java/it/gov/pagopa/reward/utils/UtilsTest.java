@@ -4,7 +4,10 @@ import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -14,7 +17,7 @@ import java.util.stream.IntStream;
 class UtilsTest {
 
     @Test
-    void performanceTest(){
+    void readUserIdPerformanceTest(){
         List<String> trxs = new ArrayList<>(IntStream.range(0, 1000)
                 .mapToObj(TransactionDTOFaker::mockInstance)
                 .map(TestUtils::jsonSerializer)
@@ -48,5 +51,15 @@ class UtilsTest {
     private String readUserIdUsingRegexp(String payload) {
         final Matcher matcher = userIdPatternMatch.matcher(payload);
         return matcher.find() ? matcher.group(1) : "";
+    }
+
+    @Test
+    void getHeaderValueTest(){
+        Message<String> msg = MessageBuilder
+                .withPayload("")
+                .setHeader("HEADERNAME", "HEADERVALUE".getBytes(StandardCharsets.UTF_8))
+                .build();
+        Assertions.assertNull(Utils.getHeaderValue(msg, "NOTEXISTS"));
+        Assertions.assertEquals("HEADERVALUE", Utils.getHeaderValue(msg, "HEADERNAME"));
     }
 }
