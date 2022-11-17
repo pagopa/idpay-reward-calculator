@@ -221,7 +221,7 @@ class RewardCalculatorMediatorServiceImplTest {
     private void verifyLockAcquireReleaseCalls(TransactionDTO... expectedTrxs) {
         Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length)).getBuketSize();
 
-        final List<Integer> expectedLockIds = Arrays.stream(expectedTrxs).map(t -> rewardCalculatorMediatorService.calculateLockId(t.getUserId())).sorted().toList();
+        final List<Integer> expectedLockIds = Arrays.stream(expectedTrxs).map(t -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload(TestUtils.jsonSerializer(t)).build())).sorted().toList();
 
         Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length * 2)).getBuketSize();
 
@@ -295,7 +295,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()))
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("{\"userId\":\"%s\"".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString())).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         lockId2Count.forEach((lockId, count) -> {
             Assertions.assertTrue(lockId < LOCK_SERVICE_BUKET_SIZE && lockId >= 0);

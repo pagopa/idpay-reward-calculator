@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
+import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
 public final class Utils {
@@ -31,5 +32,11 @@ public final class Utils {
             return afterUserId.substring(afterOpeningQuote, afterUserId.indexOf('"', afterOpeningQuote));
         }
         return null;
+    }
+
+    /** To read {@link org.apache.kafka.common.header.Header} value */
+    public static String getHeaderValue(Message<String> message, String headerName) {
+        byte[] headerValue = message.getHeaders().get(headerName, byte[].class);
+        return headerValue!=null? new String(headerValue, StandardCharsets.UTF_8) : null;
     }
 }
