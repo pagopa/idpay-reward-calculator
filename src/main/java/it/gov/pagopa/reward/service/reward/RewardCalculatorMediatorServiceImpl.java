@@ -2,10 +2,10 @@ package it.gov.pagopa.reward.service.reward;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
-import it.gov.pagopa.reward.service.BaseKafkaConsumer;
+import it.gov.pagopa.reward.service.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -15,8 +15,6 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -32,9 +30,8 @@ import java.util.function.Consumer;
 
 @Service
 @Slf4j
-public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<TransactionDTO, RewardTransactionDTO> implements RewardCalculatorMediatorService {
+public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartitionConsumer<TransactionDTO, RewardTransactionDTO> implements RewardCalculatorMediatorService {
 
-    private final LockService lockService;
     private final TransactionProcessedService transactionProcessedService;
     private final OperationTypeHandlerService operationTypeHandlerService;
     private final TransactionValidatorService transactionValidatorService;
@@ -64,8 +61,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
             @Value("${spring.cloud.stream.kafka.bindings.trxProcessor-in-0.consumer.ackTime}") long commitMillis,
 
             ObjectMapper objectMapper) {
-        super(applicationName);
-        this.lockService = lockService;
+        super(applicationName, lockService);
         this.transactionProcessedService = transactionProcessedService;
         this.operationTypeHandlerService = operationTypeHandlerService;
         this.transactionValidatorService = transactionValidatorService;
@@ -96,52 +92,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
 
     @Override
     protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
-        throw new IllegalStateException("Logic overridden");
+        throw new IllegalStateException("Logic overridden by execute(TransactionDTO, Message<java.lang.String>, Map<>, lockReleaser)");
     }
 
     @Override
-    protected Mono<RewardTransactionDTO> execute(Message<String> message, Map<String, Object> ctx) {
-        return Mono.fromSupplier(() -> {
-                    int lockId = -1;
-                    String userId = Utils.readUserId(message.getPayload());
-                    if (!StringUtils.isEmpty(userId)) {
-                        lockId = calculateLockId(userId);
-                        lockService.acquireLock(lockId);
-                        log.debug("[REWARD] [LOCK_ACQUIRED] trx having userId {} acquired lock having id {}", userId, lockId);
-                    }
-                    return new MutablePair<>(message, lockId);
-                })
-                .flatMap(m -> executeAfterLock(m, ctx));
-    }
-
-    @Override
-    protected ObjectReader getObjectReader() {
-        return objectReader;
-    }
-
-    @Override
-    protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
-    }
-
-    private Mono<RewardTransactionDTO> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId, Map<String, Object> ctx) {
-        log.trace("[REWARD] Received payload: {}", messageAndLockId.getKey().getPayload());
-
-        final Message<String> message = messageAndLockId.getKey();
-
-        final Consumer<? super Signal<RewardTransactionDTO>> lockReleaser = x -> {
-            int lockId = messageAndLockId.getValue();
-            if (lockId > -1) {
-                lockService.releaseLock(lockId);
-                messageAndLockId.setValue(-1);
-                log.debug("[REWARD] [LOCK_RELEASED] released lock having id {}", lockId);
-            }
-        };
-
-        ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());
-
-        return Mono.just(message)
-                .mapNotNull(this::deserializeMessage)
+    protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message, Map<String, Object> ctx, Consumer<? super Signal<RewardTransactionDTO>> lockReleaser) {
+        return Mono.just(payload)
                 .map(transactionValidatorService::validate)
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
@@ -161,12 +117,28 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaConsumer<Trans
     }
 
     @Override
-    protected String getFlowName() {
-        return "REWARD";
+    protected int getMessagePartitionKey(Message<String> message) {
+        String userId=Utils.readUserId(message.getPayload());
+        if(!StringUtils.isEmpty(userId)){
+            return userId.hashCode();
+        } else {
+            return super.getMessagePartitionKey(message);
+        }
     }
 
-    public int calculateLockId(String userId) {
-        return Math.floorMod(userId.hashCode(), lockService.getBuketSize());
+    @Override
+    protected ObjectReader getObjectReader() {
+        return objectReader;
+    }
+
+    @Override
+    protected Consumer<Throwable> onDeserializationError(Message<String> message) {
+        return e -> errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
+    }
+
+    @Override
+    protected String getFlowName() {
+        return "REWARD";
     }
 
     private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {

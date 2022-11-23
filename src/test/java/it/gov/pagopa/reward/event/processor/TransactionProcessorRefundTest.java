@@ -180,7 +180,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
 
     private void checkRefundOp(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
         Assertions.assertEquals(OperationType.REFUND, rewardedTrx.getOperationTypeTranscoded());
-        Assertions.assertEquals("REWARDED", rewardedTrx.getStatus());
+        Assertions.assertEquals(Collections.emptyList(), rewardedTrx.getRejectionReasons());
+        Assertions.assertEquals("REWARDED", rewardedTrx.getStatus(), "Trx not in REWARDED state: %s".formatted(rewardedTrx.getInitiativeRejectionReasons()));
 
         List<RefundUseCase> refundUseCases = isTotalRefundUseCase ? totalRefundUseCases : partialRefundUseCases;
         refundUseCases.get(bias % refundUseCases.size()).refundVerifier().accept(rewardedTrx);
