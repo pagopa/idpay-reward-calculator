@@ -15,6 +15,8 @@ public class HpanUpdateEvaluateDTO {
     private String userId;
     private String initiativeId;
     private String hpan;
+    private String maskedPan;
+    private String brandLogo;
     private String operationType;
     private LocalDateTime evaluationDate;
 }

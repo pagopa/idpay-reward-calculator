@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import it.gov.pagopa.reward.dto.Reward;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
@@ -14,7 +14,7 @@ import it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.KieContainer;
+import org.kie.api.KieBase;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -55,7 +55,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
 
     @Test
     void testReward() {
-        String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxConsequence());
+        String rule = getTransformer().apply("initiativeId", "organizationId", "ruleName", getInitiativeTrxConsequence());
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
@@ -67,26 +67,26 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
 
     @Test
     void testDiscardedIfRejected() {
-        String rule = getTransformer().apply("agendaGroup", "ruleName", getInitiativeTrxConsequence());
+        String rule = getTransformer().apply("initiativeId", "organizationId", "ruleName", getInitiativeTrxConsequence());
 
         Assertions.assertEquals(getExpectedRule(), rule);
 
         TransactionDroolsDTO trx = getTransaction();
-        trx.setInitiativeRejectionReasons(Map.of("agendaGroup", List.of("REJECTION")));
+        trx.setInitiativeRejectionReasons(Map.of("initiativeId", List.of("REJECTION")));
 
         testRule(rule, trx, null);
     }
 
-    private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward(BigDecimal.TEN, BigDecimal.TEN));
+    private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward("DUMMYINITIATIVE", "DUMMYINITIATIVEORGANIZATION", BigDecimal.TEN, BigDecimal.TEN));
 
     protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
         cleanRewards(trx);
-        KieContainer kieContainer = buildRule(rule);
-        executeRule(trx, kieContainer);
+        KieBase kieBase = buildRule(rule);
+        executeRule(trx, kieBase);
         Assertions.assertEquals(dummyReward.get("DUMMYINITIATIVE"), trx.getRewards().get("DUMMYINITIATIVE"));
         Assertions.assertEquals(
                 expectReward
-                , Optional.ofNullable(trx.getRewards().get("agendaGroup")).map(Reward::getAccruedReward).orElse(null));
+                , Optional.ofNullable(trx.getRewards().get("initiativeId")).map(Reward::getAccruedReward).orElse(null));
 
         return trx;
     }
@@ -96,9 +96,9 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         trx.getRewards().putAll(dummyReward);
     }
 
-    protected KieContainer buildRule(String rule) {
+    protected KieBase buildRule(String rule) {
         DroolsRule dr = new DroolsRule();
-        dr.setId("agendaGroup");
+        dr.setId("initiativeId");
         dr.setName("ruleName");
         dr.setRule("""
                 package %s;
@@ -116,8 +116,8 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         }
     }
 
-    protected void executeRule(TransactionDroolsDTO trx, KieContainer kieContainer) {
-        RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, false, getCounters(), kieContainer);
+    protected void executeRule(TransactionDroolsDTO trx, KieBase kieBase) {
+        RewardRule2DroolsRuleServiceTest.executeRule("initiativeId", trx, false, getCounters(), kieBase);
     }
 
     protected UserInitiativeCounters getCounters() {

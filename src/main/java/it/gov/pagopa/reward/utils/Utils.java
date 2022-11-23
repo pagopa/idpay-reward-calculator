@@ -2,9 +2,10 @@ package it.gov.pagopa.reward.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
+import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
 public final class Utils {
@@ -22,7 +23,7 @@ public final class Utils {
     }
 
     private static final String PAYLOAD_FIELD_USER_ID = "\"%s\"".formatted(TransactionDTO.Fields.userId);
-    /** It will read userId field from {@link it.gov.pagopa.reward.dto.TransactionDTO} payload */
+    /** It will read userId field from {@link TransactionDTO} payload */
     public static String readUserId(String payload) {
         int userIdIndex = payload.indexOf(PAYLOAD_FIELD_USER_ID);
         if(userIdIndex>-1){
@@ -31,5 +32,11 @@ public final class Utils {
             return afterUserId.substring(afterOpeningQuote, afterUserId.indexOf('"', afterOpeningQuote));
         }
         return null;
+    }
+
+    /** To read {@link org.apache.kafka.common.header.Header} value */
+    public static String getHeaderValue(Message<String> message, String headerName) {
+        byte[] headerValue = message.getHeaders().get(headerName, byte[].class);
+        return headerValue!=null? new String(headerValue, StandardCharsets.UTF_8) : null;
     }
 }

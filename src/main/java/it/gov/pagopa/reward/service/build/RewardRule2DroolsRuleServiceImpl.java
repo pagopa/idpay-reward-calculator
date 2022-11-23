@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -55,6 +56,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                 buildRules(out.getId(), out.getName(), initiative))
         );
+        out.setUpdateDate(LocalDateTime.now());
 
         if (onlineSyntaxCheck) {
             log.debug("Checking if the rule has valid syntax. id: %s".formatted(initiative.getInitiativeId()));
@@ -67,42 +69,42 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
         return out;
     }
 
-    private String buildRules(String agendaGroup, String ruleNamePrefix, InitiativeReward2BuildDTO initiative) {
+    private String buildRules(String initiativeId, String ruleNamePrefix, InitiativeReward2BuildDTO initiative) {
         StringBuilder initiativeRulesBuilder = new StringBuilder();
 
-        buildRuleConditions(agendaGroup, ruleNamePrefix, initiative, initiativeRulesBuilder);
-        buildRuleConsequences(agendaGroup, ruleNamePrefix, initiative, initiativeRulesBuilder);
+        buildRuleConditions(initiativeId, ruleNamePrefix, initiative, initiativeRulesBuilder);
+        buildRuleConsequences(initiativeId, ruleNamePrefix, initiative, initiativeRulesBuilder);
 
         return initiativeRulesBuilder.toString();
     }
 
-    private void buildRuleConditions(String agendaGroup, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
+    private void buildRuleConditions(String initiativeId, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
         InitiativeTrxConditions trxRules = initiative.getTrxRule();
         if (trxRules != null) {
-            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, trxRules.getDaysOfWeek()));
-            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, trxRules.getMccFilter()));
+            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, trxRules.getDaysOfWeek()));
+            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, trxRules.getMccFilter()));
 
             if (!CollectionUtils.isEmpty(trxRules.getRewardLimits())) {
                 List<RewardLimitsDTO> rewardLimits = trxRules.getRewardLimits();
                 for (RewardLimitsDTO rewardLimit : rewardLimits) {
-                    initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, rewardLimit));
+                    initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, rewardLimit));
                 }
             }
 
-            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, trxRules.getThreshold()));
-            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, trxRules.getTrxCount()));
+            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, trxRules.getThreshold()));
+            initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, trxRules.getTrxCount()));
 
             if (initiative.getRewardRule() instanceof RewardGroupsDTO rewardGroupsDTO) {
-                initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, rewardGroupsDTO));
+                initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, rewardGroupsDTO));
             }
         }
     }
 
-    private void buildRuleConsequences(String agendaGroup, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
-        initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, initiative.getRewardRule()));
+    private void buildRuleConsequences(String initiativeId, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
+        initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(initiativeId, initiative.getOrganizationId(), ruleNamePrefix, initiative.getRewardRule()));
         if (!CollectionUtils.isEmpty(initiative.getTrxRule().getRewardLimits())) {
             initiative.getTrxRule().getRewardLimits().forEach(rl ->
-                    initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(agendaGroup, ruleNamePrefix, rl))
+                    initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(initiativeId, initiative.getOrganizationId(), ruleNamePrefix, rl))
             );
         }
     }

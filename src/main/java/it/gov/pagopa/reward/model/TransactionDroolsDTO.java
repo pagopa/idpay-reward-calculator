@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.model;
 
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

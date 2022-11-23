@@ -39,7 +39,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
         if(activeTimeIntervalsList != null) {
             ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
             if (lastActiveInterval != null) {
-                LocalDateTime endInterval = hpanUpdateEvaluateDTO.getEvaluationDate().plusDays(1).with(LocalTime.MIN);
+                LocalDateTime endInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
                 if (endInterval.isAfter(lastActiveInterval.getStartInterval())){
                     if (lastActiveInterval.getEndInterval() == null) {
                             lastActiveInterval.setEndInterval(endInterval);

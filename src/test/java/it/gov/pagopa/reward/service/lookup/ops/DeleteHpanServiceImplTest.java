@@ -23,23 +23,25 @@ class DeleteHpanServiceImplTest {
     void deleteHpanBeforeLastActiveInterval() {
         // Given
         int bias = 1;
-        LocalDateTime time = LocalDateTime.now();
+        LocalDateTime time = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO1 = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO1.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO1.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO1.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO1.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO1.setEvaluationDate(time.minusYears(4L));
-        hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO2 = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO2.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO2.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO2.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO2.setEvaluationDate(time.minusYears(1L).minusMonths(3L));
-        hpanUpdateEvaluateDTO2.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        hpanUpdateEvaluateDTO2.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
         OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
@@ -54,16 +56,18 @@ class DeleteHpanServiceImplTest {
     void deleteHpanAfterLastActiveIntervalNotClose() {
         // Given
         int bias = 1;
-        LocalDateTime time = LocalDateTime.now();
+        LocalDateTime time = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO1 = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO1.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO1.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO1.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO1.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO1.setEvaluationDate(time);
-        hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
         OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
@@ -75,8 +79,8 @@ class DeleteHpanServiceImplTest {
         Assertions.assertEquals(2, activeTimeIntervalsResult.size());
 
         ActiveTimeInterval activeIntervalExpected = ActiveTimeInterval.builder()
-                .startInterval(time.minusMonths(5L).with(LocalTime.MIN).plusDays(1L))
-                .endInterval(time.plusDays(1).with(LocalTime.MIN)).build();
+                .startInterval(time.minusMonths(5L))
+                .endInterval(time).build();
 
         ActiveTimeInterval activeIntervalAfter = activeTimeIntervalsResult.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
         Assertions.assertNotNull(activeIntervalAfter);
@@ -91,16 +95,18 @@ class DeleteHpanServiceImplTest {
     void deleteHpanAfterLastActiveIntervalClose() {
         // Given
         int bias = 1;
-        LocalDateTime time = LocalDateTime.now().plusMonths(2L);
+        LocalDateTime time = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L).plusMonths(2L);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO1 = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO1.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO1.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO1.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO1.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO1.setEvaluationDate(time);
-        hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
         OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
@@ -113,15 +119,17 @@ class DeleteHpanServiceImplTest {
     void deleteHpanPresentWithNotInitiativeId() {
         // Given
         int bias = 1;
-        LocalDateTime time = LocalDateTime.now().plusMonths(2L);
+        LocalDateTime time = LocalDateTime.now().plusMonths(2L).with(LocalTime.MIN).plusDays(1L);
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO.setInitiativeId("ANOTHER_INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(time);
-        hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
         OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
@@ -134,16 +142,18 @@ class DeleteHpanServiceImplTest {
     void deleteHpanIntoLastActiveIntervalClose() {
         // Given
         int bias = 1;
-        LocalDateTime time = LocalDateTime.now().minusMonths(6L);
+        LocalDateTime time = LocalDateTime.now().minusMonths(6L).with(LocalTime.MIN).plusDays(1L);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(time);
-        hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         // When
         OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
@@ -160,7 +170,7 @@ class DeleteHpanServiceImplTest {
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setInitiativeId("ANOTHER_INITIATIVE");
         hpanUpdateEvaluateDTO.setUserId("USERID");
-        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now());
+        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
@@ -178,9 +188,11 @@ class DeleteHpanServiceImplTest {
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
-        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now());
+        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
@@ -201,9 +213,11 @@ class DeleteHpanServiceImplTest {
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
-        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now());
+        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
@@ -224,9 +238,11 @@ class DeleteHpanServiceImplTest {
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
-        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now());
+        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
@@ -249,9 +265,11 @@ class DeleteHpanServiceImplTest {
 
         HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
-        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now());
+        hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
@@ -267,20 +285,23 @@ class DeleteHpanServiceImplTest {
         int bias = 1;
         String initiativeId = "INITIATIVE_%d".formatted(bias);
 
-        LocalDateTime elabDateTime = LocalDateTime.now();
-        LocalDateTime expectedDateTime = elabDateTime.plusDays(1).with(LocalTime.MIN);
+        LocalDateTime elabDateTime = LocalDateTime.now().plusDays(1).with(LocalTime.MIN);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
         hpanInitiatives.getOnboardedInitiatives().get(0)
                 .getActiveTimeIntervals()
-                .add(new ActiveTimeInterval(expectedDateTime, null));
+                .add(new ActiveTimeInterval(elabDateTime, null));
+
+        hpanInitiatives.getOnboardedInitiatives().get(0).getActiveTimeIntervals().forEach(System.out::println);
 
         HpanUpdateEvaluateDTO request = new HpanUpdateEvaluateDTO();
         request.setHpan(hpanInitiatives.getHpan());
+        request.setMaskedPan(hpanInitiatives.getMaskedPan());
+        request.setBrandLogo(hpanInitiatives.getBrandLogo());
         request.setInitiativeId(initiativeId);
         request.setUserId(hpanInitiatives.getUserId());
         request.setEvaluationDate(elabDateTime);
-        request.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        request.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         // When
         OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, request);
@@ -299,7 +320,7 @@ class DeleteHpanServiceImplTest {
         // Then
         Assertions.assertEquals(3, result2.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
-        Assertions.assertEquals(expectedDateTime, lastInterval2.getStartInterval());
+        Assertions.assertEquals(elabDateTime, lastInterval2.getStartInterval());
         Assertions.assertNull(lastInterval2.getEndInterval());
         Assertions.assertNull(result2.getLastEndInterval());
 
@@ -319,17 +340,18 @@ class DeleteHpanServiceImplTest {
         int bias = 1;
         String initiativeId = "INITIATIVE_%d".formatted(bias);
 
-        LocalDateTime elabDateTime = LocalDateTime.now();
-        LocalDateTime expectedDateTime = elabDateTime.plusDays(1).with(LocalTime.MIN);
+        LocalDateTime elabDateTime = LocalDateTime.now().plusDays(1).with(LocalTime.MIN);
 
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
 
         HpanUpdateEvaluateDTO request = new HpanUpdateEvaluateDTO();
         request.setHpan(hpanInitiatives.getHpan());
+        request.setMaskedPan(hpanInitiatives.getMaskedPan());
+        request.setBrandLogo(hpanInitiatives.getBrandLogo());
         request.setInitiativeId(initiativeId);
         request.setUserId(hpanInitiatives.getUserId());
         request.setEvaluationDate(elabDateTime);
-        request.setOperationType(HpanInitiativeConstants.DELETE_INSTRUMENT);
+        request.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         // When adding first interval
         AddHpanService addHpanService = new AddHpanServiceImpl();
@@ -338,7 +360,7 @@ class DeleteHpanServiceImplTest {
         // Then
         Assertions.assertEquals(1, firstAddResult.getActiveTimeIntervals().size());
         ActiveTimeInterval interval = firstAddResult.getActiveTimeIntervals().get(0);
-        Assertions.assertEquals(expectedDateTime, interval.getStartInterval());
+        Assertions.assertEquals(elabDateTime, interval.getStartInterval());
         Assertions.assertNull(interval.getEndInterval());
         hpanInitiatives.setOnboardedInitiatives(new ArrayList<>(List.of(firstAddResult)));
 
@@ -356,7 +378,7 @@ class DeleteHpanServiceImplTest {
         // Then
         Assertions.assertEquals(1, result2.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
-        Assertions.assertEquals(expectedDateTime, lastInterval2.getStartInterval());
+        Assertions.assertEquals(elabDateTime, lastInterval2.getStartInterval());
         Assertions.assertNull(lastInterval2.getEndInterval());
 
         // When deleting again

@@ -50,7 +50,9 @@ microservice-chart:
     APPLICATIONINSIGHTS_ROLE_NAME: "idpayrewardcalculator"
     APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: "OFF"
     APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED: "false"
-    CACHE_REFRESH_MS_RATE: "31536000000"
+    KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID: "idpay-reward-calculator-consumer-group"
+    KAFKA_REWARD_RULE_GROUP_ID: "idpay-reward-calculator-rule-consumer-group"
+    KAFKA_HPAN_UPDATE_GROUP_ID: "idpay-reward-calculator-hpan-update-consumer-group"
 
   envConfigMapExternals:
     idpay-common:
@@ -63,6 +65,7 @@ microservice-chart:
       KAFKA_ERRORS_BROKER: kafka_broker
       KAFKA_ERRORS_TOPIC: idpay_error_topic
       KAFKA_HPAN_UPDATE_TOPIC: idpay_hpan_update_topic
+      KAFKA_HPAN_UPDATE_OUTCOME_TOPIC: idpay_hpan_update_outcome_topic
     rtd-eventhub:
       KAFKA_RTD_BROKER: kafka_broker_rtd
 
@@ -75,4 +78,7 @@ microservice-chart:
     KAFKA_REWARD_RULE_REQUEST_SASL_JAAS_CONFIG: evh-idpay-rule-update-idpay-rule-update-consumer-jaas-config-idpay-01
     KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG: evh-idpay-transaction-user-id-splitter-idpay-transaction-user-id-splitter-consumer-jaas-config-idpay-01
     KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG: evh-idpay-hpan-update-idpay-hpan-update-consumer-jaas-config-idpay-01
+    KAFKA_HPAN_UPDATE_OUTCOME_SASL_JAAS_CONFIG: evh-idpay-hpan-update-outcome-idpay-hpan-update-outcome-producer-jaas-config-idpay-01
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
+    REDIS_CONNECTION_URL: idpay-redis-00-primary-connection-url
+

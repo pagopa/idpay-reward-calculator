@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -38,7 +37,7 @@ public class AddHpanServiceImpl implements AddHpanService {
                 .filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
             List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
-            LocalDateTime startInterval = evaluationDate2StartInterval(hpanUpdateEvaluateDTO);
+            LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
 
             if (activeTimeIntervalsList.stream().noneMatch(activeTimeInterval -> startInterval.isBefore(activeTimeInterval.getStartInterval()))) {
                 log.trace("[ADD_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_ALREADY_PRESENT] Added evaluation for hpan: {} and add initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
@@ -78,16 +77,12 @@ public class AddHpanServiceImpl implements AddHpanService {
     }
 
     private OnboardedInitiative getNewOnboardedInitiative(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
-        LocalDateTime startInterval = evaluationDate2StartInterval(hpanUpdateEvaluateDTO);
+        LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
         return OnboardedInitiative.builder()
                 .initiativeId(hpanUpdateEvaluateDTO.getInitiativeId())
                 .status("ACCEPTED")
                 .acceptanceDate(startInterval)
                 .activeTimeIntervals(new ArrayList<>(List.of(initializeInterval(startInterval))))
                 .build();
-    }
-
-    private static LocalDateTime evaluationDate2StartInterval(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
-        return hpanUpdateEvaluateDTO.getEvaluationDate().with(LocalTime.MIN).plusDays(1L);
     }
 }

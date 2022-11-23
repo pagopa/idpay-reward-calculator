@@ -1,11 +1,12 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
@@ -65,6 +66,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @BeforeEach
     public void initMocks() {
         rewardCalculatorMediatorService = new RewardCalculatorMediatorServiceImpl(
+                "appName",
                 lockServiceMock,
                 transactionProcessedServiceMock,
                 operationTypeHandlerServiceMock,
@@ -76,8 +78,6 @@ class RewardCalculatorMediatorServiceImplTest {
                 errorNotifierServiceMock,
                 500,
                 TestUtils.objectMapper);
-
-        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
     }
 
     private Pair<List<Acknowledgment>, Flux<Message<String>>> buildTrxFlux(TransactionDTO... trxs) {
@@ -107,6 +107,8 @@ class RewardCalculatorMediatorServiceImplTest {
         List<String> expectedInitiatives = List.of("INITIATIVE");
 
         mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicated);
+
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         // When
         rewardCalculatorMediatorService.execute(trxFluxAndAckMocks.getValue());
@@ -202,7 +204,7 @@ class RewardCalculatorMediatorServiceImplTest {
             t.setOperationTypeTranscoded(OperationType.REFUND);
             t.setEffectiveAmount(t.getAmount());
             t.setRefundInfo(new RefundInfo());
-            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
+            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
             return Mono.just(t);
         });
 
@@ -211,7 +213,7 @@ class RewardCalculatorMediatorServiceImplTest {
             t.setOperationTypeTranscoded(OperationType.REFUND);
             t.setEffectiveAmount(BigDecimal.ZERO);
             t.setRefundInfo(new RefundInfo());
-            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", BigDecimal.ONE));
+            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
             return Mono.just(t);
         });
     }
@@ -219,7 +221,7 @@ class RewardCalculatorMediatorServiceImplTest {
     private void verifyLockAcquireReleaseCalls(TransactionDTO... expectedTrxs) {
         Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length)).getBuketSize();
 
-        final List<Integer> expectedLockIds = Arrays.stream(expectedTrxs).map(t -> rewardCalculatorMediatorService.calculateLockId(t.getUserId())).sorted().toList();
+        final List<Integer> expectedLockIds = Arrays.stream(expectedTrxs).map(t -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload(TestUtils.jsonSerializer(t)).build())).sorted().toList();
 
         Mockito.verify(lockServiceMock, Mockito.times(expectedTrxs.length * 2)).getBuketSize();
 
@@ -289,13 +291,72 @@ class RewardCalculatorMediatorServiceImplTest {
     }
 
     @Test
-    void testTrxLockIdCalculation() {
+    void testTrxLockIdCalculationWhenUserId() {
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()))
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("{\"userId\":\"%s\"".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString())).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        checkLockIdValues(lockId2Count);
+    }
+
+    @Test
+    void testTrxLockIdCalculationWhenNoUserIdButMessageKey() {
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+
+        final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.RECEIVED_MESSAGE_KEY, "KEY%s".formatted(UUID.nameUUIDFromBytes((i + "").getBytes(StandardCharsets.UTF_8)).toString()).getBytes(StandardCharsets.UTF_8)).build()))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        checkLockIdValues(lockId2Count);
+    }
+
+    @Test
+    void testTrxLockIdCalculationWhenNoUserIdNoMessageKeyButPartitionId() {
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+
+        final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.PARTITION_ID, "%d".formatted(i).getBytes(StandardCharsets.UTF_8)).build()))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        checkLockIdValues(lockId2Count);
+    }
+
+    @Test
+    void testTrxLockIdCalculationWhenNoUserIdNoMessageKeyNoPartitionId() {
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+
+        final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("%d".formatted(i)).build()))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        checkLockIdValues(lockId2Count);
+    }
+
+    private static void checkLockIdValues(Map<Integer, Long> lockId2Count) {
         lockId2Count.forEach((lockId, count) -> {
             Assertions.assertTrue(lockId < LOCK_SERVICE_BUKET_SIZE && lockId >= 0);
             Assertions.assertTrue(count < 10, "LockId %d hit too times: %d".formatted(lockId, count));
         });
+    }
+
+    @Test
+    void otherApplicationRetryTest(){
+        // Given
+        TransactionDTO trx1 = TransactionDTOFaker.mockInstance(1);
+        TransactionDTO trx2 = TransactionDTOFaker.mockInstance(2);
+
+        Flux<Message<String>> msgs = Flux.just(trx1, trx2)
+                .map(TestUtils::jsonSerializer)
+                .map(MessageBuilder::withPayload)
+                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .map(MessageBuilder::build);
+
+        // When
+        rewardCalculatorMediatorService.execute(msgs);
+
+        // Then
+        Mockito.verifyNoInteractions(lockServiceMock, transactionProcessedServiceMock, operationTypeHandlerServiceMock, transactionValidatorServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock,rewardNotifierServiceMock,errorNotifierServiceMock);
     }
 }

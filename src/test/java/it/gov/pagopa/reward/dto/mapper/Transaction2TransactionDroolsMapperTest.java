@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;

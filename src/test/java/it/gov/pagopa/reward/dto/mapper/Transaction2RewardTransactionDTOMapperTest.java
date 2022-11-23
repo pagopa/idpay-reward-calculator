@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -67,6 +67,9 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getPar(), result.getPar());
         Assertions.assertSame(trx.getRejectionReasons(), result.getRejectionReasons());
         Assertions.assertSame(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertSame(trx.getUserId(), result.getUserId());
+        Assertions.assertSame(trx.getMaskedPan(), result.getMaskedPan());
+        Assertions.assertSame(trx.getBrandLogo(), result.getBrandLogo());
     }
 
 }

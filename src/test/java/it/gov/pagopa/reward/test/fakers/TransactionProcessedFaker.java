@@ -2,8 +2,8 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
-import it.gov.pagopa.reward.dto.Reward;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 
 import java.math.BigDecimal;
@@ -48,9 +48,10 @@ public class TransactionProcessedFaker {
         LocalTime trxTime = LocalTime.of(getRandomPositiveNumber(bias, 23), getRandomPositiveNumber(bias, 59), getRandomPositiveNumber(bias, 59));
         LocalDateTime trxDateTime = LocalDateTime.of(trxDate, trxTime);
 
+        String initiativeId = "REWARDS%s".formatted(bias);
         Map<String, Reward> rewards = Map.of(
-                "REWARDS%s".formatted(bias),
-                new Reward(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)))
+                initiativeId,
+                new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)))
         );
 
 

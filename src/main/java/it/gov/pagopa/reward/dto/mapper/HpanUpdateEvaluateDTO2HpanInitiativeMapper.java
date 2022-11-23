@@ -12,9 +12,11 @@ public class HpanUpdateEvaluateDTO2HpanInitiativeMapper implements Function<Hpan
     @Override
     public HpanInitiatives apply(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
         HpanInitiatives out = null;
-        if (hpanUpdateEvaluateDTO.getOperationType().equals(HpanInitiativeConstants.ADD_INSTRUMENT)){
+        if (hpanUpdateEvaluateDTO.getOperationType().equals(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)){
             out = new HpanInitiatives();
             out.setHpan(hpanUpdateEvaluateDTO.getHpan());
+            out.setMaskedPan(hpanUpdateEvaluateDTO.getMaskedPan());
+            out.setBrandLogo(hpanUpdateEvaluateDTO.getBrandLogo());
             out.setUserId(hpanUpdateEvaluateDTO.getUserId());
         }
         return out;

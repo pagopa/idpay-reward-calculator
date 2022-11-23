@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import it.gov.pagopa.reward.dto.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
@@ -13,15 +13,18 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -43,6 +46,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
      */
     private final InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(1, Collections.emptySet(), RewardValueDTO.class)
             .initiativeId(initiativeId)
+            .initiativeName("NAME_"+initiativeId)
+            .organizationId("ORGANIZATIONID_"+initiativeId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(LocalDate.MIN)
@@ -77,6 +82,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
      */
     private final InitiativeReward2BuildDTO initiative2totalRefund = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(1, Collections.emptySet(), RewardValueDTO.class)
             .initiativeId(initiative2totalRefundId)
+            .initiativeName("NAME_"+initiative2totalRefundId)
+            .organizationId("ORGANIZATIONID_"+initiative2totalRefundId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(LocalDate.MIN)
@@ -107,6 +114,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
 
         long timePublishOnboardingStart = System.currentTimeMillis();
         trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getUserId(), i));
+        publishIntoEmbeddedKafka(topicRewardProcessorRequest, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
@@ -136,7 +144,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 timeEnd - timePublishOnboardingStart
         );
 
-//        checkOffsets(trxs.size(), trxs.size()); heavy test removed because already performed in TransactionProcessorTest
+//        checkOffsets(trxs.size()+1, trxs.size()); heavy test removed because already performed in TransactionProcessorTest
     }
 
     private List<TransactionDTO> buildTotalRefundRequests(int bias) {
@@ -172,7 +180,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
 
     private void checkRefundOp(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
         Assertions.assertEquals(OperationType.REFUND, rewardedTrx.getOperationTypeTranscoded());
-        Assertions.assertEquals("REWARDED", rewardedTrx.getStatus());
+        Assertions.assertEquals(Collections.emptyList(), rewardedTrx.getRejectionReasons());
+        Assertions.assertEquals("REWARDED", rewardedTrx.getStatus(), "Trx not in REWARDED state: %s".formatted(rewardedTrx.getInitiativeRejectionReasons()));
 
         List<RefundUseCase> refundUseCases = isTotalRefundUseCase ? totalRefundUseCases : partialRefundUseCases;
         refundUseCases.get(bias % refundUseCases.size()).refundVerifier().accept(rewardedTrx);
@@ -241,7 +250,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, totalRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false, 0L, 0, 0, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-1), false, 0L, 0, 0, false, true, true),
                 () -> List.of(buildSimpleFullTemporalInitiativeCounter(0L, 0, 0, trxDate)))
         );
 
@@ -259,7 +268,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, totalRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false, 2L, 20, 2, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-1), false, 1L, 10, 1, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-1), false, 1L, 10, 1, false, true, true),
                 () -> List.of(useCaseCounterAlreadyInitiated_initialStateOfCounters)
         ));
 
@@ -278,7 +287,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, totalRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true, 2L, 20, 10, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.9), false, 1L, 10, 9.1, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.9), false, 1L, 10, 9.1, false, true, true),
                 () -> {
                     useCaseChargeRewardLimited_initialStateOfCounters.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build());
                     return List.of(useCaseChargeRewardLimited_initialStateOfCounters);
@@ -300,7 +309,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, totalRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.1), true, 2L, 1010, 100, true),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), false, 1L, 1000, 99.9, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.1), false, 1L, 1000, 99.9, false, true, true),
                 () -> {
                     useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build());
                     useCaseChargeExhaustingInitiativeBudget_initialStateOfCounters.getWeeklyCounters().put("2022-01-0", Counters.builder().trxNumber(0L).totalAmount(TestUtils.bigDecimalValue(0)).totalReward(TestUtils.bigDecimalValue(0)).build());
@@ -333,7 +342,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false, true, false),
                 () -> List.of(buildSimpleFullTemporalInitiativeCounter(1L, 9, 0.9, trxDate))
         ));
 
@@ -351,7 +360,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false, 2L, 20, 2, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 2L, 19, 1.9, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.1), true, 2L, 19, 1.9, false, true, false),
                 () -> List.of(buildSimpleFullTemporalInitiativeCounter(2L, 19, 1.9, trxDate))
         ));
 
@@ -370,7 +379,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true, 2L, 20, 10, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.ZERO, true, 2L, 19, 10, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.ZERO, true, 2L, 19, 10, false, true, false),
                 () -> {
                     InitiativeCounters expectedCounter = buildSimpleFullTemporalInitiativeCounter(2L, 19, 10, trxDate.plusDays(1));
                     expectedCounter.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(9)).totalReward(TestUtils.bigDecimalValue(0.9)).build());
@@ -393,7 +402,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true, 2L, 20, 10, false),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 2L, 18, 9.9, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.1), true, 2L, 18, 9.9, false, true, false),
                 () -> {
                     InitiativeCounters expectedCounter = buildSimpleFullTemporalInitiativeCounter(2L, 18, 9.9, trxDate.plusDays(1));
                     expectedCounter.getDailyCounters().put("2022-01-01", Counters.builder().trxNumber(1L).totalAmount(TestUtils.bigDecimalValue(8)).totalReward(TestUtils.bigDecimalValue(0.8)).build());
@@ -418,7 +427,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true, 2L, 1010, 100, true),
-                refundReward -> assertRewardedState(refundReward, initiativeId, BigDecimal.ZERO, true, 2L, 1009, 100, true),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, BigDecimal.ZERO, true, 2L, 1009, 100, true, true, false),
                 () -> {
                     InitiativeCounters expectedCounter = buildSimpleFullTemporalInitiativeCounter(1L, 9, 0.9, trxDate);
                     expectedCounter.setTrxNumber(2L);
@@ -447,7 +456,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(0.9), true, 2L, 1010, 100, true),
-                refundReward -> assertRewardedState(refundReward, initiativeId, TestUtils.bigDecimalValue(-0.1), true, 2L, 1008, 99.9, false),
+                refundReward -> assertRewardedState(refundReward, 1, initiativeId, TestUtils.bigDecimalValue(-0.1), true, 2L, 1008, 99.9, false, true, false),
                 () -> {
                     InitiativeCounters expectedCounter = buildSimpleFullTemporalInitiativeCounter(1L, 8, 0.8, trxDate);
                     expectedCounter.setTrxNumber(2L);
@@ -474,15 +483,15 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> {
-                    assertRewardedState(chargeReward, 2, initiativeId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false);
-                    assertRewardedState(chargeReward, 2, initiative2totalRefundId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false);
+                    assertRewardedState(chargeReward, 2, initiativeId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false, false, false);
+                    assertRewardedState(chargeReward, 2, initiative2totalRefundId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false, false, false);
                 },
                 refundReward -> {
                     Assertions.assertEquals(Map.of(initiative2totalRefundId, List.of("TRX_RULE_THRESHOLD_FAIL")), refundReward.getInitiativeRejectionReasons());
                     refundReward.setInitiativeRejectionReasons(Collections.emptyMap());
 
-                    assertRewardedState(refundReward, 2, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false);
-                    assertRewardedState(refundReward, 2, initiative2totalRefundId, BigDecimal.valueOf(-1), false, 0L, 0, 0.0, false);
+                    assertRewardedState(refundReward, 2, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false, true, false);
+                    assertRewardedState(refundReward, 2, initiative2totalRefundId, BigDecimal.valueOf(-1), false, 0L, 0, 0.0, false, true, true);
                 },
                 () -> {
                     InitiativeCounters baseInitiativeCounter = buildSimpleFullTemporalInitiativeCounter(1L, 9, 0.9, trxDate);
@@ -513,11 +522,11 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false),
                 refundReward -> {
                     if ("REFUND1".equals(refundReward.getIdTrxAcquirer())) {
-                        assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false);
+                        assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.1), true, 1L, 9, 0.9, false, true, false);
                     } else if ("REFUND2".equals(refundReward.getIdTrxAcquirer())) {
-                        assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.7), true, 1L, 2, 0.2, false);
+                        assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.7), true, 1L, 2, 0.2, false, true, false);
                     } else if ("REFUND3".equals(refundReward.getIdTrxAcquirer())) {
-                        assertRewardedState(refundReward, initiativeId, BigDecimal.valueOf(-0.2), false, 0L, 0, 0, false);
+                        assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-0.2), false, 0L, 0, 0, false, true, true);
                     }
                 },
                 () -> List.of(buildSimpleFullTemporalInitiativeCounter(0L, 0, 0, trxDate))

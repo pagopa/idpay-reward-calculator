@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
-import it.gov.pagopa.reward.dto.TransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -56,7 +56,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
 
         TransactionProcessed trxCharge = null;
         BigDecimal effectiveAmount = trx.getAmount().negate();
-        Map<String, BigDecimal> pastRewards = new HashMap<>();
+        Map<String, RefundInfo.PreviousReward> pastRewards = new HashMap<>();
 
         if (!pastTrxs.isEmpty()) {
             for (TransactionProcessed pt : pastTrxs) {
@@ -84,17 +84,18 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         return trx;
     }
 
-    private void reduceRewards(Map<String, BigDecimal> pastRewards, TransactionProcessed pt) {
+    private void reduceRewards(Map<String, RefundInfo.PreviousReward> pastRewards, TransactionProcessed pt) {
         pt.getRewards().forEach((initiativeId, r) -> pastRewards.compute(initiativeId, (k, acc) -> {
             if (acc != null) {
-                final BigDecimal sum = r.getAccruedReward().add(acc);
+                final BigDecimal sum = r.getAccruedReward().add(acc.getAccruedReward());
                 if (BigDecimal.ZERO.compareTo(sum) != 0) {
-                    return sum;
+                    acc.setAccruedReward(sum);
+                    return acc;
                 } else {
                     return null;
                 }
             } else {
-                return r.getAccruedReward().setScale(2, RoundingMode.UNNECESSARY);
+                return new RefundInfo.PreviousReward(r.getInitiativeId(), r.getOrganizationId(), r.getAccruedReward().setScale(2, RoundingMode.UNNECESSARY));
             }
         }));
     }

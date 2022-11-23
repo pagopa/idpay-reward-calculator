@@ -51,6 +51,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,6 +68,7 @@ import static org.awaitility.Awaitility.await;
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO remove me
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -92,6 +94,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO remove me
                 //endregion
 
@@ -103,6 +106,8 @@ import static org.awaitility.Awaitility.await;
         })
 @AutoConfigureDataMongo
 public abstract class BaseIntegrationTest {
+    public static final String APPLICATION_NAME = "idpay-reward-calculator";
+
     @Autowired
     protected EmbeddedKafkaBroker kafkaBroker;
     @Autowired
@@ -138,6 +143,8 @@ public abstract class BaseIntegrationTest {
     protected String topicHpanInitiativeLookupConsumer;
     @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
     protected String topicErrors;
+    @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}")
+    protected String topicHpanUpdateOutcome;
 
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.group}")
     protected String groupIdRewardProcessorRequest;
@@ -145,6 +152,9 @@ public abstract class BaseIntegrationTest {
     protected String groupIdRewardRuleConsumer;
     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}")
     protected String groupIdHpanInitiativeLookupConsumer;
+
+    @Value("${spring.redis.url}")
+    protected String redisUrl;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
@@ -180,10 +190,12 @@ public abstract class BaseIntegrationTest {
                         ************************
                         Embedded mongo: %s
                         Embedded kafka: %s
+                        Embedded redis: %s
                         ************************
                         """,
                 mongoUrl,
-                "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes));
+                "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes),
+                redisUrl);
     }
 
     @Test
@@ -260,14 +272,33 @@ public abstract class BaseIntegrationTest {
         }
     }
 
+    private int totaleMessageSentCounter =0;
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
-        final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes());
+        final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes(StandardCharsets.UTF_8));
+        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, APPLICATION_NAME.getBytes(StandardCharsets.UTF_8));
+
+        AtomicBoolean containAppNameHeader = new AtomicBoolean(false);
+        if(headers!= null){
+            headers.forEach(h -> {
+                if(h.key().equals(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME)){
+                    containAppNameHeader.set(true);
+                }
+            });
+        }
+
+        final RecordHeader[] additionalHeaders;
+        if(totaleMessageSentCounter++%2 == 0 || containAppNameHeader.get()){
+            additionalHeaders= new RecordHeader[]{retryHeader};
+        } else {
+            additionalHeaders= new RecordHeader[]{retryHeader, applicationNameHeader};
+        }
+
         if (headers == null) {
-            headers = new RecordHeaders(new RecordHeader[]{retryHeader});
+            headers = new RecordHeaders(additionalHeaders);
         } else {
             headers = Stream.concat(
                             StreamSupport.stream(headers.spliterator(), false),
-                            Stream.of(retryHeader))
+                            Arrays.stream(additionalHeaders))
                     .collect(Collectors.toList());
         }
         ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
@@ -281,7 +312,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected Map<TopicPartition, OffsetAndMetadata> checkCommittedOffsets(String topic, String groupId, long expectedCommittedMessages){
-        return checkCommittedOffsets(topic, groupId, expectedCommittedMessages, 10, 500);
+        return checkCommittedOffsets(topic, groupId, expectedCommittedMessages, 20, 500);
     }
 
     // Cannot use directly Awaitlity cause the Callable condition is performed on separate thread, which will go into conflict with the consumer Kafka access
@@ -329,7 +360,7 @@ public abstract class BaseIntegrationTest {
 
     protected static void wait(long timeout, TimeUnit timeoutUnit) {
         try{
-            Awaitility.await().atLeast(timeout, timeoutUnit).until(()->false);
+            Awaitility.await().timeout(timeout, timeoutUnit).until(()->false);
         } catch (ConditionTimeoutException ex){
             // Do Nothing
         }
@@ -353,10 +384,13 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
-        checkErrorMessageHeaders(srcTopic, errorMessage, errorDescription, expectedPayload, expectedKey, true);
+    protected void checkErrorMessageHeaders(String srcTopic,String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
+        checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true);
     }
-    protected void checkErrorMessageHeaders(String srcTopic, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader) {
+    protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
+        Assertions.assertEquals(expectedAppNameHeader? APPLICATION_NAME : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+        Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
+
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
         Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
@@ -365,7 +399,13 @@ public abstract class BaseIntegrationTest {
         if(expectRetryHeader){
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
         }
-        Assertions.assertEquals(expectedPayload, errorMessage.value());
-        Assertions.assertEquals(expectedKey, errorMessage.key());
+        Assertions.assertEquals(removeElaborationDateTime(expectedPayload), removeElaborationDateTime(errorMessage.value()));
+        if(expectedKey!=null) {
+            Assertions.assertEquals(expectedKey, errorMessage.key());
+        }
+    }
+
+    private String removeElaborationDateTime(String payload){
+        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
     }
 }

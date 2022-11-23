@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.kie.api.KieBase;
 import org.kie.api.command.Command;
 import org.kie.api.runtime.KieContainer;
 import org.kie.internal.command.CommandFactory;
@@ -20,6 +21,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,14 +42,14 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     protected void testRule(String testName, String rewardCondition, TransactionDroolsDTO trx, boolean expectTrueCondition){
         trx.setInitiatives(new ArrayList<>());
-        KieContainer kieContainer = buildRule(testName, rewardCondition);
-        executeRule(trx, testName, kieContainer);
+        KieBase kieBase = buildRule(testName, rewardCondition);
+        executeRule(trx, testName, kieBase);
         Assertions.assertEquals(
                 expectTrueCondition ? List.of(testName) : Collections.emptyList()
                 , trx.getInitiatives());
     }
 
-    protected KieContainer buildRule(String testName, String rewardCondition) {
+    protected KieBase buildRule(String testName, String rewardCondition) {
         DroolsRule dr = new DroolsRule();
         dr.setId(testName);
         dr.setName("RULE");
@@ -65,6 +67,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
                 dr.getId(),
                 buildCondition(rewardCondition),
                 testName));
+        dr.setUpdateDate(LocalDateTime.now());
 
         try{
             return new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();
@@ -83,9 +86,9 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         );
     }
 
-    protected void executeRule(TransactionDroolsDTO trx, String agendaGroup, KieContainer kieContainer){
+    protected void executeRule(TransactionDroolsDTO trx, String agendaGroup, KieBase kieBase){
         List<Command<?>> commands = buildKieContainerCommands(trx, agendaGroup);
-        kieContainer.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
+        kieBase.newStatelessKieSession().execute(CommandFactory.newBatchExecution(commands));
     }
 
     protected List<Command<?>> buildKieContainerCommands(TransactionDroolsDTO trx, String agendaGroup) {
