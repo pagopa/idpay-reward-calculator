@@ -10,9 +10,8 @@ parameters:
 trigger:
   branches:
     include:
-      - release-dev
-      - release-uat
-      - release-prod
+      - release-*
+      - main
   paths:
     include:
       - src/*
@@ -52,7 +51,7 @@ variables:
     containerRegistry: '$(UAT_CONTAINER_REGISTRY_NAME)'
     selfHostedAgentPool: $(UAT_AGENT_POOL)
 
-  ${{ elseif startsWith(variables['Build.SourceBranch'], 'refs/heads/release-prod') }}:
+  ${{ elseif or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.SourceBranch'], 'refs/heads/release-prod')) }}:
     environment: 'PROD'
     dockerRegistryServiceConnection: '$(PROD_CONTAINER_REGISTRY_SERVICE_CONN)'
     kubernetesServiceConnection: '$(PROD_KUBERNETES_SERVICE_CONN)'
