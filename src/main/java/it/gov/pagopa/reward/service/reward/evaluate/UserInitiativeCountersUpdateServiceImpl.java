@@ -75,18 +75,19 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
             boolean justTrxCountRejection = isJustTrxCountRejection(ruleEngineResult, initiativeId);
 
-            if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
-                InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
-                InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
-                        .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
+            InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
+            InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
+                    .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
 
+            if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
                 evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
                 final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedReward).orElse(null) : null;
                 updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
                 updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
-                /* set RewardCounters in RewardTransactionDTO object */
-                reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
             }
+
+            /* set RewardCounters in RewardTransactionDTO object */
+            reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
         });
     }
 
@@ -121,7 +122,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateCounters(Counters counters, OperationType operationType, Reward reward, BigDecimal previousRewards, BigDecimal amount, BigDecimal effectiveAmount, boolean justTrxCountRejection) {
         if(justTrxCountRejection){
-            handleTrxCountRejection(counters, operationType, reward, effectiveAmount);
+            handleTrxCountRejection(counters, operationType, effectiveAmount);
         } else {
             if (previousRewards == null) {
                 counters.setTrxNumber(counters.getTrxNumber() + 1);
@@ -141,7 +142,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         }
     }
 
-    private static void handleTrxCountRejection(Counters counters, OperationType operationType, Reward reward, BigDecimal effectiveAmount) {
+    private static void handleTrxCountRejection(Counters counters, OperationType operationType, BigDecimal effectiveAmount) {
         // charge op
         if (OperationType.CHARGE.equals(operationType)) {
             counters.setTrxNumber(counters.getTrxNumber() + 1);
@@ -149,7 +150,6 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
             // complete refund
             if (BigDecimal.ZERO.compareTo(effectiveAmount)==0) {
                 counters.setTrxNumber(counters.getTrxNumber() - 1);
-                reward.setCompleteRefund(true);
             }
         }
     }

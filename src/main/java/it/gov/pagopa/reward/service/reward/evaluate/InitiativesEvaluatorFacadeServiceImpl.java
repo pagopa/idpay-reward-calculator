@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -86,7 +87,18 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
     private void handleCompleteRefund(TransactionDTO trx, RewardTransactionDTO trxRewarded) {
         if (trx.getRefundInfo() == null || trx.getRefundInfo().getPreviousRewards().size() == 0) {
-            trxRewarded.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
+            TransactionProcessed lastTrx = trx.getRefundInfo()==null
+                ? null
+                : trx.getRefundInfo().getPreviousTrxs().get(trx.getRefundInfo().getPreviousTrxs().size() - 1);
+            
+            trxRewarded.setRejectionReasons(lastTrx==null
+                    ? List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)
+                    : lastTrx.getRejectionReasons());
+
+            trxRewarded.setInitiativeRejectionReasons(lastTrx==null
+                    ? Collections.emptyMap()
+                    : lastTrx.getInitiativeRejectionReasons());
+
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         } else {
             trxRewarded.setRewards(trx.getRefundInfo().getPreviousRewards().entrySet().stream()
