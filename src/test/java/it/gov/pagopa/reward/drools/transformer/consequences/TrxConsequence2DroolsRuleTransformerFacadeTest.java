@@ -1,13 +1,11 @@
 package it.gov.pagopa.reward.drools.transformer.consequences;
 
-import it.gov.pagopa.reward.drools.transformer.consequences.rules.InitiativeTrxConsequence2DroolsRuleTransformer;
-import it.gov.pagopa.reward.drools.transformer.consequences.rules.RewardGroupsTrxConsequence2DroolsRuleTransformer;
-import it.gov.pagopa.reward.drools.transformer.consequences.rules.RewardLimitsTrxConsequence2DroolsRuleTransformer;
-import it.gov.pagopa.reward.drools.transformer.consequences.rules.RewardValueTrxConsequence2DroolsRuleTransformer;
+import it.gov.pagopa.reward.drools.transformer.consequences.rules.*;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
+import it.gov.pagopa.reward.dto.rule.trx.TrxCountDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,11 +23,13 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
     private static final RewardValueTrxConsequence2DroolsRuleTransformer rewardValueTransformerMock = Mockito.mock(RewardValueTrxConsequence2DroolsRuleTransformer.class);
     private static final RewardGroupsTrxConsequence2DroolsRuleTransformer rewardGroupsTransformerMock = Mockito.mock(RewardGroupsTrxConsequence2DroolsRuleTransformer.class);
     private static final RewardLimitsTrxConsequence2DroolsRuleTransformer rewardLimitsTransformerMock = Mockito.mock(RewardLimitsTrxConsequence2DroolsRuleTransformer.class);
+    private static final TrxCountTrxConsequence2DroolsRuleTransformer trxCountTransformerMock = Mockito.mock(TrxCountTrxConsequence2DroolsRuleTransformer.class);
 
     private static final List<InitiativeTrxConsequence2DroolsRuleTransformer<?>> mocks = List.of(
             rewardValueTransformerMock,
             rewardGroupsTransformerMock,
-            rewardLimitsTransformerMock
+            rewardLimitsTransformerMock,
+            trxCountTransformerMock
     );
 
     private static final TrxConsequence2DroolsRuleTransformerFacadeImpl transformer = new TrxConsequence2DroolsRuleTransformerFacadeImpl(expressionTransformerFacadeMock);
@@ -39,11 +39,12 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
         configureMock(rewardValueTransformerMock, "rewardValueTrxConsequenceTransformer");
         configureMock(rewardGroupsTransformerMock, "rewardGroupsTrxConsequenceTransformer");
         configureMock(rewardLimitsTransformerMock, "rewardLimitsTrxConsequenceTransformer");
+        configureMock(trxCountTransformerMock, "trxCountTrxConsequenceTransformer");
     }
 
     @BeforeEach
     public void resetMocks() {
-        Mockito.reset(expressionTransformerFacadeMock, rewardValueTransformerMock, rewardGroupsTransformerMock, rewardLimitsTransformerMock);
+        Mockito.reset(expressionTransformerFacadeMock, rewardValueTransformerMock, rewardGroupsTransformerMock, rewardLimitsTransformerMock, trxCountTransformerMock);
     }
 
     private static void configureMock(InitiativeTrxConsequence2DroolsRuleTransformer<?> mock, String fieldName) throws IllegalAccessException {
@@ -76,6 +77,11 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
     @Test
     void testRewardLimits() {
         test(new RewardLimitsDTO(), rewardLimitsTransformerMock);
+    }
+
+    @Test
+    void testTrxCount() {
+        test(new TrxCountDTO(), trxCountTransformerMock);
     }
 
     @Test

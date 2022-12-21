@@ -80,6 +80,9 @@ class Transaction2TransactionProcessedMapperTest {
         Assertions.assertEquals(trx.getEffectiveAmount(), result.getEffectiveAmount());
         Assertions.assertEquals(trxChargeDate, result.getTrxChargeDate());
         Assertions.assertEquals(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertEquals(trx.getStatus(), result.getStatus());
+        Assertions.assertEquals(trx.getRejectionReasons(), result.getRejectionReasons());
+        Assertions.assertEquals(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
     }
 
 

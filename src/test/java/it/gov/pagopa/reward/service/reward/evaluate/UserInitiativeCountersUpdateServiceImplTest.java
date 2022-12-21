@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -213,7 +214,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkRewardCounters(rewardTransactionDTO.getRewards().get("2").getCounters(), 21L, false, 250, 10000, 4100);
         // Third initiate (reward is 0)
         checkCounters(userInitiativeCounters.getInitiatives().get("3"), 20L, 200, 4000);
-        Assertions.assertNull(rewardTransactionDTO.getRewards().get("3").getCounters());
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("3").getCounters(), 20L, false, 200, 10000, 4000);
+
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
         Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
     }
@@ -223,6 +225,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Given
         Map<String, Reward> rewardMock = Map.of(
+                "1", new Reward("1","ORGANIZATION", BigDecimal.valueOf(0), BigDecimal.valueOf(0), false, false),
                 "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(0), false, false),
                 "3", new Reward("3","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(50), false, false)
         );
@@ -243,16 +246,49 @@ class UserInitiativeCountersUpdateServiceImplTest {
                         "2", initiativeCounters2))
         );
 
-
         // When
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+
+        // Then
+        checkCounters(userInitiativeCounters.getInitiatives().get("1"), 21L, 200, 4000);
+        checkCounters(userInitiativeCounters.getInitiatives().get("2"), 20L, 200, 4000);
+        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 1L, 50, 100);
+        Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
+        Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
+
+        // When partially refunding it
+        rewardTransactionDTO.setOperationTypeTranscoded(OperationType.REFUND);
+        rewardTransactionDTO.setAmount(BigDecimal.valueOf(10));
+        rewardTransactionDTO.setEffectiveAmount(BigDecimal.valueOf(90));
+        rewardTransactionDTO.setRefundInfo(RefundInfo.builder()
+                .previousRewards(rewardMock.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> new RefundInfo.PreviousReward(e.getValue().getInitiativeId(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward()))))
+                .build());
+        rewardTransactionDTO.setRewards(rewardMock.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e-> new Reward(e.getValue().getInitiativeId(), e.getValue().getOrganizationId(), BigDecimal.ZERO))));
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+
+        // Then
+        checkCounters(userInitiativeCounters.getInitiatives().get("1"), 21L, 200, 4000);
+        checkCounters(userInitiativeCounters.getInitiatives().get("2"), 20L, 200, 4000);
+        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 1L, 50, 90);
+        Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
+        Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
+
+        // When totally refunding it
+        rewardTransactionDTO.setOperationTypeTranscoded(OperationType.REFUND);
+        rewardTransactionDTO.setAmount(BigDecimal.valueOf(90));
+        rewardTransactionDTO.setEffectiveAmount(BigDecimal.ZERO);
+        rewardMock.values().forEach(r->r.setAccruedReward(r.getAccruedReward().negate()));
+        rewardTransactionDTO.setRewards(rewardMock);
         userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("1"), 20L, 200, 4000);
         checkCounters(userInitiativeCounters.getInitiatives().get("2"), 20L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 1L, 50, 100);
-        Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
-        Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
+        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 0L, 0, 0);
+        Assertions.assertFalse(rewardMock.get("2").isCompleteRefund()); // not complete here, because it never rewarded the trx because of cap
+        Assertions.assertTrue(rewardMock.get("3").isCompleteRefund());
     }
 
     private static InitiativeCounters createInitiativeCounter(String initiativeId, long trxNumber, double totalAmount, double totalReward) {
