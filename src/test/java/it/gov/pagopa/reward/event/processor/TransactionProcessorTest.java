@@ -603,7 +603,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     }
 
     private void assertRejectedInitiativesState(RewardTransactionDTO evaluation, Map<String, List<String>> expectedInitiativeRejectionReasons, List<String> expectedRejectionReasons) {
-        Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
+        if(evaluation.getRewards() != null && evaluation.getRewards().size()>0){
+            Assertions.assertTrue(evaluation.getRewards().values().stream().noneMatch(r->BigDecimal.ZERO.compareTo(r.getAccruedReward()) !=0), "Expected rejection: %s".formatted(evaluation.getRewards()));
+        }
         Assertions.assertEquals(expectedRejectionReasons, evaluation.getRejectionReasons());
         Assertions.assertFalse(evaluation.getInitiativeRejectionReasons().isEmpty());
         Assertions.assertEquals(expectedInitiativeRejectionReasons, evaluation.getInitiativeRejectionReasons());

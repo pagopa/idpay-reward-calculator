@@ -214,7 +214,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkRewardCounters(rewardTransactionDTO.getRewards().get("2").getCounters(), 21L, false, 250, 10000, 4100);
         // Third initiate (reward is 0)
         checkCounters(userInitiativeCounters.getInitiatives().get("3"), 20L, 200, 4000);
-        Assertions.assertNull(rewardTransactionDTO.getRewards().get("3").getCounters());
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("3").getCounters(), 20L, false, 200, 10000, 4000);
+
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
         Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
     }
@@ -224,6 +225,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         // Given
         Map<String, Reward> rewardMock = Map.of(
+                "1", new Reward("1","ORGANIZATION", BigDecimal.valueOf(0), BigDecimal.valueOf(0), false, false),
                 "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(0), false, false),
                 "3", new Reward("3","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(50), false, false)
         );

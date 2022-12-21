@@ -11,7 +11,6 @@ import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
@@ -63,16 +61,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     @Override
     public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) {
-        Stream.concat(
-                ruleEngineResult.getRewards().entrySet().stream(),
-                // when the TrxCount is the only rejection reason, we have to update the counters
-                ruleEngineResult.getInitiativeRejectionReasons().entrySet().stream()
-                        .filter(e -> isJustTrxCountRejection(e.getValue()))
-                        .map(e-> Pair.of(e.getKey(), new Reward(e.getKey(), null, BigDecimal.ZERO)))
-        ).forEach(e -> {
-            String initiativeId = e.getKey();
-            Reward reward = e.getValue();
-
+        ruleEngineResult.getRewards().forEach((initiativeId, reward) -> {
             boolean justTrxCountRejection = isJustTrxCountRejection(ruleEngineResult, initiativeId);
 
             InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
@@ -122,7 +111,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateCounters(Counters counters, OperationType operationType, Reward reward, BigDecimal previousRewards, BigDecimal amount, BigDecimal effectiveAmount, boolean justTrxCountRejection) {
         if(justTrxCountRejection){
-            handleTrxCountRejection(counters, operationType, effectiveAmount);
+            handleTrxCountRejection(counters, operationType, effectiveAmount, reward);
         } else {
             if (previousRewards == null) {
                 counters.setTrxNumber(counters.getTrxNumber() + 1);
@@ -142,7 +131,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         }
     }
 
-    private static void handleTrxCountRejection(Counters counters, OperationType operationType, BigDecimal effectiveAmount) {
+    private static void handleTrxCountRejection(Counters counters, OperationType operationType, BigDecimal effectiveAmount, Reward reward) {
         // charge op
         if (OperationType.CHARGE.equals(operationType)) {
             counters.setTrxNumber(counters.getTrxNumber() + 1);
@@ -150,6 +139,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
             // complete refund
             if (BigDecimal.ZERO.compareTo(effectiveAmount)==0) {
                 counters.setTrxNumber(counters.getTrxNumber() - 1);
+                reward.setCompleteRefund(true);
             }
         }
     }

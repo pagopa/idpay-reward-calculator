@@ -11,7 +11,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @ToString(callSuper = true)
 public class InitiativeCounters extends Counters {
     @Id

@@ -202,7 +202,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         } catch (Throwable e){
             System.err.printf("Failed use case %s %d on user %s opType %s and IdTrxAcquirer %s%n",
                     isTotalRefundUseCase ? "TOTAL_REFUND" : "PARTIAL_REFUND",
-                    (isTotalRefundUseCase? bias: bias-completeRefundedTrxs-1)%(isTotalRefundUseCase ? totalRefundUseCases.size(): partialRefundUseCases.size()),
+                    Math.floorMod(isTotalRefundUseCase? bias: bias-completeRefundedTrxs-1, (isTotalRefundUseCase ? totalRefundUseCases.size(): partialRefundUseCases.size())),
                     rewardedTrx.getUserId(),
                     rewardedTrx.getOperationTypeTranscoded(),
                     rewardedTrx.getIdTrxAcquirer());
@@ -685,7 +685,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, totalRefund);
                 },
                 chargeReward -> assertRejectedState(chargeReward, initiativeId, List.of("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL"), 1L, 10, 20, false, false, false),
-                refundReward -> assertRejectedState(refundReward, initiativeId, null, 1L, 10, 20, false, true, false),
+                refundReward -> assertRejectedState(refundReward, initiativeId, List.of("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL"), 1L, 10, 20, false, true, false),
                 List.of("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL"),
                 () -> List.of(useCaseChargeRewardLimitedCapped_initialStateOfCounters)
         ));
@@ -706,7 +706,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRejectedState(chargeReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 4L, 10, 8, false, false, false),
-                refundReward -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 4L, 10, 8, false, true, true),
+                refundReward -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 4L, 10, 8, false, true, false),
                 List.of("TRX_RULE_TRXCOUNT_FAIL"),
                 () -> List.of(buildSimpleInitiativeCounter(initiativeTrxMinId, 4L, 10, 8))
         ));

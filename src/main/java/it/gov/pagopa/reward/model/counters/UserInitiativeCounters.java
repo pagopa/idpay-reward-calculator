@@ -12,7 +12,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "user_initiative_counters")
 public class UserInitiativeCounters {
     @Id
