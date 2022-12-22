@@ -46,8 +46,11 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
     /** if REFUND, exhausted initiative considered only if they have already rewarded */
     private boolean isExhausted2Reverse(TransactionDTO trx, String initiativeId) {
         return OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) &&
-                trx.getRefundInfo()!=null &&
+                trx.getRefundInfo() != null &&
                 trx.getRefundInfo().getPreviousRewards().get(initiativeId) != null &&
-                BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward())<0;
+                (
+                        BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward()) < 0
+                                || List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()).equals(trx.getRefundInfo().getPreviousTrxs().get(0).getInitiativeRejectionReasons().get(initiativeId))
+                );
     }
 }

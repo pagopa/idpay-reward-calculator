@@ -201,7 +201,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         } catch (Throwable e){
             System.err.printf("Failed use case %s %d on user %s opType %s and IdTrxAcquirer %s%n",
                     isTotalRefundUseCase ? "TOTAL_REFUND" : "PARTIAL_REFUND",
-                    Math.floorMod(isTotalRefundUseCase? bias: bias-completeRefundedTrxs-1, (isTotalRefundUseCase ? totalRefundUseCases.size(): partialRefundUseCases.size())),
+                    Math.floorMod(bias, (isTotalRefundUseCase ? totalRefundUseCases.size(): partialRefundUseCases.size())),
                     rewardedTrx.getUserId(),
                     rewardedTrx.getOperationTypeTranscoded(),
                     rewardedTrx.getIdTrxAcquirer());
@@ -428,6 +428,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         // 7: initiatives counter's based behavior limit (https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/506266636/Mappatura+Regole#Limitazione-gestione-storni-su-iniziative-basate-su-contatori)
         // trxMin reached after N transactions, then refunding one the previous
         // due to the documented limitation, the IDTRXACQUIRER_5 transactions will still be rewarded even after the refund of the first trx (thus IDTRXACQUIRER_5 will be the 4th trx)
+        // it will also test the budget exhaustion
         totalRefundUseCases.add(new RefundUseCase(
                 initiativeTrxMinId,
                 i -> {
@@ -766,6 +767,79 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 chargeReward -> assertRewardedState(chargeReward, initiativeTrxMinId, TestUtils.bigDecimalValue(10.1), false, 5L, 111, 18.1,  false),
                 refundReward -> assertRewardedState(refundReward, 1, initiativeTrxMinId, BigDecimal.valueOf(-0.1), true, 5L, 110, 18, false, true, false),
                 () -> List.of(buildSimpleInitiativeCounter(initiativeTrxMinId, 5L, 110, 18))
+        ));
+
+        // 11: initiatives counter's based behavior limit (https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/506266636/Mappatura+Regole#Limitazione-gestione-storni-su-iniziative-basate-su-contatori)
+        // trxMin reached after N transactions, then refunding one the previous
+        // due to the documented limitation, the IDTRXACQUIRER_5 transactions will still be rewarded even after the refund of the first trx (thus IDTRXACQUIRER_5 will be the 4th trx)
+        // it will also test the budget exhaustion
+        partialRefundUseCases.add(new RefundUseCase(
+                initiativeTrxMinId,
+                i -> {
+                    final TransactionDTO trx1 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx1.setIdTrxAcquirer("IDTRXACQUIRER");
+                    trx1.setAmount(BigDecimal.valueOf(100_00));
+                    final TransactionDTO trx2 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx2.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"_2");
+                    trx2.setCorrelationId(trx1.getCorrelationId()+"_2");
+                    trx2.setAmount(BigDecimal.valueOf(100_00));
+                    final TransactionDTO trx3 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx3.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"_3");
+                    trx3.setCorrelationId(trx1.getCorrelationId()+"_3");
+                    trx3.setAmount(BigDecimal.valueOf(100_00));
+                    final TransactionDTO trx4 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx4.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"_4");
+                    trx4.setCorrelationId(trx1.getCorrelationId()+"_4");
+                    trx4.setAmount(BigDecimal.valueOf(100_00));
+                    final TransactionDTO trx5 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx5.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"_5");
+                    trx5.setCorrelationId(trx1.getCorrelationId()+"_5");
+                    trx5.setAmount(BigDecimal.valueOf(100_00));
+                    final TransactionDTO trx6 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx6.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"_6");
+                    trx6.setCorrelationId(trx1.getCorrelationId()+"_6");
+                    trx6.setAmount(BigDecimal.valueOf(100_00));
+                    final TransactionDTO trx7 = buildChargeTrx(trxDate.plusDays(11), i);
+                    trx7.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"_7");
+                    trx7.setCorrelationId(trx1.getCorrelationId()+"_7");
+                    trx7.setAmount(BigDecimal.valueOf(1000_00));
+
+                    final TransactionDTO trx1TF1 = buildRefundTrx(i, trx1);
+                    trx1TF1.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"-TF1");
+                    trx1TF1.setAmount(BigDecimal.valueOf(99_99));
+
+                    final TransactionDTO trx1TF2 = buildRefundTrx(i, trx1);
+                    trx1TF2.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"-TF2");
+                    trx1TF2.setAmount(BigDecimal.valueOf(1));
+
+                    final TransactionDTO trx7TF = buildRefundTrx(i, trx7);
+                    trx7TF.setAmount(trx7.getAmount());
+
+                    onboardHpan(trx1.getHpan(), trx1.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+
+                    return List.of(trx1, trx2, trx3, trx4, trx5, trx6, trx7, trx1TF1, trx7TF, trx1TF2);
+                },
+                chargeReward -> {
+                    switch (chargeReward.getIdTrxAcquirer()) {
+                        case "IDTRXACQUIRER" -> assertRejectedState(chargeReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 1L, 0, 0, false, false, false);
+                        case "IDTRXACQUIRER_2" -> assertRejectedState(chargeReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 2L, 0, 0, false, false, false);
+                        case "IDTRXACQUIRER_3" -> assertRejectedState(chargeReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 3L, 0, 0, false, false, false);
+                        case "IDTRXACQUIRER_4" -> assertRejectedState(chargeReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 4L, 0, 0, false, false, false);
+                        case "IDTRXACQUIRER_5" -> assertRewardedState(chargeReward, initiativeTrxMinId, TestUtils.bigDecimalValue(10), false, 5L, 100, 10, false);
+                        case "IDTRXACQUIRER_6" -> assertRewardedState(chargeReward, initiativeTrxMinId, TestUtils.bigDecimalValue(10), false, 6L, 200, 20, false);
+                        case "IDTRXACQUIRER_7" -> assertRewardedState(chargeReward, initiativeTrxMinId, TestUtils.bigDecimalValue(80), true, 7L, 1200, 100, true);
+                        default -> throw new IllegalStateException("Unexpected case! " + chargeReward);
+                    }
+                },
+                refundReward -> {
+                    switch (refundReward.getIdTrxAcquirer()) {
+                        case "IDTRXACQUIRER-TF1" -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 7L, 1200, 100, true, true, false);
+                        case "IDTRXACQUIRER_7" -> assertRewardedState(refundReward, 1, initiativeTrxMinId, TestUtils.bigDecimalValue(-80), false, 6L, 200, 20, false, true, true);
+                        case "IDTRXACQUIRER-TF2" -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 5L, 200, 20, false, true, true);
+                        default -> throw new IllegalStateException("Unexpected case! " + refundReward);
+                    }
+                },
+                () -> List.of(buildSimpleInitiativeCounter(initiativeTrxMinId, 5L, 200, 20, false))
         ));
     }
 

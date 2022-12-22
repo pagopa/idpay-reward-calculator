@@ -88,12 +88,8 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         pt.getRewards().forEach((initiativeId, r) -> pastRewards.compute(initiativeId, (k, acc) -> {
             if (acc != null) {
                 final BigDecimal sum = r.getAccruedReward().add(acc.getAccruedReward());
-                if (BigDecimal.ZERO.compareTo(sum) != 0) {
-                    acc.setAccruedReward(sum);
-                    return acc;
-                } else {
-                    return null;
-                }
+                acc.setAccruedReward(sum);
+                return acc;
             } else {
                 return new RefundInfo.PreviousReward(r.getInitiativeId(), r.getOrganizationId(), r.getAccruedReward().setScale(2, RoundingMode.UNNECESSARY));
             }
