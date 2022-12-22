@@ -47,6 +47,7 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
     private boolean isExhausted2Reverse(TransactionDTO trx, String initiativeId) {
         return OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) &&
                 trx.getRefundInfo()!=null &&
+                trx.getRefundInfo().getPreviousRewards().get(initiativeId) != null &&
                 BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward())<0;
     }
 }
