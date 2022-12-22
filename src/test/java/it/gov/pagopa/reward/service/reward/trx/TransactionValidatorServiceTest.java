@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.reward.trx;
 
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class TransactionValidatorServiceTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertSame(trx, result);
-        Assertions.assertEquals(0, BigDecimal.valueOf(2).compareTo(result.getAmount()));
+        Assertions.assertEquals(TestUtils.bigDecimalValue(2), result.getAmount());
         Assertions.assertEquals(Collections.emptyList(), trx.getRejectionReasons());
     }
 
