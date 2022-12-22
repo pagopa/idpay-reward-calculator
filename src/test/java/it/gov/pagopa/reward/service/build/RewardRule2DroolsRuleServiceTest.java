@@ -293,6 +293,15 @@ public class RewardRule2DroolsRuleServiceTest {
                       }
                    }
                 end
+                   
+                rule "ID_0_ssx-NAME_0_vnj-TRXCOUNT-REWARD"
+                salience -3
+                agenda-group "ID_0_ssx"
+                when
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
+                   eval(java.util.List.of("TRX_RULE_TRXCOUNT_FAIL").equals($trx.getInitiativeRejectionReasons().get("ID_0_ssx")))
+                then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.trx.Reward("ID_0_ssx","ORGANIZATIONID_0",java.math.BigDecimal.ZERO.setScale(2, java.math.RoundingMode.UNNECESSARY)));
+                end
                                 
                 """);
 

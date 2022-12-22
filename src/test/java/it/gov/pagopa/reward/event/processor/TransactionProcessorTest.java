@@ -2,13 +2,13 @@ package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
@@ -316,13 +316,13 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     private final Map<String, UserInitiativeCounters> expectedCounters = new HashMap<>();
     private final Map<String, BigDecimal> initiative2ExpectedReward = Map.of(
-            INITIATIVE_ID_THRESHOLD_BASED, BigDecimal.valueOf(0.5),
-            INITIATIVE_ID_DAYOFWEEK_BASED, BigDecimal.valueOf(5),
-            INITIATIVE_ID_MCC_BASED, BigDecimal.valueOf(6),
-            INITIATIVE_ID_REWARDLIMITS_BASED, BigDecimal.valueOf(0.8),
-            INITIATIVE_ID_TRXCOUNT_BASED, BigDecimal.valueOf(7),
-            INITIATIVE_ID_EXHAUSTED, BigDecimal.valueOf(0),
-            INITIATIVE_ID_EXHAUSTING, BigDecimal.valueOf(1)
+            INITIATIVE_ID_THRESHOLD_BASED, TestUtils.bigDecimalValue(0.5),
+            INITIATIVE_ID_DAYOFWEEK_BASED, TestUtils.bigDecimalValue(5),
+            INITIATIVE_ID_MCC_BASED, TestUtils.bigDecimalValue(6),
+            INITIATIVE_ID_REWARDLIMITS_BASED, TestUtils.bigDecimalValue(0.8),
+            INITIATIVE_ID_TRXCOUNT_BASED, TestUtils.bigDecimalValue(7),
+            INITIATIVE_ID_EXHAUSTED, TestUtils.bigDecimalValue(0),
+            INITIATIVE_ID_EXHAUSTING, TestUtils.bigDecimalValue(1)
     );
 
     private final List<Pair<Function<Integer, TransactionDTO>, java.util.function.Consumer<RewardTransactionDTO>>> useCases = List.of(
@@ -330,7 +330,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
-                                    .amount(BigDecimal.valueOf(5))
+                                    .amount(BigDecimal.valueOf(5_00))
                                     .build(),
                             INITIATIVE_ID_THRESHOLD_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_THRESHOLD_BASED, false, 1L, 5, 0, false)
@@ -340,7 +340,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
                                     .trxDate(trxDate)
-                                    .amount(BigDecimal.valueOf(50))
+                                    .amount(BigDecimal.valueOf(50_00))
                                     .build(),
                             INITIATIVE_ID_DAYOFWEEK_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_DAYOFWEEK_BASED, false, 1L, 50, 0, false)
@@ -350,7 +350,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
                                     .mcc("ACCEPTEDMCC")
-                                    .amount(BigDecimal.valueOf(60))
+                                    .amount(BigDecimal.valueOf(60_00))
                                     .build(),
                             INITIATIVE_ID_MCC_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_MCC_BASED, false, 1, 60, 0, false)
@@ -358,24 +358,52 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             // rewarded by TrxCount based initiative
             Pair.of(
                     i -> {
+                        BigDecimal amount = TestUtils.bigDecimalValue(70_00);
                         final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
-                                .amount(BigDecimal.valueOf(70))
+                                .amount(amount)
                                 .build();
                         saveUserInitiativeCounter(trx, InitiativeCounters.builder()
                                 .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
                                 .build());
+
                         return onboardTrxHpanAndIncreaseCounters(
                                 trx,
                                 INITIATIVE_ID_TRXCOUNT_BASED);
                     },
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED, false, TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT+1, 70, 0, false)
+                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED, false, TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT + 1, 70, 0, false)
+            ),
+            // rejected by TrxCount based initiative lower than min
+            Pair.of(
+                    i -> {
+                        final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
+                                .amount(BigDecimal.valueOf(70_00))
+                                .build();
+                        saveUserInitiativeCounter(trx, InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                                .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT-1)
+                                .build());
+
+                        UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                                trx,
+                                INITIATIVE_ID_TRXCOUNT_BASED);
+
+                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_TRXCOUNT_BASED, InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                                .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
+                                .build());
+
+                        return trx;
+                    },
+                    evaluation -> assertRejectedInitiativesState(evaluation,
+                            Map.of(INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())),
+                            Collections.emptyList())
             ),
             // rewarded by RewardLimits based initiative
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
-                                    .amount(BigDecimal.valueOf(8))
+                                    .amount(BigDecimal.valueOf(8_00))
                                     .build(),
                             INITIATIVE_ID_REWARDLIMITS_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED, false, 1, 8, 0, false)
@@ -408,7 +436,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                                 .trxDate(trxDate.minusDays(1))
-                                .amount(BigDecimal.ONE)
+                                .amount(BigDecimal.valueOf(1_00))
                                 .mcc("NOTALLOWED")
                                 .build();
 
@@ -430,6 +458,10 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 INITIATIVE_ID_REWARDLIMITS_BASED
                         );
                         userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_REWARDLIMITS_BASED, initiativeRewardCounter);
+                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_TRXCOUNT_BASED, InitiativeCounters.builder()
+                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                                .trxNumber(1L)
+                                .build());
                         return trx;
                     },
                     evaluation -> assertRejectedInitiativesState(evaluation,
@@ -451,7 +483,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
-                                .amount(BigDecimal.TEN)
+                                .amount(BigDecimal.valueOf(10_00))
                                 .build();
 
                         final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
@@ -477,7 +509,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
-                                .amount(BigDecimal.valueOf(100))
+                                .amount(BigDecimal.valueOf(100_00))
                                 .build();
 
                         final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
@@ -514,7 +546,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                             .trxDate(trxDate)
-                            .amount(BigDecimal.valueOf(80))
+                            .amount(BigDecimal.valueOf(80_00))
                             .build();
 
                     final InitiativeCounters initialStateOfCounters = InitiativeCounters.builder()
@@ -571,7 +603,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     }
 
     private void assertRejectedInitiativesState(RewardTransactionDTO evaluation, Map<String, List<String>> expectedInitiativeRejectionReasons, List<String> expectedRejectionReasons) {
-        Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
+        if(evaluation.getRewards() != null && evaluation.getRewards().size()>0){
+            Assertions.assertTrue(evaluation.getRewards().values().stream().noneMatch(r->BigDecimal.ZERO.compareTo(r.getAccruedReward()) !=0), "Expected rejection: %s".formatted(evaluation.getRewards()));
+        }
         Assertions.assertEquals(expectedRejectionReasons, evaluation.getRejectionReasons());
         Assertions.assertFalse(evaluation.getInitiativeRejectionReasons().isEmpty());
         Assertions.assertEquals(expectedInitiativeRejectionReasons, evaluation.getInitiativeRejectionReasons());
@@ -608,7 +642,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     }
 
     private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
-        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new HashMap<>()));
+        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new LinkedHashMap<>()));
     }
 
     private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
@@ -637,7 +671,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     private void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
         counters.setTrxNumber(counters.getTrxNumber() + 1);
-        counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount()).setScale(2, RoundingMode.UNNECESSARY));
+        counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN)));
         counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
     //endregion
@@ -697,18 +731,25 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         TransactionDTO failingRewardPublishing = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
                 .userId(failingRewardPublishingUserId)
                 .build();
+        TransactionDTO expectedFailingRewardPublishing = failingRewardPublishing.toBuilder()
+                .amount(failingRewardPublishing.getAmount().divide(BigDecimal.valueOf(100),2,RoundingMode.HALF_DOWN))
+                .build();
         errorUseCases.add(Pair.of(
                 () -> {
                     Mockito.doReturn(false).when(rewardNotifierServiceSpy).notify(Mockito.argThat(i -> failingRewardPublishingUserId.equals(i.getUserId())));
                     createUserCounter(failingRewardPublishing);
                     return TestUtils.jsonSerializer(failingRewardPublishing);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome,"", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, failingRewardPublishing)), failingRewardPublishingUserId, false, false)
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome,"", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, expectedFailingRewardPublishing)), failingRewardPublishingUserId, false, false)
         ));
 
         final String exceptionWhenRewardPublishUserId = "FAILING_REWARD_PUBLISHING_DUE_EXCEPTION";
         TransactionDTO exceptionWhenRewardPublish = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
                 .userId(exceptionWhenRewardPublishUserId)
+                .amount(BigDecimal.valueOf(88_00))
+                .build();
+        TransactionDTO expectedExceptionWhenRewardPublish = exceptionWhenRewardPublish.toBuilder()
+                .amount(exceptionWhenRewardPublish.getAmount().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN))
                 .build();
         errorUseCases.add(Pair.of(
                 () -> {
@@ -716,7 +757,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     createUserCounter(exceptionWhenRewardPublish);
                     return TestUtils.jsonSerializer(exceptionWhenRewardPublish);
                 },
-                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, "", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, exceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId,false,false)
+                errorMessage -> checkErrorMessageHeaders(topicRewardProcessorOutcome, "", errorMessage, "[REWARD] An error occurred while publishing the transaction evaluation result", TestUtils.jsonSerializer(trx2RejectedRewardNoInitiatives(transaction2RewardTransactionMapper, expectedExceptionWhenRewardPublish)), exceptionWhenRewardPublishUserId,false,false)
         ));
     }
 

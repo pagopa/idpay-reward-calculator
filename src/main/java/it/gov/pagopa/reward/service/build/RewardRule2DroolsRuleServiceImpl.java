@@ -107,6 +107,9 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
                     initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(initiativeId, initiative.getOrganizationId(), ruleNamePrefix, rl))
             );
         }
+        if(initiative.getTrxRule().getTrxCount()!=null){
+            initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(initiativeId, initiative.getOrganizationId(), ruleNamePrefix, initiative.getTrxRule().getTrxCount()));
+        }
     }
 
 }

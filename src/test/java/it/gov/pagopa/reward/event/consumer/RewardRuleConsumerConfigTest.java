@@ -133,7 +133,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
         return (i.getTrxRule().getDaysOfWeek() != null? 1 : 0) +
         (i.getTrxRule().getThreshold() != null? 1 : 0) +
         (i.getTrxRule().getMccFilter() != null? 1 : 0) +
-        (i.getTrxRule().getTrxCount() != null? 1 : 0) +
+        (i.getTrxRule().getTrxCount() != null? 2 : 0) +
         (i.getTrxRule().getRewardLimits() != null? i.getTrxRule().getRewardLimits().size()*2 : 0) + // x2 because each rule generates a condition and a consequence
         (i.getRewardRule() instanceof RewardGroupsDTO ? 2 : 1); // RewardGroupsDTO 2 because it generates a condition and a consequence
     }
