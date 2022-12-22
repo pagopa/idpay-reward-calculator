@@ -406,7 +406,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 initiativeTrxMinId,
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate.plusDays(11), i);
-                    trx.setAmount(BigDecimal.valueOf(100));
+                    trx.setAmount(BigDecimal.valueOf(100_00));
 
                     final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
@@ -428,7 +428,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 initiativeTrxMinId,
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate.plusDays(11), i);
-                    trx.setAmount(BigDecimal.valueOf(100));
+                    trx.setAmount(BigDecimal.valueOf(100_00));
 
                     final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
@@ -695,10 +695,10 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 initiativeTrxMinId,
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate.plusDays(11), i);
-                    trx.setAmount(BigDecimal.valueOf(101));
+                    trx.setAmount(BigDecimal.valueOf(101_00));
 
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
                     onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
                     saveUserInitiativeCounter(trx, buildSimpleInitiativeCounter(initiativeTrxMinId, 3L, 10, 8));
@@ -716,10 +716,10 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 initiativeTrxMinId,
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate.plusDays(11), i);
-                    trx.setAmount(BigDecimal.valueOf(101));
+                    trx.setAmount(BigDecimal.valueOf(101_00));
 
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
                     onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
                     saveUserInitiativeCounter(trx, buildSimpleInitiativeCounter(initiativeTrxMinId, 4L, 10, 8));
