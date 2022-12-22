@@ -14,6 +14,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -44,6 +46,9 @@ public class TransactionProcessed {
     private BigDecimal amount;
 
     private Map<String, Reward> rewards;
+    private String status;
+    private List<String> rejectionReasons = new ArrayList<>();
+    private Map<String, List<String>> initiativeRejectionReasons;
 
     private BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

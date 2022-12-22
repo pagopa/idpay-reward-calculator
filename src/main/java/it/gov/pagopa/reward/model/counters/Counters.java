@@ -12,7 +12,7 @@ import java.math.RoundingMode;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public class Counters {
     @Builder.Default
     private Long trxNumber = 0L;

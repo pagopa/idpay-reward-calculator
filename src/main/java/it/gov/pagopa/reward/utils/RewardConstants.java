@@ -40,6 +40,7 @@ public final class RewardConstants {
 
     public static final int INITIATIVE_TRX_CONSEQUENCE_ORDER = -1;
     public static final int INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER = INITIATIVE_TRX_CONSEQUENCE_ORDER - 1;
+    public static final int INITIATIVE_TRX_CONSEQUENCE_TRX_COUNT_ORDER = INITIATIVE_TRX_CONSEQUENCE_REWARD_LIMITS_ORDER - 1;
     //endregion
 
     //region reward evaluation rejection reasons
