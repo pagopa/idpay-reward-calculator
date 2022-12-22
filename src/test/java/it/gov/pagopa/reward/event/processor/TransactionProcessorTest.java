@@ -731,9 +731,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         TransactionDTO failingRewardPublishing = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
                 .userId(failingRewardPublishingUserId)
                 .build();
-        TransactionDTO expectedFailingRewardPublishing = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
-                .userId(failingRewardPublishingUserId)
-                .amount(failingRewardPublishing.getAmount().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN))
+        TransactionDTO expectedFailingRewardPublishing = failingRewardPublishing.toBuilder()
+                .amount(failingRewardPublishing.getAmount().divide(BigDecimal.valueOf(100),2,RoundingMode.HALF_DOWN))
                 .build();
         errorUseCases.add(Pair.of(
                 () -> {
@@ -749,8 +748,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 .userId(exceptionWhenRewardPublishUserId)
                 .amount(BigDecimal.valueOf(88_00))
                 .build();
-        TransactionDTO expectedExceptionWhenRewardPublish = TransactionDTOFaker.mockInstanceBuilder(errorUseCases.size())
-                .userId(exceptionWhenRewardPublishUserId)
+        TransactionDTO expectedExceptionWhenRewardPublish = exceptionWhenRewardPublish.toBuilder()
                 .amount(exceptionWhenRewardPublish.getAmount().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN))
                 .build();
         errorUseCases.add(Pair.of(
