@@ -16,7 +16,9 @@ class TransactionValidatorServiceTest {
     @Test
     void testSuccessful(){
         // Given
-        final TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
+        final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(1)
+                .amount(BigDecimal.valueOf(2_00))
+                .build();
 
         // When
         final TransactionDTO result = transactionValidatorService.validate(trx);
@@ -24,6 +26,7 @@ class TransactionValidatorServiceTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertSame(trx, result);
+        Assertions.assertEquals(0, BigDecimal.valueOf(2).compareTo(result.getAmount()));
         Assertions.assertEquals(Collections.emptyList(), trx.getRejectionReasons());
     }
 
