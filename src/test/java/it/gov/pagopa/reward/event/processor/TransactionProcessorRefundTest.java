@@ -220,7 +220,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     private static TransactionDTO buildChargeTrx(OffsetDateTime trxDate, Integer i) {
         final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
         trx.setTrxDate(trxDate);
-        trx.setAmount(TestUtils.bigDecimalValue(10));
+        trx.setAmount(TestUtils.bigDecimalValue(10_00));
         return trx;
     }
 
@@ -338,7 +338,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
                     return List.of(trx, partialRefund);
                 },
                 chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1), false, 1L, 10, 1, false),
@@ -351,7 +351,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
                     saveUserInitiativeCounter(trx,
                             buildSimpleFullTemporalInitiativeCounter(1L, 10, 1, trxDate)
@@ -372,7 +372,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
                     saveUserInitiativeCounter(trx, buildSimpleFullTemporalInitiativeCounter(1L, 10, 9.1, trxDate.plusDays(1)));
 
@@ -395,7 +395,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.valueOf(2));
+                    partialRefund.setAmount(BigDecimal.valueOf(2_00));
 
                     saveUserInitiativeCounter(trx, buildSimpleFullTemporalInitiativeCounter(1L, 10, 9.1, trxDate.plusDays(1)));
 
@@ -418,7 +418,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
                     saveUserInitiativeCounter(trx,
                             // placing a rewarded day of 99.9 to the previous year in order to avoid reward limits on current
@@ -447,7 +447,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.valueOf(2));
+                    partialRefund.setAmount(BigDecimal.valueOf(2_00));
 
                     saveUserInitiativeCounter(trx,
                             // placing a rewarded day of 99.9 to the previous year in order to avoid reward limits on current
@@ -476,7 +476,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 i -> {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
-                    partialRefund.setAmount(BigDecimal.ONE);
+                    partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
                     onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiative2totalRefund.getInitiativeId());
 
@@ -506,15 +506,15 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO trx = buildChargeTrx(trxDate, i);
 
                     final TransactionDTO partialRefund1 = buildRefundTrx(i, trx);
-                    partialRefund1.setAmount(BigDecimal.ONE);
+                    partialRefund1.setAmount(BigDecimal.valueOf(1_00));
                     partialRefund1.setIdTrxAcquirer("REFUND1");
 
                     final TransactionDTO partialRefund2 = buildRefundTrx(i, trx);
-                    partialRefund2.setAmount(BigDecimal.valueOf(7));
+                    partialRefund2.setAmount(BigDecimal.valueOf(7_00));
                     partialRefund2.setIdTrxAcquirer("REFUND2");
 
                     final TransactionDTO partialRefund3 = buildRefundTrx(i, trx);
-                    partialRefund3.setAmount(BigDecimal.valueOf(2));
+                    partialRefund3.setAmount(BigDecimal.valueOf(2_00));
                     partialRefund3.setIdTrxAcquirer("REFUND3");
 
                     return List.of(trx, partialRefund1, partialRefund2, partialRefund3);

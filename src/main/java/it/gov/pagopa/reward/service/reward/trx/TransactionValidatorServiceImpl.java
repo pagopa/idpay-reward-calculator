@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class TransactionValidatorServiceImpl implements TransactionValidatorService {
@@ -17,6 +18,12 @@ public class TransactionValidatorServiceImpl implements TransactionValidatorServ
         }
 
         Assertions.assertNotNull(transactionDTO.getId());
+
+        transactionDTO.setAmount(centsToEur(transactionDTO.getAmount()));
         return transactionDTO;
+    }
+
+    private BigDecimal centsToEur(BigDecimal amount) {
+        return amount.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN);
     }
 }
