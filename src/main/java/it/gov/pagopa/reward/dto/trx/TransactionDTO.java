@@ -39,6 +39,7 @@ public class TransactionDTO {
 
     private String correlationId;
 
+    /** if {@link #amountCents} is null, this field will contain cents, otherwise it will contain euro */
     @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
     private BigDecimal amount;
 
