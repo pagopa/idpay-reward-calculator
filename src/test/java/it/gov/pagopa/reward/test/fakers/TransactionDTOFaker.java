@@ -6,7 +6,6 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -62,7 +61,8 @@ public class TransactionDTOFaker {
                 .circuitType("CIRCUITTYPE%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
                 .correlationId("CORRELATIONID%d".formatted(bias))
-                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)).add(BigDecimal.ONE).setScale(2, RoundingMode.UNNECESSARY))
+                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200_00)).add(BigDecimal.valueOf(100)))
+                .amountCents(null)
                 .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
                 .mcc("MCC%d".formatted(bias))
                 .acquirerId("ACQUIRERID%d".formatted(bias))

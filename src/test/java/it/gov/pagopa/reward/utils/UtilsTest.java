@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,5 +63,21 @@ class UtilsTest {
                 .build();
         Assertions.assertNull(Utils.getHeaderValue(msg, "NOTEXISTS"));
         Assertions.assertEquals("HEADERVALUE", Utils.getHeaderValue(msg, "HEADERNAME"));
+    }
+
+    @Test
+    void centsToEuroTest(){
+        Assertions.assertEquals(
+                BigDecimal.valueOf(5).setScale(2, RoundingMode.UNNECESSARY),
+                Utils.centsToEuro(5_00L)
+        );
+    }
+
+    @Test
+    void euro2CentsTest(){
+        Assertions.assertEquals(
+                5_00L,
+                Utils.euroToCents(TestUtils.bigDecimalValue(5))
+        );
     }
 }
