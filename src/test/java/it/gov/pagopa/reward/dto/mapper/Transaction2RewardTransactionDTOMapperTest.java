@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,8 @@ class Transaction2RewardTransactionDTOMapperTest {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
+        trx.setAmountCents(trx.getAmount().longValue());
+        trx.setAmount(Utils.centsToEuro(trx.getAmountCents()));
         trx.setEffectiveAmount(trx.getAmount());
         trx.setRefundInfo(new RefundInfo());
 
@@ -54,6 +57,8 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
         Assertions.assertSame(trx.getCorrelationId(), result.getCorrelationId());
         Assertions.assertSame(trx.getAmount(), result.getAmount());
+        Assertions.assertSame(trx.getEffectiveAmount(), result.getEffectiveAmount());
+        Assertions.assertSame(trx.getAmountCents(), result.getAmountCents());
         Assertions.assertSame(trx.getAmountCurrency(), result.getAmountCurrency());
         Assertions.assertSame(trx.getMcc(), result.getMcc());
         Assertions.assertSame(trx.getAcquirerId(), result.getAcquirerId());

@@ -55,6 +55,7 @@ public class TransactionProcessedFaker {
         );
 
 
+        BigDecimal amountEuro = BigDecimal.valueOf(getRandomPositiveNumber(bias, 200));
         return TransactionProcessed.builder()
                 .id("IDTRX%s".formatted(bias))
                 .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))
@@ -62,7 +63,8 @@ public class TransactionProcessedFaker {
                 .trxDate(trxDateTime)
                 .operationType("OPERATIONTYPE%s".formatted(bias))
                 .correlationId("CORRELATIONID%s".formatted(bias))
-                .amount(BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)))
+                .amount(amountEuro)
+                .amountCents(amountEuro.longValue()*100)
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .rewards(rewards);

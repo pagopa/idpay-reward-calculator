@@ -51,6 +51,7 @@ public class TransactionProcessed {
     private Map<String, List<String>> initiativeRejectionReasons;
 
     private BigDecimal effectiveAmount;
+    private Long amountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime trxChargeDate;
     private OperationType operationTypeTranscoded;

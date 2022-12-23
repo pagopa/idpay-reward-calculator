@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.messaging.Message;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
@@ -38,5 +40,15 @@ public final class Utils {
     public static String getHeaderValue(Message<String> message, String headerName) {
         byte[] headerValue = message.getHeaders().get(headerName, byte[].class);
         return headerValue!=null? new String(headerValue, StandardCharsets.UTF_8) : null;
+    }
+
+    /** To convert cents into euro */
+    public static BigDecimal centsToEuro(Long cents) {
+        return BigDecimal.valueOf(cents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN);
+    }
+
+    /** To convert euro into cents */
+    public static Long euroToCents(BigDecimal euro) {
+        return euro.longValue() * 100L;
     }
 }
