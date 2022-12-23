@@ -142,14 +142,40 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
             Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())>0);
         }
 
+        checkInitiativeRewardCounters(expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, isRefund, isCompleteRefund, initiativeReward);
+
+        Assertions.assertEquals(expectedInitiativeRewarded, evaluation.getRewards().size());
+    }
+
+    private static void checkInitiativeRewardCounters(long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund, Reward initiativeReward) {
         Assertions.assertEquals(expectedCounterTrxNumber, initiativeReward.getCounters().getTrxNumber());
         Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalAmount), initiativeReward.getCounters().getTotalAmount());
         Assertions.assertEquals(TestUtils.bigDecimalValue(expectedCounterTotalReward), initiativeReward.getCounters().getTotalReward());
         Assertions.assertEquals(expectedCounterBudgetExhausted, initiativeReward.getCounters().isExhaustedBudget());
         Assertions.assertEquals(isRefund, initiativeReward.isRefund());
         Assertions.assertEquals(isCompleteRefund, initiativeReward.isCompleteRefund());
+    }
 
-        Assertions.assertEquals(expectedInitiativeRewarded, evaluation.getRewards().size());
+    protected void assertRejectedState(RewardTransactionDTO evaluation, String initiativeId, List<String> expectedRejectionReasons, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
+        Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
+        boolean expectedZeroReward = expectedRejectionReasons == null;
+
+        Assertions.assertEquals(expectedZeroReward
+                ? Collections.emptyMap()
+                : Map.of(initiativeId, expectedRejectionReasons),
+                evaluation.getInitiativeRejectionReasons());
+        Assertions.assertEquals(expectedZeroReward? "REWARDED" : "REJECTED", evaluation.getStatus());
+
+        final Reward initiativeReward = evaluation.getRewards().get(initiativeId);
+        if(expectedZeroReward){
+            Assertions.assertNotNull(initiativeReward);
+        }
+        if(initiativeReward!=null) {
+            TestUtils.assertBigDecimalEquals(BigDecimal.ZERO, initiativeReward.getAccruedReward());
+            Assertions.assertEquals("ORGANIZATIONID_" + initiativeId, initiativeReward.getOrganizationId());
+
+            checkInitiativeRewardCounters(expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, isRefund, isCompleteRefund, initiativeReward);
+        }
     }
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){

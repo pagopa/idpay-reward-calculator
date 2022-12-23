@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -46,7 +47,14 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
     /** if REFUND, exhausted initiative considered only if they have already rewarded */
     private boolean isExhausted2Reverse(TransactionDTO trx, String initiativeId) {
         return OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) &&
-                trx.getRefundInfo()!=null &&
-                BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward())<0;
+                trx.getRefundInfo() != null &&
+                trx.getRefundInfo().getPreviousRewards().get(initiativeId) != null &&
+                (
+                        BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward()) < 0
+                                || (
+                                !CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs()) &&
+                                        List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()).equals(trx.getRefundInfo().getPreviousTrxs().get(0).getInitiativeRejectionReasons().get(initiativeId))
+                        )
+                );
     }
 }

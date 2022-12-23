@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +45,8 @@ class Transaction2TransactionProcessedMapperTest {
         RewardTransactionDTO trx = transaction2RewardTransactionMapper.apply(TransactionDTOFaker.mockInstance(0));
         trx.setTrxDate(trxDate);
         trx.setTrxChargeDate(trxDate);
+        trx.setAmountCents(trx.getAmount().longValue());
+        trx.setAmount(Utils.centsToEuro(trx.getAmountCents()));
         trx.setEffectiveAmount(trx.getAmount());
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setRewards(rewards);
@@ -80,6 +83,9 @@ class Transaction2TransactionProcessedMapperTest {
         Assertions.assertEquals(trx.getEffectiveAmount(), result.getEffectiveAmount());
         Assertions.assertEquals(trxChargeDate, result.getTrxChargeDate());
         Assertions.assertEquals(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertEquals(trx.getStatus(), result.getStatus());
+        Assertions.assertEquals(trx.getRejectionReasons(), result.getRejectionReasons());
+        Assertions.assertEquals(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
     }
 
 

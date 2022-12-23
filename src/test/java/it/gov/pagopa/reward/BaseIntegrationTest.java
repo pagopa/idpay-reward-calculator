@@ -399,10 +399,14 @@ public abstract class BaseIntegrationTest {
         if(expectRetryHeader){
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
         }
-        Assertions.assertEquals(removeElaborationDateTime(expectedPayload), removeElaborationDateTime(errorMessage.value()));
+        Assertions.assertEquals(normalizePayload(expectedPayload), normalizePayload(errorMessage.value()));
         if(expectedKey!=null) {
             Assertions.assertEquals(expectedKey, errorMessage.key());
         }
+    }
+
+    protected String normalizePayload(String expectedPayload) {
+        return removeElaborationDateTime(expectedPayload);
     }
 
     private String removeElaborationDateTime(String payload){

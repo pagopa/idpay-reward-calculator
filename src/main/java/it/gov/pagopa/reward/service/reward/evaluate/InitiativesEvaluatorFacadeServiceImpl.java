@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -13,6 +14,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -85,14 +87,38 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     }
 
     private void handleCompleteRefund(TransactionDTO trx, RewardTransactionDTO trxRewarded) {
+        TransactionProcessed lastTrx = trx.getRefundInfo()==null || CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs())
+                ? null
+                : trx.getRefundInfo().getPreviousTrxs().get(trx.getRefundInfo().getPreviousTrxs().size() - 1);
+
+        trxRewarded.setInitiativeRejectionReasons(lastTrx==null
+                ? Collections.emptyMap()
+                : lastTrx.getInitiativeRejectionReasons());
+
         if (trx.getRefundInfo() == null || trx.getRefundInfo().getPreviousRewards().size() == 0) {
-            trxRewarded.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
+            
+            trxRewarded.setRejectionReasons(lastTrx==null
+                    ? List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)
+                    : lastTrx.getRejectionReasons());
+
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         } else {
             trxRewarded.setRewards(trx.getRefundInfo().getPreviousRewards().entrySet().stream()
                     .map(e -> Pair.of(e.getKey(), new Reward(e.getKey(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward().negate(), true)))
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
-            trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
+
+            boolean isRejected = trx.getRefundInfo().getPreviousRewards().values().stream().noneMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0);
+
+            if(isRejected) {
+                trxRewarded.setRejectionReasons(lastTrx == null
+                        ? Collections.emptyList()
+                        : lastTrx.getRejectionReasons());
+            }
+
+            trxRewarded.setStatus(
+                    isRejected
+                    ? RewardConstants.REWARD_STATE_REJECTED
+                    : RewardConstants.REWARD_STATE_REWARDED);
         }
     }
 
@@ -106,8 +132,13 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             r.setRefund(true);
         });
         pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), reward2Reverse.getAccruedReward().negate(), true)));
-        if(trxRewarded.getRewards().size()>0){
+        if(trxRewarded.getRewards().values().stream().anyMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0)){
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
+        } else {
+            trxRewarded.setInitiativeRejectionReasons(
+                    trxRewarded.getRefundInfo() != null && !CollectionUtils.isEmpty(trxRewarded.getRefundInfo().getPreviousTrxs())
+                            ? trxRewarded.getRefundInfo().getPreviousTrxs().get(0).getInitiativeRejectionReasons()
+                            : Collections.emptyMap());
         }
     }
 }

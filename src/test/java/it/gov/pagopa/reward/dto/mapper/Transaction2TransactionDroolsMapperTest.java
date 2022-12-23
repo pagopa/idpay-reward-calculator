@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,8 @@ class Transaction2TransactionDroolsMapperTest {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
+        trx.setAmountCents(trx.getAmount().longValue());
+        trx.setAmount(Utils.centsToEuro(trx.getAmountCents()));
         trx.setEffectiveAmount(trx.getAmount());
         trx.setRefundInfo(new RefundInfo());
 

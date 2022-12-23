@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate", "operationType", "acquirerId"}, callSuper = false)
@@ -39,6 +39,7 @@ public class TransactionDTO {
 
     private String correlationId;
 
+    /** if {@link #amountCents} is null, this field will contain cents, otherwise it will contain euro */
     @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
     private BigDecimal amount;
 
@@ -69,6 +70,7 @@ public class TransactionDTO {
     private OperationType operationTypeTranscoded;
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
+    private Long amountCents;
     private BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;

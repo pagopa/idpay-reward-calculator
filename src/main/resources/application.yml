@@ -103,11 +103,15 @@ spring:
         binder:
           auto-create-topics: false
           configuration:
-            heartbeat.interval.ms: ${KAFKA_CONFIG_HEARTBEAT_INTERVAL_MS:30000}
+            heartbeat.interval.ms: ${KAFKA_CONFIG_HEARTBEAT_INTERVAL_MS:3000}
             session.timeout.ms: ${KAFKA_CONFIG_SESSION_TIMEOUT_MS:60000}
             request.timeout.ms: ${KAFKA_CONFIG_REQUEST_TIMEOUT_MS:60000}
             sasl.mechanism: ${KAFKA_CONFIG_SASL_MECHANISM:PLAIN}
             security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
+            connections.max.idle.ms: ${KAFKA_CONFIG_CONNECTION_MAX_IDLE_TIME:180000}
+            metadata.max.idle.ms: ${KAFKA_CONFIG_METADATA_MAX_IDLE_MS:180000}
+            metadata.max.age.ms: ${KAFKA_CONFIG_METADATA_MAX_AGE_INTERVAL:180000}
+            max.request.size: ${KAFKA_CONFIG_METADATA_MAX_REQUEST_SIZE:1000000}
         bindings:
           trxProcessor-in-0:
             consumer:

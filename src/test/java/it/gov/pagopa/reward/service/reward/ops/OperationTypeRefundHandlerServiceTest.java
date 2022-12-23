@@ -158,6 +158,7 @@ class OperationTypeRefundHandlerServiceTest {
         Assertions.assertEquals(
                 Map.of(
                         "INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", scaleBigDecimal(BigDecimal.valueOf(0.5))),
+                        "INITIATIVE3", new RefundInfo.PreviousReward("INITIATIVE3", "ORGANIZATION", scaleBigDecimal(BigDecimal.ZERO)),
                         "INITIATIVE2", new RefundInfo.PreviousReward("INITIATIVE2", "ORGANIZATION", scaleBigDecimal(BigDecimal.ONE)))
                 , result.getRefundInfo().getPreviousRewards());
     }
