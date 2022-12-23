@@ -308,6 +308,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         int biasRetrieve = Integer.parseInt(hpan.substring(4));
         useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
         Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
+        Assertions.assertEquals(Utils.centsToEuro(rewardedTrx.getAmountCents()), rewardedTrx.getAmount());
     }
 
     //region useCases
@@ -335,32 +336,34 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             INITIATIVE_ID_THRESHOLD_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_THRESHOLD_BASED, false, 1L, 5, 0, false)
             ),
-            // rewarded by dayOfWeek based initiative
+            // rewarded by dayOfWeek based initiative (testing amountCents)
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
                                     .trxDate(trxDate)
-                                    .amount(BigDecimal.valueOf(50_00))
+                                    .amount(null)
+                                    .amountCents(50_00L)
                                     .build(),
                             INITIATIVE_ID_DAYOFWEEK_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_DAYOFWEEK_BASED, false, 1L, 50, 0, false)
             ),
-            // rewarded by MccFilter based initiative
+            // rewarded by MccFilter based initiative (filled both amount and amountCents)
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
                                     .mcc("ACCEPTEDMCC")
-                                    .amount(BigDecimal.valueOf(60_00))
+                                    .amountCents(60_00L)
+                                    .amount(BigDecimal.valueOf(60))
                                     .build(),
                             INITIATIVE_ID_MCC_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_MCC_BASED, false, 1, 60, 0, false)
             ),
-            // rewarded by TrxCount based initiative
+            // rewarded by TrxCount based initiative (to proof the amountCents rewrite logic)
             Pair.of(
                     i -> {
-                        BigDecimal amount = TestUtils.bigDecimalValue(70_00);
                         final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
-                                .amount(amount)
+                                .amountCents(70_00L)
+                                .amount(BigDecimal.ZERO)
                                 .build();
                         saveUserInitiativeCounter(trx, InitiativeCounters.builder()
                                 .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
@@ -670,8 +673,14 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     }
 
     private void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
+        BigDecimal amountEuro;
+        if(trx.getAmountCents()!=null){
+            amountEuro=Utils.centsToEuro(trx.getAmountCents());
+        } else {
+            amountEuro=Utils.centsToEuro(trx.getAmount().longValue());
+        }
         counters.setTrxNumber(counters.getTrxNumber() + 1);
-        counters.setTotalAmount(counters.getTotalAmount().add(trx.getAmount().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN)));
+        counters.setTotalAmount(counters.getTotalAmount().add(amountEuro));
         counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
     //endregion
@@ -732,7 +741,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 .userId(failingRewardPublishingUserId)
                 .build();
         TransactionDTO expectedFailingRewardPublishing = failingRewardPublishing.toBuilder()
-                .amount(failingRewardPublishing.getAmount().divide(BigDecimal.valueOf(100),2,RoundingMode.HALF_DOWN))
+                .amount(Utils.centsToEuro(failingRewardPublishing.getAmount().longValue()))
+                .amountCents(failingRewardPublishing.getAmount().longValue())
                 .build();
         errorUseCases.add(Pair.of(
                 () -> {
@@ -749,7 +759,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 .amount(BigDecimal.valueOf(88_00))
                 .build();
         TransactionDTO expectedExceptionWhenRewardPublish = exceptionWhenRewardPublish.toBuilder()
-                .amount(exceptionWhenRewardPublish.getAmount().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN))
+                .amount(Utils.centsToEuro(exceptionWhenRewardPublish.getAmount().longValue()))
+                .amountCents(exceptionWhenRewardPublish.getAmount().longValue())
                 .build();
         errorUseCases.add(Pair.of(
                 () -> {

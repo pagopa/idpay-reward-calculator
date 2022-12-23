@@ -69,6 +69,7 @@ public class TransactionDTO {
     private OperationType operationTypeTranscoded;
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
+    private Long amountCents;
     private BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
