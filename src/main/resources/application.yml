@@ -3,7 +3,8 @@ server:
 
 spring:
   application:
-    name: idpay-reward-calculator
+    name: "@project.artifactId@"
+    version: "@project.version@"
   jmx.enabled: true
   config:
     activate:
@@ -195,6 +196,10 @@ spring:
   redis:
     enabled: ${REDIS_CACHE_ENABLED:false}
     url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}
+
+management.endpoints:
+  web:
+    exposure.include: info, health
 
 logging:
   level:
