@@ -406,10 +406,11 @@ public abstract class BaseIntegrationTest {
     }
 
     protected String normalizePayload(String expectedPayload) {
-        return removeElaborationDateTime(expectedPayload);
+        String temp = removeDateTimeField(expectedPayload, "elaborationDateTime");
+        return removeDateTimeField(temp,"timestamp");
     }
 
-    private String removeElaborationDateTime(String payload){
-        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
+    private String removeDateTimeField(String payload, String fieldName){
+        return payload.replaceAll("(\""+fieldName+"\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
     }
 }
