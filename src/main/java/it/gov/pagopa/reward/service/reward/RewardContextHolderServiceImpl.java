@@ -88,6 +88,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
 
     private Mono<KieBase> refreshKieContainerCacheMiss() {
         log.trace("Refreshing KieContainer");
+        initiativeId2Config.clear();
         final Flux<DroolsRule> droolsRuleFlux = droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig()));
         return kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieBase);
     }
