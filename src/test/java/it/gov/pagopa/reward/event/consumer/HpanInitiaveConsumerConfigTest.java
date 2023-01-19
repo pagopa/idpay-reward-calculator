@@ -32,7 +32,6 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -343,7 +342,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                             .hpanList(new ArrayList<>())
                             .rejectedHpanList(List.of(infoFailingHpanUpdatePublishing.getHpan()))
                             .operationType(hpanBulkErrorPublishedNotPaymentManagerChannel.getOperationType())
-                            .timestamp(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L))
+                            .timestamp(LocalDateTime.now())
                             .build();
                     checkErrorMessageHeaders(topicHpanUpdateOutcome,null, errorMessage,"[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome",TestUtils.jsonSerializer(expectedFailingHpanUpdateOutcomePublishing),null,false,false);
                 }
@@ -374,7 +373,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                             .hpanList(new ArrayList<>())
                             .rejectedHpanList(List.of(infoFailingExceptionHpanUpdatePublishing.getHpan()))
                             .operationType(hpanBulkErrorPublishedExceptionNotPaymentManagerChannel.getOperationType())
-                            .timestamp(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L))
+                            .timestamp(LocalDateTime.now())
                             .build();
                     checkErrorMessageHeaders(topicHpanUpdateOutcome,null, errorMessage,"[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome",TestUtils.jsonSerializer(expectedFailingHpanUpdateOutcomePublishing),null,false,false);
                 }

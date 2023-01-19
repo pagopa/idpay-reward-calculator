@@ -163,6 +163,47 @@ class DeleteHpanServiceImplTest {
     }
 
     @Test
+    void deleteHpanOpenToday(){
+        // Given
+        int bias = 1;
+        LocalDateTime time = LocalDateTime.now();
+        LocalDateTime timeStartInterval = time.minusMinutes(5L);
+
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(bias);
+
+        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .activeTimeIntervals(new ArrayList<>())
+                .build();
+        ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(timeStartInterval).build();
+        onboardedInitiative.getActiveTimeIntervals().add(interval1);
+
+        List<OnboardedInitiative> onboardedInitiativeList = new ArrayList<>();
+        onboardedInitiativeList.add(onboardedInitiative);
+        hpanInitiatives.setOnboardedInitiatives(onboardedInitiativeList);
+
+
+        HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = new HpanUpdateEvaluateDTO();
+        hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
+        hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
+        hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
+        hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
+        hpanUpdateEvaluateDTO.setEvaluationDate(time);
+        hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
+
+        // When
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.getActiveTimeIntervals().size());
+        ActiveTimeInterval activeTimeInterval = result.getActiveTimeIntervals().get(0);
+        Assertions.assertEquals(timeStartInterval,activeTimeInterval.getStartInterval());
+        Assertions.assertEquals(time,activeTimeInterval.getEndInterval());
+    }
+
+    @Test
     void hpanNull() {
         // Given
         HpanInitiatives hpanInitiatives = HpanInitiatives.builder().userId("USERID").build();

@@ -95,7 +95,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message, Map<String, Object> ctx) {
-        LocalDateTime evaluationDate = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
+        LocalDateTime evaluationDate = LocalDateTime.now();
         return Mono.just(payload)
                 .flatMapMany(bulk -> this.evaluate(bulk,evaluationDate))
                 .collectList()
