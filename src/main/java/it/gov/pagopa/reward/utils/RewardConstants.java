@@ -44,6 +44,7 @@ public final class RewardConstants {
     //endregion
 
     //region reward evaluation rejection reasons
+    public static final String TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID = "DUPLICATE_CORRELATION_ID";
     public static final String TRX_REJECTION_REASON_NO_INITIATIVE = "NO_ACTIVE_INITIATIVES";
     public static final String TRX_REJECTION_REASON_INVALID_OPERATION_TYPE = "INVALID_OPERATION_TYPE";
     public static final String TRX_REJECTION_REASON_INVALID_AMOUNT = "INVALID_AMOUNT";

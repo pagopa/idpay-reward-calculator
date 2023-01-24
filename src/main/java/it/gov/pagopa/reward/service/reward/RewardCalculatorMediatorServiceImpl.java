@@ -148,7 +148,9 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
                     .flatMap(initiatives -> initiativesEvaluatorFacadeService.evaluate(trx, initiatives));
         } else {
             log.trace("[REWARD] [REWARD_KO] Transaction discarded: {} - {}", trx.getId(), trx.getRejectionReasons());
-            return Mono.just(rewardTransactionMapper.apply(trx));
+            RewardTransactionDTO rejectedTrx = rewardTransactionMapper.apply(trx);
+            return transactionProcessedService.save(rejectedTrx)
+                    .then(Mono.just(rejectedTrx));
         }
     }
 

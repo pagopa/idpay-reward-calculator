@@ -5,4 +5,8 @@ import reactor.core.publisher.Mono;
 
 public interface OperationTypeHandlerService {
     Mono<TransactionDTO> handleOperationType(TransactionDTO transactionDTO);
+
+    boolean isChargeOperation(TransactionDTO transactionDTO);
+
+    boolean isRefundOperation(TransactionDTO transactionDTO);
 }

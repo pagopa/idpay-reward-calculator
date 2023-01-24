@@ -1,13 +1,12 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
@@ -42,11 +41,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
     }
 
     private Mono<TransactionDTO> handleRefund(TransactionDTO trx) {
-        TransactionProcessed query = TransactionProcessed.builder()
-                .acquirerId(trx.getAcquirerId())
-                .correlationId(trx.getCorrelationId())
-                .build();
-        return transactionProcessedRepository.findAll(Example.of(query))
+        return transactionProcessedRepository.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())
                 .collectList()
                 .map(pastTrxs -> evaluatePastTransactions(trx, pastTrxs));
     }

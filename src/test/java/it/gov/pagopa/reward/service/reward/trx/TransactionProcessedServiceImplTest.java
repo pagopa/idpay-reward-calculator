@@ -20,7 +20,7 @@ class TransactionProcessedServiceImplTest {
     void checkDuplicateTransactionsOk() {
         // Given
         TransactionProcessedRepository transactionProcessedRepositoryMock = Mockito.mock(TransactionProcessedRepository.class);
-        TransactionProcessedService transactionProcessedService = new TransactionProcessedServiceImpl(new Transaction2TransactionProcessedMapper(), transactionProcessedRepositoryMock);
+        TransactionProcessedService transactionProcessedService = new TransactionProcessedServiceImpl(operationTypeHandlerService, new Transaction2TransactionProcessedMapper(), transactionProcessedRepositoryMock, trxNotifierService);
 
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 
@@ -37,7 +37,7 @@ class TransactionProcessedServiceImplTest {
     void checkDuplicateTransactionsKo() {
         // Given
         TransactionProcessedRepository transactionProcessedRepositoryMock = Mockito.mock(TransactionProcessedRepository.class);
-        TransactionProcessedService transactionProcessedService = new TransactionProcessedServiceImpl(new Transaction2TransactionProcessedMapper(), transactionProcessedRepositoryMock);
+        TransactionProcessedService transactionProcessedService = new TransactionProcessedServiceImpl(operationTypeHandlerService, new Transaction2TransactionProcessedMapper(), transactionProcessedRepositoryMock, trxNotifierService);
 
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 

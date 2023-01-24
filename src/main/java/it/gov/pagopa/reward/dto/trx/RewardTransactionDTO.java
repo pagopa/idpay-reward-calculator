@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.trx;
 
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -14,7 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class RewardTransactionDTO extends TransactionDTO {
+public class RewardTransactionDTO extends TransactionDTO implements BaseTransactionProcessed {
 
     private String status;
 
