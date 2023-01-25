@@ -1,9 +1,11 @@
 package it.gov.pagopa.reward.model;
 
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.List;
 import java.util.Map;
@@ -26,4 +28,8 @@ public interface BaseTransactionProcessed {
     List<String> getRejectionReasons();
     Map<String, List<String>> getInitiativeRejectionReasons();
 
+    Map<String, Reward> getRewards();
+
+    LocalDateTime getElaborationDateTime();
+    void setElaborationDateTime(LocalDateTime elaborationDateTime);
 }

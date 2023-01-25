@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.TransactionProcessed;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.service.reward.TrxNotifierService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
@@ -44,7 +44,7 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
         } else {
             return transactionProcessedRepository.findById(trx.getId())
                     .flatMap(result -> {
-                        if(!isChargeOperation && result.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH)){
+                        if(!isChargeOperation && isRefundNotMatchRejection(result)){
                             log.info("[REWARD][REFUND_RECOVER] Retrieved recovered refund {}", result.getId());
                             return Mono.empty();
                         } else {
@@ -58,8 +58,12 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
         }
     }
 
-    private Mono<TransactionDTO> checkCorrelatedTransactions(TransactionDTO trx, List<TransactionProcessed> trxs) {
-        for (TransactionProcessed t : trxs) {
+    private static boolean isRefundNotMatchRejection(BaseTransactionProcessed result) {
+        return result.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH);
+    }
+
+    private Mono<TransactionDTO> checkCorrelatedTransactions(TransactionDTO trx, List<BaseTransactionProcessed> trxs) {
+        for (BaseTransactionProcessed t : trxs) {
             if (trx.getId().equals(t.getId())) {
                 log.info("[REWARD][DUPLICATE_TRX] Already processed transaction found searching by acquirerId and correlationId {}: acquirerId: {}; correlationId: {}", trx.getId(), trx.getAcquirerId(), trx.getCorrelationId());
                 return Mono.empty();
@@ -71,9 +75,9 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
             }
         }
 
-        for (TransactionProcessed r : trxs) {
+        for (BaseTransactionProcessed r : trxs) {
             log.info("[REWARD][REFUND_RECOVER] Recovering refund related to current trx; trx id {}; refund id {}; acquirerId: {}; correlationId: {}", trx.getId(), r.getId(), trx.getAcquirerId(), trx.getCorrelationId());
-            if(!trxNotifierService.notify(r)){
+            if(r instanceof RewardTransactionDTO refundDiscarded && !trxNotifierService.notify(refundDiscarded)){
                 return Mono.error(new IllegalStateException("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId %s refundId %s".formatted(trx.getId(), r.getId())));
             }
         }
@@ -82,10 +86,14 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     }
 
     @Override
-    public Mono<TransactionProcessed> save(RewardTransactionDTO trx) {
-        //TODO if refund not match, store the entire payload
-        TransactionProcessed trxProcessed = transaction2TransactionProcessedMapper.apply(trx);
-        trxProcessed.setTimestamp(LocalDateTime.now());
+    public Mono<BaseTransactionProcessed> save(RewardTransactionDTO trx) {
+        BaseTransactionProcessed trxProcessed;
+        if(OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) && isRefundNotMatchRejection(trx)){
+            trxProcessed = trx;
+        } else {
+            trxProcessed = transaction2TransactionProcessedMapper.apply(trx);
+        }
+        trxProcessed.setElaborationDateTime(LocalDateTime.now());
         return transactionProcessedRepository.save(trxProcessed);
     }
 }

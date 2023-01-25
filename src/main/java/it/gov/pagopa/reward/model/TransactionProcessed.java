@@ -23,7 +23,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder
 @Document(collection = "transactions_processed")
-public class TransactionProcessed {
+public class TransactionProcessed implements BaseTransactionProcessed {
     @Id
     private String id;
 
@@ -56,6 +56,6 @@ public class TransactionProcessed {
     private LocalDateTime trxChargeDate;
     private OperationType operationTypeTranscoded;
 
-    private LocalDateTime timestamp;
+    private LocalDateTime elaborationDateTime;
 }
 

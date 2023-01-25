@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.dto.trx;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.Map;
 @NoArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
+@Document(collection = "transactions_processed")
 public class RewardTransactionDTO extends TransactionDTO implements BaseTransactionProcessed {
 
     private String status;
