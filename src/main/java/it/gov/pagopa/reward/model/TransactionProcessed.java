@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** A transaction that has been elaborated */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -47,6 +48,8 @@ public class TransactionProcessed implements BaseTransactionProcessed {
 
     private Map<String, Reward> rewards;
     private String status;
+
+    @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
     private Map<String, List<String>> initiativeRejectionReasons;
 

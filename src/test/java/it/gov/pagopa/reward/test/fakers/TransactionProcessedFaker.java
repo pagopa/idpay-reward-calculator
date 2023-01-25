@@ -69,6 +69,7 @@ public class TransactionProcessedFaker {
                 .amountCents(amountEuro.longValue()*100)
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
-                .rewards(rewards);
+                .rewards(rewards)
+                .elaborationDateTime(LocalDateTime.now());
     }
 }

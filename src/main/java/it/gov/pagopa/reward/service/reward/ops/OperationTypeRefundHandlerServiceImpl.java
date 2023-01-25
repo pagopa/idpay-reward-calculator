@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,20 +52,29 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
     private TransactionDTO evaluatePastTransactions(TransactionDTO trx, List<BaseTransactionProcessed> pastTrxs) {
         log.trace("[REWARD] Retrieved correlated trxs {} {}", pastTrxs.size(), trx.getId());
 
-        BaseTransactionProcessed trxCharge = null;
+        TransactionProcessed trxCharge = null;
         BigDecimal effectiveAmount = trx.getAmount().negate();
         Map<String, RefundInfo.PreviousReward> pastRewards = new HashMap<>();
 
+        List<TransactionProcessed> pastElabTrxs = null;
+
         if (!pastTrxs.isEmpty()) {
+            pastElabTrxs = new ArrayList<>(pastTrxs.size());
+
             for (BaseTransactionProcessed pt : pastTrxs) {
-                if (pt.getOperationTypeTranscoded().equals(OperationType.CHARGE)) {
-                    trxCharge = pt;
-                    effectiveAmount = effectiveAmount.add(pt.getAmount());
-                } else {
-                    effectiveAmount = effectiveAmount.subtract(pt.getAmount());
+                if(pt instanceof TransactionProcessed pastProcessed) {
+                    if (pastProcessed.getOperationTypeTranscoded().equals(OperationType.CHARGE)) {
+                        trxCharge = pastProcessed;
+                        effectiveAmount = effectiveAmount.add(pastProcessed.getAmount());
+                    } else {
+                        effectiveAmount = effectiveAmount.subtract(pastProcessed.getAmount());
+                    }
+
+                    reduceRewards(pastRewards, pastProcessed);
+
+                    pastElabTrxs.add(pastProcessed);
                 }
 
-                reduceRewards(pastRewards, pt);
             }
         }
 
@@ -73,21 +84,16 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
             trx.setTrxChargeDate(readChargeDate(trxCharge));
             trx.setEffectiveAmount(effectiveAmount);
             trx.setRefundInfo(new RefundInfo());
-            trx.getRefundInfo().setPreviousTrxs(pastTrxs);
+            trx.getRefundInfo().setPreviousTrxs(pastElabTrxs);
             trx.getRefundInfo().setPreviousRewards(pastRewards);
         }
 
         return trx;
     }
 
-    private static OffsetDateTime readChargeDate(BaseTransactionProcessed trxCharge) {
-        if(trxCharge.getTrxChargeDate() instanceof LocalDateTime trxChargeLocalDateTime){
-            return OffsetDateTime.of(trxChargeLocalDateTime, RewardConstants.ZONEID.getRules().getOffset(trxChargeLocalDateTime));
-        } else if(trxCharge.getTrxChargeDate() instanceof OffsetDateTime trxChargeOffsetDateTime){
-            return trxChargeOffsetDateTime;
-        } else {
-            throw new IllegalStateException("Unsupported chargeDate type stored class %s for trx havingId %s".formatted(trxCharge.getTrxChargeDate().getClass(), trxCharge.getId()));
-        }
+    private static OffsetDateTime readChargeDate(TransactionProcessed trxCharge) {
+        LocalDateTime trxChargeLocalDateTime = trxCharge.getTrxChargeDate();
+        return OffsetDateTime.of(trxChargeLocalDateTime, RewardConstants.ZONEID.getRules().getOffset(trxChargeLocalDateTime));
     }
 
     private void reduceRewards(Map<String, RefundInfo.PreviousReward> pastRewards, BaseTransactionProcessed pt) {

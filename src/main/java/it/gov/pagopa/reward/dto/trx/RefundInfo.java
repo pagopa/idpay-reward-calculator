@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.trx;
 
-import it.gov.pagopa.reward.model.BaseTransactionProcessed;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder
 public class RefundInfo {
-    private List<BaseTransactionProcessed> previousTrxs;
+    private List<TransactionProcessed> previousTrxs;
     private Map<String, PreviousReward> previousRewards;
 
     @Data @AllArgsConstructor @NoArgsConstructor

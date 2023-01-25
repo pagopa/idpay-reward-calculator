@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** When stored into mongo, it will represent a transaction that has NOT been elaborated */
 @Data
 @ToString(callSuper = true)
 @AllArgsConstructor

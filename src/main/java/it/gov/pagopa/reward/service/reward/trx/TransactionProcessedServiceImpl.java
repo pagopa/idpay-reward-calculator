@@ -63,16 +63,21 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     }
 
     private Mono<TransactionDTO> checkCorrelatedTransactions(TransactionDTO trx, List<BaseTransactionProcessed> trxs) {
+        boolean foundCorrelated = false;
         for (BaseTransactionProcessed t : trxs) {
             if (trx.getId().equals(t.getId())) {
                 log.info("[REWARD][DUPLICATE_TRX] Already processed transaction found searching by acquirerId and correlationId {}: acquirerId: {}; correlationId: {}", trx.getId(), trx.getAcquirerId(), trx.getCorrelationId());
                 return Mono.empty();
-            } else if(OperationType.CHARGE.equals(t.getOperationTypeTranscoded())){
+            } else if(!foundCorrelated && OperationType.CHARGE.equals(t.getOperationTypeTranscoded())){
                 log.info("[REWARD][DUPLICATE_CORRELATIONID] Found an other CHARGE transaction having same acquirerId and correlationId trx id {} retrieved id {}: acquirerId: {}; correlationId: {}", trx.getId(), t.getId(), trx.getAcquirerId(), trx.getCorrelationId());
                 trx.getRejectionReasons()
                         .add(RewardConstants.TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID);
-                return Mono.just(trx);
+                foundCorrelated=true; // not exiting immediately in order to give precedence to the duplicate check
             }
+        }
+
+        if(foundCorrelated){
+            return Mono.just(trx);
         }
 
         for (BaseTransactionProcessed r : trxs) {
@@ -88,12 +93,17 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     @Override
     public Mono<BaseTransactionProcessed> save(RewardTransactionDTO trx) {
         BaseTransactionProcessed trxProcessed;
-        if(OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) && isRefundNotMatchRejection(trx)){
+        if(isNotElaboratedTransaction(trx)){
             trxProcessed = trx;
         } else {
             trxProcessed = transaction2TransactionProcessedMapper.apply(trx);
         }
         trxProcessed.setElaborationDateTime(LocalDateTime.now());
         return transactionProcessedRepository.save(trxProcessed);
+    }
+
+    private static boolean isNotElaboratedTransaction(RewardTransactionDTO trx) {
+        return (OperationType.REFUND.equals(trx.getOperationTypeTranscoded()) && isRefundNotMatchRejection(trx))
+                || trx.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID);
     }
 }
