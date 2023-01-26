@@ -45,7 +45,7 @@ spring:
         trxResubmitter-out-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-idpay-splitter
+          binder: kafka-idpay-splitter-producer
         # TODO remove me
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
@@ -59,6 +59,13 @@ spring:
               brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
               configuration:
                 sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG:}
+        kafka-idpay-splitter-producer:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_PRODUCER_SASL_JAAS_CONFIG:}
                 key.serializer: org.apache.kafka.common.serialization.StringSerializer
         kafka-idpay:
           type: kafka
