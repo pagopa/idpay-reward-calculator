@@ -81,6 +81,9 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
         }
 
         for (BaseTransactionProcessed r : trxs) {
+            // At this point, the trxs could be just REFUND of type RewardTransactionDTO:
+            // *  Without CHARGE operation, they couldn't be TransactionProcessed
+            // *  If there could be a TransactionProcessed, it should be a CHARGE, but this case would bring to have found a duplicate or foundDuplicateCorrelation=true, thus exiting before
             log.info("[REWARD][REFUND_RECOVER] Recovering refund related to current trx; trx id {}; refund id {}; acquirerId: {}; correlationId: {}", trx.getId(), r.getId(), trx.getAcquirerId(), trx.getCorrelationId());
             if (r instanceof RewardTransactionDTO refundDiscarded && !trxRePublisherService.notify(refundDiscarded)) {
                 return Mono.error(new IllegalStateException("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId %s refundId %s".formatted(trx.getId(), r.getId())));

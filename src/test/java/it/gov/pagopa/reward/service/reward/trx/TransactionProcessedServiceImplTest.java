@@ -209,6 +209,7 @@ class TransactionProcessedServiceImplTest {
     private RewardTransactionDTO buildDiscardedCorrelatedRefund(TransactionDTO trx, int bias) {
         TransactionDTO refund = TransactionDTOFaker.mockInstance(bias);
         refund.setOperationType("01");
+        refund.setOperationTypeTranscoded(OperationType.REFUND);
         refund.setAcquirerId(trx.getAcquirerId());
         refund.setCorrelationId(trx.getCorrelationId());
         refund.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
