@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.service.reward.TrxNotifierService;
+import it.gov.pagopa.reward.service.reward.TrxRePublisherService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,13 +24,13 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     private final OperationTypeHandlerService operationTypeHandlerService;
     private final Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper;
     private final TransactionProcessedRepository transactionProcessedRepository;
-    private final TrxNotifierService trxNotifierService;
+    private final TrxRePublisherService trxRePublisherService;
 
-    public TransactionProcessedServiceImpl(OperationTypeHandlerService operationTypeHandlerService, Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper, TransactionProcessedRepository transactionProcessedRepository, TrxNotifierService trxNotifierService) {
+    public TransactionProcessedServiceImpl(OperationTypeHandlerService operationTypeHandlerService, Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper, TransactionProcessedRepository transactionProcessedRepository, TrxRePublisherService trxRePublisherService) {
         this.operationTypeHandlerService = operationTypeHandlerService;
         this.transaction2TransactionProcessedMapper = transaction2TransactionProcessedMapper;
         this.transactionProcessedRepository = transactionProcessedRepository;
-        this.trxNotifierService = trxNotifierService;
+        this.trxRePublisherService = trxRePublisherService;
     }
 
     @Override
@@ -83,13 +82,8 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
 
         for (BaseTransactionProcessed r : trxs) {
             log.info("[REWARD][REFUND_RECOVER] Recovering refund related to current trx; trx id {}; refund id {}; acquirerId: {}; correlationId: {}", trx.getId(), r.getId(), trx.getAcquirerId(), trx.getCorrelationId());
-            if (r instanceof RewardTransactionDTO refundDiscarded) {
-                refundDiscarded.setStatus(null);
-                refundDiscarded.setEffectiveAmount(null);
-                refundDiscarded.setRejectionReasons(new ArrayList<>());
-                if (!trxNotifierService.notify(refundDiscarded)) {
-                    return Mono.error(new IllegalStateException("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId %s refundId %s".formatted(trx.getId(), r.getId())));
-                }
+            if (r instanceof RewardTransactionDTO refundDiscarded && !trxRePublisherService.notify(refundDiscarded)) {
+                return Mono.error(new IllegalStateException("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId %s refundId %s".formatted(trx.getId(), r.getId())));
             }
         }
 

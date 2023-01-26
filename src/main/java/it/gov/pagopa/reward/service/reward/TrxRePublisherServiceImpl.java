@@ -7,19 +7,28 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
-public class TrxNotifierServiceImpl implements TrxNotifierService {
+public class TrxRePublisherServiceImpl implements TrxRePublisherService {
 
     private final StreamBridge streamBridge;
 
-    public TrxNotifierServiceImpl(StreamBridge streamBridge) {
+    public TrxRePublisherServiceImpl(StreamBridge streamBridge) {
         this.streamBridge = streamBridge;
     }
 
     @Override
     public boolean notify(TransactionDTO trx) {
+        clearStatus(trx);
         return streamBridge.send("trxResubmitter-out-0",
                buildMessage(trx));
+    }
+
+    private void clearStatus(TransactionDTO trx) {
+        trx.setEffectiveAmount(null);
+        trx.setRejectionReasons(new ArrayList<>());
+        trx.setRefundInfo(null);
     }
 
     public static Message<TransactionDTO> buildMessage(TransactionDTO trx){

@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.service.reward.TrxNotifierService;
+import it.gov.pagopa.reward.service.reward.TrxRePublisherService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
@@ -24,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +34,7 @@ class TransactionProcessedServiceImplTest {
     @Mock
     private TransactionProcessedRepository transactionProcessedRepositoryMock;
     @Mock
-    private TrxNotifierService trxNotifierServiceMock;
+    private TrxRePublisherService trxRePublisherServiceMock;
 
     private TransactionProcessedService service;
 
@@ -44,14 +43,14 @@ class TransactionProcessedServiceImplTest {
 
     @BeforeEach
     void init() {
-        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxNotifierServiceMock);
+        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock);
 
         Mockito.lenient().when(operationTypeHandlerServiceMock.isChargeOperation(Mockito.any())).thenAnswer(i -> i.getArgument(0, TransactionDTO.class).getOperationType().equals("00"));
     }
 
     @AfterEach
     void checkMock() {
-        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, transactionProcessedRepositoryMock, trxNotifierServiceMock);
+        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, transactionProcessedRepositoryMock, trxRePublisherServiceMock);
     }
 
     // region checkDuplicateTransactions based on findById search
@@ -164,7 +163,7 @@ class TransactionProcessedServiceImplTest {
                         .findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.just(correlatedRefund1, correlatedRefund2));
 
-        Mockito.when(trxNotifierServiceMock.notify(Mockito.any())).thenReturn(true);
+        Mockito.when(trxRePublisherServiceMock.notify(Mockito.any())).thenReturn(true);
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();
@@ -172,12 +171,9 @@ class TransactionProcessedServiceImplTest {
         // Then
         Assertions.assertSame(trx, result);
 
-        Mockito.verify(trxNotifierServiceMock).notify(Mockito.same(correlatedRefund1));
-        Mockito.verify(trxNotifierServiceMock).notify(Mockito.same(correlatedRefund2));
+        Mockito.verify(trxRePublisherServiceMock).notify(Mockito.same(correlatedRefund1));
+        Mockito.verify(trxRePublisherServiceMock).notify(Mockito.same(correlatedRefund2));
         Mockito.verify(operationTypeHandlerServiceMock).isChargeOperation(Mockito.any());
-
-        assertRefundRecoveredBody(correlatedRefund1);
-        assertRefundRecoveredBody(correlatedRefund2);
     }
 
     @Test
@@ -192,7 +188,7 @@ class TransactionProcessedServiceImplTest {
                         .findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.just(correlatedRefund1, correlatedRefund2));
 
-        Mockito.when(trxNotifierServiceMock.notify(Mockito.same(correlatedRefund1))).thenReturn(false);
+        Mockito.when(trxRePublisherServiceMock.notify(Mockito.same(correlatedRefund1))).thenReturn(false);
 
         // When
         Mono<TransactionDTO> mono = service.checkDuplicateTransactions(trx);
@@ -205,19 +201,9 @@ class TransactionProcessedServiceImplTest {
             Assertions.assertTrue(e.getMessage().startsWith("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId IDTRXACQUIRER1ACQUIRERCODE12"), "Unexpected exception message: %s".formatted(e.getMessage()));
         }
 
-        Mockito.verify(trxNotifierServiceMock).notify(Mockito.same(correlatedRefund1));
-        Mockito.verify(trxNotifierServiceMock, Mockito.never()).notify(Mockito.same(correlatedRefund2));
+        Mockito.verify(trxRePublisherServiceMock).notify(Mockito.same(correlatedRefund1));
+        Mockito.verify(trxRePublisherServiceMock, Mockito.never()).notify(Mockito.same(correlatedRefund2));
         Mockito.verify(operationTypeHandlerServiceMock).isChargeOperation(Mockito.any());
-
-        assertRefundRecoveredBody(correlatedRefund1);
-
-        Assertions.assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH), correlatedRefund2.getRejectionReasons());
-    }
-
-    private static void assertRefundRecoveredBody(RewardTransactionDTO correlatedRefund) {
-        Assertions.assertEquals(Collections.emptyList(), correlatedRefund.getRejectionReasons());
-        Assertions.assertNull(correlatedRefund.getStatus());
-        Assertions.assertNull(correlatedRefund.getEffectiveAmount());
     }
 
     private RewardTransactionDTO buildDiscardedCorrelatedRefund(TransactionDTO trx, int bias) {
