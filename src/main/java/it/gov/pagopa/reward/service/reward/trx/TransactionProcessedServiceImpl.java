@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -63,27 +64,32 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     }
 
     private Mono<TransactionDTO> checkCorrelatedTransactions(TransactionDTO trx, List<BaseTransactionProcessed> trxs) {
-        boolean foundCorrelated = false;
+        boolean foundDuplicateCorrelation = false;
         for (BaseTransactionProcessed t : trxs) {
             if (trx.getId().equals(t.getId())) {
                 log.info("[REWARD][DUPLICATE_TRX] Already processed transaction found searching by acquirerId and correlationId {}: acquirerId: {}; correlationId: {}", trx.getId(), trx.getAcquirerId(), trx.getCorrelationId());
                 return Mono.empty();
-            } else if(!foundCorrelated && OperationType.CHARGE.equals(t.getOperationTypeTranscoded())){
+            } else if(!foundDuplicateCorrelation && OperationType.CHARGE.equals(t.getOperationTypeTranscoded())){
                 log.info("[REWARD][DUPLICATE_CORRELATIONID] Found an other CHARGE transaction having same acquirerId and correlationId trx id {} retrieved id {}: acquirerId: {}; correlationId: {}", trx.getId(), t.getId(), trx.getAcquirerId(), trx.getCorrelationId());
                 trx.getRejectionReasons()
                         .add(RewardConstants.TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID);
-                foundCorrelated=true; // not exiting immediately in order to give precedence to the duplicate check
+                foundDuplicateCorrelation=true; // not exiting immediately in order to give precedence to the duplicate check
             }
         }
 
-        if(foundCorrelated){
+        if(foundDuplicateCorrelation){
             return Mono.just(trx);
         }
 
         for (BaseTransactionProcessed r : trxs) {
             log.info("[REWARD][REFUND_RECOVER] Recovering refund related to current trx; trx id {}; refund id {}; acquirerId: {}; correlationId: {}", trx.getId(), r.getId(), trx.getAcquirerId(), trx.getCorrelationId());
-            if(r instanceof RewardTransactionDTO refundDiscarded && !trxNotifierService.notify(refundDiscarded)){
-                return Mono.error(new IllegalStateException("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId %s refundId %s".formatted(trx.getId(), r.getId())));
+            if (r instanceof RewardTransactionDTO refundDiscarded) {
+                refundDiscarded.setStatus(null);
+                refundDiscarded.setEffectiveAmount(null);
+                refundDiscarded.setRejectionReasons(new ArrayList<>());
+                if (!trxNotifierService.notify(refundDiscarded)) {
+                    return Mono.error(new IllegalStateException("[REWARD][REFUND_RECOVER] Something gone wrong while recovering previous refund; trxId %s refundId %s".formatted(trx.getId(), r.getId())));
+                }
             }
         }
 

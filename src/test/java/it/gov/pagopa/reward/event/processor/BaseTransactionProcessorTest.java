@@ -121,10 +121,12 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 .build()).block();
     }
 
+    /** To assert rewarded charge transactions */
     protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
         assertRewardedState(evaluation, 1, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, false, false);
     }
-    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
+    /** To assert rewarded refunds (also negative is a refund) */
+    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedDifferentAccrued, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
         Assertions.assertFalse(evaluation.getRewards().isEmpty());
@@ -136,7 +138,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         Assertions.assertEquals(rewardedInitiativeId, initiativeReward.getInitiativeId());
         Assertions.assertEquals("ORGANIZATIONID_" + rewardedInitiativeId, initiativeReward.getOrganizationId());
         TestUtils.assertBigDecimalEquals(expectedReward, initiativeReward.getAccruedReward());
-        if (!expectedCap) {
+        if (!expectedDifferentAccrued) {
             TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
         } else {
             Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())>0);
@@ -156,6 +158,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         Assertions.assertEquals(isCompleteRefund, initiativeReward.isCompleteRefund());
     }
 
+    /** Valid trx, processed by the ruleEngine, but which has been discarded by the initiative configuration */
     protected void assertRejectedState(RewardTransactionDTO evaluation, String initiativeId, List<String> expectedRejectionReasons, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         boolean expectedZeroReward = expectedRejectionReasons == null;
@@ -176,6 +179,15 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
             checkInitiativeRewardCounters(expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, isRefund, isCompleteRefund, initiativeReward);
         }
+    }
+
+    /** assert on rejected trx (which has skipped the ruleEngine) */
+    protected void assertRejectedTrx(RewardTransactionDTO evaluation, List<String> expectedRejectionReasons) {
+        Assertions.assertEquals(expectedRejectionReasons, evaluation.getRejectionReasons());
+
+        Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
+        Assertions.assertEquals("REJECTED", evaluation.getStatus());
+        Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
     }
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){

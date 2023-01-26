@@ -62,6 +62,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
             pastElabTrxs = new ArrayList<>(pastTrxs.size());
 
             for (BaseTransactionProcessed pt : pastTrxs) {
+                // Considering only processed transactions
                 if(pt instanceof TransactionProcessed pastProcessed) {
                     if (pastProcessed.getOperationTypeTranscoded().equals(OperationType.CHARGE)) {
                         trxCharge = pastProcessed;
