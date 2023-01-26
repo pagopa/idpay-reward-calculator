@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -119,9 +120,8 @@ class TransactionProcessedServiceImplTest {
         TransactionDTO refund = TransactionDTOFaker.mockInstance(1);
         refund.setOperationType("01");
 
-        RewardTransactionDTO previousRejected = buildCorrelatedRefund(refund, 3);
+        RewardTransactionDTO previousRejected = buildDiscardedCorrelatedRefund(refund, 3);
         previousRejected.setId(refund.getId());
-        previousRejected.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH);
 
         Mockito.when(transactionProcessedRepositoryMock
                         .findById(refund.getId()))
@@ -157,8 +157,8 @@ class TransactionProcessedServiceImplTest {
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 
-        RewardTransactionDTO correlatedRefund1 = buildCorrelatedRefund(trx, 2);
-        RewardTransactionDTO correlatedRefund2 = buildCorrelatedRefund(trx, 3);
+        RewardTransactionDTO correlatedRefund1 = buildDiscardedCorrelatedRefund(trx, 2);
+        RewardTransactionDTO correlatedRefund2 = buildDiscardedCorrelatedRefund(trx, 3);
 
         Mockito.when(transactionProcessedRepositoryMock
                         .findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
@@ -175,6 +175,9 @@ class TransactionProcessedServiceImplTest {
         Mockito.verify(trxNotifierServiceMock).notify(Mockito.same(correlatedRefund1));
         Mockito.verify(trxNotifierServiceMock).notify(Mockito.same(correlatedRefund2));
         Mockito.verify(operationTypeHandlerServiceMock).isChargeOperation(Mockito.any());
+
+        assertRefundRecoveredBody(correlatedRefund1);
+        assertRefundRecoveredBody(correlatedRefund2);
     }
 
     @Test
@@ -182,8 +185,8 @@ class TransactionProcessedServiceImplTest {
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 
-        RewardTransactionDTO correlatedRefund1 = buildCorrelatedRefund(trx, 2);
-        RewardTransactionDTO correlatedRefund2 = buildCorrelatedRefund(trx, 3);
+        RewardTransactionDTO correlatedRefund1 = buildDiscardedCorrelatedRefund(trx, 2);
+        RewardTransactionDTO correlatedRefund2 = buildDiscardedCorrelatedRefund(trx, 3);
 
         Mockito.when(transactionProcessedRepositoryMock
                         .findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
@@ -205,13 +208,25 @@ class TransactionProcessedServiceImplTest {
         Mockito.verify(trxNotifierServiceMock).notify(Mockito.same(correlatedRefund1));
         Mockito.verify(trxNotifierServiceMock, Mockito.never()).notify(Mockito.same(correlatedRefund2));
         Mockito.verify(operationTypeHandlerServiceMock).isChargeOperation(Mockito.any());
+
+        assertRefundRecoveredBody(correlatedRefund1);
+
+        Assertions.assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH), correlatedRefund2.getRejectionReasons());
     }
 
-    private RewardTransactionDTO buildCorrelatedRefund(TransactionDTO trx, int bias) {
+    private static void assertRefundRecoveredBody(RewardTransactionDTO correlatedRefund) {
+        Assertions.assertEquals(Collections.emptyList(), correlatedRefund.getRejectionReasons());
+        Assertions.assertNull(correlatedRefund.getStatus());
+        Assertions.assertNull(correlatedRefund.getEffectiveAmount());
+    }
+
+    private RewardTransactionDTO buildDiscardedCorrelatedRefund(TransactionDTO trx, int bias) {
         TransactionDTO refund = TransactionDTOFaker.mockInstance(bias);
         refund.setOperationType("01");
         refund.setAcquirerId(trx.getAcquirerId());
         refund.setCorrelationId(trx.getCorrelationId());
+        refund.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
+        refund.setEffectiveAmount(trx.getAmount().negate());
         return transaction2RewardTransactionMapper.apply(refund);
     }
 
