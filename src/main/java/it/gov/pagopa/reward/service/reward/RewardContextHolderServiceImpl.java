@@ -45,7 +45,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     private final boolean isRedisCacheEnabled;
 
-    private final boolean preBuildContainer;
+    private final boolean preCompileContainer;
 
     private KieBase kieBase;
     private byte[] kieBaseSerialized;
@@ -56,12 +56,13 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
             ApplicationEventPublisher applicationEventPublisher,
             @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate,
             @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled,
-            @Value("${app.reward-rule.pre-build}") boolean preBuildContainer) {
+            @Value("${app.reward-rule.pre-compile}") boolean preCompileContainer) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.isRedisCacheEnabled = isRedisCacheEnabled;
-        this.preBuildContainer = preBuildContainer;
+        this.preCompileContainer = preCompileContainer;
+
         refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
     }
 
@@ -99,25 +100,30 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     private void compileKieBase(){
-        if(preBuildContainer) {
-            long startTime = System.currentTimeMillis();
-            TransactionDroolsDTO trx = new TransactionDroolsDTO();
-            trx.setEffectiveAmount(BigDecimal.ONE);
-            trx.setTrxChargeDate(OffsetDateTime.now());
-            UserInitiativeCounters userCounters = new UserInitiativeCounters();
-            userCounters.setInitiatives(new HashMap<>());
+        if(preCompileContainer) {
+            try {
+                log.info("[DROOLS_CONTAINER_COMPILE] Starting KieContainer compile");
+                long startTime = System.currentTimeMillis();
+                TransactionDroolsDTO trx = new TransactionDroolsDTO();
+                trx.setEffectiveAmount(BigDecimal.ONE);
+                trx.setTrxChargeDate(OffsetDateTime.now());
+                UserInitiativeCounters userCounters = new UserInitiativeCounters();
+                userCounters.setInitiatives(new HashMap<>());
 
-            List<Command<?>> cmds = new ArrayList<>();
-            cmds.add(CommandFactory.newInsert(new RuleEngineConfig()));
-            cmds.add(CommandFactory.newInsert(userCounters));
-            cmds.add(CommandFactory.newInsert(trx));
-            Arrays.stream(((KnowledgeBaseImpl) this.kieBase).getPackages()).flatMap(p -> p.getRules().stream()).map(r -> ((RuleImpl) r).getAgendaGroup())
-                    .distinct().forEach(a -> cmds.add(new AgendaGroupSetFocusCommand(a)));
-            StatelessKieSession session = this.kieBase.newStatelessKieSession();
-            session.execute(CommandFactory.newBatchExecution(cmds));
-            long endTime = System.currentTimeMillis();
+                List<Command<?>> cmds = new ArrayList<>();
+                cmds.add(CommandFactory.newInsert(new RuleEngineConfig()));
+                cmds.add(CommandFactory.newInsert(userCounters));
+                cmds.add(CommandFactory.newInsert(trx));
+                Arrays.stream(((KnowledgeBaseImpl) this.kieBase).getPackages()).flatMap(p -> p.getRules().stream()).map(r -> ((RuleImpl) r).getAgendaGroup())
+                        .distinct().forEach(a -> cmds.add(new AgendaGroupSetFocusCommand(a)));
+                StatelessKieSession session = this.kieBase.newStatelessKieSession();
+                session.execute(CommandFactory.newBatchExecution(cmds));
+                long endTime = System.currentTimeMillis();
 
-            log.info("KieContainer instance compiled in {} ms", endTime - startTime);
+                log.info("[DROOLS_CONTAINER_COMPILE] KieContainer instance compiled in {} ms", endTime - startTime);
+            } catch (Exception e){
+                log.warn("[DROOLS_CONTAINER_COMPILE] An error occurred while pre-compiling Drools rules", e);
+            }
         }
     }
 
