@@ -1,20 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
-import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
-import org.drools.core.definitions.rule.impl.RuleImpl;
-import org.drools.core.impl.KnowledgeBaseImpl;
 import org.kie.api.KieBase;
-import org.kie.api.command.Command;
-import org.kie.api.runtime.StatelessKieSession;
-import org.kie.internal.command.CommandFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEvent;
@@ -26,10 +17,9 @@ import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -45,7 +35,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     private final boolean isRedisCacheEnabled;
 
-    private final boolean preCompileContainer;
+    private final boolean preLoadContainer;
 
     private KieBase kieBase;
     private byte[] kieBaseSerialized;
@@ -56,12 +46,12 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
             ApplicationEventPublisher applicationEventPublisher,
             @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate,
             @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled,
-            @Value("${app.reward-rule.pre-compile}") boolean preCompileContainer) {
+            @Value("${app.reward-rule.pre-load}") boolean preLoadContainer) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.isRedisCacheEnabled = isRedisCacheEnabled;
-        this.preCompileContainer = preCompileContainer;
+        this.preLoadContainer = preLoadContainer;
 
         refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
     }
@@ -79,51 +69,23 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     @Override
-    public void setRewardRulesKieBase(KieBase kieBase) {
-        this.kieBase = kieBase;
+    public void setRewardRulesKieBase(KieBase newKieBase) {
+        preLoadKieBase(newKieBase);
+        this.kieBase = newKieBase;
 
         if (isRedisCacheEnabled) {
-            kieBaseSerialized = SerializationUtils.serialize(kieBase);
+            kieBaseSerialized = SerializationUtils.serialize(newKieBase);
             if (kieBaseSerialized != null) {
-                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> {
-                    log.debug("Saving KieContainer in cache and compiling it");
-                    compileKieBase();
-                });
+                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> log.info("KieContainer build and stored in cache"));
             } else {
-                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.debug("Clearing KieContainer in cache"));
-            }
-        } else {
-            if(kieBase!=null){
-                compileKieBase();
+                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.info("KieContainer removed from the cache"));
             }
         }
     }
 
-    private void compileKieBase(){
-        if(preCompileContainer) {
-            try {
-                log.info("[DROOLS_CONTAINER_COMPILE] Starting KieContainer compile");
-                long startTime = System.currentTimeMillis();
-                TransactionDroolsDTO trx = new TransactionDroolsDTO();
-                trx.setEffectiveAmount(BigDecimal.ONE);
-                trx.setTrxChargeDate(OffsetDateTime.now());
-                UserInitiativeCounters userCounters = new UserInitiativeCounters();
-                userCounters.setInitiatives(new HashMap<>());
-
-                List<Command<?>> cmds = new ArrayList<>();
-                cmds.add(CommandFactory.newInsert(new RuleEngineConfig()));
-                cmds.add(CommandFactory.newInsert(userCounters));
-                cmds.add(CommandFactory.newInsert(trx));
-                Arrays.stream(((KnowledgeBaseImpl) this.kieBase).getPackages()).flatMap(p -> p.getRules().stream()).map(r -> ((RuleImpl) r).getAgendaGroup())
-                        .distinct().forEach(a -> cmds.add(new AgendaGroupSetFocusCommand(a)));
-                StatelessKieSession session = this.kieBase.newStatelessKieSession();
-                session.execute(CommandFactory.newBatchExecution(cmds));
-                long endTime = System.currentTimeMillis();
-
-                log.info("[DROOLS_CONTAINER_COMPILE] KieContainer instance compiled in {} ms", endTime - startTime);
-            } catch (Exception e){
-                log.warn("[DROOLS_CONTAINER_COMPILE] An error occurred while pre-compiling Drools rules", e);
-            }
+    private void preLoadKieBase(KieBase kieBase){
+        if(preLoadContainer) {
+            kieContainerBuilderService.preLoadKieBase(kieBase);
         }
     }
 
@@ -137,9 +99,10 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
             reactiveRedisTemplate.opsForValue().get(REWARD_CONTEXT_HOLDER_CACHE_NAME)
                     .map(c -> {
                         if(!Arrays.equals(c, kieBaseSerialized)){
-                            this.kieBase = (KieBase) SerializationUtils.deserialize(c);
                             this.kieBaseSerialized = c;
-                            compileKieBase();
+                            KieBase newKieBase = (KieBase) SerializationUtils.deserialize(c);
+                            preLoadKieBase(newKieBase);
+                            this.kieBase=newKieBase;
                         }
                         return this.kieBase;
                     })

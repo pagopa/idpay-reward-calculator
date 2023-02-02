@@ -232,7 +232,7 @@ app:
     # The milliseconds rate after which to fetch from cache a new instance of the benefiricaryRilekieContainer
     cache.refresh-ms-rate: ${CACHE_REFRESH_MS_RATE:10000}
     # Pre compile container
-    pre-compile: ${REWARD_RULE_CONTAINER_PRE_COMPILE_ENABLED:true}
+    pre-load: ${REWARD_RULE_CONTAINER_PRE_LOAD_ENABLED:true}
     rule-engine:
       # if exit immediately at the first condition failed
       short-circuit-conditions: ${REWARD_RULE_SHORT_CIRCUIT:false}
