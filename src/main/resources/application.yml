@@ -12,7 +12,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer
+        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
@@ -20,7 +20,7 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-splitter
           consumer.autoStartup: false
-        trxProcessor-out-0:
+        trxProcessorOut-out-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay
@@ -129,7 +129,7 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
-          trxProcessor-out-0:
+          trxProcessorOut-out-0:
             producer:
               configuration:
                 client.id: trxProcessor-transaction
