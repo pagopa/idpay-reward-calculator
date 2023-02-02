@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -38,8 +37,6 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private KieContainerBuilderService kieContainerBuilderService;
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
     private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     @Autowired
@@ -86,10 +83,8 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
                 500
         );
 
-        Field kieBaseField = ReflectionUtils.findField(RewardContextHolderServiceImpl.class, "kieBase");
-        Assertions.assertNotNull(kieBaseField);
-        ReflectionUtils.makeAccessible(kieBaseField);
-        ReflectionUtils.setField(kieBaseField, rewardContextHolderService, null);
+        setContextHolderFieldToNull("kieBase");
+        setContextHolderFieldToNull("kieBaseSerialized");
 
         Assertions.assertNull(rewardContextHolderService.getRewardRulesKieBase());
 
@@ -133,6 +128,13 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
         int resultRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
         Assertions.assertEquals(0, resultRuleBuiltSize);
+    }
+
+    private void setContextHolderFieldToNull(String fieldName) {
+        Field field = ReflectionUtils.findField(RewardContextHolderServiceImpl.class, fieldName);
+        Assertions.assertNotNull(field);
+        ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.setField(field, rewardContextHolderService, null);
     }
 
     private RewardTransactionDTO executeRules(TransactionDTO trx) {
