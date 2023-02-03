@@ -12,7 +12,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors
+        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
