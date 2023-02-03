@@ -12,7 +12,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer
+        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
@@ -20,7 +20,7 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-splitter
           consumer.autoStartup: false
-        trxProcessor-out-0:
+        trxProcessorOut-out-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay
@@ -141,7 +141,7 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
-          trxProcessor-out-0:
+          trxProcessorOut-out-0:
             producer:
               configuration:
                 client.id: trxProcessor-transaction
@@ -157,6 +157,14 @@ spring:
                 retry.backoff.ms: ${KAFKA_ERRORS_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
                 linger.ms: ${KAFKA_ERRORS_LINGER_MS:${KAFKA_LINGER_MS:2}}
                 batch.size: ${KAFKA_ERRORS_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+          hpanUpdateOutcome-out-0:
+            producer:
+              configuration:
+                client.id: hpanUpdateOutcome
+                connections.max.idle.ms: ${KAFKA_HPANUPDATE_OUTCOME_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_HPANUPDATE_OUTCOME_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_HPANUPDATE_OUTCOME_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_HPANUPDATE_OUTCOME_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
           trxResubmitter-out-0:
             producer:
               configuration:

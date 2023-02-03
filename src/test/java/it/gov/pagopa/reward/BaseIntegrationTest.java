@@ -64,7 +64,7 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.trxProcessor-in-0.destination}",
-        "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
+        "${spring.cloud.stream.bindings.trxProcessorOut-out-0.destination}",
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
@@ -136,7 +136,7 @@ public abstract class BaseIntegrationTest {
 
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}")
     protected String topicRewardProcessorRequest;
-    @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}")
+    @Value("${spring.cloud.stream.bindings.trxProcessorOut-out-0.destination}")
     protected String topicRewardProcessorOutcome;
     @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}")
     protected String topicRewardRuleConsumer;
