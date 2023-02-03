@@ -23,8 +23,9 @@ public class RewardNotifierServiceImpl implements RewardNotifierService {
         this.streamBridge = streamBridge;
     }
 
+    /** Declared just to let know Spring to connect the producer at startup */
     @Configuration
-    static class RewardNotifierConfig {
+    static class RewardNotifierPublisherConfig {
         @Bean
         public Supplier<Flux<Message<RewardTransactionDTO>>> trxProcessorOut() {
             return Flux::empty;
