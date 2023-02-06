@@ -22,7 +22,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -75,7 +74,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected void subscribeAfterCommits(Flux<List<HpanInitiativeBulkDTO>> afterCommits2subscribe) {
-        afterCommits2subscribe.subscribe(updateResult -> log.debug("[HPAN_INITIATIVE_OP] A change has occurred"));
+        afterCommits2subscribe.subscribe(updateResult -> log.info("[HPAN_INITIATIVE_OP] Processed offsets committed successfully"));
     }
 
     @Override

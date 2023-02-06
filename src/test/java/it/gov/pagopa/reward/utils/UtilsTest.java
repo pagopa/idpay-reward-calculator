@@ -61,8 +61,8 @@ class UtilsTest {
                 .withPayload("")
                 .setHeader("HEADERNAME", "HEADERVALUE".getBytes(StandardCharsets.UTF_8))
                 .build();
-        Assertions.assertNull(Utils.getHeaderValue(msg, "NOTEXISTS"));
-        Assertions.assertEquals("HEADERVALUE", Utils.getHeaderValue(msg, "HEADERNAME"));
+        Assertions.assertNull(Utils.getByteArrayHeaderValue(msg, "NOTEXISTS"));
+        Assertions.assertEquals("HEADERVALUE", Utils.getByteArrayHeaderValue(msg, "HEADERNAME"));
     }
 
     @Test

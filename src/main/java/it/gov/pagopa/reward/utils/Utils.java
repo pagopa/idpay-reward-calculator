@@ -36,8 +36,14 @@ public final class Utils {
         return null;
     }
 
+    /** To read Message header value */
+    @SuppressWarnings("unchecked")
+    public static <T> T getHeaderValue(Message<?> message, String headerName) {
+        return  (T)message.getHeaders().get(headerName);
+    }
+
     /** To read {@link org.apache.kafka.common.header.Header} value */
-    public static String getHeaderValue(Message<String> message, String headerName) {
+    public static String getByteArrayHeaderValue(Message<String> message, String headerName) {
         byte[] headerValue = message.getHeaders().get(headerName, byte[].class);
         return headerValue!=null? new String(headerValue, StandardCharsets.UTF_8) : null;
     }
