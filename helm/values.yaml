@@ -70,7 +70,6 @@ microservice-chart:
       KAFKA_RTD_BROKER: kafka_broker_rtd
 
   envSecret:
-    #    APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
     MONGODB_URI: mongodb-connection-string
     KAFKA_RTD_SASL_JAAS_CONFIG: evh-rtd-trx-rtd-trx-consumer-jaas-config
     KAFKA_RTD_PROD_SASL_JAAS_CONFIG: evh-rtd-trx-rtd-trx-producer-jaas-config
