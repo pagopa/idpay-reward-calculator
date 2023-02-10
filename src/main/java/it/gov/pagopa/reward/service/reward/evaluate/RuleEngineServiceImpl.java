@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
+import it.gov.pagopa.reward.utils.PerformanceLogger;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
@@ -61,10 +62,9 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             long before=System.currentTimeMillis();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
-            long after=System.currentTimeMillis();
 
-            log.info("[PERFORMANCE_LOG] [REWARD] [RULE_ENGINE] - Time between before and after fireAllRules {} ms transaction evaluated  ({}) and resulted into rewards:({}), initiativeRejectionReason:{}",
-                    after-before, trx.getId(), trx.getRewards(), trx.getInitiativeRejectionReasons());
+            PerformanceLogger.logTiming("[REWARD_RULE_ENGINE]", before , "transaction evaluated (%s) and resulted into rewards:(%s), initiativeRejectionReason:%s".formatted(
+                    trx.getId(), trx.getRewards(), trx.getInitiativeRejectionReasons()));
         }else {
             trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE);
         }

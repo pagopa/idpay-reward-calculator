@@ -82,7 +82,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     @Override
     protected void subscribeAfterCommits(Flux<List<RewardTransactionDTO>> afterCommits2subscribe) {
-        afterCommits2subscribe.subscribe(p -> log.debug("[REWARD] Processed offsets committed successfully"));
+        afterCommits2subscribe.subscribe(p -> log.info("[REWARD] Processed offsets committed successfully"));
     }
 
     @Override

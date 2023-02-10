@@ -89,7 +89,9 @@ class RewardCalculatorMediatorServiceImplTest {
                 .zipWith(Flux.fromIterable(acks),
                         (p, ack) -> MessageBuilder
                                 .withPayload(p)
-                                .copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, ack))
+                                .setHeader(KafkaHeaders.ACKNOWLEDGMENT, ack)
+                                .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                                .setHeader(KafkaHeaders.OFFSET, (long)acks.indexOf(ack))
                                 .build()
                 ));
     }
@@ -153,11 +155,9 @@ class RewardCalculatorMediatorServiceImplTest {
                 rewardNotifierServiceMock,
                 errorNotifierServiceMock);
 
-        trxFluxAndAckMocks.getKey().forEach(ackMock -> {
-            Mockito.verify(ackMock).acknowledge();
-            Mockito.verifyNoMoreInteractions(ackMock);
-        });
+        trxFluxAndAckMocks.getKey().stream().limit(trxFluxAndAckMocks.getKey().size()-1).forEach(ackMock -> Mockito.verify(ackMock, Mockito.never()).acknowledge());
 
+        Mockito.verify(trxFluxAndAckMocks.getKey().get(trxFluxAndAckMocks.getKey().size()-1)).acknowledge();
     }
 
     private void assertRejectionReasons(List<RewardTransactionDTO> result, TransactionDTO trx, String expectedRejectionReason) {

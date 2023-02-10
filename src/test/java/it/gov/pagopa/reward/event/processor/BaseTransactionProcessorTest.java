@@ -41,6 +41,7 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=WARN",
+        "logging.level.it.gov.pagopa.reward.utils.PerformanceLogger=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {

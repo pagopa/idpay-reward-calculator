@@ -7,8 +7,8 @@ import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.dto.mapper.HpanList2HpanUpdateOutcomeDTOMapper;
-import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
+import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
@@ -35,7 +35,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 @ExtendWith(MockitoExtension.class)
 class HpanInitiativeMediatorServiceImplTest {
 
@@ -209,11 +208,11 @@ class HpanInitiativeMediatorServiceImplTest {
 
         // When
         hpanInitiativeMediatorService.execute(Flux
-               .fromIterable(List.of(MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTOValidJson)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTOValidJsonAck)).build(),
-                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotHpanList)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTONotHpanListAck)).build(),
-                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotDate)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTONotDateAck)).build(),
-                        MessageBuilder.withPayload("NOT VALID JSON").copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, notValidJsonAck)).build(),
-                        MessageBuilder.withPayload(TestUtils.jsonSerializer(hpanInitiativeBulkDTErrorPublishedUpdate)).copyHeaders(Map.of(KafkaHeaders.ACKNOWLEDGMENT, hpanErrorPublishedUpdateJsonAck)).build()
+               .fromIterable(List.of(buildMessage(TestUtils.jsonSerializer(hpanInitiativeBulkDTOValidJson), hpanInitiativeBulkDTOValidJsonAck),
+                       buildMessage(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotHpanList), hpanInitiativeBulkDTONotHpanListAck),
+                       buildMessage(TestUtils.jsonSerializer(hpanInitiativeBulkDTONotDate), hpanInitiativeBulkDTONotDateAck),
+                       buildMessage("NOT VALID JSON", notValidJsonAck),
+                       buildMessage(TestUtils.jsonSerializer(hpanInitiativeBulkDTErrorPublishedUpdate), hpanErrorPublishedUpdateJsonAck)
                 )));
         // Then
         Mockito.verify(hpanInitiativesRepositoryMock,Mockito.times(3)).findById(Mockito.anyString());
@@ -222,6 +221,15 @@ class HpanInitiativeMediatorServiceImplTest {
         Mockito.verify(errorNotifierServiceMock,Mockito.times(2)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(Throwable.class));
         Mockito.verify(errorNotifierServiceMock, Mockito.times(1)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(NullPointerException.class));
         Mockito.verify(errorNotifierServiceMock, Mockito.times(1)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(JsonProcessingException.class));
+    }
+
+    private static Message<String> buildMessage(String hpanInitiativeBulkDTONotHpanList, Acknowledgment hpanInitiativeBulkDTONotHpanListAck) {
+        return MessageBuilder
+                .withPayload(hpanInitiativeBulkDTONotHpanList)
+                .setHeader(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTONotHpanListAck)
+                .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                .setHeader(KafkaHeaders.OFFSET, 0L)
+                .build();
     }
 
     @Test
