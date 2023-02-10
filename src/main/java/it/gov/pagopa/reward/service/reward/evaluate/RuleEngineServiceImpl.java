@@ -63,7 +63,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             long before=System.currentTimeMillis();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
 
-            PerformanceLogger.logTiming("[REWARD_RULE_ENGINE]", before , "transaction evaluated (%s) and resulted into rewards:(%s), initiativeRejectionReason:%s".formatted(
+            PerformanceLogger.logTiming("REWARD_RULE_ENGINE", before , "transaction evaluated (%s) and resulted into rewards:(%s), initiativeRejectionReason:%s".formatted(
                     trx.getId(), trx.getRewards(), trx.getInitiativeRejectionReasons()));
         }else {
             trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE);
