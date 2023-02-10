@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service;
 
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.reward.utils.PerformanceLogger;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -134,7 +135,8 @@ public abstract class BaseKafkaConsumer<T, R> {
         Long startTime = (Long)ctx.get(CONTEXT_KEY_START_TIME);
         String msgId = (String)ctx.get(CONTEXT_KEY_MSG_ID);
         if(startTime != null){
-            log.info("[PERFORMANCE_LOG] [{}] Time occurred to perform business logic: {} ms (partition: {}, offset: {}) {}", getFlowName(), System.currentTimeMillis() - startTime, getMessagePartitionId(message), getMessageOffset(message), msgId);
+            PerformanceLogger.logTiming(getFlowName(), startTime,
+                    "(partition: %s, offset: %s) %s".formatted(getMessagePartitionId(message), getMessageOffset(message), msgId));
         }
     }
 
