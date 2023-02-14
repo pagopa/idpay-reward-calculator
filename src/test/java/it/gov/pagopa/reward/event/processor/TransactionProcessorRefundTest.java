@@ -55,7 +55,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .organizationId("ORGANIZATIONID_"+initiativeId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
-                    .startDate(LocalDate.MIN)
+//                    .startDate(LocalDate.MIN) TODO CHECK
                     .build())
             .trxRule(InitiativeTrxConditions.builder()
                     .rewardLimits(List.of(
@@ -91,7 +91,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .organizationId("ORGANIZATIONID_"+initiative2totalRefundId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
-                    .startDate(LocalDate.MIN)
+//                    .startDate(LocalDate.MIN) TODO CHECK
                     .build())
             .trxRule(InitiativeTrxConditions.builder()
                     .threshold(ThresholdDTO.builder()
@@ -113,7 +113,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .organizationId("ORGANIZATIONID_"+initiativeTrxMinId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
-                    .startDate(LocalDate.MIN)
+//                    .startDate(LocalDate.MIN) TODO CHECK
                     .build())
             .trxRule(InitiativeTrxConditions.builder()
                     .threshold(ThresholdDTO.builder()

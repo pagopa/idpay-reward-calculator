@@ -286,7 +286,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
                                 .general(InitiativeGeneralDTO.builder()
-                                        .endDate(trxDate.minusDays(1).toLocalDate())
+                                        .endDate(trxDate.minusDays(2).toLocalDate())
                                         .build())
                                 .build()
                 )
