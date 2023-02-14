@@ -77,11 +77,11 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
      * </ol>
      * */
     protected int getMessagePartitionKey(Message<String> message) {
-        String messageKey = Utils.getHeaderValue(message, KafkaHeaders.RECEIVED_MESSAGE_KEY);
+        String messageKey = Utils.getByteArrayHeaderValue(message, KafkaHeaders.RECEIVED_MESSAGE_KEY);
         if(!StringUtils.isEmpty(messageKey)){
             return messageKey.hashCode();
         } else {
-            String partitionId = Utils.getHeaderValue(message, KafkaHeaders.PARTITION_ID);
+            String partitionId = Utils.getByteArrayHeaderValue(message, KafkaHeaders.PARTITION_ID);
             if(partitionId!=null){
                 return Integer.parseInt(partitionId);
             } else {
