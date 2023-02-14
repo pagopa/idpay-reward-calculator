@@ -119,7 +119,7 @@ spring:
               startOffset: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:1000}
+              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -163,7 +163,7 @@ spring:
               startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:1000}
+              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REWARD_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -178,7 +178,7 @@ spring:
               startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:1000}
+              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
