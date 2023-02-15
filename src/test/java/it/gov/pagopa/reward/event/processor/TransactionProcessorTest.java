@@ -312,7 +312,6 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private TransactionDTO mockInstance(int bias) {
         final TransactionDTO trx = useCases.get(bias % useCases.size()).getFirst().apply(bias);
         onboardTrxHPan(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED);
-        onboardTrxHPan(trx, INITIATIVE_ID_NOT_STARTED);
         return trx;
     }
 

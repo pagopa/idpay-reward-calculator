@@ -175,6 +175,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 timeConsumerResponseEnd,
                 timeEnd - timePublishOnboardingStart
         );
+
+//        checkOffsets(trxs.size()+1, trxs.size()); heavy test removed because already performed in TransactionProcessorTest
     }
 
     private List<TransactionDTO> buildTotalRefundRequests(int bias) {
