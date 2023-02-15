@@ -25,10 +25,10 @@ public class Utilities {
     private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s", SRCIP);
     private static final String MSG = " msg=";
     private static final String USER = "suser=";
-    private static final String CORRELATION_ID = "correlationId=";
-    private static final String TRX_ISSUER = "TRXIssuer=";
-    private static final String TRX_ACQUIRER = "TRXAcquirer=";
-    private static final String REWARD = "reward=";
+    private static final String CORRELATION_ID = "cs1Label=correlationId cs1=";
+    private static final String TRX_ISSUER = "cs2Label=TRXIssuer cs2=";
+    private static final String TRX_ACQUIRER = "cs3Label=TRXAcquirer cs3=";
+    private static final String REWARD = "cs4Label=reward cs4=";
     final Logger logger = Logger.getLogger("AUDIT");
 
 
