@@ -15,6 +15,7 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.reward.utils.Utilities;
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
@@ -58,6 +59,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private RewardNotifierService rewardNotifierServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
+    @Mock private Utilities utilitiesMock;
 
     private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
 
@@ -76,6 +78,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 rewardTransactionMapper,
                 rewardNotifierServiceMock,
                 errorNotifierServiceMock,
+                utilitiesMock,
                 500,
                 TestUtils.objectMapper);
     }
