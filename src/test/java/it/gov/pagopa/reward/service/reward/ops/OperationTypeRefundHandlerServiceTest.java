@@ -1,13 +1,16 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
-import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Example;
 import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
@@ -63,11 +65,8 @@ class OperationTypeRefundHandlerServiceTest {
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
 
-        Mockito.when(transactionProcessedRepositoryMock.findAll(
-                Example.of(TransactionProcessed.builder()
-                        .acquirerId(trx.getAcquirerId())
-                        .correlationId(trx.getCorrelationId())
-                        .build()))).thenReturn(Flux.empty());
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
+                        .thenReturn(Flux.empty());
 
         // When
         final TransactionDTO result = operationTypeRefundHandlerService.handleRefundOperation(trx).block();
@@ -88,11 +87,7 @@ class OperationTypeRefundHandlerServiceTest {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
 
 
-        Mockito.when(transactionProcessedRepositoryMock.findAll(
-                        Example.of(TransactionProcessed.builder()
-                                .acquirerId(trx.getAcquirerId())
-                                .correlationId(trx.getCorrelationId())
-                                .build())))
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.just(TransactionProcessed.builder().operationTypeTranscoded(OperationType.REFUND).amount(BigDecimal.ONE).rewards(Collections.emptyMap()).build()));
 
         // When
@@ -109,22 +104,33 @@ class OperationTypeRefundHandlerServiceTest {
     }
 
     @Test
-    void testRefund() {
+    void testRefund_RewardTransactionDto(){
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
         trx.setAmount(BigDecimal.valueOf(2));
 
-        List<TransactionProcessed> expectedPreviousTrxs = List.of(
+        List<BaseTransactionProcessed> expectedPreviousTrxs = List.of(
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.CHARGE)
                         .trxDate(LocalDateTime.MIN)
                         .trxChargeDate(LocalDateTime.MIN)
                         .amount(BigDecimal.TEN).effectiveAmount(BigDecimal.TEN)
                         .rewards(Map.of(
-                                "INITIATIVE1", new Reward("INITIATIVE1","ORGANIZATION", BigDecimal.ONE),
-                                "INITIATIVE2", new Reward("INITIATIVE2","ORGANIZATION", BigDecimal.ONE),
-                                "INITIATIVE3", new Reward("INITIATIVE3","ORGANIZATION", BigDecimal.ONE)))
+                                "INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION", BigDecimal.ONE),
+                                "INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION", BigDecimal.ONE),
+                                "INITIATIVE3", new Reward("INITIATIVE3", "ORGANIZATION", BigDecimal.ONE)))
                         .build(),
+
+                // a past refund discarded
+                RewardTransactionDTO.builder()
+                        .operationTypeTranscoded(OperationType.REFUND)
+                        .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH))
+                        .trxDate(OffsetDateTime.MIN)
+                        .trxChargeDate(OffsetDateTime.MIN)
+                        .amount(BigDecimal.ONE).effectiveAmount(BigDecimal.ONE)
+                        .build(),
+
+                // a past refund elaborated
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.REFUND)
                         .trxDate(LocalDateTime.MAX)
@@ -136,10 +142,7 @@ class OperationTypeRefundHandlerServiceTest {
                         .build()
         );
 
-        Mockito.when(transactionProcessedRepositoryMock.findAll(Mockito.<Example<TransactionProcessed>>argThat(i ->
-                        i.getProbe().getAcquirerId().equals(trx.getAcquirerId()) &&
-                                i.getProbe().getCorrelationId().equals(trx.getCorrelationId())
-                )))
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.fromIterable(expectedPreviousTrxs));
 
         // When
@@ -154,7 +157,7 @@ class OperationTypeRefundHandlerServiceTest {
         Assertions.assertEquals(Collections.emptyList(), result.getRejectionReasons());
         Assertions.assertNotNull(result.getRefundInfo());
 
-        Assertions.assertEquals(expectedPreviousTrxs, result.getRefundInfo().getPreviousTrxs());
+        Assertions.assertEquals(List.of(expectedPreviousTrxs.get(0), expectedPreviousTrxs.get(2)), result.getRefundInfo().getPreviousTrxs());
         Assertions.assertEquals(
                 Map.of(
                         "INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", scaleBigDecimal(BigDecimal.valueOf(0.5))),

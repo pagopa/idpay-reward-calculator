@@ -31,6 +31,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -46,6 +48,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     private final String initiative2totalRefundId = "INITIATIVE2TOTALREFUND";
     private final String initiativeTrxMinId = "INITIATIVEMINCOUNTID";
 
+    private final List<Runnable> assertionsAfterChecks = new ArrayList<>();
 
     /**
      * Configuring just one initiative which will reward the 10% of the effective amount having temporal reward limits
@@ -162,6 +165,8 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             Assertions.assertEquals(payload.getUserId(), p.key());
         }
 
+        assertionsAfterChecks.forEach(Runnable::run);
+
         System.out.printf("""
                         ************************
                         Time spent to send %d trx messages: %d millis
@@ -238,7 +243,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         InitiativeCounters initiativeCounters = userInitiativeCounters.getInitiatives().get(refundUseCase.initiativeId2Test);
         Assertions.assertNotNull(initiativeCounters);
 
-        refundUseCase.expectedInitiativeCounterSupplier().get().forEach(initiativeCounter ->
+        refundUseCase.expectedInitiativeFinalCounterSupplier().get().forEach(initiativeCounter ->
                 Assertions.assertEquals(
                         initiativeCounter,
                         userInitiativeCounters.getInitiatives().get(initiativeCounter.getInitiativeId()),
@@ -255,7 +260,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             Function<Integer, List<TransactionDTO>> useCaseBuilder,
             Consumer<RewardTransactionDTO> chargeRewardVerifier,
             Consumer<RewardTransactionDTO> refundVerifier,
-            Supplier<List<InitiativeCounters>> expectedInitiativeCounterSupplier) {
+            Supplier<List<InitiativeCounters>> expectedInitiativeFinalCounterSupplier) {
     }
 
     /**
@@ -493,6 +498,35 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 () -> List.of(buildSimpleInitiativeCounter(initiativeTrxMinId, 5L, 200, 20, false))
         ));
 
+        // 8: refund trx came before correlated charge
+        Map<String, AtomicInteger> trx2RefundCounts = new ConcurrentHashMap<>();
+        totalRefundUseCases.add(new RefundUseCase(
+                initiativeId,
+                i -> {
+                    final TransactionDTO chargeTrx = buildChargeTrx(trxDate, i);
+                    chargeTrx.setAmount(BigDecimal.valueOf(19_00));
+
+                    final TransactionDTO totalRefund = buildRefundTrx(i, chargeTrx);
+                    totalRefund.setAmount(chargeTrx.getAmount());
+
+                    return List.of(totalRefund, chargeTrx, chargeTrx); // sending twice the charge operation (the second would be skipped without having be processed) in order to take in consideration the re-publish of discarded refund when counting the trx to await in output
+                },
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1.9), false, 1L, 19, 1.9,  false),
+                refundReward -> {
+                    AtomicInteger counter = trx2RefundCounts.computeIfAbsent(refundReward.getId(), trxId -> new AtomicInteger(0));
+                    int count = counter.incrementAndGet();
+                    if (refundReward.getRejectionReasons().equals(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH))) {
+                        assertRejectedTrx(refundReward, List.of("REFUND_NOT_MATCH"));
+                        Assertions.assertEquals(1, count);
+                    } else {
+                        assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-1.9), false, 0L, 0, 0, false, true, true);
+                        Assertions.assertEquals(2, count);
+                    }
+                },
+                () -> List.of(buildSimpleFullTemporalInitiativeCounter(initiativeId, 0L, 0, 0, trxDate))
+        ));
+        assertionsAfterChecks.add(() ->
+                Assertions.assertEquals(Collections.emptyList(), trx2RefundCounts.entrySet().stream().filter(e->e.getValue().get() != 2).toList()));
     }
     //endregion
 
@@ -805,20 +839,20 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     trx7.setCorrelationId(trx1.getCorrelationId()+"_7");
                     trx7.setAmount(BigDecimal.valueOf(1000_00));
 
-                    final TransactionDTO trx1TF1 = buildRefundTrx(i, trx1);
-                    trx1TF1.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"-TF1");
-                    trx1TF1.setAmount(BigDecimal.valueOf(99_99));
+                    final TransactionDTO trx1PF1 = buildRefundTrx(i, trx1);
+                    trx1PF1.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"-PF1");
+                    trx1PF1.setAmount(BigDecimal.valueOf(99_99));
 
-                    final TransactionDTO trx1TF2 = buildRefundTrx(i, trx1);
-                    trx1TF2.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"-TF2");
-                    trx1TF2.setAmount(BigDecimal.valueOf(1));
+                    final TransactionDTO trx1PF2 = buildRefundTrx(i, trx1);
+                    trx1PF2.setIdTrxAcquirer(trx1.getIdTrxAcquirer()+"-PF2");
+                    trx1PF2.setAmount(BigDecimal.valueOf(1));
 
-                    final TransactionDTO trx7TF = buildRefundTrx(i, trx7);
-                    trx7TF.setAmount(trx7.getAmount());
+                    final TransactionDTO trx7PF = buildRefundTrx(i, trx7);
+                    trx7PF.setAmount(trx7.getAmount());
 
                     onboardHpan(trx1.getHpan(), trx1.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
 
-                    return List.of(trx1, trx2, trx3, trx4, trx5, trx6, trx7, trx1TF1, trx7TF, trx1TF2);
+                    return List.of(trx1, trx2, trx3, trx4, trx5, trx6, trx7, trx1PF1, trx7PF, trx1PF2);
                 },
                 chargeReward -> {
                     switch (chargeReward.getIdTrxAcquirer()) {
@@ -834,14 +868,56 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 },
                 refundReward -> {
                     switch (refundReward.getIdTrxAcquirer()) {
-                        case "IDTRXACQUIRER-TF1" -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 7L, 1200, 100, true, true, false);
+                        case "IDTRXACQUIRER-PF1" -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 7L, 1200, 100, true, true, false);
                         case "IDTRXACQUIRER_7" -> assertRewardedState(refundReward, 1, initiativeTrxMinId, TestUtils.bigDecimalValue(-80), false, 6L, 200, 20, false, true, true);
-                        case "IDTRXACQUIRER-TF2" -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 5L, 200, 20, false, true, true);
+                        case "IDTRXACQUIRER-PF2" -> assertRejectedState(refundReward, initiativeTrxMinId, List.of("TRX_RULE_TRXCOUNT_FAIL"), 5L, 200, 20, false, true, true);
                         default -> throw new IllegalStateException("Unexpected case! " + refundReward);
                     }
                 },
                 () -> List.of(buildSimpleInitiativeCounter(initiativeTrxMinId, 5L, 200, 20, false))
         ));
+
+        // 12: refund trx came before correlated charge
+        Map<String, AtomicInteger> trx2RefundCounts = new ConcurrentHashMap<>();
+        partialRefundUseCases.add(new RefundUseCase(
+                initiativeId,
+                i -> {
+                    final TransactionDTO chargeTrx = buildChargeTrx(trxDate, i);
+                    chargeTrx.setIdTrxAcquirer("IDTRXACQUIRER");
+                    chargeTrx.setAmount(BigDecimal.valueOf(19_00));
+
+                    final TransactionDTO partialRefund1 = buildRefundTrx(i, chargeTrx);
+                    partialRefund1.setIdTrxAcquirer(chargeTrx.getIdTrxAcquirer()+"_PF1");
+                    partialRefund1.setAmount(BigDecimal.valueOf(10_00));
+
+                    final TransactionDTO partialRefund2 = buildRefundTrx(i, chargeTrx);
+                    partialRefund2.setIdTrxAcquirer(chargeTrx.getIdTrxAcquirer()+"_PF2");
+                    partialRefund2.setAmount(BigDecimal.valueOf(1_00));
+
+                    return List.of(partialRefund1, chargeTrx, partialRefund2, chargeTrx); // sending twice the charge operation (the second would be skipped without having be processed) in order to take in consideration the re-publish of discarded refund when counting the trx to await in output
+                },
+                chargeReward -> assertRewardedState(chargeReward, initiativeId, TestUtils.bigDecimalValue(1.9), false, 1L, 19, 1.9,  false),
+                refundReward -> {
+                    switch (refundReward.getIdTrxAcquirer()){
+                        case "IDTRXACQUIRER_PF1" -> {
+                            AtomicInteger counter = trx2RefundCounts.computeIfAbsent(refundReward.getId(), trxId -> new AtomicInteger(0));
+                            int count = counter.incrementAndGet();
+                            if (refundReward.getRejectionReasons().equals(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH))) {
+                                assertRejectedTrx(refundReward, List.of("REFUND_NOT_MATCH"));
+                                Assertions.assertEquals(1, count);
+                            } else {
+                                assertRewardedState(refundReward, 1, initiativeId, BigDecimal.valueOf(-1), true, 1L, 8, 0.8, false, true, false);
+                                Assertions.assertEquals(2, count);
+                            }
+                        }
+                        case "IDTRXACQUIRER_PF2" -> assertRewardedState(refundReward, 1, initiativeId, TestUtils.bigDecimalValue(-0.1), true, 1L, 18, 1.8,  false, true, false);
+                        default -> throw new IllegalStateException("Unexpected case! " + refundReward);
+                    }
+                },
+                () -> List.of(buildSimpleFullTemporalInitiativeCounter(initiativeId, 1L, 8, 0.8, trxDate))
+        ));
+        assertionsAfterChecks.add(() ->
+                Assertions.assertEquals(Collections.emptyList(), trx2RefundCounts.entrySet().stream().filter(e->e.getValue().get() != 2).toList()));
     }
 
     private static InitiativeCounters buildSimpleInitiativeCounter(String initiativeId, long trxNumber, double totalAmount, double totalReward) {

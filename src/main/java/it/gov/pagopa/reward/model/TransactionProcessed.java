@@ -18,12 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** A transaction that has been elaborated */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Document(collection = "transactions_processed")
-public class TransactionProcessed {
+public class TransactionProcessed implements BaseTransactionProcessed {
     @Id
     private String id;
 
@@ -47,6 +48,8 @@ public class TransactionProcessed {
 
     private Map<String, Reward> rewards;
     private String status;
+
+    @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
     private Map<String, List<String>> initiativeRejectionReasons;
 
@@ -56,6 +59,6 @@ public class TransactionProcessed {
     private LocalDateTime trxChargeDate;
     private OperationType operationTypeTranscoded;
 
-    private LocalDateTime timestamp;
+    private LocalDateTime elaborationDateTime;
 }
 

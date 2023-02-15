@@ -1,12 +1,12 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
+import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
-import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.TransactionProcessed;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -87,7 +87,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     }
 
     private void handleCompleteRefund(TransactionDTO trx, RewardTransactionDTO trxRewarded) {
-        TransactionProcessed lastTrx = trx.getRefundInfo()==null || CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs())
+        BaseTransactionProcessed lastTrx = trx.getRefundInfo()==null || CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs())
                 ? null
                 : trx.getRefundInfo().getPreviousTrxs().get(trx.getRefundInfo().getPreviousTrxs().size() - 1);
 
