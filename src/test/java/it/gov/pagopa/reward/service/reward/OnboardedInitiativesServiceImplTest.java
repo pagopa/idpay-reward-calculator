@@ -76,6 +76,11 @@ class OnboardedInitiativesServiceImplTest {
         testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(9L),false);
     }
 
+    @Test
+    void getChargeInitiativeIntoInitiativeInterval(){
+        testChargeInitiative(LocalDate.now().minusDays(10L), LocalDate.now().plusDays(10L), OffsetDateTime.now(),true);
+    }
+
     void testChargeInitiative(LocalDate initiativeStartDate, LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
         if(trxDateTime == null){
             trxDateTime = OffsetDateTime.now().plusDays(10L);
