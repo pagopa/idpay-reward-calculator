@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
@@ -12,9 +13,11 @@ import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeSe
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
+import it.gov.pagopa.reward.utils.Utilities;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -45,6 +48,8 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     private final ObjectReader objectReader;
 
+    private final Utilities utilities;
+
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardCalculatorMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
@@ -57,6 +62,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
             Transaction2RewardTransactionMapper rewardTransactionMapper,
             RewardNotifierService rewardNotifierService,
             ErrorNotifierService errorNotifierService,
+            Utilities utilities,
 
             @Value("${spring.cloud.stream.kafka.bindings.trxProcessor-in-0.consumer.ackTime}") long commitMillis,
 
@@ -71,6 +77,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
         this.rewardNotifierService = rewardNotifierService;
         this.errorNotifierService = errorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
+        this.utilities = utilities;
 
         this.objectReader = objectMapper.readerFor(TransactionDTO.class);
     }
@@ -103,9 +110,17 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
                 .flatMap(operationTypeHandlerService::handleOperationType)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
                 .doOnEach(lockReleaser)
-
                 .doOnNext(r -> {
                     try {
+                        if (OperationType.CHARGE.equals(payload.getOperationTypeTranscoded())) {
+                            utilities.logCharge(payload.getUserId(), payload.getIdTrxIssuer(), payload.getIdTrxAcquirer(),
+                                    r.getRewards().entrySet().stream().map(entry -> ("initiativeId=".concat(entry.getKey())
+                                            .concat(" reward=").concat(entry.getValue().getProvidedReward().toString()))).toString());
+                        } else if (OperationType.REFUND.equals(payload.getOperationTypeTranscoded())) {
+                            utilities.logRefund(payload.getUserId(), payload.getIdTrxIssuer(), payload.getIdTrxAcquirer(),
+                                    r.getRewards().entrySet().stream().map(entry -> ("initiativeId=".concat(entry.getKey())
+                                            .concat(" reward=").concat(entry.getValue().getProvidedReward().toString()))).toString(), payload.getCorrelationId());
+                        }
                         if (!rewardNotifierService.notify(r)) {
                             throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
                         }
