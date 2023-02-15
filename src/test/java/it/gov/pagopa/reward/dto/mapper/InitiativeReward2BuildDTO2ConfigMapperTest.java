@@ -33,6 +33,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertEquals(initiative.getInitiativeId(), result.getInitiativeId());
         Assertions.assertEquals(initiative.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(initiative.getOrganizationId(), result.getOrganizationId());
+        Assertions.assertEquals(initiative.getGeneral().getStartDate(), result.getStartDate());
         Assertions.assertEquals(initiative.getGeneral().getEndDate(), result.getEndDate());
         Assertions.assertEquals(initiative.getGeneral().getBeneficiaryBudget(), result.getBeneficiaryBudget());
 
@@ -133,6 +134,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
     void mapperAllFrequencyType() {
         // Given
         InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstance(1);
+        initiative.getGeneral().setStartDate(LocalDate.MIN);
         initiative.getGeneral().setEndDate(LocalDate.MAX);
         initiative.getTrxRule().setRewardLimits(List.of(
                 RewardLimitsDTO.builder().frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY).build(),

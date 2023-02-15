@@ -169,6 +169,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private static final String INITIATIVE_ID_EXHAUSTED = "ID_5_EXHAUSTED";
     private static final String INITIATIVE_ID_EXHAUSTING = "ID_6_EXHAUSTING";
     private static final String INITIATIVE_ID_EXPIRED = "ID_7_EXPIRED";
+    private static final String INITIATIVE_ID_NOT_STARTED = "ID_8_NOTSTARTED";
 
     private void publishRewardRules() {
         int[] expectedRules = {0};
@@ -286,7 +287,18 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
                                 .general(InitiativeGeneralDTO.builder()
-                                        .endDate(trxDate.minusDays(1).toLocalDate())
+                                        .endDate(trxDate.minusDays(2).toLocalDate())
+                                        .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), null)
+                                .initiativeId(INITIATIVE_ID_NOT_STARTED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_NOT_STARTED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_NOT_STARTED)
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .general(InitiativeGeneralDTO.builder()
+                                        .startDate(trxDate.plusYears(1L).toLocalDate())
                                         .build())
                                 .build()
                 )
@@ -299,7 +311,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     private TransactionDTO mockInstance(int bias) {
         final TransactionDTO trx = useCases.get(bias % useCases.size()).getFirst().apply(bias);
-        onboardTrxHPan(trx, INITIATIVE_ID_EXPIRED);
+        onboardTrxHPan(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED);
         return trx;
     }
 

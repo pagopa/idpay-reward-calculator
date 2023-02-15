@@ -44,32 +44,52 @@ class OnboardedInitiativesServiceImplTest {
 
     @Test
     void getChargeInitiativesWhenNoEndEnd(){
-        testChargeInitiative(null, null, true);
+        testChargeInitiative(null,null, null, true);
     }
 
     @Test
     void getChargeInitiativesWhenEndEnd(){
-        testChargeInitiative(LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), false);
+        testChargeInitiative(null, LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), true);
     }
     @Test
     void getChargeInitiativesWhenFutureEndEnd(){
-        testChargeInitiative(LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
+        testChargeInitiative(null, LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
     }
 
     @Test
     void getChargeInitiativesWhenPastEndEnd(){
-        testChargeInitiative(LocalDate.now().plusDays(9), OffsetDateTime.now().plusDays(10), false);
+        testChargeInitiative(null, LocalDate.now().plusDays(9), OffsetDateTime.now().plusDays(10), false);
     }
 
-    void testChargeInitiative(LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
+    @Test
+    void getChargeInitiativesWhenStart(){
+        testChargeInitiative(LocalDate.now().plusDays(10L),null, OffsetDateTime.now().plusDays(10L), true);
+    }
+
+    @Test
+    void getChargeInitiativeAfterStartInitiative(){
+        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(11L), true);
+    }
+
+    @Test
+    void getChargeInitiativeBeforeStartInitiative(){
+        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(9L),false);
+    }
+
+    @Test
+    void getChargeInitiativeIntoInitiativeInterval(){
+        testChargeInitiative(LocalDate.now().minusDays(10L), LocalDate.now().plusDays(10L), OffsetDateTime.now(),true);
+    }
+
+    void testChargeInitiative(LocalDate initiativeStartDate, LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
         if(trxDateTime == null){
             trxDateTime = OffsetDateTime.now().plusDays(10L);
         }
         TransactionDTO trx = buildTrx(trxDateTime, hpan);
 
-        testGetInitiativesPrivateMethod(trx, initiativeEndDate, expectSuccess);
+        testGetInitiativesPrivateMethod(trx,initiativeStartDate, initiativeEndDate, expectSuccess);
     }
-    void testGetInitiativesPrivateMethod(TransactionDTO trx, LocalDate initiativeEndDate, boolean expectSuccess) {
+    void testGetInitiativesPrivateMethod(TransactionDTO trx, LocalDate initiativeStartDate, LocalDate initiativeEndDate, boolean expectSuccess) {
         // Given
         Integer bias = 1;
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
@@ -80,6 +100,7 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(
                 InitiativeConfig.builder()
                         .initiativeId(mockedInitiativeId)
+                        .startDate(initiativeStartDate)
                         .endDate(initiativeEndDate)
                         .build());
 
@@ -221,6 +242,6 @@ class OnboardedInitiativesServiceImplTest {
         TransactionDTO trx = buildTrx(trxDate, hpan);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
 
-        testGetInitiativesPrivateMethod(trx, null, true);
+        testGetInitiativesPrivateMethod(trx, null, null, true);
     }
 }
