@@ -42,6 +42,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
 
     final LocalDateTime trxDateLocalDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     final OffsetDateTime trxDate = OffsetDateTime.of(trxDateLocalDateTime, RewardConstants.ZONEID.getRules().getOffset(trxDateLocalDateTime));
+    final LocalDate initiativeStartDate = LocalDate.of(1970,1,1);
 
     private final String initiativeId = "INITIATIVEID";
     private final String initiative2totalRefundId = "INITIATIVE2TOTALREFUND";
@@ -58,7 +59,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .organizationId("ORGANIZATIONID_"+initiativeId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
-                    .startDate(LocalDate.MIN)
+                    .startDate(initiativeStartDate)
                     .build())
             .trxRule(InitiativeTrxConditions.builder()
                     .rewardLimits(List.of(
@@ -94,7 +95,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .organizationId("ORGANIZATIONID_"+initiative2totalRefundId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
-                    .startDate(LocalDate.MIN)
+                    .startDate(initiativeStartDate)
                     .build())
             .trxRule(InitiativeTrxConditions.builder()
                     .threshold(ThresholdDTO.builder()
@@ -116,7 +117,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .organizationId("ORGANIZATIONID_"+initiativeTrxMinId)
             .general(InitiativeGeneralDTO.builder()
                     .beneficiaryBudget(BigDecimal.valueOf(100))
-                    .startDate(LocalDate.MIN)
+                    .startDate(initiativeStartDate)
                     .build())
             .trxRule(InitiativeTrxConditions.builder()
                     .threshold(ThresholdDTO.builder()

@@ -18,6 +18,7 @@ public class InitiativeConfig {
     private String initiativeName;
     private String organizationId;
     private BigDecimal beneficiaryBudget;
+    private LocalDate startDate;
     private LocalDate endDate;
     private boolean dailyThreshold;
     private boolean weeklyThreshold;

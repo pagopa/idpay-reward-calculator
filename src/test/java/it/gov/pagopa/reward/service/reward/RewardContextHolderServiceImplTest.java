@@ -111,6 +111,7 @@ class RewardContextHolderServiceImplTest {
                 .initiativeName("NAME")
                 .organizationId("ORGANIZATIONID")
                 .beneficiaryBudget(BigDecimal.valueOf(100))
+                .startDate(LocalDate.MIN)
                 .endDate(LocalDate.MAX)
                 .dailyThreshold(true)
                 .monthlyThreshold(false)
