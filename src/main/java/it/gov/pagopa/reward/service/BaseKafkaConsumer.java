@@ -83,8 +83,10 @@ public abstract class BaseKafkaConsumer<T, R> {
                                     Map<Integer, Pair<Long, KafkaAcknowledgeResult<?>>> partition2Offsets = p.stream()
                                             .collect(kafkaAcknowledgeResultMapCollector);
 
-                                    log.info("[KAFKA_COMMIT][{}] Committing {} messages: {}", getFlowName(), p.size(), partition2Offsets.entrySet()
-                                            .stream().map(e->"partition %d: %d - %d".formatted(e.getKey(),e.getValue().getKey(), e.getValue().getValue().offset())));
+                                    log.info("[KAFKA_COMMIT][{}] Committing {} messages: {}", getFlowName(), p.size(),
+                                            partition2Offsets.entrySet().stream()
+                                                    .map(e->"partition %d: %d - %d".formatted(e.getKey(),e.getValue().getKey(), e.getValue().getValue().offset()))
+                                                    .collect(Collectors.joining(";")));
 
                                     partition2Offsets.forEach((partition, offsets) -> Optional.ofNullable(offsets.getValue().ack()).ifPresent(Acknowledgment::acknowledge));
 
