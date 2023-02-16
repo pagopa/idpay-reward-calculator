@@ -7,7 +7,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -24,8 +23,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
-@ContextConfiguration(classes = {Utilities.class,InetAddress.class})
-class UtilitiesTest {
+@ContextConfiguration(classes = {AuditUtilities.class,InetAddress.class})
+class AuditUtilitiesTest {
     private static final String SRCIP;
 
     static {
@@ -36,7 +35,6 @@ class UtilitiesTest {
         }
     }
 
-    private static final String CEF = String.format("CEF:0 srcip=%s ", SRCIP);
     private static final String MSG = " TEST_MSG";
     private static final String USER = "TEST_USER_ID";
     private static final String CORRELATION_ID = "TEST_CORRELATION_ID";
@@ -47,7 +45,7 @@ class UtilitiesTest {
     @MockBean
     Logger logger;
     @Autowired
-    Utilities utilities;
+    AuditUtilities auditUtilities;
     @MockBean
     InetAddress inetAddress;
     MemoryAppender memoryAppender;
@@ -65,13 +63,13 @@ class UtilitiesTest {
 
     @Test
     void logCharge_ok(){
-        utilities.logCharge(USER, TRX_ISSUER, TRX_ACQUIRER, REWARD);
+        auditUtilities.logCharge(USER, TRX_ISSUER, TRX_ACQUIRER, REWARD);
         assertThat(memoryAppender.contains(ch.qos.logback.classic.Level.DEBUG,MSG)).isFalse();
     }
 
     @Test
     void logRefund_ok(){
-        utilities.logRefund(USER, TRX_ISSUER, TRX_ACQUIRER, REWARD, CORRELATION_ID);
+        auditUtilities.logRefund(USER, TRX_ISSUER, TRX_ACQUIRER, REWARD, CORRELATION_ID);
         assertThat(memoryAppender.contains(ch.qos.logback.classic.Level.DEBUG,MSG)).isFalse();
     }
 

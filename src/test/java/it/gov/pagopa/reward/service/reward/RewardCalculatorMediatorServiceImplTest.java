@@ -15,7 +15,7 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utilities;
+import it.gov.pagopa.reward.utils.AuditUtilities;
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
@@ -61,7 +61,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private RewardNotifierService rewardNotifierServiceMock;
     @Mock private ErrorNotifierService errorNotifierServiceMock;
-    @Mock private Utilities utilitiesMock;
+    @Mock private AuditUtilities auditUtilitiesMock;
 
     private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
 
@@ -80,7 +80,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 rewardTransactionMapper,
                 rewardNotifierServiceMock,
                 errorNotifierServiceMock,
-                utilitiesMock,
+                auditUtilitiesMock,
                 500,
                 TestUtils.objectMapper);
     }
