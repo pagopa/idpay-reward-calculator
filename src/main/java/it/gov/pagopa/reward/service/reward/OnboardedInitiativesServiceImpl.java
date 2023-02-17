@@ -79,7 +79,9 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
     private boolean checkInitiativeValidity(String initiativeId, OffsetDateTime trxDate) {
         InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
-        return initiativeConfig != null && (initiativeConfig.getEndDate() == null || initiativeConfig.getEndDate().isAfter(trxDate.toLocalDate()));
+        return initiativeConfig != null
+                && (initiativeConfig.getStartDate() == null || !initiativeConfig.getStartDate().isAfter(trxDate.toLocalDate()))
+                && (initiativeConfig.getEndDate() == null || !initiativeConfig.getEndDate().isBefore(trxDate.toLocalDate()));
     }
 
     //scroll the ActiveTimeInterval list from the end to facilitate the exit of the for-cycle

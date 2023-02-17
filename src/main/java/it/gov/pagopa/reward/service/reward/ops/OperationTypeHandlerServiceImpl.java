@@ -30,14 +30,24 @@ public class OperationTypeHandlerServiceImpl implements OperationTypeHandlerServ
 
     @Override
     public Mono<TransactionDTO> handleOperationType(TransactionDTO transactionDTO) {
-        if(refundOperationTypes.contains(transactionDTO.getOperationType())) {
+        if(isRefundOperation(transactionDTO)) {
             return operationTypeRefundHandlerService.handleRefundOperation(transactionDTO);
-        } else if(chargeOperationTypes.contains(transactionDTO.getOperationType())) {
+        } else if(isChargeOperation(transactionDTO)) {
             return operationTypeChargeHandlerService.handleChargeOperation(transactionDTO);
         } else {
             log.info("[REWARD] [REWARD_KO] Cannot recognize the operationType: {}", transactionDTO.getOperationType());
             transactionDTO.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_INVALID_OPERATION_TYPE);
             return Mono.just(transactionDTO);
         }
+    }
+
+    @Override
+    public boolean isChargeOperation(TransactionDTO transactionDTO) {
+        return chargeOperationTypes.contains(transactionDTO.getOperationType());
+    }
+
+    @Override
+    public boolean isRefundOperation(TransactionDTO transactionDTO) {
+        return refundOperationTypes.contains(transactionDTO.getOperationType());
     }
 }

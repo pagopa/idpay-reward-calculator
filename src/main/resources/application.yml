@@ -12,7 +12,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors
+        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
@@ -42,6 +42,10 @@ spring:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-errors
+        trxResubmitter-out-0:
+          destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-splitter-producer
         # TODO remove me
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
@@ -55,6 +59,14 @@ spring:
               brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
               configuration:
                 sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG:}
+        kafka-idpay-splitter-producer:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_PRODUCER_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
         kafka-idpay:
           type: kafka
           environment:
@@ -119,7 +131,7 @@ spring:
               startOffset: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -153,6 +165,14 @@ spring:
                 retry.backoff.ms: ${KAFKA_HPANUPDATE_OUTCOME_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
                 linger.ms: ${KAFKA_HPANUPDATE_OUTCOME_LINGER_MS:${KAFKA_LINGER_MS:2}}
                 batch.size: ${KAFKA_HPANUPDATE_OUTCOME_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+          trxResubmitter-out-0:
+            producer:
+              configuration:
+                client.id: trxResubmitter
+                connections.max.idle.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:180000}}
+                retry.backoff.ms: ${KAFKA_TRX_RESUBMITTER_PRODUCER_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_TRX_RESUBMITTER_PRODUCER_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_TRX_RESUBMITTER_PRODUCER_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
           # TODO remove me
           trxProducer-out-0:
             producer:
@@ -163,7 +183,7 @@ spring:
               startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:1000}
+              ackTime: ${KAFKA_REWARD_RULE_REQUEST_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_REWARD_RULE_REQUEST_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
@@ -178,7 +198,7 @@ spring:
               startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
               autoCommitOffset: false
               ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:10000}
+              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:500}
               standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
