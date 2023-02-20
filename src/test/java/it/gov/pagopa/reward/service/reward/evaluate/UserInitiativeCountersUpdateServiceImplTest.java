@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.InitiativeCounters;
@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -62,7 +63,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .monthlyThreshold(true)
                 .yearlyThreshold(true)
                 .build();
-        Mockito.when(rewardContextHolderService.getInitiativeConfig(Mockito.any())).thenReturn(initiativeConfig);
+        Mockito.when(rewardContextHolderService.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
     }
 
     @Test
@@ -91,7 +92,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
@@ -138,7 +139,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 21L, 250, 4100);
@@ -168,7 +169,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 21L, 10000, 4100);
@@ -204,7 +205,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 ));
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         // First initiative (not rewarded)
@@ -247,7 +248,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("1"), 21L, 200, 4000);
@@ -266,7 +267,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                                 e -> new RefundInfo.PreviousReward(e.getValue().getInitiativeId(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward()))))
                 .build());
         rewardTransactionDTO.setRewards(rewardMock.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e-> new Reward(e.getValue().getInitiativeId(), e.getValue().getOrganizationId(), BigDecimal.ZERO))));
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("1"), 21L, 200, 4000);
@@ -281,7 +282,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         rewardTransactionDTO.setEffectiveAmount(BigDecimal.ZERO);
         rewardMock.values().forEach(r->r.setAccruedReward(r.getAccruedReward().negate()));
         rewardTransactionDTO.setRewards(rewardMock);
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("1"), 20L, 200, 4000);
@@ -319,7 +320,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
@@ -350,7 +351,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
@@ -381,7 +382,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
@@ -412,7 +413,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
@@ -445,7 +446,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 21L, 10000, 4100);
@@ -483,7 +484,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 21L, 10000, 4001);
@@ -526,7 +527,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 20L, 8000, 3901);
@@ -582,7 +583,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 20L, 9000, 3999);
@@ -618,7 +619,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO);
+        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
 
         // Then
         checkCounters(initiativeCounters, 19L, 8000, 3900);

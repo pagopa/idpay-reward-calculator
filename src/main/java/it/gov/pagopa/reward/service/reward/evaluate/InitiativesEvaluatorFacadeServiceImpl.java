@@ -49,18 +49,20 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
         final String userId = trx.getUserId();
 
         return userInitiativeCountersRepository.findById(userId)
-                                .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
-                                .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
-                                .flatMap(counters2rewardedTrx -> {
-                                    RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
-                                    userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), rewardedTrx);
+                .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
+                .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
+                .flatMap(counters2rewardedTrx ->
+                        userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond())
+                                .then(Mono.just(counters2rewardedTrx)))
+                .flatMap(counters2rewardedTrx -> {
+                    RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
 
-                                    return transactionProcessedService.save(rewardedTrx)
-                                            .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", trx.getId()))
-                                            .then(userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst()))
-                                            .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", trx.getId()))
-                                            .then(Mono.just(rewardedTrx));
-                                });
+                    return transactionProcessedService.save(rewardedTrx)
+                            .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", trx.getId()))
+                            .then(userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst()))
+                            .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", trx.getId()))
+                            .then(Mono.just(rewardedTrx));
+                });
     }
 
     private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {

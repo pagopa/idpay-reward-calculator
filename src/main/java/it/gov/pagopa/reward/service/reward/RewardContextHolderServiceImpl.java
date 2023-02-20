@@ -17,7 +17,6 @@ import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -125,8 +124,15 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
 
     //region initiativeConfig holder
     @Override
-    public InitiativeConfig getInitiativeConfig(String initiativeId) {
-        return initiativeId2Config.computeIfAbsent(initiativeId, this::retrieveInitiativeConfig);
+    public Mono<InitiativeConfig> getInitiativeConfig(String initiativeId) {
+        InitiativeConfig cachedInitiativeConfig = initiativeId2Config.get(initiativeId);
+        if(cachedInitiativeConfig==null){
+        return retrieveInitiativeConfig(initiativeId)
+                    .doOnNext(initiativeConfig -> initiativeId2Config.put(initiativeId, initiativeConfig))
+                ;
+        } else {
+            return Mono.just(cachedInitiativeConfig);
+        }
     }
 
     @Override
@@ -134,16 +140,16 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         initiativeId2Config.put(initiativeConfig.getInitiativeId(),initiativeConfig);
     }
 
-    private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
+    private Mono<InitiativeConfig> retrieveInitiativeConfig(String initiativeId) {
         log.debug("[CACHE_MISS] Cannot find locally initiativeId {}", initiativeId);
         long startTime = System.currentTimeMillis();
-        DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10));
-        log.info("[CACHE_MISS] [PERFORMANCE_LOG] Time spent fetching initiativeId: {} ms", System.currentTimeMillis() - startTime);
-        if (droolsRule==null){
-            log.error("[REWARD_CONTEXT] cannot find initiative having id %s".formatted(initiativeId));
-            return null;
-        }
-        return droolsRule.getInitiativeConfig();
+        return droolsRuleRepository.findById(initiativeId)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("[REWARD_CONTEXT] cannot find initiative having id %s".formatted(initiativeId));
+                    return Mono.empty();
+                }))
+                .map(DroolsRule::getInitiativeConfig)
+                .doFinally(x -> log.info("[CACHE_MISS] [PERFORMANCE_LOG] Time spent fetching initiativeId {} ({}): {} ms", initiativeId, x.toString(), System.currentTimeMillis() - startTime));
     }
     //endregion
 }
