@@ -8,6 +8,7 @@ public class HpanInitiativeDTOFaker {
                 .hpan("HPAN_%d".formatted(bias))
                 .maskedPan("MASKEDPAM_%d".formatted(bias))
                 .brandLogo("BRANDLOGO_%d".formatted(bias))
+                .brand("BRAND_%d".formatted(bias))
                 .userId("USERID_%d".formatted(bias))
                 .initiativeId("INITIATIVE_%d".formatted(bias));
     }

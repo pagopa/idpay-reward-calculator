@@ -24,7 +24,8 @@ class HpanUpdateBulk2SingleMapperTest {
         PaymentMethodInfoDTO infoHpan = PaymentMethodInfoDTO.builder()
                 .hpan("HPAN_1")
                 .maskedPan("MASKEDPAN_1")
-                .brandLogo("BRANDLOGO_1").build();
+                .brandLogo("BRANDLOGO_1")
+                .brand("BRAND_1").build();
 
         HpanInitiativeBulkDTO hpanInitiativeBulkDTO = HpanInitiativeBulkDTO.builder()
                 .userId("USERID")
@@ -40,6 +41,7 @@ class HpanUpdateBulk2SingleMapperTest {
         Assertions.assertEquals("HPAN_1", result.getHpan());
         Assertions.assertEquals("MASKEDPAN_1", result.getMaskedPan());
         Assertions.assertEquals("BRANDLOGO_1", result.getBrandLogo());
+        Assertions.assertEquals("BRAND_1", result.getBrand());
         Assertions.assertEquals("USERID", result.getUserId());
         Assertions.assertEquals("INITIATIVEID", result.getInitiativeId());
         Assertions.assertEquals(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT, result.getOperationType());
