@@ -42,6 +42,7 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=WARN",
         "logging.level.it.gov.pagopa.reward.utils.PerformanceLogger=WARN",
+        "logging.level.AUDIT=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
@@ -87,7 +88,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         });
 
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
-        initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())));
+        initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId()).block()));
     }
 
     protected void onboardHpan(String hpan, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){

@@ -98,11 +98,11 @@ class OnboardedInitiativesServiceImplTest {
 
         final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(
-                InitiativeConfig.builder()
+                Mono.just(InitiativeConfig.builder()
                         .initiativeId(mockedInitiativeId)
                         .startDate(initiativeStartDate)
                         .endDate(initiativeEndDate)
-                        .build());
+                        .build()));
 
 
         // When
@@ -177,7 +177,7 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
 
         final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build());
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build()));
 
         // When
         List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();

@@ -58,6 +58,8 @@ class InitiativeEvaluatorFacadeServiceTest {
                 userInitiativeCountersUpdateServiceMock,
                 transactionProcessedService,
                 rewardTransactionMapper);
+
+        Mockito.when(userInitiativeCountersUpdateServiceMock.update(Mockito.any(),Mockito.any())).thenAnswer(i->Mono.just(i.getArgument(1)));
     }
 
     @Test

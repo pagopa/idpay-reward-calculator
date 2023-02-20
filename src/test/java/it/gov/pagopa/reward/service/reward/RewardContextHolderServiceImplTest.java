@@ -75,7 +75,7 @@ class RewardContextHolderServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.findById(Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
         // When
-        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId).block();
 
         //Then
         Assertions.assertNull(result);
@@ -93,7 +93,7 @@ class RewardContextHolderServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.findById(Mockito.same(initiativeId))).thenReturn(Mono.just(droolsRule));
 
         // When
-        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId).block();
 
         //Then
         Assertions.assertNotNull(result);
@@ -120,7 +120,7 @@ class RewardContextHolderServiceImplTest {
 
         // When
         rewardContextHolderService.setInitiativeConfig(initiativeConfig);
-        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId).block();
 
         //Then
         Assertions.assertNotNull(result);
