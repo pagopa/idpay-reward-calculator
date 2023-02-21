@@ -64,5 +64,6 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setUserId(src.getUserId());
         dest.setMaskedPan(src.getMaskedPan());
         dest.setBrandLogo(src.getBrandLogo());
+        dest.setBrand(src.getBrand());
     }
 }
