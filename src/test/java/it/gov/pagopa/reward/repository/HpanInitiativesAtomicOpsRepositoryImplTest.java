@@ -40,7 +40,8 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                 .userId("USERID")
                 .hpan(hpan)
                 .maskedPan("MASKED_PAN")
-                .brandLogo("BRAND_LOGO").build();
+                .brandLogo("BRAND_LOGO")
+                .brand("BRAND").build();
 
         List<OnboardedInitiative> onboardedInitiativeList = new ArrayList<>();
 
@@ -136,6 +137,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         String hpan = "hpan_prova";
         String maskedPan = "MASKEDPAN_CONCURRENCY";
         String brandLogo = "BRANDLOGO_CONCURRENCY";
+        String brand = "BRAND_CONCURRENCY";
         String userId = "USERID_CONCURRENCY";
 
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
@@ -146,6 +148,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                             .hpan(hpan)
                             .maskedPan(maskedPan)
                             .brandLogo(brandLogo)
+                            .brand(brand)
                             .userId(userId)
                             .build();
                     return hpanInitiativesAtomicOpsRepositoryImpl.createIfNotExist(hpanInitiatives).block();
@@ -205,6 +208,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                 .hpan(hpan)
                 .maskedPan("MASKEDPAN")
                 .brandLogo("BRANDLOGO")
+                .brand("BRAND")
                 .onboardedInitiatives(onboardedInitiativeList).build();
 
         hpanInitiativesRepository.save(hpanInitiatives).block();

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.LockService;
@@ -111,18 +110,10 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
                 .doOnEach(lockReleaser)
                 .doOnNext(r -> {
                     try {
-                        if (OperationType.CHARGE.equals(payload.getOperationTypeTranscoded())) {
-                            auditUtilities.logCharge(payload.getUserId(), payload.getIdTrxIssuer(), payload.getIdTrxAcquirer(),
-                                    r.getRewards().entrySet().stream().map(entry -> ("initiativeId=".concat(entry.getKey())
-                                            .concat(" reward=").concat(entry.getValue().getProvidedReward().toString()))).toString());
-                        } else if (OperationType.REFUND.equals(payload.getOperationTypeTranscoded())) {
-                            auditUtilities.logRefund(payload.getUserId(), payload.getIdTrxIssuer(), payload.getIdTrxAcquirer(),
-                                    r.getRewards().entrySet().stream().map(entry -> ("initiativeId=".concat(entry.getKey())
-                                            .concat(" reward=").concat(entry.getValue().getProvidedReward().toString()))).toString(), payload.getCorrelationId());
-                        }
                         if (!rewardNotifierService.notify(r)) {
                             throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
                         }
+                        auditUtilities.logExecute(payload, r);
                     } catch (Exception e) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
                         errorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);

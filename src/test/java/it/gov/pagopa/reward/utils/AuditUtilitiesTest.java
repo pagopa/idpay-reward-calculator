@@ -6,7 +6,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -25,16 +24,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @ContextConfiguration(classes = {AuditUtilities.class,InetAddress.class})
 class AuditUtilitiesTest {
-    private static final String SRCIP;
-
-    static {
-        try {
-            SRCIP = InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private static final String MSG = " TEST_MSG";
     private static final String USER = "TEST_USER_ID";
     private static final String CORRELATION_ID = "TEST_CORRELATION_ID";

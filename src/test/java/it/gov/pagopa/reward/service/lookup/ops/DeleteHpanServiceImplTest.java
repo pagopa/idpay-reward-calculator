@@ -31,6 +31,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO1.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO1.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO1.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO1.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO1.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO1.setEvaluationDate(time.minusYears(4L));
@@ -64,6 +65,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO1.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO1.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO1.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO1.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO1.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO1.setEvaluationDate(time);
@@ -103,6 +105,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO1.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO1.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO1.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO1.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO1.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO1.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO1.setEvaluationDate(time);
@@ -126,6 +129,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("ANOTHER_INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(time);
@@ -150,6 +154,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(time);
@@ -187,6 +192,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVE_%d".formatted(bias));
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(time);
@@ -231,6 +237,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
@@ -256,6 +263,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
@@ -281,6 +289,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
@@ -308,6 +317,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setHpan(hpanInitiatives.getHpan());
         hpanUpdateEvaluateDTO.setMaskedPan(hpanInitiatives.getMaskedPan());
         hpanUpdateEvaluateDTO.setBrandLogo(hpanInitiatives.getBrandLogo());
+        hpanUpdateEvaluateDTO.setBrand(hpanInitiatives.getBrand());
         hpanUpdateEvaluateDTO.setInitiativeId("INITIATIVEID");
         hpanUpdateEvaluateDTO.setUserId(hpanInitiatives.getUserId());
         hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now().with(LocalTime.MIN).plusDays(1L));
@@ -339,6 +349,7 @@ class DeleteHpanServiceImplTest {
         request.setHpan(hpanInitiatives.getHpan());
         request.setMaskedPan(hpanInitiatives.getMaskedPan());
         request.setBrandLogo(hpanInitiatives.getBrandLogo());
+        request.setBrand(hpanInitiatives.getBrand());
         request.setInitiativeId(initiativeId);
         request.setUserId(hpanInitiatives.getUserId());
         request.setEvaluationDate(elabDateTime);
@@ -389,6 +400,7 @@ class DeleteHpanServiceImplTest {
         request.setHpan(hpanInitiatives.getHpan());
         request.setMaskedPan(hpanInitiatives.getMaskedPan());
         request.setBrandLogo(hpanInitiatives.getBrandLogo());
+        request.setBrand(hpanInitiatives.getBrand());
         request.setInitiativeId(initiativeId);
         request.setUserId(hpanInitiatives.getUserId());
         request.setEvaluationDate(elabDateTime);

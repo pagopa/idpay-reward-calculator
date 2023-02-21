@@ -21,6 +21,7 @@ public class HpanInitiatives {
     private String hpan;
     private String maskedPan;
     private String brandLogo;
+    private String brand;
     private String userId;
     private List<OnboardedInitiative> onboardedInitiatives;
 }

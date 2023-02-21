@@ -17,6 +17,7 @@ public class HpanUpdateEvaluateDTO2HpanInitiativeMapper implements Function<Hpan
             out.setHpan(hpanUpdateEvaluateDTO.getHpan());
             out.setMaskedPan(hpanUpdateEvaluateDTO.getMaskedPan());
             out.setBrandLogo(hpanUpdateEvaluateDTO.getBrandLogo());
+            out.setBrand(hpanUpdateEvaluateDTO.getBrand());
             out.setUserId(hpanUpdateEvaluateDTO.getUserId());
         }
         return out;

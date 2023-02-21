@@ -19,6 +19,7 @@ public class HpanUpdateBulk2SingleMapper implements TriFunction<HpanInitiativeBu
         output.setHpan(infoHpan.getHpan());
         output.setMaskedPan(infoHpan.getMaskedPan());
         output.setBrandLogo(infoHpan.getBrandLogo());
+        output.setBrand(infoHpan.getBrand());
         output.setOperationType(hpanInitiativeBulkDTO.getOperationType());
         output.setEvaluationDate(evaluationDate);
 
