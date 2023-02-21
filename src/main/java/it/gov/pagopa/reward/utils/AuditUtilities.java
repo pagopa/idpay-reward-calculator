@@ -36,22 +36,32 @@ public class AuditUtilities {
         log.info(userId);
     }
 
-    private String buildBaseAuditLog(String eventLog, String userId, String trxIssuer, String trxAcquirer, String rewards) {
-        return "%s msg=%s suser=%s cs1Label=TRXIssuer cs1=%s cs2Label=TRXAcquirer cs2=%s cs3Label=rewards cs3=%s".formatted(
-                CEF, eventLog, userId, trxIssuer, trxAcquirer, rewards);
+    private StringBuilder buildBaseAuditLog(String eventLog, String userId, String trxIssuer, String trxAcquirer, String rewards) {
+        return new StringBuilder(CEF)
+                .append(" msg=")
+                .append(eventLog)
+                .append(" suser=")
+                .append(userId)
+                .append(" cs1Label=TRXIssuer cs1=")
+                .append(trxIssuer)
+                .append(" cs2Label=TRXAcquirer cs2=")
+                .append(trxAcquirer)
+                .append(" cs3Label=rewards cs3=")
+                .append(rewards);
     }
 
     public void logCharge(String userId, String trxIssuer, String trxAcquirer, String rewards) {
         logAuditString(
-                this.buildBaseAuditLog("The charge has been calculated", userId, trxIssuer, trxAcquirer, rewards)
+                this.buildBaseAuditLog("The charge has been calculated", userId, trxIssuer, trxAcquirer, rewards).toString()
         );
     }
 
     public void logRefund(String userId, String trxIssuer, String trxAcquirer, String rewards, String correlationId) {
         logAuditString(
-                "%s cs4Label=correlationId cs4=%s".formatted(
-                this.buildBaseAuditLog("The refund has been calculated", userId, trxIssuer, trxAcquirer, rewards),
-                correlationId)
+                this.buildBaseAuditLog("The refund has been calculated", userId, trxIssuer, trxAcquirer, rewards)
+                        .append(" cs4Label=correlationId cs4=")
+                        .append(correlationId)
+                        .toString()
         );
     }
 
