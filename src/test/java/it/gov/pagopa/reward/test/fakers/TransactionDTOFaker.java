@@ -76,6 +76,7 @@ public class TransactionDTOFaker {
                 .par("PAR%d".formatted(bias))
                 .userId("USERID%d".formatted(bias))
                 .maskedPan("MASKEDPAN%d".formatted(bias))
-                .brandLogo("BRANDLOGO%d".formatted(bias));
+                .brandLogo("BRANDLOGO%d".formatted(bias))
+                .brand("BRAND%d".formatted(bias));
     }
 }
