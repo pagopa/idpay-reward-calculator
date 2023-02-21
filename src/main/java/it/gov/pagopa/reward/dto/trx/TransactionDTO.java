@@ -80,6 +80,7 @@ public class TransactionDTO {
     //region fields added by splitter
     private String userId;
     private String brandLogo;
+    private String brand;
     private String maskedPan;
     //endregion
 

@@ -28,7 +28,8 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                                 .setOnInsert(HpanInitiatives.Fields.userId, hpanInitiatives.getUserId())
                                 .setOnInsert(HpanInitiatives.Fields.hpan, hpanInitiatives.getHpan())
                                 .setOnInsert(HpanInitiatives.Fields.maskedPan, hpanInitiatives.getMaskedPan())
-                                .setOnInsert(HpanInitiatives.Fields.brandLogo, hpanInitiatives.getBrandLogo()),
+                                .setOnInsert(HpanInitiatives.Fields.brandLogo, hpanInitiatives.getBrandLogo())
+                                .setOnInsert(HpanInitiatives.Fields.brand, hpanInitiatives.getBrand()),
                         HpanInitiatives.class).onErrorResume(e -> {
                     if (e instanceof DuplicateKeyException) {
                         return Mono.just(UpdateResult.acknowledged(1, 0L, null));

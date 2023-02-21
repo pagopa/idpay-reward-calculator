@@ -13,4 +13,5 @@ public class PaymentMethodInfoDTO {
     private String hpan;
     private String maskedPan;
     private String brandLogo;
+    private String brand;
 }
