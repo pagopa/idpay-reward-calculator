@@ -31,27 +31,24 @@ public class AuditUtilities {
     }
 
     private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s", SRCIP);
+    private static final String CEF_PATTERN = CEF + " msg={} suser={} cs1Label=TRXIssuer cs1={} cs2Label=TRXAcquirer cs2={} cs3Label=rewards cs3={}";
+    private static final String CEF_CORRELATED_PATTERN = CEF_PATTERN + " cs4Label=correlationId cs4={}";
 
-    private void logAuditString(String userId) {
-        log.info(userId);
-    }
-
-    private String buildBaseAuditLog(String eventLog, String userId, String trxIssuer, String trxAcquirer, String rewards) {
-        return "%s msg=%s suser=%s cs1Label=TRXIssuer cs1=%s cs2Label=TRXAcquirer cs2=%s cs3Label=rewards cs3=%s".formatted(
-                CEF, eventLog, userId, trxIssuer, trxAcquirer, rewards);
+    private void logAuditString(String pattern, String... parameters) {
+        log.info(pattern, (Object[]) parameters);
     }
 
     public void logCharge(String userId, String trxIssuer, String trxAcquirer, String rewards) {
         logAuditString(
-                this.buildBaseAuditLog("The charge has been calculated", userId, trxIssuer, trxAcquirer, rewards)
+                CEF_PATTERN,
+                "The charge has been calculated", userId, trxIssuer, trxAcquirer, rewards
         );
     }
 
     public void logRefund(String userId, String trxIssuer, String trxAcquirer, String rewards, String correlationId) {
         logAuditString(
-                "%s cs4Label=correlationId cs4=%s".formatted(
-                this.buildBaseAuditLog("The refund has been calculated", userId, trxIssuer, trxAcquirer, rewards),
-                correlationId)
+                CEF_CORRELATED_PATTERN,
+                "The refund has been calculated", userId, trxIssuer, trxAcquirer, rewards, correlationId
         );
     }
 

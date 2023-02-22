@@ -1,15 +1,11 @@
 package it.gov.pagopa.reward.utils;
 
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
+import it.gov.pagopa.reward.test.utils.MemoryAppender;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.List;
 
 class AuditUtilitiesTest {
     private static final String USER = "TEST_USER_ID";
@@ -47,7 +43,7 @@ class AuditUtilitiesTest {
                                 TRX_ACQUIRER,
                                 REWARD
                         ),
-                memoryAppender.getLoggedEvents().get(0).getMessage()
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
 
@@ -77,29 +73,8 @@ class AuditUtilitiesTest {
                                 REWARD,
                                 CORRELATION_ID
                                 ),
-                memoryAppender.getLoggedEvents().get(0).getMessage()
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
-    }
-
-
-    public static class MemoryAppender extends ListAppender<ILoggingEvent> {
-        public void reset() {
-            this.list.clear();
-        }
-
-        public boolean contains(ch.qos.logback.classic.Level level, String string) {
-            return this.list.stream()
-                    .anyMatch(event -> event.toString().contains(string)
-                            && event.getLevel().equals(level));
-        }
-
-        public int getSize() {
-            return this.list.size();
-        }
-
-        public List<ILoggingEvent> getLoggedEvents() {
-            return Collections.unmodifiableList(this.list);
-        }
     }
 
 }
