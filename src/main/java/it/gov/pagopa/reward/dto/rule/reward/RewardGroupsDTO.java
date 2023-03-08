@@ -1,10 +1,9 @@
 package it.gov.pagopa.reward.dto.rule.reward;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,10 +18,23 @@ public class RewardGroupsDTO implements InitiativeRewardRule, InitiativeTrxCondi
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    @Builder
-    public static class RewardGroupDTO {
+    @SuperBuilder
+    @EqualsAndHashCode(callSuper = true)
+    @JsonPropertyOrder({
+            "from",
+            "to",
+            "rewardValue",
+            "rewardValueType"
+    })
+    @ToString(callSuper = true)
+    public static class RewardGroupDTO extends BaseRewardValue {
         private BigDecimal from;
         private BigDecimal to;
-        private BigDecimal rewardValue;
+
+        public RewardGroupDTO(BigDecimal from, BigDecimal to, BigDecimal rewardValue){
+            super(rewardValue);
+            this.from=from;
+            this.to=to;
+        }
     }
 }
