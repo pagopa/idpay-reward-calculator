@@ -43,5 +43,5 @@ microservice-chart:
 
   envConfig:
     JAVA_TOOL_OPTIONS: "-Xms128m -Xmx4g -Djava.util.concurrent.ForkJoinPool.common.parallelism=7 -Dio.netty.eventLoopThreads=100 -javaagent:/app/applicationinsights-agent.jar"
-    CACHE_REFRESH_MS_RATE: "900000"
+    CACHE_REFRESH_MS_RATE: "60000"
     REDIS_CACHE_ENABLED: "true"
