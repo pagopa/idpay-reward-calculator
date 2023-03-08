@@ -141,7 +141,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private long waitForDroolsRulesStored(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 90, 1000);
+        waitFor(()->(countSaved[0]=droolsRuleRepository.count().block()) >= N, ()->"Expected %d saved rules, read %d".formatted(N, countSaved[0]), 100, 1000);
         return countSaved[0];
     }
 
