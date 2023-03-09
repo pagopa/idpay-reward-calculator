@@ -113,11 +113,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
                         if (!rewardNotifierService.notify(r)) {
                             throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
                         }
-                        auditUtilities.logExecute(payload, r);
                     } catch (Exception e) {
                         log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
                         errorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e);
                     }
+
+                    auditUtilities.logExecute(r);
                 });
     }
 
