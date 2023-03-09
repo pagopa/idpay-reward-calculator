@@ -50,7 +50,7 @@ class AuditUtilitiesTest {
 
         //Then
         Assertions.assertEquals(
-                "CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=The charge has been calculated suser=USERID0 cs1Label=TRXIssuer cs1=IDTRXISSUER0 cs2Label=TRXAcquirer cs2=IDTRXACQUIRER0 cs3Label=rewards cs3=[initiativeId=INITIATIVE3 rewardCents=100] cs4Label=rejectionReasons cs4=[REJECTIONREASON1] cs5Label=initiativeRejectionReasons cs5=[INITIATIVE1=[REJECTIONREASON2],INITIATIVE2=[REJECTIONREASON3,REJECTIONREASON4]]"
+                "CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=The charge has been calculated suser=USERID0 cs1Label=TRXIssuer cs1=IDTRXISSUER0 cs2Label=TRXAcquirer cs2=IDTRXACQUIRER0 cs3Label=rewards cs3=[initiativeId=INITIATIVE3 rewardCents=100] cs4Label=rejectionReasons cs4=[REJECTIONREASON1] cs5Label=initiativeRejectionReasons cs5=[INITIATIVE1=[REJECTIONREASON2,REJECTIONREASON3]]"
                         .formatted(AuditUtilities.SRCIP),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
@@ -68,7 +68,7 @@ class AuditUtilitiesTest {
 
         //Then
         Assertions.assertEquals(
-                "CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=The refund has been calculated suser=USERID1 cs1Label=TRXIssuer cs1=IDTRXISSUER1 cs2Label=TRXAcquirer cs2=IDTRXACQUIRER1 cs3Label=rewards cs3=[initiativeId=INITIATIVE3 rewardCents=100] cs4Label=rejectionReasons cs4=[REJECTIONREASON1] cs5Label=initiativeRejectionReasons cs5=[INITIATIVE1=[REJECTIONREASON2],INITIATIVE2=[REJECTIONREASON3,REJECTIONREASON4]] cs6Label=correlationId cs6=CORRELATIONID1"
+                "CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=The refund has been calculated suser=USERID1 cs1Label=TRXIssuer cs1=IDTRXISSUER1 cs2Label=TRXAcquirer cs2=IDTRXACQUIRER1 cs3Label=rewards cs3=[initiativeId=INITIATIVE3 rewardCents=100] cs4Label=rejectionReasons cs4=[REJECTIONREASON1] cs5Label=initiativeRejectionReasons cs5=[INITIATIVE1=[REJECTIONREASON2,REJECTIONREASON3]] cs6Label=correlationId cs6=CORRELATIONID1"
                         .formatted(AuditUtilities.SRCIP),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
@@ -78,8 +78,7 @@ class AuditUtilitiesTest {
         RewardTransactionDTO trx = mapper.apply(TransactionDroolsDtoFaker.mockInstance(bias));
         trx.setRejectionReasons(List.of("REJECTIONREASON1"));
         trx.setInitiativeRejectionReasons(Map.of(
-                "INITIATIVE1", List.of("REJECTIONREASON2"),
-                "INITIATIVE2", List.of("REJECTIONREASON3", "REJECTIONREASON4")
+                "INITIATIVE1", List.of("REJECTIONREASON2", "REJECTIONREASON3")
         ));
         trx.setRewards(Map.of(
                 "INITIATIVE3", new Reward("INITIATIVE3", "ORGID", BigDecimal.ONE)
