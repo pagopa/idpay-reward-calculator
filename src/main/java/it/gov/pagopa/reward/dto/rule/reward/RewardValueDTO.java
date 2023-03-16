@@ -1,16 +1,20 @@
 package it.gov.pagopa.reward.dto.rule.reward;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class RewardValueDTO implements InitiativeRewardRule {
-    private BigDecimal rewardValue;
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class RewardValueDTO extends BaseRewardValue implements InitiativeRewardRule {
+    public RewardValueDTO(BigDecimal rewardValue){
+        super(rewardValue);
+    }
 }

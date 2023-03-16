@@ -2,7 +2,9 @@ package it.gov.pagopa.reward.drools.transformer.consequences.expressions;
 
 import it.gov.pagopa.reward.drools.model.DroolsRuleTemplateParam;
 import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
+import it.gov.pagopa.reward.dto.rule.reward.BaseRewardValue;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
+import it.gov.pagopa.reward.enums.RewardValueType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -13,14 +15,26 @@ public class RewardValueTrxConsequence2DroolsExpressionTransformer implements In
 
     @Override
     public String apply(String initiativeId, RewardValueDTO trxConsequence) {
-        return applyPercentReward(rewardPercentValue2TemplateParam(trxConsequence.getRewardValue()));
+        return applyRewardValue(trxConsequence);
+    }
+
+    public static String applyRewardValue(BaseRewardValue trxConsequence) {
+        if(RewardValueType.ABSOLUTE.equals(trxConsequence.getRewardValueType())){
+            return applyAbsoluteReward(trxConsequence.getRewardValue());
+        } else {
+            return applyPercentageReward(rewardPercentValue2TemplateParam(trxConsequence.getRewardValue()));
+        }
+    }
+
+    public static String applyAbsoluteReward(BigDecimal rewardValueAbsolute) {
+        return DroolsTemplateRuleUtils.toTemplateParam(rewardValueAbsolute).getParam()+".setScale(2, java.math.RoundingMode.HALF_DOWN)";
     }
 
     public static DroolsRuleTemplateParam rewardPercentValue2TemplateParam(BigDecimal rewardPercentValue) {
         return DroolsTemplateRuleUtils.toTemplateParam(rewardPercentValue.setScale(4, RoundingMode.HALF_DOWN).divide(ONEHUNDRED, RoundingMode.HALF_DOWN));
     }
 
-    public static String applyPercentReward(DroolsRuleTemplateParam rewardPercentValueTemplateParam) {
+    public static String applyPercentageReward(DroolsRuleTemplateParam rewardPercentValueTemplateParam) {
         return "$trx.getEffectiveAmount().multiply(%s).setScale(2, java.math.RoundingMode.HALF_DOWN)".formatted(rewardPercentValueTemplateParam.getParam());
     }
 }

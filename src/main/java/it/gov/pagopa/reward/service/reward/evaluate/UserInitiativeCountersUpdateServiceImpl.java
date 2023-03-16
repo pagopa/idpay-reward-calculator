@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
 
@@ -66,6 +68,8 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         return Flux.fromIterable(ruleEngineResult.getRewards().values())
                         .flatMap(reward -> {
                             String initiativeId = reward.getInitiativeId();
+                            capRewardToEffectiveAmount(ruleEngineResult, reward, initiativeId);
+
                             return rewardContextHolderService.getInitiativeConfig(initiativeId)
                                     .doOnNext(initiativeConfig -> {
                                         boolean justTrxCountRejection = isJustTrxCountRejection(ruleEngineResult, initiativeId);
@@ -85,6 +89,15 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                     });
                         })
                 .then(Mono.just(ruleEngineResult));
+    }
+
+    private void capRewardToEffectiveAmount(RewardTransactionDTO ruleEngineResult, Reward reward, String initiativeId) {
+        if(reward.getAccruedReward().compareTo(ruleEngineResult.getEffectiveAmount() )> 0){
+            log.warn("[REWARD] The following initiative calculated a reward greater than the amount: initiativeId={}, amount={}, reward={}, trxId={}",
+                    initiativeId, ruleEngineResult.getEffectiveAmount(), reward.getAccruedReward(), ruleEngineResult.getId());
+
+            reward.setAccruedReward(ruleEngineResult.getEffectiveAmount());
+        }
     }
 
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
