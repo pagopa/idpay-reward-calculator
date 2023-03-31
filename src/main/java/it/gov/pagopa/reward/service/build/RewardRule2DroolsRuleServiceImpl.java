@@ -47,14 +47,17 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
 
         DroolsRule out = new DroolsRule();
         out.setId(initiative.getInitiativeId());
-        out.setName(String.format("%s-%s", initiative.getInitiativeId(), initiative.getInitiativeName()));
+        out.setName(initiative.getInitiativeName());
 
         out.setRule("""
                 package %s;
+                
+                // %s
                 %s
                 """.formatted(
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
-                buildRules(out.getId(), out.getName(), initiative))
+                out.getName(),
+                buildRules(out.getId(), out.getId(), initiative))
         );
         out.setUpdateDate(LocalDateTime.now());
 
