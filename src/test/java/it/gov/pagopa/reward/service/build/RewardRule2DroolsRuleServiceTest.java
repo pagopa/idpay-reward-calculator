@@ -71,7 +71,7 @@ public class RewardRule2DroolsRuleServiceTest {
         DroolsRule result = buildRewardRule2DroolsRule(true).apply(dto);
 
         // then
-        Assertions.assertEquals("package it.gov.pagopa.reward.drools.buildrules;\n\n", result.getRule());
+        Assertions.assertEquals("package it.gov.pagopa.reward.drools.buildrules;\n\n// null\n\n", result.getRule());
     }
 
     @Test
@@ -103,11 +103,13 @@ public class RewardRule2DroolsRuleServiceTest {
     private void checkResult(DroolsRule result) {
         DroolsRule expected = new DroolsRule();
         expected.setId("ID_0_ssx");
-        expected.setName("ID_0_ssx-NAME_0_vnj");
+        expected.setName("NAME_0_vnj");
         expected.setRule("""
                 package it.gov.pagopa.reward.drools.buildrules;
-                                        
-                rule "ID_0_ssx-NAME_0_vnj-DAYOFWEEK"
+                
+                // NAME_0_vnj
+                
+                rule "ID_0_ssx-DAYOFWEEK"
                 salience 1
                 agenda-group "ID_0_ssx"
                 when
@@ -118,7 +120,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_DAYOFWEEK_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-MCCFILTER"
+                rule "ID_0_ssx-MCCFILTER"
                 salience 4
                 agenda-group "ID_0_ssx"
                 when
@@ -129,7 +131,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_MCCFILTER_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-DAILY-REWARDLIMITS"
+                rule "ID_0_ssx-DAILY-REWARDLIMITS"
                 salience 6
                 agenda-group "ID_0_ssx"
                 when
@@ -140,7 +142,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_DAILY_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-WEEKLY-REWARDLIMITS"
+                rule "ID_0_ssx-WEEKLY-REWARDLIMITS"
                 salience 6
                 agenda-group "ID_0_ssx"
                 when
@@ -151,7 +153,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_WEEKLY_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-MONTHLY-REWARDLIMITS"
+                rule "ID_0_ssx-MONTHLY-REWARDLIMITS"
                 salience 6
                 agenda-group "ID_0_ssx"
                 when
@@ -162,7 +164,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_MONTHLY_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-YEARLY-REWARDLIMITS"
+                rule "ID_0_ssx-YEARLY-REWARDLIMITS"
                 salience 6
                 agenda-group "ID_0_ssx"
                 when
@@ -173,7 +175,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_YEARLY_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-THRESHOLD"
+                rule "ID_0_ssx-THRESHOLD"
                 salience 3
                 agenda-group "ID_0_ssx"
                 when
@@ -184,7 +186,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_THRESHOLD_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-TRXCOUNT"
+                rule "ID_0_ssx-TRXCOUNT"
                 salience 5
                 agenda-group "ID_0_ssx"
                 when
@@ -195,7 +197,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("ID_0_ssx",k->new java.util.ArrayList<>()).add("TRX_RULE_TRXCOUNT_FAIL");
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-REWARDVALUE"
+                rule "ID_0_ssx-REWARDVALUE"
                 salience -1
                 agenda-group "ID_0_ssx"
                 when
@@ -206,7 +208,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 then $trx.getRewards().put("ID_0_ssx", new it.gov.pagopa.reward.dto.trx.Reward("ID_0_ssx","ORGANIZATIONID_0",$trx.getEffectiveAmount().multiply(new java.math.BigDecimal("0.0023")).setScale(2, java.math.RoundingMode.HALF_DOWN)));
                 end
                                 
-                rule "ID_0_ssx-NAME_0_vnj-DAILY-REWARDLIMITS-CAP"
+                rule "ID_0_ssx-DAILY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
                 when
@@ -228,7 +230,7 @@ public class RewardRule2DroolsRuleServiceTest {
                    }
                 end
                 
-                rule "ID_0_ssx-NAME_0_vnj-WEEKLY-REWARDLIMITS-CAP"
+                rule "ID_0_ssx-WEEKLY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
                 when
@@ -250,7 +252,7 @@ public class RewardRule2DroolsRuleServiceTest {
                    }
                 end
                 
-                rule "ID_0_ssx-NAME_0_vnj-MONTHLY-REWARDLIMITS-CAP"
+                rule "ID_0_ssx-MONTHLY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
                 when
@@ -272,7 +274,7 @@ public class RewardRule2DroolsRuleServiceTest {
                    }
                 end
                 
-                rule "ID_0_ssx-NAME_0_vnj-YEARLY-REWARDLIMITS-CAP"
+                rule "ID_0_ssx-YEARLY-REWARDLIMITS-CAP"
                 salience -2
                 agenda-group "ID_0_ssx"
                 when
@@ -294,7 +296,7 @@ public class RewardRule2DroolsRuleServiceTest {
                    }
                 end
                    
-                rule "ID_0_ssx-NAME_0_vnj-TRXCOUNT-REWARD"
+                rule "ID_0_ssx-TRXCOUNT-REWARD"
                 salience -3
                 agenda-group "ID_0_ssx"
                 when
