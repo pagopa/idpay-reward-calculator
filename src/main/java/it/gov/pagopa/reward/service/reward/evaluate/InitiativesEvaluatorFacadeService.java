@@ -14,4 +14,7 @@ public interface InitiativesEvaluatorFacadeService {
 
     /** It will return a preview of the reward evaluating initiative budget and rules, without budget updates */
     Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters);
+
+    /** It will reserve the budgets after the evaluation of the rewards */
+    Mono<RewardTransactionDTO> updateBudgets(Mono<Pair<UserInitiativeCounters, RewardTransactionDTO>> trxEvaluationMono);
 }
