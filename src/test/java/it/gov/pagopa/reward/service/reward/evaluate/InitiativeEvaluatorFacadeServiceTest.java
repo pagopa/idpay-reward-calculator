@@ -79,7 +79,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         mockUseCases(trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
 
         // When
-        @SuppressWarnings("ConstantConditions") List<RewardTransactionDTO> result = trxs.stream().map(t -> initiativesEvaluatorFacadeService.evaluate(t, initiatives).block()).toList();
+        @SuppressWarnings("ConstantConditions") List<RewardTransactionDTO> result = trxs.stream().map(t -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(t, initiatives).block()).toList();
 
         // Then
         Assertions.assertNotNull(result);

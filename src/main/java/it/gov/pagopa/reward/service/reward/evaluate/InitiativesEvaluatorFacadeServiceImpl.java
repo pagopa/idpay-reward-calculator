@@ -43,7 +43,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     }
 
     @Override
-    public Mono<RewardTransactionDTO> evaluate(TransactionDTO trx, List<String> initiatives) {
+    public Mono<RewardTransactionDTO> evaluateAndUpdateBudget(TransactionDTO trx, List<String> initiatives) {
         log.trace("[REWARD] Initiative fetched, retrieving counter: {}", trx.getId());
 
         final String userId = trx.getUserId();
@@ -65,7 +65,8 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                 });
     }
 
-    private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+    @Override
+    public Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
         log.trace("[REWARD] Counter retrieved, evaluating initiatives: {} - {}", trx.getId(), initiatives.size());
 
         RewardTransactionDTO trxRewarded;
