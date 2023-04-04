@@ -16,7 +16,7 @@ public class TrxCountTrxCondition2DroolsConditionTransformer implements Initiati
                         checkDefinedThreshold(trxCountDTO.getTo(), trxCountDTO.isToIncluded(), "<")
                 ).filter(Objects::nonNull)
                 .map(op ->
-                        "$initiativeCounters.trxNumber %s %s".formatted(
+                        "$userInitiativeCounters.trxNumber %s %s".formatted(
                                 op.getFirst(),
                                 DroolsTemplateRuleUtils.toTemplateParam(op.getSecond() - 1L) // -1 in order to count the current transaction
                         )

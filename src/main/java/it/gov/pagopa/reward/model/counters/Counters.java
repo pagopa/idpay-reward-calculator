@@ -20,4 +20,10 @@ public class Counters {
     private BigDecimal totalReward = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+
+    public abstract static class CountersBuilder<C extends Counters, B extends CountersBuilder<C, B>> {
+        protected C hiddenBuild(){
+            return this.build();
+        }
+    }
 }

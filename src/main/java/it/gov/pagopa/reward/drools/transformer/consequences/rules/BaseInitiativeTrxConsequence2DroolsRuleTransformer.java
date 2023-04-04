@@ -4,8 +4,8 @@ import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2Drool
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T extends InitiativeTrxConsequence> implements InitiativeTrxConsequence2DroolsRuleTransformer<T> {
@@ -40,7 +40,7 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 agenda-group "%s"
                 when
                    $userCounters: %s()
-                   $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s("%s"))
+                   $userInitiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s("DUMMYUSERID", "%s"))
                    $trx: %s()
                    eval($trx.getInitiativeRejectionReasons().get("%s") == null)
                 then %s
@@ -50,10 +50,10 @@ public abstract class BaseInitiativeTrxConsequence2DroolsRuleTransformer<T exten
                 getTrxConsequenceRuleName(),
                 getTrxConsequenceRuleOrder(),
                 initiativeId,
+                UserInitiativeCountersWrapper.class.getName(),
                 UserInitiativeCounters.class.getName(),
-                InitiativeCounters.class.getName(),
                 initiativeId,
-                InitiativeCounters.class.getName(),
+                UserInitiativeCounters.class.getName(),
                 initiativeId,
                 TransactionDroolsDTO.class.getName(),
                 initiativeId,
