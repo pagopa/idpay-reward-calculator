@@ -3,12 +3,16 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.exception.ClientException;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
+import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,6 +47,17 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                 return Flux.empty();
             }
         }
+    }
+
+    @Override
+    public Mono<HpanInitiatives> isOnboarded(String hpan, String initiativeId) {
+        return  hpanInitiativesRepository.findByHpanAndInitiativeId(hpan, initiativeId)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException()))
+                .doOnError(e -> {
+                    if(e instanceof  IllegalArgumentException){
+                        throw new ClientException(HttpStatus.FORBIDDEN, "User not onboarded to initiative %s".formatted(initiativeId));
+                    }
+                });
     }
 
     /** true if > 0 */
