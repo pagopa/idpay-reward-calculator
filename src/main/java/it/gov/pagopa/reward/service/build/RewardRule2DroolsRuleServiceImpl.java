@@ -50,15 +50,18 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
         out.setId(initiative.getInitiativeId());
         out.setName(initiative.getInitiativeName());
         out.setInitiativeConfig(initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
+        out.setRuleVersion("20230404");
 
         out.setRule("""
                 package %s;
                 
                 // %s
+                // ruleVersion: %s
                 %s
                 """.formatted(
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
                 out.getName(),
+                out.getRuleVersion(),
                 buildRules(out.getId(), out.getId(), out.getInitiativeConfig()))
         );
         out.setUpdateDate(LocalDateTime.now());

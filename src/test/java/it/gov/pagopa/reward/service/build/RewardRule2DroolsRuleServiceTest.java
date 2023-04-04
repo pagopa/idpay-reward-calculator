@@ -35,6 +35,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/*
+ ******************
+ For any change necessary on this test consider if update "ruleVersion" value setted in it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl.apply
+ ******************
+*/
 public class RewardRule2DroolsRuleServiceTest {
 
     @BeforeAll
@@ -71,7 +76,7 @@ public class RewardRule2DroolsRuleServiceTest {
         DroolsRule result = buildRewardRule2DroolsRule(true).apply(dto);
 
         // then
-        Assertions.assertEquals("package it.gov.pagopa.reward.drools.buildrules;\n\n// null\n\n", result.getRule());
+        Assertions.assertEquals("package it.gov.pagopa.reward.drools.buildrules;\n\n// null\n// ruleVersion: 20230404\n\n", result.getRule());
     }
 
     @Test
@@ -83,7 +88,7 @@ public class RewardRule2DroolsRuleServiceTest {
         DroolsRule result = buildRewardRule2DroolsRule(true).apply(dto);
 
         // then
-        checkResult(result);
+        checkResult(result, dto);
 
         executeRule(result);
     }
@@ -97,10 +102,10 @@ public class RewardRule2DroolsRuleServiceTest {
         DroolsRule result = rewardRule2DroolsRuleService.apply(dto);
 
         // then
-        checkResult(result);
+        checkResult(result, dto);
     }
 
-    private void checkResult(DroolsRule result) {
+    private void checkResult(DroolsRule result, InitiativeReward2BuildDTO dto) {
         DroolsRule expected = new DroolsRule();
         expected.setId("ID_0_ssx");
         expected.setName("NAME_0_vnj");
@@ -108,6 +113,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 package it.gov.pagopa.reward.drools.buildrules;
                 
                 // NAME_0_vnj
+                // ruleVersion: 20230404
                 
                 rule "ID_0_ssx-DAYOFWEEK"
                 salience 1
@@ -316,8 +322,11 @@ public class RewardRule2DroolsRuleServiceTest {
                 .weeklyThreshold(true)
                 .monthlyThreshold(true)
                 .yearlyThreshold(true)
+                .trxRule(dto.getTrxRule())
+                .rewardRule(dto.getRewardRule())
                 .build());
 
+        expected.setRuleVersion("20230404");
         expected.setUpdateDate(result.getUpdateDate());
 
         Assertions.assertEquals(expected, result);

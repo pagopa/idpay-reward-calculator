@@ -57,7 +57,7 @@ class RewardRuleMediatorServiceImplTest {
     void testSetUp() {
         Mockito.when(rewardRule2DroolsRuleServiceMock.apply(Mockito.any())).thenAnswer(invocation -> {
             InitiativeReward2BuildDTO i = invocation.getArgument(0);
-            return new DroolsRule(i.getInitiativeId(), i.getInitiativeName(),"RULE",
+            return new DroolsRule(i.getInitiativeId(), i.getInitiativeName(),"RULE","RULEVERSION",
                     InitiativeConfig.builder()
                             .initiativeId(i.getInitiativeId())
                             .beneficiaryBudget(new BigDecimal("1000.00"))
