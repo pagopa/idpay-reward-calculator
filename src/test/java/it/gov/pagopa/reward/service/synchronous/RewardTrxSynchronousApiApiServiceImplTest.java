@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewResponse;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.exception.ClientException;
+import it.gov.pagopa.reward.exception.ClientExceptionWithBody;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
@@ -49,20 +49,22 @@ class RewardTrxSynchronousApiApiServiceImplTest {
         TransactionPreviewRequest previewRequest = TransactionPreviewRequestFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
 
+        String errorMessage = "User not onboarded to initiative %s".formatted(initiativeId);
+
         TransactionDTO transactionDTOMock = TransactionDTOFaker.mockInstance(1);
         Mockito.when(transactionPreviewRequest2TransactionDTOMapperMock.apply(Mockito.same(previewRequest))).thenReturn(transactionDTOMock);
 
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.same(transactionDTOMock.getHpan()), Mockito.same(initiativeId))).thenReturn(Mono.error(new IllegalArgumentException()));
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.same(transactionDTOMock.getHpan()), Mockito.same(initiativeId))).thenReturn(Mono.error(new IllegalArgumentException(errorMessage)));
 
         RewardTrxSynchronousApiApiServiceImpl rewardTrxSynchronousApiApiService = new RewardTrxSynchronousApiApiServiceImpl(onboardedInitiativesServiceMock,initiativesEvaluatorFacadeServiceMock, userInitiativeCountersRepositoryMock, transactionPreviewRequest2TransactionDTOMapperMock, rewardTransaction2PreviewResponseMapperMock);
 
         // When
         try {
-            TransactionPreviewResponse result = rewardTrxSynchronousApiApiService.postTransactionPreview(previewRequest, initiativeId).block();
+            rewardTrxSynchronousApiApiService.postTransactionPreview(previewRequest, initiativeId).block();
 
         } catch (Exception e){
-            Assertions.assertTrue(e instanceof ClientException);
-            Assertions.assertEquals("User not onboarded to initiative %s".formatted(initiativeId), e.getMessage());
+            Assertions.assertTrue(e instanceof ClientExceptionWithBody);
+            Assertions.assertEquals(errorMessage, e.getMessage());
         }
     }
 

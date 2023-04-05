@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 class HpanInitiativesRepositoryTest extends BaseIntegrationTest {
     @Autowired
     protected HpanInitiativesRepository hpanInitiativesRepository;
@@ -20,7 +22,7 @@ class HpanInitiativesRepositoryTest extends BaseIntegrationTest {
         hpanInitiativesRepository.save(hpanInitiatives).block();
 
         // When
-        HpanInitiatives result = hpanInitiativesRepository.findByHpanAndInitiativeId("HPAN_%d".formatted(bias), "INITIATIVE_%d".formatted(bias)).block();
+        HpanInitiatives result = hpanInitiativesRepository.findByHpanAndOnboardedInitiativesInitiativeIdIn("HPAN_%d".formatted(bias), List.of("INITIATIVE_%d".formatted(bias))).block();
 
         // Then
         Assertions.assertNotNull(result);
@@ -37,7 +39,7 @@ class HpanInitiativesRepositoryTest extends BaseIntegrationTest {
         hpanInitiativesRepository.save(hpanInitiatives).block();
 
         // When
-        Mono<HpanInitiatives> result = hpanInitiativesRepository.findByHpanAndInitiativeId("HPAN_%d".formatted(bias), "INITIATIVE_5");
+        Mono<HpanInitiatives> result = hpanInitiativesRepository.findByHpanAndOnboardedInitiativesInitiativeIdIn("HPAN_%d".formatted(bias), List.of("INITIATIVE_5"));
 
         // Then
         Assertions.assertNull(result.block());

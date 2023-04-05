@@ -37,12 +37,12 @@ public class RewardTrxSynchronousApiApiServiceImpl implements RewardTrxSynchrono
         TransactionDTO trxDTO = trxPreviewRequest2TransactionDtoMapper.apply(trxPreviewRequest);
 
         return onboardedInitiativesService.isOnboarded(trxDTO.getHpan(), initiativeId)
-                .flatMap(i -> userInitiativeCountersRepository.findById(trxPreviewRequest.getUserId()))
+                .flatMap(i -> userInitiativeCountersRepository.findById(trxPreviewRequest.getUserId())) //TODO counter Logics
                 .map(userCounters -> initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), userCounters))
                 .map(p -> rewardTransaction2PreviewResponseMapper.apply(trxPreviewRequest.getTransactionId(),initiativeId, p.getSecond()))
                 .doOnError(e -> {
                     if(e instanceof  IllegalArgumentException){
-                        throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,"Error",  "User not onboarded to initiative %s".formatted(initiativeId));
+                        throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,"Error",  e.getMessage());
                     }
                 });
     }

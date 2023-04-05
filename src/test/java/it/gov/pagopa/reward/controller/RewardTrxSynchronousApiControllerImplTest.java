@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.controller;
 import it.gov.pagopa.reward.dto.ErrorDTO;
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewResponse;
+import it.gov.pagopa.reward.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.exception.ClientExceptionWithBody;
 import it.gov.pagopa.reward.exception.Severity;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
@@ -51,7 +52,7 @@ class RewardTrxSynchronousApiControllerImplTest {
     }
 
     @Test
-    void postTransactionPreview(){
+    void postTransactionPreviewUserNotOnboarded(){
         String initiativeId = " INITIATIVEID";
         TransactionPreviewRequest request = TransactionPreviewRequestFaker.mockInstance(1);
         Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new ClientExceptionWithBody(HttpStatus.FORBIDDEN,"Error",  "User not onboarded to initiative %s".formatted(initiativeId)));
@@ -65,6 +66,40 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .exchange()
                 .expectStatus().isForbidden()
                 .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDTO);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void postTransactionPreview(){
+        String initiativeId = " INITIATIVEID";
+        TransactionPreviewRequest request = TransactionPreviewRequestFaker.mockInstance(1);
+        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new RuntimeException());
+
+        ErrorDTO expectedDefaultErrorDTO =new ErrorDTO(Severity.ERROR, "Error", "Something gone wrong");
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(ErrorDTO.class).isEqualTo(expectedDefaultErrorDTO);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void postTransactionPreviewWithNoBodyException(){
+        String initiativeId = " INITIATIVEID";
+        TransactionPreviewRequest request = TransactionPreviewRequestFaker.mockInstance(1);
+        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST));
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isBadRequest();
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
     }
