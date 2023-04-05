@@ -3,8 +3,8 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,13 +25,13 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
     }
 
     @Override
-    public RewardTransactionDTO evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+    public RewardTransactionDTO evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper userCounters) {
         List<String> notExhaustedInitiatives = new ArrayList<>();
         Map<String, List<String>> rejectedInitiativesForBudget = new HashMap<>();
         initiatives.forEach(initiativeId -> {
-            InitiativeCounters initiativeCounters = userCounters.getInitiatives().get(initiativeId);
+            UserInitiativeCounters userInitiativeCounters = userCounters.getInitiatives().get(initiativeId);
             // exhausted initiative to be considered in case of REFUND in order to
-            if(initiativeCounters != null && initiativeCounters.isExhaustedBudget() && !isExhausted2Reverse(trx, initiativeId)) {
+            if(userInitiativeCounters != null && userInitiativeCounters.isExhaustedBudget() && !isExhausted2Reverse(trx, initiativeId)) {
                 rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
             } else {
                 notExhaustedInitiatives.add(initiativeId);

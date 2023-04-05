@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -34,10 +33,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
             return getInitiatives(trx.getHpan(), trx.getTrxChargeDate());
         } else {
             if(trx.getRefundInfo() != null){
-                return Flux.fromIterable(trx.getRefundInfo()
-                        .getPreviousRewards().entrySet().stream()
-                        .filter(r-> isPositive(r.getValue().getAccruedReward()))
-                        .map(Map.Entry::getKey).toList());
+                return Flux.fromIterable(trx.getRefundInfo().getPreviousRewards().keySet());
             } else {
                 log.trace("[REWARD] [REWARD_KO] Recognized REFUND operation without previous rewards");
                 return Flux.empty();

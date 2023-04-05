@@ -16,8 +16,8 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
             salience -1
             agenda-group "initiativeId"
             when
-               $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
-               $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("initiativeId", new it.gov.pagopa.reward.model.counters.InitiativeCounters("initiativeId"))
+               $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper()
+               $userInitiativeCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters() from $userCounters.initiatives.getOrDefault("initiativeId", new it.gov.pagopa.reward.model.counters.UserInitiativeCounters("DUMMYUSERID", "initiativeId"))
                $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                eval($trx.getInitiativeRejectionReasons().get("initiativeId") == null)
             then $trx.getRewards().put("initiativeId", new it.gov.pagopa.reward.dto.trx.Reward("initiativeId","organizationId",%REWARD%));

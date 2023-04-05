@@ -4,7 +4,7 @@ package it.gov.pagopa.reward.service.build;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
@@ -91,7 +91,7 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
             TransactionDroolsDTO trx = new TransactionDroolsDTO();
             trx.setEffectiveAmount(BigDecimal.ONE);
             trx.setTrxChargeDate(OffsetDateTime.now());
-            UserInitiativeCounters userCounters = new UserInitiativeCounters();
+            UserInitiativeCountersWrapper userCounters = new UserInitiativeCountersWrapper();
             userCounters.setInitiatives(new HashMap<>());
 
             List<Command<?>> cmds = new ArrayList<>();

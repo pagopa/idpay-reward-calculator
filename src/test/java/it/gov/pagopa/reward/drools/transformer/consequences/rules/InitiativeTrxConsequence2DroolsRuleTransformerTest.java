@@ -6,7 +6,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeTrxConsequence;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -120,7 +120,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         RewardRule2DroolsRuleServiceTest.executeRule("initiativeId", trx, false, getCounters(), kieBase);
     }
 
-    protected UserInitiativeCounters getCounters() {
+    protected UserInitiativeCountersWrapper getCounters() {
         return null;
     }
 }

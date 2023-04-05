@@ -6,8 +6,8 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
@@ -140,12 +140,12 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
     private RewardTransactionDTO executeRules(TransactionDTO trx) {
 
         List<String> initiatives = List.of("INITIATIVE1");
-        UserInitiativeCounters counters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper counters = UserInitiativeCountersWrapper.builder()
                 .userId("USER1")
                 .initiatives(
                         new HashMap<>(Map.of(
                                 "INITIATIVE1",
-                                new InitiativeCounters("INITIATIVE1")
+                                new UserInitiativeCounters(trx.getUserId(), "INITIATIVE1")
                         ))
                 )
                 .build();

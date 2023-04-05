@@ -5,8 +5,8 @@ import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.KieContainer;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -133,16 +132,16 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
     }
 
     protected void executeRule(TransactionDroolsDTO trx, boolean shortCircuited, KieBase kieBase) {
-        UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
-        InitiativeCounters initiativeCounters = getInitiativeCounters();
-        if(initiativeCounters!=null){
-            counters.getInitiatives().put("agendaGroup", initiativeCounters);
+        UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", new HashMap<>());
+        UserInitiativeCounters userInitiativeCounters = getInitiativeCounters();
+        if(userInitiativeCounters !=null){
+            counters.getInitiatives().put("agendaGroup", userInitiativeCounters);
         }
 
         RewardRule2DroolsRuleServiceTest.executeRule("agendaGroup", trx, shortCircuited, counters, kieBase);
     }
 
-    protected InitiativeCounters getInitiativeCounters(){
+    protected UserInitiativeCounters getInitiativeCounters(){
         return null;
     }
 }

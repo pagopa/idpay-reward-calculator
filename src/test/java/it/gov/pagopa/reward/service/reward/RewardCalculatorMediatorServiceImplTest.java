@@ -196,7 +196,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
         Mockito.when(transactionValidatorServiceMock.validate(Mockito.any())).thenAnswer(i -> i.getArgument(0));
 
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluate(Mockito.any(), Mockito.any())).thenAnswer(i -> Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.any(), Mockito.any())).thenAnswer(i -> Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
 
         Mockito.when(rewardNotifierServiceMock.notify(Mockito.any())).thenReturn(true);
         Mockito.when(rewardNotifierServiceMock.notify(Mockito.argThat(i -> i.getIdTrxAcquirer().equals(trxInErrorDuringPublish.getIdTrxAcquirer())))).thenReturn(false);
@@ -291,7 +291,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
     private void verifyInitiativeEvaluatorCalls(List<String> expectedInitiatives, TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(initiativesEvaluatorFacadeServiceMock).evaluate(t, expectedInitiatives);
+            Mockito.verify(initiativesEvaluatorFacadeServiceMock).evaluateAndUpdateBudget(t, expectedInitiatives);
         }
     }
 

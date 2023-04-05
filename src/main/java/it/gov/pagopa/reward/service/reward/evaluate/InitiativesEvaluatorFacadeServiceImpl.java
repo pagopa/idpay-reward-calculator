@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,29 +45,21 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     }
 
     @Override
-    public Mono<RewardTransactionDTO> evaluate(TransactionDTO trx, List<String> initiatives) {
+    public Mono<RewardTransactionDTO> evaluateAndUpdateBudget(TransactionDTO trx, List<String> initiatives) {
         log.trace("[REWARD] Initiative fetched, retrieving counter: {}", trx.getId());
 
         final String userId = trx.getUserId();
 
-        return userInitiativeCountersRepository.findById(userId)
-                .defaultIfEmpty(new UserInitiativeCounters(userId, new HashMap<>()))
-                .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
-                .flatMap(counters2rewardedTrx ->
-                        userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond())
-                                .then(Mono.just(counters2rewardedTrx)))
-                .flatMap(counters2rewardedTrx -> {
-                    RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
-
-                    return transactionProcessedService.save(rewardedTrx)
-                            .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", trx.getId()))
-                            .then(userInitiativeCountersRepository.save(counters2rewardedTrx.getFirst()))
-                            .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", trx.getId()))
-                            .then(Mono.just(rewardedTrx));
-                });
+        return updateBudgets(
+                userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
+                        .collectList()
+                        .map(counters -> new UserInitiativeCountersWrapper(userId, counters.stream().collect(Collectors.toMap(UserInitiativeCounters::getInitiativeId, Function.identity()))))
+                        .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
+        );
     }
 
-    private Pair<UserInitiativeCounters, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCounters userCounters) {
+    @Override
+    public Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper userCounters) {
         log.trace("[REWARD] Counter retrieved, evaluating initiatives: {} - {}", trx.getId(), initiatives.size());
 
         RewardTransactionDTO trxRewarded;
@@ -89,17 +83,17 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     }
 
     private void handleCompleteRefund(TransactionDTO trx, RewardTransactionDTO trxRewarded) {
-        BaseTransactionProcessed lastTrx = trx.getRefundInfo()==null || CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs())
+        BaseTransactionProcessed lastTrx = trx.getRefundInfo() == null || CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs())
                 ? null
                 : trx.getRefundInfo().getPreviousTrxs().get(trx.getRefundInfo().getPreviousTrxs().size() - 1);
 
-        trxRewarded.setInitiativeRejectionReasons(lastTrx==null
+        trxRewarded.setInitiativeRejectionReasons(lastTrx == null
                 ? Collections.emptyMap()
                 : lastTrx.getInitiativeRejectionReasons());
 
         if (trx.getRefundInfo() == null || trx.getRefundInfo().getPreviousRewards().size() == 0) {
-            
-            trxRewarded.setRejectionReasons(lastTrx==null
+
+            trxRewarded.setRejectionReasons(lastTrx == null
                     ? List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)
                     : lastTrx.getRejectionReasons());
 
@@ -111,7 +105,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
             boolean isRejected = trx.getRefundInfo().getPreviousRewards().values().stream().noneMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0);
 
-            if(isRejected) {
+            if (isRejected) {
                 trxRewarded.setRejectionReasons(lastTrx == null
                         ? Collections.emptyList()
                         : lastTrx.getRejectionReasons());
@@ -119,22 +113,22 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
             trxRewarded.setStatus(
                     isRejected
-                    ? RewardConstants.REWARD_STATE_REJECTED
-                    : RewardConstants.REWARD_STATE_REWARDED);
+                            ? RewardConstants.REWARD_STATE_REJECTED
+                            : RewardConstants.REWARD_STATE_REWARDED);
         }
     }
 
     private void handlePartialRefund(RewardTransactionDTO trxRewarded) {
         Map<String, RefundInfo.PreviousReward> pastRewards = new HashMap<>(trxRewarded.getRefundInfo() != null ? trxRewarded.getRefundInfo().getPreviousRewards() : Collections.emptyMap());
-        trxRewarded.getRewards().forEach((initiativeId, r)-> {
+        trxRewarded.getRewards().forEach((initiativeId, r) -> {
             RefundInfo.PreviousReward pastReward = pastRewards.remove(initiativeId);
-            if(pastReward!=null){
+            if (pastReward != null) {
                 r.setAccruedReward(r.getAccruedReward().subtract(pastReward.getAccruedReward()));
             }
             r.setRefund(true);
         });
         pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), reward2Reverse.getAccruedReward().negate(), true)));
-        if(trxRewarded.getRewards().values().stream().anyMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0)){
+        if (trxRewarded.getRewards().values().stream().anyMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0)) {
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         } else {
             trxRewarded.setInitiativeRejectionReasons(
@@ -142,5 +136,22 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                             ? trxRewarded.getRefundInfo().getPreviousTrxs().get(0).getInitiativeRejectionReasons()
                             : Collections.emptyMap());
         }
+    }
+
+    @Override
+    public Mono<RewardTransactionDTO> updateBudgets(Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> trxEvaluationMono) {
+        return trxEvaluationMono
+                .flatMap(counters2rewardedTrx ->
+                        userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond())
+                                .then(Mono.just(counters2rewardedTrx)))
+                .flatMap(counters2rewardedTrx -> {
+                    RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
+
+                    return transactionProcessedService.save(rewardedTrx)
+                            .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", rewardedTrx.getId()))
+                            .thenMany(userInitiativeCountersRepository.saveAll(counters2rewardedTrx.getFirst().getInitiatives().values()))
+                            .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", rewardedTrx.getId()))
+                            .then(Mono.just(rewardedTrx));
+                });
     }
 }
