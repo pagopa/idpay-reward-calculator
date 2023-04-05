@@ -1,9 +1,8 @@
 package it.gov.pagopa.reward.dto.mapper;
 
 
-import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
+import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousRequest;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +16,7 @@ class TransactionPreviewRequest2TransactionDTOMapperTest {
         // Give
         String operationType = "00";
         TransactionPreviewRequest2TransactionDTOMapper mapper = new TransactionPreviewRequest2TransactionDTOMapper(operationType);
-        TransactionPreviewRequest previewRequest = TransactionPreviewRequest.builder()
+        TransactionSynchronousRequest previewRequest = TransactionSynchronousRequest.builder()
                 .transactionId("TRANSACTIONID")
                 .userId("USERID")
                 .merchantId("MERCHANTID")

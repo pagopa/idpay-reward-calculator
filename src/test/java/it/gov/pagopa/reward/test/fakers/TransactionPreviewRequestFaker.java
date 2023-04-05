@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
-import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
+import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,18 +38,18 @@ public class TransactionPreviewRequestFaker {
     }
 
     /**
-     * It will return an example of {@link TransactionPreviewRequest}. Providing a bias, it will return a pseudo-casual object
+     * It will return an example of {@link TransactionSynchronousRequest}. Providing a bias, it will return a pseudo-casual object
      */
-    public static TransactionPreviewRequest mockInstance(Integer bias) {
+    public static TransactionSynchronousRequest mockInstance(Integer bias) {
         return mockInstanceBuilder(bias).build();
     }
 
-    public static TransactionPreviewRequest.TransactionPreviewRequestBuilder mockInstanceBuilder(Integer bias) {
+    public static TransactionSynchronousRequest.TransactionSynchronousRequestBuilder mockInstanceBuilder(Integer bias) {
         LocalDate trxDate = LocalDate.of(2022, getRandomPositiveNumber(bias, 11) + 1, getRandomPositiveNumber(bias, 27)+1);
         LocalTime trxTime = LocalTime.of(getRandomPositiveNumber(bias, 23), getRandomPositiveNumber(bias, 59), getRandomPositiveNumber(bias, 59));
         LocalDateTime trxDateTime = LocalDateTime.of(trxDate, trxTime);
 
-        return TransactionPreviewRequest.builder()
+        return TransactionSynchronousRequest.builder()
                 .transactionId("TRANSACTIONID%d".formatted(bias))
                 .userId("USERID%d".formatted(bias))
                 .merchantId("MERCHANTID%d".formatted(bias))

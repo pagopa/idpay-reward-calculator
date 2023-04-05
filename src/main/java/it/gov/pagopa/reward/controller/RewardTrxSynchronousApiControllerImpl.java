@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.controller;
 
-import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
-import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewResponse;
+import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousRequest;
+import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousResponse;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -15,7 +15,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     }
 
     @Override
-    public Mono<TransactionPreviewResponse> postTransactionPreview(TransactionPreviewRequest trxPreviewRequest, String initiativeId) {
+    public Mono<TransactionSynchronousResponse> postTransactionPreview(TransactionSynchronousRequest trxPreviewRequest, String initiativeId) {
         return rewardTrxSynchronousService.postTransactionPreview(trxPreviewRequest,initiativeId);
 
     }

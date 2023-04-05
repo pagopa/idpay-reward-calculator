@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionPreviewRequest {
+public class TransactionSynchronousRequest {
     private String transactionId;
     private String userId;
     private String merchantId;
@@ -22,12 +22,12 @@ public class TransactionPreviewRequest {
     private String vat;
     private String idTrxIssuer;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxDate; //TODO TBV
+    private OffsetDateTime trxDate;
     private BigDecimal amount;
     private String amountCurrency;
     private String mcc;
     private String acquirerCode;
     private String acquirerId;
     private String idTrxAcquirer;
-    private String hpan; //TODO TBV "IDPAY_"+userId
+    private String hpan;
 }

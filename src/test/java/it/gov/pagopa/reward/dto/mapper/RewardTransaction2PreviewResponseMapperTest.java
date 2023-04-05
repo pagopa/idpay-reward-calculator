@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewResponse;
+import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousResponse;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -38,13 +38,13 @@ class RewardTransaction2PreviewResponseMapperTest {
                 .build();
 
         // When
-        TransactionPreviewResponse result = responseMapper.apply(trxId, initiativeId, trxDto);
+        TransactionSynchronousResponse result = responseMapper.apply(trxId, initiativeId, trxDto);
 
         // Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result, "rejectionReasons");
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REWARDED, result.getStatus());
-        Assertions.assertEquals(reward, result.getReward());
+        Assertions.assertEquals(reward.getProvidedReward(), result.getReward());
         checkCommonAssertions(result);
 
     }
@@ -61,7 +61,7 @@ class RewardTransaction2PreviewResponseMapperTest {
                 .build();
 
         // When
-        TransactionPreviewResponse result = responseMapper.apply(trxId, initiativeId, trxDto);
+        TransactionSynchronousResponse result = responseMapper.apply(trxId, initiativeId, trxDto);
 
         // Then
         Assertions.assertNotNull(result);
@@ -71,7 +71,7 @@ class RewardTransaction2PreviewResponseMapperTest {
         checkCommonAssertions(result);
     }
 
-    void checkCommonAssertions(TransactionPreviewResponse result){
+    void checkCommonAssertions(TransactionSynchronousResponse result){
         Assertions.assertEquals(trxId, result.getTransactionId());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(userId, result.getUserId());

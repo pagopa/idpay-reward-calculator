@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
+import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousRequest;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.function.Function;
 
 @Service
-public class TransactionPreviewRequest2TransactionDTOMapper implements Function<TransactionPreviewRequest, TransactionDTO> {
+public class TransactionPreviewRequest2TransactionDTOMapper implements Function<TransactionSynchronousRequest, TransactionDTO> {
     private final String chargeOperation;
 
     private static final String PREFIX_PAYMENT_INSTRUMENT="IDPAY_%s";
@@ -18,17 +18,13 @@ public class TransactionPreviewRequest2TransactionDTOMapper implements Function<
     }
 
     @Override
-    public TransactionDTO apply(TransactionPreviewRequest trx) {
+    public TransactionDTO apply(TransactionSynchronousRequest trx) {
         TransactionDTO out = new TransactionDTO();
         out.setId(trx.getTransactionId());
         out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
-        if (trx.getHpan() == null) {
-            out.setHpan(getPaymentInstrument(trx.getUserId()));
-        } else {
-            out.setHpan(trx.getHpan());
-        }
+        out.setHpan(trx.getHpan() == null ? getPaymentInstrument(trx.getUserId()) : trx.getHpan()); //TODO check
         out.setOperationType(chargeOperation);
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
         out.setAmount(trx.getAmount());
