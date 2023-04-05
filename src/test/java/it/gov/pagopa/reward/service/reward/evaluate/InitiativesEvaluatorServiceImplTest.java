@@ -5,8 +5,8 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
@@ -30,13 +30,13 @@ class InitiativesEvaluatorServiceImplTest {
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         List<String> initiatives = List.of("INITIATIVE1", "INITIATIVE2");
 
-        UserInitiativeCounters userCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userCounters = UserInitiativeCountersWrapper.builder()
                 .userId("USER1")
                 .initiatives(Map.of(
                                 "INITIATIVE1",
-                                InitiativeCounters.builder().initiativeId("INITIATIVE1").exhaustedBudget(true).build(),
+                                UserInitiativeCounters.builder(trx.getUserId(), "INITIATIVE1").exhaustedBudget(true).build(),
                                 "INITIATIVE2",
-                                InitiativeCounters.builder().initiativeId("INITIATIVE2").exhaustedBudget(false).build()
+                                UserInitiativeCounters.builder(trx.getUserId(), "INITIATIVE2").exhaustedBudget(false).build()
                         )
                 )
                 .build();

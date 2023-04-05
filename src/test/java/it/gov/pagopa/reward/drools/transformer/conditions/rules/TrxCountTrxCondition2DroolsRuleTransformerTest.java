@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.trx.TrxCountDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.rule.TrxCountDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
@@ -34,9 +34,9 @@ class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondit
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
-                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !($initiativeCounters.trxNumber >= new java.lang.Long("-1") && $initiativeCounters.trxNumber <= new java.lang.Long("9")))
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper()
+                   $userInitiativeCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.UserInitiativeCounters("DUMMYUSERID", "agendaGroup"))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !($userInitiativeCounters.trxNumber >= new java.lang.Long("-1") && $userInitiativeCounters.trxNumber <= new java.lang.Long("9")))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_TRXCOUNT_FAIL");
                 end
                 """;
@@ -57,9 +57,9 @@ class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondit
     }
 
     @Override
-    protected InitiativeCounters getInitiativeCounters() {
+    protected UserInitiativeCounters getInitiativeCounters() {
         if(startingTransactioCount!=null) {
-            final InitiativeCounters counters = new InitiativeCounters("agendaGroup");
+            final UserInitiativeCounters counters = new UserInitiativeCounters("USERID", "agendaGroup");
             counters.setTrxNumber(startingTransactioCount);
             return counters;
         } else {
