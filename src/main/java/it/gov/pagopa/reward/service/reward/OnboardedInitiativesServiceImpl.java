@@ -52,12 +52,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     @Override
     public Mono<HpanInitiatives> isOnboarded(String hpan, String initiativeId) {
         return  hpanInitiativesRepository.findByHpanAndInitiativeId(hpan, initiativeId)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException()))
-                .doOnError(e -> {
-                    if(e instanceof  IllegalArgumentException){
-                        throw new ClientException(HttpStatus.FORBIDDEN, "User not onboarded to initiative %s".formatted(initiativeId));
-                    }
-                });
+                .switchIfEmpty(Mono.error(new IllegalArgumentException()));
     }
 
     /** true if > 0 */

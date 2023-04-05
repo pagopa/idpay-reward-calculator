@@ -2,15 +2,15 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewResponse;
-import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiApiServiceImpl;
+import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
 public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchronousApiController {
-    private final RewardTrxSynchronousApiApiServiceImpl rewardTrxSynchronousService;
+    private final RewardTrxSynchronousApiService rewardTrxSynchronousService;
 
-    public RewardTrxSynchronousApiControllerImpl(RewardTrxSynchronousApiApiServiceImpl rewardTrxSynchronousService) {
+    public RewardTrxSynchronousApiControllerImpl(RewardTrxSynchronousApiService rewardTrxSynchronousService) {
         this.rewardTrxSynchronousService = rewardTrxSynchronousService;
     }
 

@@ -5,9 +5,11 @@ import it.gov.pagopa.reward.dto.mapper.TransactionPreviewRequest2TransactionDTOM
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewRequest;
 import it.gov.pagopa.reward.dto.synchronous.TransactionPreviewResponse;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.exception.ClientExceptionWithBody;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -34,9 +36,14 @@ public class RewardTrxSynchronousApiApiServiceImpl implements RewardTrxSynchrono
     public Mono<TransactionPreviewResponse> postTransactionPreview(TransactionPreviewRequest trxPreviewRequest, String initiativeId) {
         TransactionDTO trxDTO = trxPreviewRequest2TransactionDtoMapper.apply(trxPreviewRequest);
 
-        return Mono.just(onboardedInitiativesService.isOnboarded(trxDTO.getHpan(), initiativeId))
+        return onboardedInitiativesService.isOnboarded(trxDTO.getHpan(), initiativeId)
                 .flatMap(i -> userInitiativeCountersRepository.findById(trxPreviewRequest.getUserId()))
                 .map(userCounters -> initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), userCounters))
-                .map(p -> rewardTransaction2PreviewResponseMapper.apply(trxPreviewRequest.getTransactionId(),initiativeId, p.getSecond()));
+                .map(p -> rewardTransaction2PreviewResponseMapper.apply(trxPreviewRequest.getTransactionId(),initiativeId, p.getSecond()))
+                .doOnError(e -> {
+                    if(e instanceof  IllegalArgumentException){
+                        throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,"Error",  "User not onboarded to initiative %s".formatted(initiativeId));
+                    }
+                });
     }
 }

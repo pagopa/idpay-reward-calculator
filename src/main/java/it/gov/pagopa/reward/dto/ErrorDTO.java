@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
 import it.gov.pagopa.reward.exception.Severity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,13 +17,13 @@ import javax.validation.constraints.NotBlank;
 @EqualsAndHashCode
 public class ErrorDTO {
     @NotBlank
-//    @ApiModelProperty(required = true, value = "Severity level of the error message", example = "ERROR")
+    @ApiModelProperty(required = true, value = "Severity level of the error message", example = "ERROR")
     Severity severity;
     @NotBlank
-//    @ApiModelProperty(required = true, value = "Content of the error message", example = "Messaggio")
+    @ApiModelProperty(required = true, value = "Title of the error message", example = "Titolo")
     String title;
     @NotBlank
-//    @ApiModelProperty(required = true, value = "Title of the error message", example = "Titolo")
+    @ApiModelProperty(required = true, value = "Content of the error message", example = "Messaggio")
     String message;
 
 }
