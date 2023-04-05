@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.reward.dto.rule.trx.TrxCountDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -17,8 +17,8 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
     private long trxNumber;
 
     @Override
-    protected InitiativeCounters getInitiativeCounters() {
-        final InitiativeCounters counter = new InitiativeCounters(initiativeId);
+    protected UserInitiativeCounters getInitiativeCounters() {
+        final UserInitiativeCounters counter = new UserInitiativeCounters("USERID", initiativeId);
         counter.setTrxNumber(trxNumber);
         return counter;
     }
@@ -52,7 +52,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
         initiativeTrxCondition.setFromIncluded(false);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.trxNumber > new java.lang.Long(\"0\")", thresholdCondition);
+        Assertions.assertEquals("$userInitiativeCounters.trxNumber > new java.lang.Long(\"0\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -67,7 +67,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
         initiativeTrxCondition.setFromIncluded(true);
         String trxCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.trxNumber >= new java.lang.Long(\"0\")", trxCondition);
+        Assertions.assertEquals("$userInitiativeCounters.trxNumber >= new java.lang.Long(\"0\")", trxCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -82,7 +82,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
         initiativeTrxCondition.setToIncluded(false);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.trxNumber < new java.lang.Long(\"9\")", thresholdCondition);
+        Assertions.assertEquals("$userInitiativeCounters.trxNumber < new java.lang.Long(\"9\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -97,7 +97,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
         initiativeTrxCondition.setToIncluded(true);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.trxNumber <= new java.lang.Long(\"9\")", thresholdCondition);
+        Assertions.assertEquals("$userInitiativeCounters.trxNumber <= new java.lang.Long(\"9\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -114,7 +114,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
         initiativeTrxCondition.setToIncluded(true);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.trxNumber >= new java.lang.Long(\"0\") && $initiativeCounters.trxNumber <= new java.lang.Long(\"9\")", thresholdCondition);
+        Assertions.assertEquals("$userInitiativeCounters.trxNumber >= new java.lang.Long(\"0\") && $userInitiativeCounters.trxNumber <= new java.lang.Long(\"9\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -131,7 +131,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
         initiativeTrxCondition.setToIncluded(false);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("$initiativeCounters.trxNumber > new java.lang.Long(\"0\") && $initiativeCounters.trxNumber < new java.lang.Long(\"9\")", thresholdCondition);
+        Assertions.assertEquals("$userInitiativeCounters.trxNumber > new java.lang.Long(\"0\") && $userInitiativeCounters.trxNumber < new java.lang.Long(\"9\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 

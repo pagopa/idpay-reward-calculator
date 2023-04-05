@@ -6,9 +6,9 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
-import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.RewardCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -80,12 +80,13 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testUpdateCountersWhenNeverInitiated() {
         //Given
-        UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1", "ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -93,14 +94,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 50.0, 100.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 50.0, 100.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 50.0, 100.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 1L, false, 50.0, 10000.0, 100.0);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
@@ -124,27 +125,28 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmount(BigDecimal.valueOf(100))
                 .rewards(rewardMock).build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 200);
 
-        setTemporalCounters(initiativeCounters, 11L, 100, 70);
+        setTemporalCounters(userInitiativeCounters, 11L, 100, 70);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
-                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 21L, 250, 4100);
-        checkTemporaleCounters(initiativeCounters, 12L, 120, 200);
+        checkCounters(userInitiativeCounters, 21L, 250, 4100);
+        checkTemporaleCounters(userInitiativeCounters, 12L, 120, 200);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 21L, false, 250, 10000, 4100);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
@@ -154,27 +156,28 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(9800)));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(10000))
                 .effectiveAmount(BigDecimal.valueOf(10000))
                 .rewards(rewardMock).build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 200);
 
-        setTemporalCounters(initiativeCounters, 10L, 100, 70);
+        setTemporalCounters(userInitiativeCounters, 10L, 100, 70);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
-                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 21L, 10000, 14000);
-        checkTemporaleCounters(initiativeCounters, 11L, 9870, 10100);
+        checkCounters(userInitiativeCounters, 21L, 10000, 14000);
+        checkTemporaleCounters(userInitiativeCounters, 11L, 9870, 10100);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 21L, true, 10000, 10000, 14000);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
@@ -186,6 +189,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 "2", new Reward("2","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false),
                 "3", new Reward("3","ORGANIZATION", BigDecimal.ZERO, BigDecimal.ZERO, false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -193,29 +197,29 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock)
                 .build();
 
-        InitiativeCounters initiativeCounters1 = createInitiativeCounter("1", 20L, 4000, 200);
-        InitiativeCounters initiativeCounters2 = createInitiativeCounter("2", 20L, 4000, 200);
-        InitiativeCounters initiativeCounters3 = createInitiativeCounter("3", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters1 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "1", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters2 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "2", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters3 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "3", 20L, 4000, 200);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
                 new HashMap<>(Map.of(
-                        initiativeCounters1.getInitiativeId(), initiativeCounters1,
-                        initiativeCounters2.getInitiativeId(), initiativeCounters2,
-                        initiativeCounters3.getInitiativeId(), initiativeCounters3)
+                        userInitiativeCounters1.getInitiativeId(), userInitiativeCounters1,
+                        userInitiativeCounters2.getInitiativeId(), userInitiativeCounters2,
+                        userInitiativeCounters3.getInitiativeId(), userInitiativeCounters3)
                 ));
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
         // First initiative (not rewarded)
-        checkCounters(userInitiativeCounters.getInitiatives().get("1"), 20L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("1"), 20L, 200, 4000);
         // Second initiative (rewarded)
-        checkCounters(userInitiativeCounters.getInitiatives().get("2"), 21L, 250, 4100);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("2"), 21L, 250, 4100);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("2").getCounters(), 21L, false, 250, 10000, 4100);
         // Third initiate (reward is 0)
-        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 20L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("3"), 20L, 200, 4000);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("3").getCounters(), 20L, false, 200, 10000, 4000);
 
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
@@ -232,6 +236,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 "3", new Reward("3","ORGANIZATION", BigDecimal.valueOf(100), BigDecimal.valueOf(50), false, false)
         );
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -239,22 +244,22 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock)
                 .initiativeRejectionReasons(Map.of("1", List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()))).build();
 
-        InitiativeCounters initiativeCounters1 = createInitiativeCounter("1", 20L, 4000, 200);
-        InitiativeCounters initiativeCounters2 = createInitiativeCounter("2", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters1 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "1", 20L, 4000, 200);
+        UserInitiativeCounters userInitiativeCounters2 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "2", 20L, 4000, 200);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
-                new HashMap<>(Map.of("1", initiativeCounters1,
-                        "2", initiativeCounters2))
+                new HashMap<>(Map.of("1", userInitiativeCounters1,
+                        "2", userInitiativeCounters2))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("1"), 21L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("2"), 20L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 1L, 50, 100);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("1"), 21L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("2"), 20L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("3"), 1L, 50, 100);
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
         Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
 
@@ -268,12 +273,12 @@ class UserInitiativeCountersUpdateServiceImplTest {
                                 e -> new RefundInfo.PreviousReward(e.getValue().getInitiativeId(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward()))))
                 .build());
         rewardTransactionDTO.setRewards(rewardMock.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e-> new Reward(e.getValue().getInitiativeId(), e.getValue().getOrganizationId(), BigDecimal.ZERO))));
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("1"), 21L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("2"), 20L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 1L, 50, 90);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("1"), 21L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("2"), 20L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("3"), 1L, 50, 90);
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
         Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());
 
@@ -283,22 +288,22 @@ class UserInitiativeCountersUpdateServiceImplTest {
         rewardTransactionDTO.setEffectiveAmount(BigDecimal.ZERO);
         rewardMock.values().forEach(r->r.setAccruedReward(r.getAccruedReward().negate()));
         rewardTransactionDTO.setRewards(rewardMock);
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("1"), 20L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("2"), 20L, 200, 4000);
-        checkCounters(userInitiativeCounters.getInitiatives().get("3"), 0L, 0, 0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("1"), 20L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("2"), 20L, 200, 4000);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("3"), 0L, 0, 0);
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund()); // not complete here, because it never rewarded the trx because of cap
         Assertions.assertTrue(rewardMock.get("3").isCompleteRefund());
     }
 
-    private static InitiativeCounters createInitiativeCounter(String initiativeId, long trxNumber, double totalAmount, double totalReward) {
-        InitiativeCounters initiativeCounters1 = new InitiativeCounters(initiativeId);
-        initiativeCounters1.setTrxNumber(trxNumber);
-        initiativeCounters1.setTotalAmount(BigDecimal.valueOf(totalAmount));
-        initiativeCounters1.setTotalReward(BigDecimal.valueOf(totalReward));
-        return initiativeCounters1;
+    private static UserInitiativeCounters createInitiativeCounter(String userId, String initiativeId, long trxNumber, double totalAmount, double totalReward) {
+        UserInitiativeCounters userInitiativeCounters1 = new UserInitiativeCounters(userId, initiativeId);
+        userInitiativeCounters1.setTrxNumber(trxNumber);
+        userInitiativeCounters1.setTotalAmount(BigDecimal.valueOf(totalAmount));
+        userInitiativeCounters1.setTotalReward(BigDecimal.valueOf(totalReward));
+        return userInitiativeCounters1;
     }
 
     @Test
@@ -308,12 +313,13 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setMonthlyThreshold(false);
         initiativeConfig.setYearlyThreshold(false);
 
-        UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -321,14 +327,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 50.0, 100.0);
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 50.0, 100.0);
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
 
@@ -339,12 +345,13 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setMonthlyThreshold(false);
         initiativeConfig.setYearlyThreshold(false);
 
-        UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -352,14 +359,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 50.0, 100.0);
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getDailyCounters());
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 50.0, 100.0);
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
 
@@ -370,12 +377,13 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setWeeklyThreshold(false);
         initiativeConfig.setYearlyThreshold(false);
 
-        UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -383,14 +391,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 50.0, 100.0);
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getDailyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 50.0, 100.0);
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters());
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
 
@@ -401,12 +409,13 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setWeeklyThreshold(false);
         initiativeConfig.setMonthlyThreshold(false);
 
-        UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
@@ -414,14 +423,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters());
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
-        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1"), 1L, 50.0, 100.0);
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getDailyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getWeeklyCounters());
+        Assertions.assertEquals(Collections.emptyMap(), userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getMonthlyCounters());
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 50.0, 100.0);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }
 
@@ -431,37 +440,38 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Reward reward = new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(2000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmount(BigDecimal.valueOf(2100))
                 .rewards(Map.of("INITIATIVEID1", reward)).build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 9000);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 9000);
 
-        setTemporalCounters(initiativeCounters, 10L, 100, 70);
+        setTemporalCounters(userInitiativeCounters, 10L, 100, 70);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
-                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 21L, 10000, 6100);
+        checkCounters(userInitiativeCounters, 21L, 10000, 6100);
         assertEquals(BigDecimal.valueOf(1000.0).setScale(2, RoundingMode.HALF_DOWN), reward.getAccruedReward());
         assertTrue(reward.isCapped());
-        checkTemporaleCounters(initiativeCounters, 11L, 1070, 2200);
+        checkTemporaleCounters(userInitiativeCounters, 11L, 1070, 2200);
         Assertions.assertFalse(reward.isCompleteRefund());
     }
 
-    private static void setTemporalCounters(InitiativeCounters initiativeCounters, long trxNumber, int totalAmount, int totalReward) {
-        initiativeCounters.setDailyCounters(new HashMap<>(Map.of(TRX_DATE_DAY, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
-        initiativeCounters.setWeeklyCounters(new HashMap<>(Map.of(TRX_DATE_WEEK, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
-        initiativeCounters.setMonthlyCounters(new HashMap<>(Map.of(TRX_DATE_MONTH, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
-        initiativeCounters.setYearlyCounters(new HashMap<>(Map.of(TRX_DATE_YEAR, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
+    private static void setTemporalCounters(UserInitiativeCounters userInitiativeCounters, long trxNumber, int totalAmount, int totalReward) {
+        userInitiativeCounters.setDailyCounters(new HashMap<>(Map.of(TRX_DATE_DAY, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
+        userInitiativeCounters.setWeeklyCounters(new HashMap<>(Map.of(TRX_DATE_WEEK, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
+        userInitiativeCounters.setMonthlyCounters(new HashMap<>(Map.of(TRX_DATE_MONTH, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
+        userInitiativeCounters.setYearlyCounters(new HashMap<>(Map.of(TRX_DATE_YEAR, Counters.builder().trxNumber(trxNumber).totalReward(BigDecimal.valueOf(totalReward)).totalAmount(BigDecimal.valueOf(totalAmount)).build())));
     }
 
     @Test
@@ -469,6 +479,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Reward reward1 = new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(1000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
                 .trxDate(TRX_DATE.plusDays(1))
                 .trxChargeDate(TRX_DATE)
@@ -477,21 +488,21 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(Map.of("INITIATIVEID1", reward1))
                 .build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 9000);
-        setTemporalCounters(initiativeCounters, 10L, 101, 1001);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 9000);
+        setTemporalCounters(userInitiativeCounters, 10L, 101, 1001);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters("USERID",
-                new HashMap<>(Map.of("INITIATIVEID1", initiativeCounters))
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper("USERID",
+                new HashMap<>(Map.of("INITIATIVEID1", userInitiativeCounters))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 21L, 10000, 5001);
+        checkCounters(userInitiativeCounters, 21L, 10000, 5001);
         assertEquals(TestUtils.bigDecimalValue(1000), reward1.getAccruedReward());
         assertFalse(reward1.isCapped());
-        checkTemporaleCounters(initiativeCounters, 11L, 2001, 1102);
+        checkTemporaleCounters(userInitiativeCounters, 11L, 2001, 1102);
         Assertions.assertFalse(reward1.isCompleteRefund());
     }
 
@@ -502,6 +513,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         Reward reward2 = new Reward("INITIATIVEID2","ORGANIZATION", BigDecimal.valueOf(2000));
         Reward reward3 = new Reward("INITIATIVEID3","ORGANIZATION", BigDecimal.valueOf(-2000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
                 .trxDate(TRX_DATE.plusDays(1))
                 .trxChargeDate(TRX_DATE)
@@ -515,47 +527,47 @@ class UserInitiativeCountersUpdateServiceImplTest {
                         .build())
                 .build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 9000);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 9000);
 
-        setTemporalCounters(initiativeCounters, 10L, 101, 1001);
+        setTemporalCounters(userInitiativeCounters, 10L, 101, 1001);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
                 new HashMap<>(Map.of(
-                        "INITIATIVEID1", initiativeCounters,
-                        "INITIATIVEID3", createInitiativeCounter("INITIATIVEID3", 1L, 2100, 2000)
+                        "INITIATIVEID1", userInitiativeCounters,
+                        "INITIATIVEID3", createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID3", 1L, 2100, 2000)
                 ))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 20L, 8000, 3901);
+        checkCounters(userInitiativeCounters, 20L, 8000, 3901);
         assertEquals(BigDecimal.valueOf(-1000), reward1.getAccruedReward());
         assertFalse(reward1.isCapped());
-        checkTemporaleCounters(initiativeCounters, 10L, 1, 2);
+        checkTemporaleCounters(userInitiativeCounters, 10L, 1, 2);
         Assertions.assertFalse(reward1.isCompleteRefund());
 
         //reward2
-        InitiativeCounters initiativeCounters2 = userInitiativeCounters.getInitiatives().get("INITIATIVEID2");
-        checkCounters(initiativeCounters2, 1L, 2000, 2001);
+        UserInitiativeCounters userInitiativeCounters2 = userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID2");
+        checkCounters(userInitiativeCounters2, 1L, 2000, 2001);
         assertEquals(BigDecimal.valueOf(2000), reward2.getAccruedReward());
         assertFalse(reward2.isCapped());
-        checkTemporaleCounters(initiativeCounters2, 1L, 2000, 2001);
+        checkTemporaleCounters(userInitiativeCounters2, 1L, 2000, 2001);
         Assertions.assertFalse(reward2.isCompleteRefund());
 
         //reward3
-        InitiativeCounters initiativeCounters3 = userInitiativeCounters.getInitiatives().get("INITIATIVEID3");
-        checkCounters(initiativeCounters3, 0L, 0, 0);
+        UserInitiativeCounters userInitiativeCounters3 = userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID3");
+        checkCounters(userInitiativeCounters3, 0L, 0, 0);
         Assertions.assertTrue(reward3.isCompleteRefund());
     }
 
-    private void checkTemporaleCounters(InitiativeCounters initiativeCounters, long expectedTrxCount, int expectedTotalReward, int expectedTotalAmount) {
-        checkCounters(initiativeCounters.getDailyCounters().get(TRX_DATE_DAY), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
-        checkCounters(initiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
-        checkCounters(initiativeCounters.getMonthlyCounters().get(TRX_DATE_MONTH), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
-        checkCounters(initiativeCounters.getYearlyCounters().get(TRX_DATE_YEAR), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
+    private void checkTemporaleCounters(UserInitiativeCounters userInitiativeCounters, long expectedTrxCount, int expectedTotalReward, int expectedTotalAmount) {
+        checkCounters(userInitiativeCounters.getDailyCounters().get(TRX_DATE_DAY), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
+        checkCounters(userInitiativeCounters.getWeeklyCounters().get(TRX_DATE_WEEK), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
+        checkCounters(userInitiativeCounters.getMonthlyCounters().get(TRX_DATE_MONTH), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
+        checkCounters(userInitiativeCounters.getYearlyCounters().get(TRX_DATE_YEAR), expectedTrxCount, expectedTotalReward, expectedTotalAmount);
     }
 
     @Test
@@ -563,6 +575,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Reward reward1 = new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.ZERO); // Capped rewards previous rewarded, should update their amount
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
                 .trxDate(TRX_DATE.plusDays(1))
                 .trxChargeDate(TRX_DATE)
@@ -574,23 +587,23 @@ class UserInitiativeCountersUpdateServiceImplTest {
                         .build())
                 .build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 9000);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 9000);
 
-        setTemporalCounters(initiativeCounters, 10L, 101, 1001);
+        setTemporalCounters(userInitiativeCounters, 10L, 101, 1001);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
-                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 20L, 9000, 3999);
+        checkCounters(userInitiativeCounters, 20L, 9000, 3999);
         assertEquals(BigDecimal.ZERO, reward1.getAccruedReward());
         assertFalse(reward1.isCapped());
-        checkTemporaleCounters(initiativeCounters, 10L, 1001, 100);
+        checkTemporaleCounters(userInitiativeCounters, 10L, 1001, 100);
         Assertions.assertFalse(reward1.isCompleteRefund());
     }
 
@@ -599,6 +612,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Reward reward1 = new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(-1000));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
                 .trxDate(TRX_DATE.plusDays(1))
                 .trxChargeDate(TRX_DATE)
@@ -610,30 +624,30 @@ class UserInitiativeCountersUpdateServiceImplTest {
                         .build())
                 .build();
 
-        InitiativeCounters initiativeCounters = createInitiativeCounter("INITIATIVEID1", 20L, 4000, 9000);
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000, 9000);
 
-        setTemporalCounters(initiativeCounters, 10L, 101, 1001);
+        setTemporalCounters(userInitiativeCounters, 10L, 101, 1001);
 
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
                 "USERID",
-                new HashMap<>(Map.of(initiativeCounters.getInitiativeId(), initiativeCounters))
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
         );
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(initiativeCounters, 19L, 8000, 3900);
+        checkCounters(userInitiativeCounters, 19L, 8000, 3900);
         assertEquals(BigDecimal.valueOf(-1000), reward1.getAccruedReward());
         assertFalse(reward1.isCapped());
-        checkTemporaleCounters(initiativeCounters, 9L, 1, 1);
+        checkTemporaleCounters(userInitiativeCounters, 9L, 1, 1);
         Assertions.assertTrue(reward1.isCompleteRefund());
     }
 
     @Test
     void testCapRewardToEffectiveAmount() {
         //Given
-        UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
                 .userId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
@@ -647,14 +661,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .rewards(rewardMock).build();
 
         // When
-        userInitiativeCountersUpdateService.update(userInitiativeCounters, rewardTransactionDTO).block();
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1"), 1L, 10.0, 10.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 10.0, 10.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 10.0, 10.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 10.0, 10.0);
-        checkCounters(userInitiativeCounters.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 10.0, 10.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1"), 1L, 10.0, 10.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getDailyCounters().get(TRX_DATE_DAY), 1L, 10.0, 10.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getWeeklyCounters().get(TRX_DATE_WEEK), 1L, 10.0, 10.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getMonthlyCounters().get(TRX_DATE_MONTH), 1L, 10.0, 10.0);
+        checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 10.0, 10.0);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 1L, false, 10.0, 10000.0, 10.0);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
     }

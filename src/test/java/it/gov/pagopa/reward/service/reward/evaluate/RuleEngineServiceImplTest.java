@@ -12,7 +12,7 @@ import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.*;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -58,7 +58,7 @@ class RuleEngineServiceImplTest {
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives =  List.of("Initiative1");
-        UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
+        UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", new HashMap<>());
 
         TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
         Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
@@ -92,7 +92,7 @@ class RuleEngineServiceImplTest {
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
         List<String> initiatives = new ArrayList<>();
-        UserInitiativeCounters counters = new UserInitiativeCounters("userId", new HashMap<>());
+        UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", new HashMap<>());
 
         TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
         Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
@@ -138,7 +138,7 @@ class RuleEngineServiceImplTest {
                 .effectiveAmount(BigDecimal.valueOf(11))
                 .mcc("MCC_0")
                 .build();
-        RewardTransactionDTO result = ruleEngineService.applyRules(trx, rules.stream().map(DroolsRule::getId).collect(Collectors.toList()), new UserInitiativeCounters(trx.getUserId(), new HashMap<>()));
+        RewardTransactionDTO result = ruleEngineService.applyRules(trx, rules.stream().map(DroolsRule::getId).collect(Collectors.toList()), new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>()));
 
         Assertions.assertEquals(Map.of(
                 "ID_0_ssx", shortCircuited ? List.of("TRX_RULE_MCCFILTER_FAIL") :List.of("TRX_RULE_MCCFILTER_FAIL","TRX_RULE_THRESHOLD_FAIL"),

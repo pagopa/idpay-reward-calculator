@@ -4,8 +4,8 @@ import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacade;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxCondition;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
 public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends InitiativeTrxCondition> implements InitiativeTrxCondition2DroolsRuleTransformer<T> {
@@ -40,7 +40,7 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 when
                    $config: %s()
                    $userCounters: %s()
-                   $initiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s("%s"))
+                   $userInitiativeCounters: %s() from $userCounters.initiatives.getOrDefault("%s", new %s("DUMMYUSERID", "%s"))
                    $trx: %s(!$config.shortCircuitConditions || initiativeRejectionReasons.get("%s") == null, !(%s))
                 then %s
                 end
@@ -50,10 +50,10 @@ public abstract class BaseInitiativeTrxCondition2DroolsRuleTransformer<T extends
                 RewardConstants.InitiativeTrxConditionOrder.values().length-getTrxConditionOrder().getOrder(),
                 initiativeId,
                 RuleEngineConfig.class.getName(),
+                UserInitiativeCountersWrapper.class.getName(),
                 UserInitiativeCounters.class.getName(),
-                InitiativeCounters.class.getName(),
                 initiativeId,
-                InitiativeCounters.class.getName(),
+                UserInitiativeCounters.class.getName(),
                 initiativeId,
                 TransactionDroolsDTO.class.getName(),
                 initiativeId,
