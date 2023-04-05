@@ -23,6 +23,7 @@ import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,10 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
         Assertions.assertEquals(0, startingRuleBuiltSize);
 
+        // Caching invalid rules
+        reactiveRedisTemplate.opsForValue().set(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME, "INVALIDOBJECT".getBytes()).block();
+        refreshAndAssertKieContainerRuleSize(0);
+
         // Build a valid KieBase that produces a rule of size 1, assert KieBase is null after Reflection
         DroolsRule dr = new DroolsRule();
         dr.setId("NAME");
@@ -74,14 +79,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
                 )
         );
 
-        KieBase kieBase = kieContainerBuilderService.build(Flux.just(dr)).block();
-        rewardContextHolderService.setRewardRulesKieBase(kieBase);
-        waitFor(
-                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
-                ()->"KieBase not saved in cache",
-                10,
-                500
-        );
+        buildAndCacheRules(List.of(dr));
 
         setContextHolderFieldToNull("kieBase");
         setContextHolderFieldToNull("kieBaseSerialized");
@@ -89,16 +87,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNull(rewardContextHolderService.getRewardRulesKieBase());
 
         // Refresh KieBase and assert the built rules has expected size
-        rewardContextHolderService.refreshKieContainer();
-        waitFor(
-                ()->rewardContextHolderService.getRewardRulesKieBase() != null,
-                ()->"KieBase is null",
-                10,
-                500
-        );
-
-        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
-        Assertions.assertEquals(1, ruleBuiltSize);
+        refreshAndAssertKieContainerRuleSize(1);
 
         // Execute rule and assert transaction has the expected rejection reason
         TransactionDTO trxMock = TransactionDTOFaker.mockInstance(1);
@@ -128,6 +117,29 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
         int resultRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
         Assertions.assertEquals(0, resultRuleBuiltSize);
+    }
+
+    private void refreshAndAssertKieContainerRuleSize(int expected) {
+        rewardContextHolderService.refreshKieContainer();
+        waitFor(
+                ()->rewardContextHolderService.getRewardRulesKieBase() != null,
+                ()->"KieBase is null",
+                10,
+                500
+        );
+        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        Assertions.assertEquals(expected, ruleBuiltSize);
+    }
+
+    private void buildAndCacheRules(Collection<DroolsRule> drs) {
+        KieBase kieBase = kieContainerBuilderService.build(Flux.fromIterable(drs)).block();
+        rewardContextHolderService.setRewardRulesKieBase(kieBase);
+        waitFor(
+                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
+                ()->"KieBase not saved in cache",
+                10,
+                500
+        );
     }
 
     private void setContextHolderFieldToNull(String fieldName) {
