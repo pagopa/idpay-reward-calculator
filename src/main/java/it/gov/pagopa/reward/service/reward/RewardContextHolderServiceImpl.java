@@ -96,12 +96,18 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     public void refreshKieContainer(Consumer<? super KieBase> subscriber) {
         if (isRedisCacheEnabled) {
             reactiveRedisTemplate.opsForValue().get(REWARD_CONTEXT_HOLDER_CACHE_NAME)
-                    .map(c -> {
+                    .mapNotNull(c -> {
                         if(!Arrays.equals(c, kieBaseSerialized)){
                             this.kieBaseSerialized = c;
-                            KieBase newKieBase = (KieBase) SerializationUtils.deserialize(c);
-                            preLoadKieBase(newKieBase);
-                            this.kieBase=newKieBase;
+                            try{
+                                KieBase newKieBase = (KieBase) SerializationUtils.deserialize(c);
+                                preLoadKieBase(newKieBase);
+
+                                this.kieBase=newKieBase;
+                            } catch (Exception e){
+                                log.warn("[REWARD_RULE_BUILD] Cached KieContainer cannot be executed! refreshing it!");
+                                return null;
+                            }
                         }
                         return this.kieBase;
                     })
