@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Mono;
 
-@RequestMapping("/idpay/reward")
+@RequestMapping("/reward")
 public interface RewardTrxSynchronousApiController {
 
     @PostMapping("/preview/{initiativeId}")

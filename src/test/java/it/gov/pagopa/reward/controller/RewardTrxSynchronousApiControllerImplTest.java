@@ -19,7 +19,7 @@ import java.util.List;
 
 @WebFluxTest(controllers = {RewardTrxSynchronousApiController.class})
 class RewardTrxSynchronousApiControllerImplTest {
-    private final String rewardPreviewPath = "/idpay/reward/preview/{initiativeId}";
+    private final String rewardPreviewPath = "/reward/preview/{initiativeId}";
 
     @MockBean
     RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;

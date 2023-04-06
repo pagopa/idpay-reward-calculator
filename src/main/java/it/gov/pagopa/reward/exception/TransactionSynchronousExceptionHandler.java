@@ -20,7 +20,7 @@ public class TransactionSynchronousExceptionHandler {
         SynchronousTransactionResponseDTO response;
         HttpStatus httpStatus;
         if (error instanceof TransactionSynchronousException transactionSynchronousException) {
-            httpStatus = determinateStatus(transactionSynchronousException.getResponse().getRejectionReasons());
+            httpStatus = getHttpStatus(transactionSynchronousException.getResponse().getRejectionReasons());
             response = transactionSynchronousException.getResponse();
 
         } else {
@@ -32,8 +32,8 @@ public class TransactionSynchronousExceptionHandler {
                 .body(response);
     }
 
-    private HttpStatus determinateStatus(List<String> rejectionReasons){
+    private HttpStatus getHttpStatus(List<String> rejectionReasons){
         return RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND
-                .equals(rejectionReasons.get(0)) ? HttpStatus.NOT_FOUND: HttpStatus.FORBIDDEN;
+                .equals(rejectionReasons.get(0)) ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN;
     }
 }
