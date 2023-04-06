@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousResponse;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -14,14 +14,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class RewardTransaction2PreviewResponseMapperTest {
+class RewardTransaction2SynchronousTransactionRequestDTOMapperTest {
     String trxId = "TRXID";
     String initiativeId = "INITIATIVEID";
     String userId = "USERID";
     @Test
     void applyRewardedTest(){
         // Given
-        RewardTransaction2PreviewResponseMapper responseMapper = new RewardTransaction2PreviewResponseMapper();
+        RewardTransaction2SynchronousTransactionRequestDTOMapper responseMapper = new RewardTransaction2SynchronousTransactionRequestDTOMapper();
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
                 .organizationId("ORGANIZATIONID")
@@ -38,7 +38,7 @@ class RewardTransaction2PreviewResponseMapperTest {
                 .build();
 
         // When
-        TransactionSynchronousResponse result = responseMapper.apply(trxId, initiativeId, trxDto);
+        SynchronousTransactionResponseDTO result = responseMapper.apply(trxId, initiativeId, trxDto);
 
         // Then
         Assertions.assertNotNull(result);
@@ -51,7 +51,7 @@ class RewardTransaction2PreviewResponseMapperTest {
     @Test
     void applyRejectedTest(){
         // Given
-        RewardTransaction2PreviewResponseMapper responseMapper = new RewardTransaction2PreviewResponseMapper();
+        RewardTransaction2SynchronousTransactionRequestDTOMapper responseMapper = new RewardTransaction2SynchronousTransactionRequestDTOMapper();
         List<String> rejectionReasons = List.of(RewardConstants.TRX_REJECTION_REASON_INVALID_AMOUNT);
         RewardTransactionDTO trxDto = RewardTransactionDTO.builder()
                 .userId(userId)
@@ -61,17 +61,18 @@ class RewardTransaction2PreviewResponseMapperTest {
                 .build();
 
         // When
-        TransactionSynchronousResponse result = responseMapper.apply(trxId, initiativeId, trxDto);
+        SynchronousTransactionResponseDTO result = responseMapper.apply(trxId, initiativeId, trxDto);
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "reward");
+        Assertions.assertEquals(BigDecimal.ZERO, result.getReward());
+        TestUtils.checkNotNullFields(result);
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(rejectionReasons, result.getRejectionReasons());
         checkCommonAssertions(result);
     }
 
-    void checkCommonAssertions(TransactionSynchronousResponse result){
+    void checkCommonAssertions(SynchronousTransactionResponseDTO result){
         Assertions.assertEquals(trxId, result.getTransactionId());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(userId, result.getUserId());

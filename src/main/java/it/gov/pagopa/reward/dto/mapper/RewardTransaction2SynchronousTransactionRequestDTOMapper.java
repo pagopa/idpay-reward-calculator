@@ -1,16 +1,18 @@
 package it.gov.pagopa.reward.dto.mapper;
 
-import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousResponse;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
-public class RewardTransaction2PreviewResponseMapper implements TriFunction<String, String, RewardTransactionDTO, TransactionSynchronousResponse> {
+public class RewardTransaction2SynchronousTransactionRequestDTOMapper implements TriFunction<String, String, RewardTransactionDTO, SynchronousTransactionResponseDTO> {
     @Override
-    public TransactionSynchronousResponse apply(String trxId, String initiativeId, RewardTransactionDTO rewardTransactionDTO) {
-        TransactionSynchronousResponse out = new TransactionSynchronousResponse();
+    public SynchronousTransactionResponseDTO apply(String trxId, String initiativeId, RewardTransactionDTO rewardTransactionDTO) {
+        SynchronousTransactionResponseDTO out = new SynchronousTransactionResponseDTO();
 
         out.setTransactionId(trxId);
         out.setInitiativeId(initiativeId);
@@ -19,6 +21,7 @@ public class RewardTransaction2PreviewResponseMapper implements TriFunction<Stri
         if(rewardTransactionDTO.getStatus().equals(RewardConstants.REWARD_STATE_REWARDED)) {
             out.setReward(rewardTransactionDTO.getRewards().get(initiativeId).getProvidedReward());
         } else {
+            out.setReward(BigDecimal.ZERO);
             out.setRejectionReasons(rewardTransactionDTO.getRejectionReasons());
         }
         return out;

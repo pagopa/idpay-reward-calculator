@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionSynchronousResponse {
+public class SynchronousTransactionResponseDTO {
     private String transactionId;
     private String initiativeId;
     private String userId;

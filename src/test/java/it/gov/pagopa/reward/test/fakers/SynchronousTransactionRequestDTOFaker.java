@@ -2,19 +2,16 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
-import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousRequest;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.Random;
 
-public class TransactionPreviewRequestFaker {
+public class SynchronousTransactionRequestDTOFaker {
 
-    private TransactionPreviewRequestFaker() {
+    private SynchronousTransactionRequestDTOFaker() {
     }
 
     private static final Random randomGenerator = new Random();
@@ -38,18 +35,14 @@ public class TransactionPreviewRequestFaker {
     }
 
     /**
-     * It will return an example of {@link TransactionSynchronousRequest}. Providing a bias, it will return a pseudo-casual object
+     * It will return an example of {@link SynchronousTransactionRequestDTO}. Providing a bias, it will return a pseudo-casual object
      */
-    public static TransactionSynchronousRequest mockInstance(Integer bias) {
+    public static SynchronousTransactionRequestDTO mockInstance(Integer bias) {
         return mockInstanceBuilder(bias).build();
     }
 
-    public static TransactionSynchronousRequest.TransactionSynchronousRequestBuilder mockInstanceBuilder(Integer bias) {
-        LocalDate trxDate = LocalDate.of(2022, getRandomPositiveNumber(bias, 11) + 1, getRandomPositiveNumber(bias, 27)+1);
-        LocalTime trxTime = LocalTime.of(getRandomPositiveNumber(bias, 23), getRandomPositiveNumber(bias, 59), getRandomPositiveNumber(bias, 59));
-        LocalDateTime trxDateTime = LocalDateTime.of(trxDate, trxTime);
-
-        return TransactionSynchronousRequest.builder()
+    public static SynchronousTransactionRequestDTO.SynchronousTransactionRequestDTOBuilder mockInstanceBuilder(Integer bias) {
+        return SynchronousTransactionRequestDTO.builder()
                 .transactionId("TRANSACTIONID%d".formatted(bias))
                 .userId("USERID%d".formatted(bias))
                 .merchantId("MERCHANTID%d".formatted(bias))

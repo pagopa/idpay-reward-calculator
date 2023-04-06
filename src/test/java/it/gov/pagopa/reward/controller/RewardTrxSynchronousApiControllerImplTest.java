@@ -1,26 +1,25 @@
 package it.gov.pagopa.reward.controller;
 
-import it.gov.pagopa.reward.dto.ErrorDTO;
-import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousRequest;
-import it.gov.pagopa.reward.dto.synchronous.TransactionSynchronousResponse;
-import it.gov.pagopa.reward.exception.ClientExceptionNoBody;
-import it.gov.pagopa.reward.exception.ClientExceptionWithBody;
-import it.gov.pagopa.reward.exception.Severity;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
-import it.gov.pagopa.reward.test.fakers.TransactionPreviewRequestFaker;
+import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @WebFluxTest(controllers = {RewardTrxSynchronousApiController.class})
 class RewardTrxSynchronousApiControllerImplTest {
+    private final String rewardPreviewPath = "/idpay/reward/preview/{initiativeId}";
 
     @MockBean
     RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;
@@ -32,8 +31,8 @@ class RewardTrxSynchronousApiControllerImplTest {
     void postTransactionPreviewOK(){
 
         String initiativeId = "INITIATIVEID";
-        TransactionSynchronousRequest request = TransactionPreviewRequestFaker.mockInstance(1);
-        TransactionSynchronousResponse response = TransactionSynchronousResponse.builder()
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
                 .initiativeId(initiativeId)
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
@@ -41,12 +40,12 @@ class RewardTrxSynchronousApiControllerImplTest {
         Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.just(response));
 
         webClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
                         .build(initiativeId))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(TransactionSynchronousResponse.class).isEqualTo(response);
+                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
     }
@@ -54,18 +53,24 @@ class RewardTrxSynchronousApiControllerImplTest {
     @Test
     void postTransactionPreviewUserNotOnboarded(){
         String initiativeId = " INITIATIVEID";
-        TransactionSynchronousRequest request = TransactionPreviewRequestFaker.mockInstance(1);
-        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new ClientExceptionWithBody(HttpStatus.FORBIDDEN,"Error",  "User not onboarded to initiative %s".formatted(initiativeId)));
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
+                .transactionId(request.getTransactionId())
+                .initiativeId(initiativeId)
+                .userId(request.getUserId())
+                .status(RewardConstants.REWARD_STATE_REJECTED)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
 
-        ErrorDTO expectedErrorDTO = new ErrorDTO(Severity.ERROR,"Error", "User not onboarded to initiative %s".formatted(initiativeId));
+        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new TransactionSynchronousException(response));
 
         webClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
                         .build(initiativeId))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isForbidden()
-                .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDTO);
+                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
     }
@@ -73,35 +78,17 @@ class RewardTrxSynchronousApiControllerImplTest {
     @Test
     void postTransactionPreview(){
         String initiativeId = " INITIATIVEID";
-        TransactionSynchronousRequest request = TransactionPreviewRequestFaker.mockInstance(1);
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new RuntimeException());
 
-        ErrorDTO expectedDefaultErrorDTO =new ErrorDTO(Severity.ERROR, "Error", "Something gone wrong");
+
         webClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
                         .build(initiativeId))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody(ErrorDTO.class).isEqualTo(expectedDefaultErrorDTO);
+                .expectStatus().is5xxServerError();
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
     }
-
-    @Test
-    void postTransactionPreviewWithNoBodyException(){
-        String initiativeId = " INITIATIVEID";
-        TransactionSynchronousRequest request = TransactionPreviewRequestFaker.mockInstance(1);
-        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST));
-
-        webClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
-                        .build(initiativeId))
-                .body(BodyInserters.fromValue(request))
-                .exchange()
-                .expectStatus().isBadRequest();
-
-        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
-    }
-
 }

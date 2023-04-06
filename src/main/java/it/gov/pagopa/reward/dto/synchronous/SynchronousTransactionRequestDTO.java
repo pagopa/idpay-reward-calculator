@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionSynchronousRequest {
+public class SynchronousTransactionRequestDTO {
     private String transactionId;
     private String userId;
     private String merchantId;
