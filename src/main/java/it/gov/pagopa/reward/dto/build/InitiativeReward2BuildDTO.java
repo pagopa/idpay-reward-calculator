@@ -16,4 +16,5 @@ public class InitiativeReward2BuildDTO {
     private InitiativeGeneralDTO general;
     private InitiativeRewardRule rewardRule;
     private InitiativeTrxConditions trxRule;
+    private String initiativeRewardType;
 }

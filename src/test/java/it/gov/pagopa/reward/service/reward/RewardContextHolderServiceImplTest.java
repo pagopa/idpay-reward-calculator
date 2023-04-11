@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
@@ -120,6 +121,7 @@ class RewardContextHolderServiceImplTest {
                 .yearlyThreshold(false)
                 .trxRule(new InitiativeTrxConditions())
                 .rewardRule(new RewardValueDTO())
+                .initiativeRewardType(InitiativeRewardType.REFUND.name())
                 .build();
 
 
