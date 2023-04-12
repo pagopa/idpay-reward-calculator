@@ -17,24 +17,47 @@ import java.util.List;
 public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
 
     @Test
-    void applyTest(){
+    void applyChargeOperationTest(){
         // Give
-        String operationType = "00";
-        SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(operationType);
+        String chargeOperation = "00";
+        String refundOperation = "01";
+
+        SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(chargeOperation, refundOperation);
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         BigDecimal expectedAmountEur = new BigDecimal("10.00");
         // When
         TransactionDTO result = mapper.apply(previewRequest);
 
         // Then
-        System.out.println(previewRequest.getTrxDate());
+        commonOperationTypeAssertions(previewRequest, result, expectedAmountEur);
+        Assertions.assertEquals(chargeOperation, result.getOperationType());
+    }
+
+    @Test
+    void applyRefundOperationTest(){
+        // Give
+        String chargeOperation = "00";
+        String refundOperation = "01";
+
+        SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(chargeOperation, refundOperation);
+        SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        previewRequest.setOperationTypeTranscoded(OperationType.REFUND);
+        BigDecimal expectedAmountEur = new BigDecimal("10.00");
+        // When
+        TransactionDTO result = mapper.apply(previewRequest);
+
+        // Then
+        commonOperationTypeAssertions(previewRequest, result, expectedAmountEur);
+        Assertions.assertEquals(refundOperation, result.getOperationType());
+    }
+
+    private void commonOperationTypeAssertions(SynchronousTransactionRequestDTO previewRequest, TransactionDTO result, BigDecimal expectedAmountEur) {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(previewRequest.getTransactionId(), result.getId());
         Assertions.assertEquals(previewRequest.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertEquals(previewRequest.getAcquirerCode(), result.getAcquirerCode());
         Assertions.assertEquals(previewRequest.getTrxDate(), result.getTrxDate());
         Assertions.assertEquals(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(previewRequest.getUserId()), result.getHpan());
-        Assertions.assertEquals(operationType, result.getOperationType());
         Assertions.assertEquals(previewRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
         Assertions.assertEquals(expectedAmountEur, result.getAmount());
         Assertions.assertEquals(previewRequest.getAmountCurrency(), result.getAmountCurrency());
@@ -43,7 +66,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getMerchantId(), result.getMerchantId());
         Assertions.assertEquals(previewRequest.getMerchantFiscalCode(), result.getFiscalCode());
         Assertions.assertEquals(previewRequest.getVat(), result.getVat());
-        Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
+        Assertions.assertEquals(previewRequest.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
         Assertions.assertEquals(expectedAmountEur, result.getEffectiveAmount());
@@ -56,8 +79,9 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
     @Test
     void apply2SynchronousResponseTest(){
         // Give
-        String operationType = "00";
-        SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(operationType);
+        String chargeOperation = "00";
+        String refundOperation = "01";
+        SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(chargeOperation, refundOperation);
 
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId="INITIATIVEID";

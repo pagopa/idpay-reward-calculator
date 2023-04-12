@@ -15,11 +15,14 @@ import java.util.List;
 @Service
 public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
     private final String chargeOperation;
+    private final String refundOperation;
 
     private static final String PREFIX_PAYMENT_INSTRUMENT="IDPAY_%s";
 
-    public SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(@Value("${app.operationType.charge}")String chargeOperation) {
+    public SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(@Value("${app.operationType.charge}") String chargeOperation,
+                                                                    @Value("${app.operationType.refund}") String refundOperation) {
         this.chargeOperation = chargeOperation;
+        this.refundOperation = refundOperation;
     }
 
     public TransactionDTO apply(SynchronousTransactionRequestDTO trx) {
@@ -31,7 +34,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
         out.setHpan(trx.getHpan() == null ? getPaymentInstrument(trx.getUserId()) : trx.getHpan());
-        out.setOperationType(chargeOperation);
+        out.setOperationType(getOperationType(trx.getOperationTypeTranscoded()));
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
         out.setCorrelationId(trx.getCorrelationId());
         out.setAmount(amount);
@@ -41,13 +44,20 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setMerchantId(trx.getMerchantId());
         out.setFiscalCode(trx.getMerchantFiscalCode());
         out.setVat(trx.getVat());
-        out.setOperationTypeTranscoded(OperationType.CHARGE);
+        out.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
         out.setAmountCents(trx.getAmountCents());
         out.setEffectiveAmount(amount);
         out.setTrxChargeDate(trx.getTrxChargeDate());
         out.setUserId(trx.getUserId());
 
         return out;
+    }
+
+    private String getOperationType(OperationType operationTypeTranscoded) {
+        return switch (operationTypeTranscoded){
+            case CHARGE -> chargeOperation;
+            case REFUND -> refundOperation;
+        };
     }
 
     public SynchronousTransactionResponseDTO apply(SynchronousTransactionRequestDTO request, String initiativeId, List<String> discardCause){

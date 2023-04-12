@@ -48,6 +48,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
         return checkInitiative(trxPreviewRequest, initiativeId)
                 .flatMap(b -> checkOnboarded(trxPreviewRequest, trxDTO, initiativeId))
                 .flatMap(b -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(trxDTO.getUserId(),initiativeId)))
+                .switchIfEmpty(createCounter(trxPreviewRequest.getUserId(), initiativeId))
                 .map(userInitiativeCounters -> {
                     UserInitiativeCountersWrapper counterWrapper = UserInitiativeCountersWrapper.builder()
                             .userId(userInitiativeCounters.getUserId())
@@ -73,5 +74,12 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
         } else {
             throw new TransactionSynchronousException(trxPreviewRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
         }
+    }
+    private Mono<UserInitiativeCounters> createCounter(String userId, String initiativeId){
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        userInitiativeCounters.setId(UserInitiativeCounters.buildId(userId, initiativeId));
+        userInitiativeCounters.setUserId(userId);
+        userInitiativeCounters.setInitiativeId(initiativeId);
+        return Mono.just(userInitiativeCounters);
     }
 }

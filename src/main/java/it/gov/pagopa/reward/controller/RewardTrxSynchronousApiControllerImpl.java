@@ -2,11 +2,16 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import it.gov.pagopa.reward.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
+import it.gov.pagopa.reward.utils.PerformanceLogger;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
+@Slf4j
 public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchronousApiController {
     private final RewardTrxSynchronousApiService rewardTrxSynchronousService;
 
@@ -16,7 +21,16 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
     @Override
     public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
-        return rewardTrxSynchronousService.previewTransaction(trxPreviewRequest,initiativeId);
+        log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction", trxPreviewRequest.getUserId());
+        Mono<SynchronousTransactionResponseDTO> responseMono = PerformanceLogger.logTimingFinally("[SYNC_PREVIEW_TRANSACTION]", rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId), trxPreviewRequest.toString());
 
+        return responseMono.hasElement()
+                .flatMap(b -> {
+                    if(b.equals(Boolean.FALSE)){
+                        throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND);
+                    }else{
+                        return responseMono;
+                    }
+                });
     }
 }

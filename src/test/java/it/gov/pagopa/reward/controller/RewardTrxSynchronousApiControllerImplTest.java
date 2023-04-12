@@ -76,6 +76,30 @@ class RewardTrxSynchronousApiControllerImplTest {
     }
 
     @Test
+    void postTransactionPreviewNullRequest(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
+                .transactionId(request.getTransactionId())
+                .initiativeId(initiativeId)
+                .userId(request.getUserId())
+                .status(RewardConstants.REWARD_STATE_REJECTED)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+
+        Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.empty());
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().isEmpty();
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+    @Test
     void postTransactionPreviewError(){
         String initiativeId = " INITIATIVEID";
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
