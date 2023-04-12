@@ -20,8 +20,8 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     private final ReactiveMongoTemplate mongoTemplate;
     private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 
-    public UserInitiativeCountersAtomicOpsRepositoryImpl(@Value("${app.synchronous.throttlingSeconds}") int ThrottlingSeconds, ReactiveMongoTemplate mongoTemplate, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper) {
-        this.throttlingSeconds = ThrottlingSeconds;
+    public UserInitiativeCountersAtomicOpsRepositoryImpl(@Value("${app.synchronous.throttlingSeconds}") int throttlingSeconds, ReactiveMongoTemplate mongoTemplate, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper) {
+        this.throttlingSeconds = throttlingSeconds;
         this.mongoTemplate = mongoTemplate;
         this.synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper = synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
     }
@@ -43,7 +43,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                 .flatMap(b -> mongoTemplate.exists(Query.query(criteriaByUserIdAndInitiativeId(request.getUserId(), initiativeId)), UserInitiativeCounters.class))
                 .map(b -> {
                     if(b.equals(Boolean.TRUE)){
-                        throw new TransactionSynchronousException(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(request, initiativeId, List.of(RewardConstants.TRX_REJECTION_USER_NOT_ENABLED)));
+                        throw new TransactionSynchronousException(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(request, initiativeId, List.of(RewardConstants.TRX_TOO_REJECTION_TOO_MANY_REQUEST)));
                     }
                     return b;
                 });

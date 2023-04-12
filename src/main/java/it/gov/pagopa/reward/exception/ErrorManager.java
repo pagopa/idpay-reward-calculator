@@ -55,7 +55,12 @@ public class ErrorManager {
     }
 
     private HttpStatus getHttpStatus(List<String> rejectionReasons){
-        return RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND
-                .equals(rejectionReasons.get(0)) ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN;
+        return switch(rejectionReasons.get(0)){
+            case RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE-> HttpStatus.FORBIDDEN;
+            case RewardConstants.TRX_REJECTION_ALREADY_PROCESSED -> HttpStatus.CONFLICT;
+            case RewardConstants.TRX_TOO_REJECTION_TOO_MANY_REQUEST -> HttpStatus.TOO_MANY_REQUESTS;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
     }
 }
