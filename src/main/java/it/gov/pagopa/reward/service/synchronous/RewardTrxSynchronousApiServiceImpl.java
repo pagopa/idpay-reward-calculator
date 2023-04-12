@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
+import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,15 +27,16 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     private final RewardContextHolderService rewardContextHolderService;
     private final OnboardedInitiativesService onboardedInitiativesService;
     private final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
-
+    private final TransactionProcessedService transactionProcessedService;
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper;
     private final RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper;
 
-    public RewardTrxSynchronousApiServiceImpl(RewardContextHolderService rewardContextHolderService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, UserInitiativeCountersRepository userInitiativeCountersRepository, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper, RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper) {
+    public RewardTrxSynchronousApiServiceImpl(RewardContextHolderService rewardContextHolderService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, TransactionProcessedService transactionProcessedService, UserInitiativeCountersRepository userInitiativeCountersRepository, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper, RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper) {
         this.rewardContextHolderService = rewardContextHolderService;
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
+        this.transactionProcessedService = transactionProcessedService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.trxPreviewRequest2TransactionDtoMapper = trxPreviewRequest2TransactionDtoMapper;
         this.rewardTransaction2SynchronousTransactionResponseDTOMapper = rewardTransaction2SynchronousTransactionResponseDTOMapper;
@@ -58,6 +60,20 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
                 .map(p -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxPreviewRequest.getTransactionId(),initiativeId, p.getSecond()));
     }
 
+    @Override
+    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
+        log.trace("[REWARD] Starting reward preview calculation for transaction {}", trxAuthorizeRequest.getTransactionId());
+        TransactionDTO trxDTO = trxPreviewRequest2TransactionDtoMapper.apply(trxAuthorizeRequest);
+        return checkInitiative(trxAuthorizeRequest, initiativeId)
+                .flatMap(b -> checkSynTrxAlreadyProcessed(trxAuthorizeRequest,trxDTO, initiativeId))
+                .flatMap(b -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId))
+                .flatMap(b -> userInitiativeCountersRepository.updateDate(trxAuthorizeRequest, initiativeId))
+                .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trxDTO,List.of(initiativeId)))
+                .map(rewardTransaction -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxAuthorizeRequest.getTransactionId(),initiativeId, rewardTransaction));
+
+
+    }
+
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){
         return rewardContextHolderService.getInitiativeConfig(initiativeId).hasElement()
                 .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
@@ -67,6 +83,10 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
                 .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
     }
 
+    private Mono<Boolean> checkSynTrxAlreadyProcessed(SynchronousTransactionRequestDTO request,TransactionDTO trx, String initiativeId){
+        return transactionProcessedService.checkDuplicateTransactions(trx).hasElement()
+                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_ALREADY_PROCESSED));
+    }
     private Boolean checkingResult(Boolean b, SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReasonNoInitiative) {
         if ( b.equals(Boolean.TRUE)){
             return Boolean.TRUE;

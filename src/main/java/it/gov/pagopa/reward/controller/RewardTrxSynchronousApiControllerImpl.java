@@ -19,4 +19,9 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
         return rewardTrxSynchronousService.previewTransaction(trxPreviewRequest,initiativeId);
 
     }
+
+    @Override
+    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
+        return rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId);
+    }
 }
