@@ -73,7 +73,7 @@ class RewardTrxSynchronousApiServiceImplTest {
 
         // When
         try {
-            rewardTrxSynchronousApiApiService.postTransactionPreview(previewRequest, initiativeId).block();
+            rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
 
         } catch (Exception e){
             Assertions.assertTrue(e instanceof TransactionSynchronousException);
@@ -106,7 +106,7 @@ class RewardTrxSynchronousApiServiceImplTest {
 
         // When
         try {
-            rewardTrxSynchronousApiApiService.postTransactionPreview(previewRequest, initiativeId).block();
+            rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
 
         } catch (Exception e){
             Assertions.assertTrue(e instanceof TransactionSynchronousException);
@@ -155,7 +155,7 @@ class RewardTrxSynchronousApiServiceImplTest {
         RewardTrxSynchronousApiServiceImpl rewardTrxSynchronousApiApiService = new RewardTrxSynchronousApiServiceImpl(rewardContextHolderServiceMock, onboardedInitiativesServiceMock,initiativesEvaluatorFacadeServiceMock, userInitiativeCountersRepositoryMock, synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock, rewardTransaction2SynchronousTransactionRequestDTOMapperMock);
 
         // When
-        SynchronousTransactionResponseDTO result = rewardTrxSynchronousApiApiService.postTransactionPreview(previewRequest, initiativeId).block();
+        SynchronousTransactionResponseDTO result = rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
 
         // Then
         Assertions.assertNotNull(result);

@@ -41,7 +41,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> postTransactionPreview(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
+    public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
         log.trace("[REWARD] Starting reward preview calculation for transaction {}", trxPreviewRequest.getTransactionId());
         TransactionDTO trxDTO = trxPreviewRequest2TransactionDtoMapper.apply(trxPreviewRequest);
 
@@ -60,22 +60,18 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
 
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){
         return rewardContextHolderService.getInitiativeConfig(initiativeId).hasElement()
-                .map(b ->{
-                    if ( b.equals(Boolean.TRUE)){
-                        return Boolean.TRUE;
-                    } else {
-                        throw new TransactionSynchronousException(trxPreviewRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND)));
-                    }
-                });
+                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
     }
     private Mono<Boolean> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId){
         return onboardedInitiativesService.isOnboarded(trx.getHpan(),trx.getTrxDate(), initiativeId)
-                .map(b -> {
-                    if ( b.equals(Boolean.TRUE)){
-                        return Boolean.TRUE;
-                    } else {
-                        throw new TransactionSynchronousException(trxPreviewRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)));
-                    }
-                });
+                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
+    }
+
+    private Boolean checkingResult(Boolean b, SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReasonNoInitiative) {
+        if ( b.equals(Boolean.TRUE)){
+            return Boolean.TRUE;
+        } else {
+            throw new TransactionSynchronousException(trxPreviewRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+        }
     }
 }

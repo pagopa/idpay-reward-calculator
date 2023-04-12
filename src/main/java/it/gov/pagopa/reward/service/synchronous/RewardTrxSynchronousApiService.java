@@ -5,5 +5,5 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import reactor.core.publisher.Mono;
 
 public interface RewardTrxSynchronousApiService {
-    Mono<SynchronousTransactionResponseDTO> postTransactionPreview(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId);
+    Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId);
 }

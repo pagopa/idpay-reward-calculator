@@ -12,6 +12,6 @@ import reactor.core.publisher.Mono;
 public interface RewardTrxSynchronousApiController {
 
     @PostMapping("/preview/{initiativeId}")
-    Mono<SynchronousTransactionResponseDTO> postTransactionPreview(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
-                                                                   @PathVariable("initiativeId") String initiativeId);
+    Mono<SynchronousTransactionResponseDTO> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
+                                                               @PathVariable("initiativeId") String initiativeId);
 }

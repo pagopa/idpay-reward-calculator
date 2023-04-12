@@ -4,6 +4,7 @@ package it.gov.pagopa.reward.dto.mapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -21,10 +22,12 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         String operationType = "00";
         SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(operationType);
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        BigDecimal expectedAmountEur = new BigDecimal("10.00");
         // When
         TransactionDTO result = mapper.apply(previewRequest);
 
         // Then
+        System.out.println(previewRequest.getTrxDate());
         Assertions.assertNotNull(result);
         Assertions.assertEquals(previewRequest.getTransactionId(), result.getId());
         Assertions.assertEquals(previewRequest.getIdTrxAcquirer(), result.getIdTrxAcquirer());
@@ -33,14 +36,21 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(previewRequest.getUserId()), result.getHpan());
         Assertions.assertEquals(operationType, result.getOperationType());
         Assertions.assertEquals(previewRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
-        Assertions.assertEquals(previewRequest.getAmount(), result.getAmount());
+        Assertions.assertEquals(expectedAmountEur, result.getAmount());
         Assertions.assertEquals(previewRequest.getAmountCurrency(), result.getAmountCurrency());
         Assertions.assertEquals(previewRequest.getMcc(), result.getMcc());
         Assertions.assertEquals(previewRequest.getAcquirerId(), result.getAcquirerId());
         Assertions.assertEquals(previewRequest.getMerchantId(), result.getMerchantId());
         Assertions.assertEquals(previewRequest.getMerchantFiscalCode(), result.getFiscalCode());
         Assertions.assertEquals(previewRequest.getVat(), result.getVat());
+        Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
+        Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
+        Assertions.assertEquals(expectedAmountEur, result.getEffectiveAmount());
+        Assertions.assertEquals(previewRequest.getCorrelationId(), result.getCorrelationId());
+        Assertions.assertEquals(previewRequest.getTrxChargeDate(),result.getTrxChargeDate());
+        TestUtils.checkNotNullFields(result, "circuitType", "terminalId", "bin", "senderCode",
+                "posType","par", "refundInfo", "brandLogo", "brand", "maskedPan");
     }
 
     @Test

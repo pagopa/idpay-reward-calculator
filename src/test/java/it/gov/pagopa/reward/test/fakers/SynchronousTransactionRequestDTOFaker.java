@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.Random;
 
@@ -42,6 +43,7 @@ public class SynchronousTransactionRequestDTOFaker {
     }
 
     public static SynchronousTransactionRequestDTO.SynchronousTransactionRequestDTOBuilder mockInstanceBuilder(Integer bias) {
+        OffsetDateTime offsetDateTimeNow = OffsetDateTime.of(2023, 4,11,10,0,0,0, ZoneOffset.UTC);
         return SynchronousTransactionRequestDTO.builder()
                 .transactionId("TRANSACTIONID%d".formatted(bias))
                 .userId("USERID%d".formatted(bias))
@@ -49,14 +51,16 @@ public class SynchronousTransactionRequestDTOFaker {
                 .senderCode("SENDERCODE%d".formatted(bias))
                 .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
                 .vat("VAT%d".formatted(bias))
-                .trxDate(OffsetDateTime.now())
-                .amount(BigDecimal.TEN)
+                .trxDate(offsetDateTimeNow)
+                .amountCents(1_000L)
                 .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
                 .mcc("MCC%d".formatted(bias))
                 .acquirerCode("ACQUIRERCODE%d".formatted(bias))
                 .acquirerId("ACQUIRERID%d".formatted(bias))
                 .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
-                .idTrxIssuer("IDTRXISSUER%d".formatted(bias));
+                .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
+                .correlationId("CORRELATIONID%d".formatted(bias))
+                .trxChargeDate(offsetDateTimeNow);
     }
 
 

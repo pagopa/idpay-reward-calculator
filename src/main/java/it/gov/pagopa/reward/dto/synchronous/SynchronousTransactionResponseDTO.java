@@ -17,6 +17,6 @@ public class SynchronousTransactionResponseDTO {
     private String initiativeId;
     private String userId;
     private String status;
-    private BigDecimal reward;
+    private BigDecimal reward; //TODO
     private List<String> rejectionReasons;
 }

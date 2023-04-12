@@ -23,11 +23,14 @@ public class SynchronousTransactionRequestDTO {
     private String idTrxIssuer;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxDate;
-    private BigDecimal amount;
+    private Long amountCents;
     private String amountCurrency;
     private String mcc;
     private String acquirerCode;
     private String acquirerId;
     private String idTrxAcquirer;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private String correlationId;
+    private OffsetDateTime trxChargeDate;
     private String hpan;
 }

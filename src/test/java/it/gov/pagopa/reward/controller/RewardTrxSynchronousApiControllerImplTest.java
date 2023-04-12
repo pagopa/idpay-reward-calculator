@@ -37,7 +37,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
 
-        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.just(response));
+        Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.just(response));
 
         webClient.post()
                 .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
@@ -47,7 +47,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .expectStatus().isOk()
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
-        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
     }
 
     @Test
@@ -62,7 +62,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
 
-        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new TransactionSynchronousException(response));
+        Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new TransactionSynchronousException(response));
 
         webClient.post()
                 .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
@@ -72,14 +72,14 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .expectStatus().isForbidden()
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
-        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
     }
 
     @Test
-    void postTransactionPreview(){
+    void postTransactionPreviewError(){
         String initiativeId = " INITIATIVEID";
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
-        Mockito.when(rewardTrxSynchronousServiceMock.postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new RuntimeException());
+        Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new RuntimeException());
 
 
         webClient.post()
@@ -89,6 +89,6 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .exchange()
                 .expectStatus().is5xxServerError();
 
-        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).postTransactionPreview(Mockito.any(), Mockito.eq(initiativeId));
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
     }
 }
