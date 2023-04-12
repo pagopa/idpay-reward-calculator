@@ -14,14 +14,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class RewardTransaction2SynchronousTransactionRequestDTOMapperTest {
+class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
     String trxId = "TRXID";
     String initiativeId = "INITIATIVEID";
     String userId = "USERID";
     @Test
     void applyRewardedTest(){
         // Given
-        RewardTransaction2SynchronousTransactionRequestDTOMapper responseMapper = new RewardTransaction2SynchronousTransactionRequestDTOMapper();
+        RewardTransaction2SynchronousTransactionResponseDTOMapper responseMapper = new RewardTransaction2SynchronousTransactionResponseDTOMapper();
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
                 .organizationId("ORGANIZATIONID")
@@ -44,14 +44,14 @@ class RewardTransaction2SynchronousTransactionRequestDTOMapperTest {
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result, "rejectionReasons");
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REWARDED, result.getStatus());
-        Assertions.assertEquals(reward.getProvidedReward(), result.getReward());
+        Assertions.assertEquals(reward, result.getReward());
         checkCommonAssertions(result);
 
     }
     @Test
     void applyRejectedTest(){
         // Given
-        RewardTransaction2SynchronousTransactionRequestDTOMapper responseMapper = new RewardTransaction2SynchronousTransactionRequestDTOMapper();
+        RewardTransaction2SynchronousTransactionResponseDTOMapper responseMapper = new RewardTransaction2SynchronousTransactionResponseDTOMapper();
         List<String> rejectionReasons = List.of(RewardConstants.TRX_REJECTION_REASON_INVALID_AMOUNT);
         RewardTransactionDTO trxDto = RewardTransactionDTO.builder()
                 .userId(userId)
@@ -65,8 +65,8 @@ class RewardTransaction2SynchronousTransactionRequestDTOMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(BigDecimal.ZERO, result.getReward());
-        TestUtils.checkNotNullFields(result);
+        Assertions.assertNull(result.getReward());
+        TestUtils.checkNotNullFields(result, "reward");
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(rejectionReasons, result.getRejectionReasons());
         checkCommonAssertions(result);

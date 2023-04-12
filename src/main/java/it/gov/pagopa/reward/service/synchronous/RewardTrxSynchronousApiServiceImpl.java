@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.synchronous;
 
-import it.gov.pagopa.reward.dto.mapper.RewardTransaction2SynchronousTransactionRequestDTOMapper;
+import it.gov.pagopa.reward.dto.mapper.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
@@ -29,15 +29,15 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
 
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper;
-    private final RewardTransaction2SynchronousTransactionRequestDTOMapper rewardTransaction2SynchronousTransactionRequestDTOMapper;
+    private final RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper;
 
-    public RewardTrxSynchronousApiServiceImpl(RewardContextHolderService rewardContextHolderService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, UserInitiativeCountersRepository userInitiativeCountersRepository, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper, RewardTransaction2SynchronousTransactionRequestDTOMapper rewardTransaction2SynchronousTransactionRequestDTOMapper) {
+    public RewardTrxSynchronousApiServiceImpl(RewardContextHolderService rewardContextHolderService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, UserInitiativeCountersRepository userInitiativeCountersRepository, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper, RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper) {
         this.rewardContextHolderService = rewardContextHolderService;
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.trxPreviewRequest2TransactionDtoMapper = trxPreviewRequest2TransactionDtoMapper;
-        this.rewardTransaction2SynchronousTransactionRequestDTOMapper = rewardTransaction2SynchronousTransactionRequestDTOMapper;
+        this.rewardTransaction2SynchronousTransactionResponseDTOMapper = rewardTransaction2SynchronousTransactionResponseDTOMapper;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
                             .build();
                     return initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), counterWrapper);
                 })
-                .map(p -> rewardTransaction2SynchronousTransactionRequestDTOMapper.apply(trxPreviewRequest.getTransactionId(),initiativeId, p.getSecond()));
+                .map(p -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxPreviewRequest.getTransactionId(),initiativeId, p.getSecond()));
     }
 
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){

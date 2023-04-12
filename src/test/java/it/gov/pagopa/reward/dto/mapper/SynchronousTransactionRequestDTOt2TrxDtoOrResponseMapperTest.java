@@ -76,7 +76,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(discardCause, result.getRejectionReasons());
-        Assertions.assertEquals(BigDecimal.ZERO, result.getReward());
-        TestUtils.checkNotNullFields(result);
+        Assertions.assertNull(result.getReward());
+        TestUtils.checkNotNullFields(result, "reward");
     }
 }

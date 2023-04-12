@@ -56,7 +56,6 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setInitiativeId(initiativeId);
         out.setUserId(request.getUserId());
         out.setStatus(RewardConstants.REWARD_STATE_REJECTED);
-        out.setReward(BigDecimal.ZERO);
         out.setRejectionReasons(discardCause);
         return out;
     }
