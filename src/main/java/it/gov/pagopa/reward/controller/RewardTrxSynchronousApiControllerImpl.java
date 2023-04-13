@@ -22,15 +22,10 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     @Override
     public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
         log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction", trxPreviewRequest.getUserId());
-        Mono<SynchronousTransactionResponseDTO> responseMono = PerformanceLogger.logTimingFinally("[SYNC_PREVIEW_TRANSACTION]", rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId), trxPreviewRequest.toString());
 
-        return responseMono.hasElement()
-                .flatMap(b -> {
-                    if(b.equals(Boolean.FALSE)){
-                        throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND);
-                    }else{
-                        return responseMono;
-                    }
-                });
+        return PerformanceLogger.logTimingFinally("[SYNC_PREVIEW_TRANSACTION]",
+                rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))),
+                trxPreviewRequest.toString());
     }
 }

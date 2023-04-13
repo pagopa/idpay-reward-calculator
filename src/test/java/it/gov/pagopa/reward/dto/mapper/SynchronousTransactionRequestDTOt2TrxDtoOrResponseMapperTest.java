@@ -41,7 +41,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
 
         SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(chargeOperation, refundOperation);
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
-        previewRequest.setOperationTypeTranscoded(OperationType.REFUND);
+        previewRequest.setOperationType(OperationType.REFUND);
         BigDecimal expectedAmountEur = new BigDecimal("10.00");
         // When
         TransactionDTO result = mapper.apply(previewRequest);
@@ -66,7 +66,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getMerchantId(), result.getMerchantId());
         Assertions.assertEquals(previewRequest.getMerchantFiscalCode(), result.getFiscalCode());
         Assertions.assertEquals(previewRequest.getVat(), result.getVat());
-        Assertions.assertEquals(previewRequest.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertEquals(previewRequest.getOperationType(), result.getOperationTypeTranscoded());
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
         Assertions.assertEquals(expectedAmountEur, result.getEffectiveAmount());

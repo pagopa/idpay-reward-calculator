@@ -77,7 +77,7 @@ class RewardTrxSynchronousApiServiceImplTest {
         // When
         try {
             rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
-            Assertions.fail();
+            Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
             Assertions.assertTrue(e instanceof TransactionSynchronousException);
@@ -110,7 +110,7 @@ class RewardTrxSynchronousApiServiceImplTest {
         // When
         try {
             rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
-            Assertions.fail();
+            Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
             Assertions.assertTrue(e instanceof TransactionSynchronousException);

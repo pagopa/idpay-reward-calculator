@@ -48,7 +48,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
         return checkInitiative(trxPreviewRequest, initiativeId)
                 .flatMap(b -> checkOnboarded(trxPreviewRequest, trxDTO, initiativeId))
                 .flatMap(b -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(trxDTO.getUserId(),initiativeId)))
-                .switchIfEmpty(Mono.just(UserInitiativeCounters.builder(trxPreviewRequest.getUserId(), initiativeId).build()))
+                .switchIfEmpty(Mono.just(new UserInitiativeCounters(trxPreviewRequest.getUserId(), initiativeId)))
                 .map(userInitiativeCounters -> {
                     UserInitiativeCountersWrapper counterWrapper = UserInitiativeCountersWrapper.builder()
                             .userId(userInitiativeCounters.getUserId())

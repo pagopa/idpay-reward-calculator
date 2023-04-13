@@ -34,7 +34,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
         out.setHpan(trx.getHpan() == null ? getPaymentInstrument(trx.getUserId()) : trx.getHpan());
-        out.setOperationType(getOperationType(trx.getOperationTypeTranscoded()));
+        out.setOperationType(getOperationType(trx.getOperationType()));
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
         out.setCorrelationId(trx.getCorrelationId());
         out.setAmount(amount);
@@ -44,7 +44,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setMerchantId(trx.getMerchantId());
         out.setFiscalCode(trx.getMerchantFiscalCode());
         out.setVat(trx.getVat());
-        out.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
+        out.setOperationTypeTranscoded(trx.getOperationType());
         out.setAmountCents(trx.getAmountCents());
         out.setEffectiveAmount(amount);
         out.setTrxChargeDate(trx.getTrxChargeDate());

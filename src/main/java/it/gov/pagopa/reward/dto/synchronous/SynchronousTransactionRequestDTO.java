@@ -32,6 +32,6 @@ public class SynchronousTransactionRequestDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private String correlationId;
     private OffsetDateTime trxChargeDate;
-    private OperationType operationTypeTranscoded;
+    private OperationType operationType;
     private String hpan;
 }
