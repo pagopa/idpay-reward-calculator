@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.exception;
 
 import it.gov.pagopa.reward.dto.ErrorDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -10,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
-
-import java.util.List;
 
 
 @RestControllerAdvice
@@ -51,15 +48,9 @@ public class ErrorManager {
 
     @ExceptionHandler(TransactionSynchronousException.class)
     protected ResponseEntity<SynchronousTransactionResponseDTO> synchronousTrxHandleException(TransactionSynchronousException error, ServerWebExchange exchange){
-        SynchronousTransactionResponseDTO response = error.getResponse();
-        return ResponseEntity.status(getHttpStatus(response.getRejectionReasons()))
+        return ResponseEntity.status(error.getHttpStatus())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(response);
-    }
-
-    private HttpStatus getHttpStatus(List<String> rejectionReasons){
-        return RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND
-                .equals(rejectionReasons.get(0)) ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN;
+                .body(error.getResponse());
     }
 
     private String getRequestDetails(ServerWebExchange exchange) {

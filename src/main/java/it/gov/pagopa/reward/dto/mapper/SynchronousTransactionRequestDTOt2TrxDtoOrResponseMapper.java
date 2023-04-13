@@ -33,7 +33,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
-        out.setHpan(trx.getHpan() == null ? getPaymentInstrument(trx.getUserId()) : trx.getHpan());
+        out.setHpan(getPaymentInstrument(trx.getUserId()));
         out.setOperationType(getOperationType(trx.getOperationType()));
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
         out.setCorrelationId(trx.getCorrelationId());

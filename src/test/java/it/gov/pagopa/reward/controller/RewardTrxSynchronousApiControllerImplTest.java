@@ -20,6 +20,7 @@ import java.util.List;
 @WebFluxTest(controllers = {RewardTrxSynchronousApiController.class})
 class RewardTrxSynchronousApiControllerImplTest {
     private final String rewardPreviewPath = "/reward/preview/{initiativeId}";
+    private final String rewardAuthorizePath = "/reward/{initiativeId}";
 
     @MockBean
     RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;
@@ -76,16 +77,9 @@ class RewardTrxSynchronousApiControllerImplTest {
     }
 
     @Test
-    void postTransactionPreviewNullRequest(){
+    void postTransactionPreviewNotResponse(){
         String initiativeId = " INITIATIVEID";
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
-        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
-                .transactionId(request.getTransactionId())
-                .initiativeId(initiativeId)
-                .userId(request.getUserId())
-                .status(RewardConstants.REWARD_STATE_REJECTED)
-                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                .build();
 
         Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.empty());
 
@@ -114,5 +108,86 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .expectStatus().is5xxServerError();
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void postTransactionAuthorizeOK(){
+
+        String initiativeId = "INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
+                .initiativeId(initiativeId)
+                .status(RewardConstants.REWARD_STATE_REWARDED)
+                .build();
+
+        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.just(response));
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void postTransactionAuthorizeUserNotOnboarded(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
+                .transactionId(request.getTransactionId())
+                .initiativeId(initiativeId)
+                .userId(request.getUserId())
+                .status(RewardConstants.REWARD_STATE_REJECTED)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+
+        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new TransactionSynchronousException(response));
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void postTransactionAuthorizeNotResponse(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.empty());
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().isEmpty();
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+    @Test
+    void postTransactionAuthorizeError(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenThrow(new RuntimeException());
+
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId));
     }
 }

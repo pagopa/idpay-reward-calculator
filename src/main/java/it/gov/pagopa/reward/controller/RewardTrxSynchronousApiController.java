@@ -14,4 +14,9 @@ public interface RewardTrxSynchronousApiController {
     @PostMapping("/preview/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
                                                                @PathVariable("initiativeId") String initiativeId);
+
+
+    @PostMapping("/{initiativeId}")
+    Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestBody SynchronousTransactionRequestDTO trxAuthorizeRequest,
+                                                               @PathVariable("initiativeId") String initiativeId);
 }

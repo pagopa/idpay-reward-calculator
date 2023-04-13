@@ -23,9 +23,19 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
         log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction", trxPreviewRequest.getUserId());
 
-        return PerformanceLogger.logTimingFinally("[SYNC_PREVIEW_TRANSACTION]",
+        return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
-                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"NOTFOUND"))),
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
                 trxPreviewRequest.toString());
+    }
+
+    @Override
+    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
+        log.info("[SYNC_AUTHORIZE_TRANSACTION] The user {} requests authorize transaction {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId());
+
+        return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
+                rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId)
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
+                trxAuthorizeRequest.toString());
     }
 }
