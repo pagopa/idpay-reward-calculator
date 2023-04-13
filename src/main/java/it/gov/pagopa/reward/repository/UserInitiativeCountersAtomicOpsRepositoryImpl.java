@@ -30,12 +30,12 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                                         Criteria.where(UserInitiativeCounters.Fields.updateDate).is(null),
                                         Criteria.where(UserInitiativeCounters.Fields.updateDate).is(LocalDateTime.now().minusSeconds(throttlingSeconds)))),
                         new Update()
-                                .setOnInsert(UserInitiativeCounters.Fields.updateDate, LocalDateTime.now()),
+                                .set(UserInitiativeCounters.Fields.updateDate, LocalDateTime.now()),
                         UserInitiativeCounters.class
                 )
                 .switchIfEmpty(mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class)
                         .mapNotNull(counterExist -> {
-                            if(Boolean.TRUE.equals(counterExist)){
+                            if (Boolean.TRUE.equals(counterExist)) {
                                 throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS,"MANY_REQUESTS");
                             } else {
                                 return null;

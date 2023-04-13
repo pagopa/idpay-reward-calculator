@@ -23,7 +23,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
         log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction", trxPreviewRequest.getUserId());
 
-        return PerformanceLogger.logTimingFinally("[SYNC_PREVIEW_TRANSACTION]",
+        return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
                         .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"NOTFOUND"))),
                 trxPreviewRequest.toString());
@@ -31,6 +31,11 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
     @Override
     public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
-        return rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId);
+        log.info("[SYNC_AUTHORIZE_TRANSACTION] The user {} requests authorize transaction {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId());
+
+        return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
+                rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId)
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"NOTFOUND"))),
+                trxAuthorizeRequest.toString());
     }
 }

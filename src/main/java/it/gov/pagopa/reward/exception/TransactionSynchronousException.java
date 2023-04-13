@@ -13,7 +13,6 @@ public class TransactionSynchronousException extends RuntimeException{
     private final transient SynchronousTransactionResponseDTO response;
 
     public TransactionSynchronousException(SynchronousTransactionResponseDTO response) {
-
         this.httpStatus = getHttpStatus(response.getRejectionReasons());
         this.response = response;
     }

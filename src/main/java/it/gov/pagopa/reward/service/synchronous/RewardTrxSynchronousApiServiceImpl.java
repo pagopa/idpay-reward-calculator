@@ -36,6 +36,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     private final RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper;
     private final TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper;
 
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardTrxSynchronousApiServiceImpl(RewardContextHolderService rewardContextHolderService, OnboardedInitiativesService onboardedInitiativesService, InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService, TransactionProcessedRepository transactionProcessedRepository, UserInitiativeCountersRepository userInitiativeCountersRepository, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper trxPreviewRequest2TransactionDtoMapper, RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper, TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper) {
         this.rewardContextHolderService = rewardContextHolderService;
         this.onboardedInitiativesService = onboardedInitiativesService;
@@ -71,8 +72,9 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
         log.trace("[REWARD] Starting reward preview calculation for transaction {}", trxAuthorizeRequest.getTransactionId());
         TransactionDTO trxDTO = trxPreviewRequest2TransactionDtoMapper.apply(trxAuthorizeRequest);
         return checkInitiative(trxAuthorizeRequest, initiativeId)
-                .flatMap(initiativeFound -> checkSynTrxAlreadyProcessed(trxDTO, initiativeId))
-                .flatMap(transactionProcessed -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId))
+                .flatMap(initiativeFound -> checkSynTrxAlreadyProcessed(trxAuthorizeRequest, initiativeId))
+                .switchIfEmpty(Mono.just(Boolean.TRUE))
+                .flatMap(transactionNotProcessed -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId))
                 .flatMap(isOnboarded -> userInitiativeCountersRepository.findByIdThrottled(UserInitiativeCounters.buildId(trxAuthorizeRequest.getUserId(), initiativeId)))
                 .switchIfEmpty(Mono.just(new UserInitiativeCounters(trxAuthorizeRequest.getUserId(), initiativeId)))
                 .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trxDTO,List.of(initiativeId)))
@@ -81,27 +83,25 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
 
     }
 
-    private Mono<InitiativeConfig> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){
-        return rewardContextHolderService.getInitiativeConfig(initiativeId)
-                .switchIfEmpty(Mono.error(new TransactionSynchronousException(getErrorResponse(request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND))));
+    private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){
+        return rewardContextHolderService.getInitiativeConfig(initiativeId).hasElement()
+                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
     }
     private Mono<Boolean> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId){
         return onboardedInitiativesService.isOnboarded(trx.getHpan(),trx.getTrxDate(), initiativeId)
-                .switchIfEmpty(Mono.error(new TransactionSynchronousException(getErrorResponse(request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))));
+                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
     }
 
-    private Mono<Boolean> checkSynTrxAlreadyProcessed(TransactionDTO trx, String initiativeId){ //TODO check
-        return transactionProcessedRepository.findById(trx.getId())
-                .map(trxProcessed -> {
-                    if (trxProcessed != null){
-                        throw new TransactionSynchronousException(HttpStatus.CONFLICT,transactionProcessed2SyncTrxResponseDTOMapper.apply(trxProcessed, initiativeId));
-                    }
-                    else{
-                        return null;
-                    }
-                });
+    private Mono<Boolean> checkSynTrxAlreadyProcessed(SynchronousTransactionRequestDTO request, String initiativeId){
+        return transactionProcessedRepository.findById(request.getTransactionId())
+                .flatMap(trxProcessed -> Mono.error(new TransactionSynchronousException(HttpStatus.CONFLICT,transactionProcessed2SyncTrxResponseDTOMapper.apply(trxProcessed, initiativeId))));
     }
-    private SynchronousTransactionResponseDTO getErrorResponse(SynchronousTransactionRequestDTO request, String initiativeId, String rejectionReason){
-        return trxPreviewRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(rejectionReason));
+
+    private Boolean checkingResult(Boolean b, SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReasonNoInitiative) {
+        if ( b.equals(Boolean.TRUE)){
+            return Boolean.TRUE;
+        } else {
+            throw new TransactionSynchronousException(trxPreviewRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+        }
     }
 }
