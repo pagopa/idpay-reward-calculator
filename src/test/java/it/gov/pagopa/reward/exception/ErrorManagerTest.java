@@ -19,7 +19,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import java.util.List;
 
-@DirtiesContext
 class ErrorManagerTest extends BaseIntegrationTest {
 
     @SpyBean
@@ -32,7 +31,7 @@ class ErrorManagerTest extends BaseIntegrationTest {
     void handleExceptionClientExceptionNoBody() {
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
 
-        Mockito.doThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "NOTFOUND"))
+        Mockito.doThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot find initiative having id " + "ClientExceptionNoBody"))
                 .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("ClientExceptionNoBody"));
 
         webTestClient.post()
@@ -163,6 +162,24 @@ class ErrorManagerTest extends BaseIntegrationTest {
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isForbidden()
+                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(responseDTO);
+    }
+
+    @Test
+    void SynchronousHandleExceptionClientExceptionInitiativeInternalServerError() {
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO responseDTO = SynchronousTransactionResponseDTOFaker.mockInstance(1);
+        responseDTO.setRejectionReasons(List.of("ANOTHER_REJECTION"));
+
+        Mockito.doThrow(new TransactionSynchronousException(responseDTO))
+                .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionInternalServerError"));
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                        .build("TransactionSynchronousExceptionInternalServerError"))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().is5xxServerError()
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(responseDTO);
     }
 }

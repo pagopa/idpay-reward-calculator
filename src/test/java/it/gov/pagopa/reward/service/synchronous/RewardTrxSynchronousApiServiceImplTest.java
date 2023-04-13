@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
-class RewardTrxSynchronousApiServiceImplTest { //TODO checks
+class RewardTrxSynchronousApiServiceImplTest {
 
     @Mock
     RewardContextHolderService rewardContextHolderServiceMock;

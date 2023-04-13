@@ -25,7 +25,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
         return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
-                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"NOTFOUND"))),
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
                 trxPreviewRequest.toString());
     }
 
@@ -35,7 +35,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
         return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
                 rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId)
-                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"NOTFOUND"))),
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
                 trxAuthorizeRequest.toString());
     }
 }
