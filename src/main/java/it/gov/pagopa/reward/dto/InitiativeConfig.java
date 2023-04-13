@@ -28,5 +28,6 @@ public class InitiativeConfig {
     private boolean yearlyThreshold;
     private InitiativeRewardRule rewardRule;
     private InitiativeTrxConditions trxRule;
+    private String initiativeRewardType;
 
 }

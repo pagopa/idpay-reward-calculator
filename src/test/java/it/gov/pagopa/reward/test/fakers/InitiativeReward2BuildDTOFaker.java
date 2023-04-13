@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.test.fakers.rule.*;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -59,6 +60,7 @@ public final class InitiativeReward2BuildDTOFaker {
         out.initiativeId("ID_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.initiativeName("NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")));
         out.organizationId("ORGANIZATIONID_%s".formatted(bias));
+        out.initiativeRewardType(InitiativeRewardType.REFUND.name());
 
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
@@ -120,6 +122,7 @@ public final class InitiativeReward2BuildDTOFaker {
         out.setInitiativeId(fakeValuesService.bothify("?????"));
         out.setInitiativeName(fakeValuesService.bothify("?????"));
         out.setOrganizationId(fakeValuesService.bothify("?????"));
+        out.setInitiativeRewardType(InitiativeRewardType.REFUND.name());
 
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),

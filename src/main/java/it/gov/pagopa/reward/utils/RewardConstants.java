@@ -51,8 +51,6 @@ public final class RewardConstants {
     public static final String TRX_REJECTION_REASON_INVALID_REFUND = "INVALID_REFUND";
     public static final String TRX_REJECTION_REASON_REFUND_NOT_MATCH = "REFUND_NOT_MATCH";
     public static final String TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND = "INITIATIVE_NOT_FOUND";
-    public static final String TRX_REJECTION_ALREADY_PROCESSED = "TRX_ALREADY_PROCESSED";
-    public static final String TRX_TOO_REJECTION_TOO_MANY_REQUEST = "TOO_MANY_REQUEST";
     //endregion
 
     //region reward status
