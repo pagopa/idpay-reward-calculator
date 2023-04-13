@@ -23,9 +23,12 @@ public class ErrorManager {
     }
     @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerWebExchange exchange) {
-        if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace()){
-            log.error("Something gone wrong handlind request: " + exchange.getRequest().getId(), error);
+        if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){
+            log.error("Something gone wrong handling request {}", getRequestDetails(exchange), error);
+        } else {
+            log.info("A {} occurred handling request {}: {} at {}", clientException.getClass().getSimpleName(), getRequestDetails(exchange), error.getMessage(), error.getStackTrace().length > 0 ? error.getStackTrace()[0] : "UNKNOWN");
         }
+
         if(error instanceof ClientExceptionNoBody clientExceptionNoBody){
             return ResponseEntity.status(clientExceptionNoBody.getHttpStatus()).build();
         }
@@ -62,5 +65,9 @@ public class ErrorManager {
             case RewardConstants.TRX_TOO_REJECTION_TOO_MANY_REQUEST -> HttpStatus.TOO_MANY_REQUESTS;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
+    }
+
+    private String getRequestDetails(ServerWebExchange exchange) {
+        return "%s %s (%s)".formatted(exchange.getRequest().getMethod(), exchange.getRequest().getURI(), exchange.getRequest().getId());
     }
 }

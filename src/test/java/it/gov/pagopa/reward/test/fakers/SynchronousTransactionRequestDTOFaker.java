@@ -3,8 +3,8 @@ package it.gov.pagopa.reward.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Locale;
@@ -60,6 +60,7 @@ public class SynchronousTransactionRequestDTOFaker {
                 .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
                 .correlationId("CORRELATIONID%d".formatted(bias))
+                .operationType(OperationType.CHARGE)
                 .trxChargeDate(offsetDateTimeNow);
     }
 

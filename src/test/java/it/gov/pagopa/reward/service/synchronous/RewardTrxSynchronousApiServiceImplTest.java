@@ -24,6 +24,8 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -78,6 +80,7 @@ class RewardTrxSynchronousApiServiceImplTest {
         // When
         try {
             rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
+            Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
             Assertions.assertTrue(e instanceof TransactionSynchronousException);
@@ -110,6 +113,7 @@ class RewardTrxSynchronousApiServiceImplTest {
         // When
         try {
             rewardTrxSynchronousApiApiService.previewTransaction(previewRequest, initiativeId).block();
+            Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
             Assertions.assertTrue(e instanceof TransactionSynchronousException);
@@ -120,8 +124,9 @@ class RewardTrxSynchronousApiServiceImplTest {
         }
     }
 
-    @Test
-    void postTransactionPreviewOK(){
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void postTransactionPreviewOK(boolean existUserInitiativeCounter){
         // Given
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
@@ -137,8 +142,10 @@ class RewardTrxSynchronousApiServiceImplTest {
         Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(Mockito.same(previewRequest))).thenReturn(transactionDTOMock);
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        userInitiativeCounters.setId(UserInitiativeCounters.buildId(transactionDTOMock.getUserId(), initiativeId));
         userInitiativeCounters.setUserId(transactionDTOMock.getUserId());
-        Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.anyString())).thenReturn(Mono.just(userInitiativeCounters));
+        userInitiativeCounters.setInitiativeId(initiativeId);
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.anyString())).thenReturn(existUserInitiativeCounter ? Mono.just(userInitiativeCounters) : Mono.empty());
 
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()

@@ -32,7 +32,7 @@ class ErrorManagerTest extends BaseIntegrationTest {
     void handleExceptionClientExceptionNoBody() {
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
 
-        Mockito.doThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST))
+        Mockito.doThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "NOTFOUND"))
                 .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("ClientExceptionNoBody"));
 
         webTestClient.post()
