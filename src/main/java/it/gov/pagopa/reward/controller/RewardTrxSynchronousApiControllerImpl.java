@@ -25,7 +25,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
         return PerformanceLogger.logTimingFinally("[SYNC_PREVIEW_TRANSACTION]",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
-                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND))),
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"NOTFOUND"))),
                 trxPreviewRequest.toString());
     }
 }

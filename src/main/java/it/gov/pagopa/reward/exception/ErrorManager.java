@@ -23,9 +23,12 @@ public class ErrorManager {
     }
     @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerWebExchange exchange) {
-        if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace()){
-            log.error("Something gone wrong handlind request: " + exchange.getRequest().getId(), error);
+        if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){
+            log.error("Something gone wrong handling request {}", getRequestDetails(exchange), error);
+        } else {
+            log.info("A {} occurred handling request {}: {} at {}", clientException.getClass().getSimpleName(), getRequestDetails(exchange), error.getMessage(), error.getStackTrace().length > 0 ? error.getStackTrace()[0] : "UNKNOWN");
         }
+
         if(error instanceof ClientExceptionNoBody clientExceptionNoBody){
             return ResponseEntity.status(clientExceptionNoBody.getHttpStatus()).build();
         }
@@ -57,5 +60,9 @@ public class ErrorManager {
     private HttpStatus getHttpStatus(List<String> rejectionReasons){
         return RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND
                 .equals(rejectionReasons.get(0)) ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN;
+    }
+
+    private String getRequestDetails(ServerWebExchange exchange) {
+        return "%s %s (%s)".formatted(exchange.getRequest().getMethod(), exchange.getRequest().getURI(), exchange.getRequest().getId());
     }
 }
