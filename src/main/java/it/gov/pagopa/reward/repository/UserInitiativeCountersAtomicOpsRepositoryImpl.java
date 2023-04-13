@@ -34,9 +34,9 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         UserInitiativeCounters.class
                 )
                 .switchIfEmpty(mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class)
-                        .mapNotNull(b -> {
-                            if(Boolean.TRUE.equals(b)){
-                                throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS);
+                        .mapNotNull(counterExist -> {
+                            if(Boolean.TRUE.equals(counterExist)){
+                                throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS,"MANY_REQUESTS");
                             } else {
                                 return null;
                             }
