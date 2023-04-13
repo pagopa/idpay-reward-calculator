@@ -1,36 +1,31 @@
 package it.gov.pagopa.reward.repository;
 
-import it.gov.pagopa.reward.dto.mapper.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
-import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
-import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository{
     private final int throttlingSeconds;
     private final ReactiveMongoTemplate mongoTemplate;
-    private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 
-    public UserInitiativeCountersAtomicOpsRepositoryImpl(@Value("${app.synchronous.throttlingSeconds}") int throttlingSeconds, ReactiveMongoTemplate mongoTemplate, SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper) {
+    public UserInitiativeCountersAtomicOpsRepositoryImpl(@Value("${app.synchronousTransactions.throttlingSeconds}") int throttlingSeconds, ReactiveMongoTemplate mongoTemplate) {
         this.throttlingSeconds = throttlingSeconds;
         this.mongoTemplate = mongoTemplate;
-        this.synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper = synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
     }
 
     @Override
-    public Mono<UserInitiativeCounters> updateDate(SynchronousTransactionRequestDTO request, String initiativeId) {
+    public Mono<UserInitiativeCounters> findByThrottled(String id) {
         Mono<UserInitiativeCounters> initiativeCountersMono = mongoTemplate
                 .findAndModify(
-                        Query.query(criteriaByUserIdAndInitiativeId(request.getUserId(), initiativeId)
+                        Query.query(criteriaById(id)
                                 .orOperator(
                                         Criteria.where(UserInitiativeCounters.Fields.updateDate).is(null),
                                         Criteria.where(UserInitiativeCounters.Fields.updateDate).is(LocalDateTime.now().minusSeconds(throttlingSeconds)))),
@@ -39,22 +34,19 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         UserInitiativeCounters.class
                 );
 
-        initiativeCountersMono.hasElement().filter(b ->b.equals(Boolean.FALSE))
-                .flatMap(b -> mongoTemplate.exists(Query.query(criteriaByUserIdAndInitiativeId(request.getUserId(), initiativeId)), UserInitiativeCounters.class))
-                .map(b -> {
+        return initiativeCountersMono.hasElement().filter(b ->b.equals(Boolean.FALSE))
+                .flatMap(b -> mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class))
+                .flatMap(b -> {
                     if(b.equals(Boolean.TRUE)){
-                        throw new TransactionSynchronousException(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(request, initiativeId, List.of(RewardConstants.TRX_TOO_REJECTION_TOO_MANY_REQUEST)));
+                        throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS);
                     }
-                    return b;
+                    return initiativeCountersMono;
                 });
-
-        return initiativeCountersMono;
     }
 
-    private Criteria criteriaByUserIdAndInitiativeId(String userId, String initiativeId) {
+    private Criteria criteriaById(String id) {
         return Criteria
-                .where(UserInitiativeCounters.Fields.userId).is(userId)
-                .and(UserInitiativeCounters.Fields.initiativeId).is(initiativeId);
+                .where(UserInitiativeCounters.Fields.id).is(id);
     }
 
 }

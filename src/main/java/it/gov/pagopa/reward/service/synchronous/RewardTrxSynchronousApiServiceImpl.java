@@ -67,7 +67,8 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
         return checkInitiative(trxAuthorizeRequest, initiativeId)
                 .flatMap(b -> checkSynTrxAlreadyProcessed(trxAuthorizeRequest,trxDTO, initiativeId))
                 .flatMap(b -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId))
-                .flatMap(b -> userInitiativeCountersRepository.updateDate(trxAuthorizeRequest, initiativeId))
+                .flatMap(b -> userInitiativeCountersRepository.findByThrottled(UserInitiativeCounters.buildId(trxAuthorizeRequest.getUserId(), initiativeId)))
+                .switchIfEmpty(Mono.just(UserInitiativeCounters.builder(trxAuthorizeRequest.getUserId(), initiativeId).build()))
                 .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trxDTO,List.of(initiativeId)))
                 .map(rewardTransaction -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxAuthorizeRequest.getTransactionId(),initiativeId, rewardTransaction));
 

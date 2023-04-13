@@ -279,6 +279,6 @@ app:
     timeout: ${TRX_LOCK_SECONDS_TIMEOUT:180}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
-  synchronous:
+  synchronousTransactions:
       throttlingSeconds: ${SYNCHRONOUS_REWARD_THROTTLING_SECONDS:${REWARD_THROTTLING_SECONDS:1}}
 
