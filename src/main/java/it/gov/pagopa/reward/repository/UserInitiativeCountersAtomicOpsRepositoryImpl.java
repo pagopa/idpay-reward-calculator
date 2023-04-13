@@ -22,8 +22,8 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     }
 
     @Override
-    public Mono<UserInitiativeCounters> findByThrottled(String id) {
-        Mono<UserInitiativeCounters> initiativeCountersMono = mongoTemplate
+    public Mono<UserInitiativeCounters> findByIdThrottled(String id) {
+        return mongoTemplate
                 .findAndModify(
                         Query.query(criteriaById(id)
                                 .orOperator(
@@ -32,16 +32,15 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         new Update()
                                 .setOnInsert(UserInitiativeCounters.Fields.updateDate, LocalDateTime.now()),
                         UserInitiativeCounters.class
-                );
-
-        return initiativeCountersMono.hasElement().filter(b ->b.equals(Boolean.FALSE))
-                .flatMap(b -> mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class))
-                .flatMap(b -> {
-                    if(b.equals(Boolean.TRUE)){
-                        throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS);
-                    }
-                    return initiativeCountersMono;
-                });
+                )
+                .switchIfEmpty(mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class)
+                        .mapNotNull(b -> {
+                            if(Boolean.TRUE.equals(b)){
+                                throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS);
+                            } else {
+                                return null;
+                            }
+                        }));
     }
 
     private Criteria criteriaById(String id) {
