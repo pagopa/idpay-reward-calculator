@@ -9,11 +9,13 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -30,7 +32,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     @Override
     public Flux<String> getInitiatives(TransactionDTO trx) {
         if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
-            return getInitiatives(trx.getHpan(), trx.getTrxChargeDate());
+            return getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null);
         } else {
             if(trx.getRefundInfo() != null){
                 return Flux.fromIterable(trx.getRefundInfo().getPreviousRewards().keySet());
@@ -41,12 +43,17 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         }
     }
 
+    @Override
+    public Mono<Boolean> isOnboarded(String hpan, OffsetDateTime trxDate, String initiativeId) {
+        return getInitiatives(hpan,trxDate,Set.of(initiativeId)).hasElements();
+    }
+
     /** true if > 0 */
     private boolean isPositive(BigDecimal value) {
         return BigDecimal.ZERO.compareTo(value) < 0;
     }
 
-    private Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate) {
+    private Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate, Set<String> initiatives) {
         log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate: {} - {}", hpan, trxDate);
         return hpanInitiativesRepository.findById(hpan)
                 .flatMapMany(initiativesForHpan -> {
@@ -55,7 +62,9 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                     if (initiativesForHpan != null && initiativesForHpan.getOnboardedInitiatives() != null) {
                         return Flux.fromIterable(initiativesForHpan.getOnboardedInitiatives())
                                 .flatMap(i -> rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())
-                                        .filter(initiativeConfig -> checkInitiativeValidity(initiativeConfig, trxDate) && checkDate(trxDateTime, i.getActiveTimeIntervals()))
+                                        .filter(initiativeConfig -> (initiatives == null || initiatives.contains(initiativeConfig.getInitiativeId()))
+                                                && checkInitiativeValidity(initiativeConfig, trxDate)
+                                                && checkDate(trxDateTime, i.getActiveTimeIntervals()))
                                         .map(InitiativeConfig::getInitiativeId));
                     }
                     return Flux.empty();
