@@ -324,6 +324,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 .yearlyThreshold(true)
                 .trxRule(dto.getTrxRule())
                 .rewardRule(dto.getRewardRule())
+                .initiativeRewardType(dto.getInitiativeRewardType())
                 .build());
 
         expected.setRuleVersion("20230404");

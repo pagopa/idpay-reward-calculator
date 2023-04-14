@@ -227,4 +227,51 @@ class OnboardedInitiativesServiceImplTest {
 
         testGetInitiativesPrivateMethod(trx, null, null, true);
     }
+
+    @Test
+    void isOnboardedKO() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String initiativeId = "INITIATIVEID";
+        LocalDate now = LocalDate.now();
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
+        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId("INITIATIVE_1")
+                .startDate(now.minusYears(5L))
+                .startDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE_1")).thenReturn(Mono.just(initiativeConfig));
+        // When
+        Boolean result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(Boolean.FALSE, result);
+    }
+
+    @Test
+    void isOnboardedOK() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        LocalDate now = LocalDate.now();
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
+        String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
+        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        // When
+        Boolean result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(Boolean.TRUE, result);
+
+    }
 }

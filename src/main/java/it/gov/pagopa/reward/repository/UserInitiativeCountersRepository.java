@@ -6,7 +6,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.Collection;
 
-public interface UserInitiativeCountersRepository extends ReactiveMongoRepository<UserInitiativeCounters,String> {
+public interface UserInitiativeCountersRepository extends ReactiveMongoRepository<UserInitiativeCounters,String>, UserInitiativeCountersAtomicOpsRepository {
     Flux<UserInitiativeCounters> findByUserId(String userId);
     Flux<UserInitiativeCounters> findByUserIdAndInitiativeIdIn(String userId, Collection<String> initiativeIds);
 }

@@ -1,10 +1,12 @@
 package it.gov.pagopa.reward.model.counters;
 
 import lombok.*;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +16,7 @@ import java.util.Map;
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true, builderMethodName = "hiddenBuilder", buildMethodName = "hiddenBuild")
 @ToString(callSuper = true)
+@FieldNameConstants
 @Document(collection = "user_initiative_counters")
 public class UserInitiativeCounters extends Counters {
 
@@ -25,6 +28,7 @@ public class UserInitiativeCounters extends Counters {
     @NonNull
     private String initiativeId;
 
+    private LocalDateTime updateDate;
 
     private boolean exhaustedBudget;
     @Builder.Default

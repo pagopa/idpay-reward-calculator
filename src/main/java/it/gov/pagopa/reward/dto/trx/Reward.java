@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.trx;
 
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Reward {
     private String initiativeId;
     private String organizationId;
