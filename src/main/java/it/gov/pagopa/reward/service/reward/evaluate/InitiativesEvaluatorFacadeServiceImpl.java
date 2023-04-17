@@ -79,6 +79,8 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                 trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
             }
         }
+//        return userInitiativeCountersUpdateService.update(userCounters, trxRewarded) TODO and check test
+//                .then(Mono.just(Pair.of(userCounters, trxRewarded)));
         return Pair.of(userCounters, trxRewarded);
     }
 

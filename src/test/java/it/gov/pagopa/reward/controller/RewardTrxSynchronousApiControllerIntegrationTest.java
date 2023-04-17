@@ -13,7 +13,6 @@ import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.TransactionProcessed;
-import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
@@ -38,7 +37,10 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -47,7 +49,6 @@ import java.util.stream.IntStream;
 @TestPropertySource(
         properties = {
                 "logging.level.it.gov.pagopa.reward=WARN",
-                "logging.level.it.gov.pagopa.common=WARN",
                 "logging.level.it.gov.pagopa.reward.exception.ErrorManager=INFO",
         })
 class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationTest {
@@ -79,8 +80,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
 
         publishRewardRules();
 
-        initializeSettings();
-
         List<? extends Future<?>> tasks = IntStream.range(0, N)
                 .mapToObj(i -> executor.submit(() -> {
                     try {
@@ -107,7 +106,26 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
 
     }
 
-    protected WebTestClient.ResponseSpec previewTrx(SynchronousTransactionRequestDTO trxRequest, String initiativeId){
+    private void publishRewardRules() {
+        InitiativeReward2BuildDTO rule = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(0, Collections.emptySet(), RewardValueDTO.class)
+                .initiativeId(INITIATIVEID)
+                .initiativeName("NAME_" + INITIATIVEID)
+                .organizationId("ORGANIZATIONID_" + INITIATIVEID)
+                .trxRule(InitiativeTrxConditions.builder()
+                        .threshold(ThresholdDTO.builder()
+                                .from(BigDecimal.valueOf(5))
+                                .fromIncluded(true)
+                                .build())
+                        .build())
+                .rewardRule(RewardValueDTO.builder()
+                        .rewardValue(BigDecimal.TEN)
+                        .build())
+                .build();
+        publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
+        RewardRuleConsumerConfigTest.waitForKieContainerBuild(1, rewardContextHolderService);
+    }
+
+    private WebTestClient.ResponseSpec previewTrx(SynchronousTransactionRequestDTO trxRequest, String initiativeId){
         return webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
                         .build(initiativeId))
@@ -115,7 +133,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 .exchange();
     }
 
-    protected WebTestClient.ResponseSpec authorizeTrx(SynchronousTransactionRequestDTO trxRequest, String initiativeId){
+    private WebTestClient.ResponseSpec authorizeTrx(SynchronousTransactionRequestDTO trxRequest, String initiativeId){
         return webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/reward/{initiativeId}")
                         .build(initiativeId))
@@ -124,7 +142,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
     }
 
     {
-        //TODO riutilizzo useCase and erroUseCase delle code
         // useCase 0: initiative not existent
         useCases.add(i -> {
             SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
@@ -200,46 +217,51 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                     .reward(transactionProcessed.getRewards().get(INITIATIVEID))
                     .build();
 
+            // todo chiamata a preview
+
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> autResponseAlreadyProcessed = extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.CONFLICT, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(autResponseAlreadyProcessed);
             autResponseAlreadyProcessed.isEqualTo(responseExpectedTrxAlreadyProcessed);
         });
 
-        //UseCase 3: 429 // TODO case
-//        useCases.add(i -> {
-//            String userId = "USERTHROTTLED_"+i;
-//            SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
-//            trxRequest.setUserId(userId);
-//            // save hpanInitiative
-//            HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(1);
-//            hpanInitiatives.setHpan("IDPAY_"+userId);
-//            hpanInitiatives.setUserId(userId);
-//
-//            ActiveTimeInterval activeTimeInterval = ActiveTimeInterval.builder()
-//                    .startInterval(LocalDateTime.now().minusMonths(1L)).build();
-//            OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
-//                    .initiativeId(INITIATIVEID)
-//                    .activeTimeIntervals(List.of(activeTimeInterval))
-//                    .build();
-//            hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
-//            hpanInitiativesRepository.save(hpanInitiatives).block();
-//            // save userInitiativeCounter
-//            UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, INITIATIVEID);
-//            userInitiativeCounters.setUpdateDate(LocalDateTime.now());
-//            userInitiativeCountersRepository.save(userInitiativeCounters);
-//
-//            extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.TOO_MANY_REQUESTS, null);
-//
-//        });
+        //UseCase 3: 429 todo 2 authorizzazioni per 2 richieste
+        useCases.add(i -> {
+            String userId = "USERTHROTTLED_"+i;
+            SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
+            trxRequest.setUserId(userId);
+            // save hpanInitiative
+            HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(1);
+            hpanInitiatives.setHpan("IDPAY_"+userId);
+            hpanInitiatives.setUserId(userId);
 
-//        UseCase 4: not rewarded
+            ActiveTimeInterval activeTimeInterval = ActiveTimeInterval.builder()
+                    .startInterval(LocalDateTime.now().minusMonths(1L)).build();
+            OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                    .initiativeId(INITIATIVEID)
+                    .activeTimeIntervals(List.of(activeTimeInterval))
+                    .build();
+            hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
+            hpanInitiativesRepository.save(hpanInitiatives).block();
+            // save userInitiativeCounter
+            UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, INITIATIVEID);
+            userInitiativeCounters.setUpdateDate(LocalDateTime.now());
+            userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+            extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.TOO_MANY_REQUESTS, null);
+
+            // todo wait thottled e verifica
+
+        });
+
+        //  UseCase 4: not rewarded
         useCases.add(i -> {
             String userId = USERID+i;
             SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
-            trxRequest.setUserId(USERID);
+            trxRequest.setUserId(userId);
             trxRequest.setAmountCents(100L);
-            // Settings
+
             //Settings
+            //TODO publiccare sulla coda di onboarding
             HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(i);
             hpanInitiatives.setHpan("IDPAY_"+userId);
             hpanInitiatives.setUserId(userId);
@@ -323,7 +345,52 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             authorizeResponseRewardRule.value(response -> {
                Assertions.assertEquals(trxRequest.getTransactionId(), response.getTransactionId()); //TODO aggiungere altre assertions, rendendole comune col caso rejected
             });
+        });
 
+        // useCase 6: Budget exhausted
+        useCases.add(i -> {
+            String userId = USERID+i;
+            SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
+            trxRequest.setUserId(userId);
+            trxRequest.setAmountCents(20000L);
+
+            //Settings //TODO to send in queue
+            HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(i);
+            hpanInitiatives.setHpan("IDPAY_"+userId);
+            hpanInitiatives.setUserId(userId);
+
+            ActiveTimeInterval activeTimeInterval = ActiveTimeInterval.builder()
+                    .startInterval(LocalDateTime.now().minusMonths(1L)).build();
+            OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                    .initiativeId(INITIATIVEID)
+                    .activeTimeIntervals(List.of(activeTimeInterval))
+                    .build();
+            hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
+
+            hpanInitiativesRepository.save(hpanInitiatives).block();
+
+            // save userInitiativeCounter
+            UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, INITIATIVEID);
+            userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusDays(1));
+            userInitiativeCounters.setExhaustedBudget(true);
+            userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+            //expected response
+            SynchronousTransactionResponseDTO responseExpectedBudgetExhausted = SynchronousTransactionResponseDTO.builder()
+                    .transactionId(trxRequest.getTransactionId())
+                    .initiativeId(INITIATIVEID)
+                    .userId(trxRequest.getUserId())
+                    .status(RewardConstants.REWARD_STATE_REJECTED)
+                    .rejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                    .build();
+
+            WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> previewResponseBudgetExhausted = extractResponse(previewTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
+            Assertions.assertNotNull(previewResponseBudgetExhausted);
+            previewResponseBudgetExhausted.isEqualTo(responseExpectedBudgetExhausted);
+
+            WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> authorizeResponseBudgetExhausted = extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
+            Assertions.assertNotNull(authorizeResponseBudgetExhausted);
+            authorizeResponseBudgetExhausted.isEqualTo(responseExpectedBudgetExhausted);
         });
     }
 
@@ -335,38 +402,5 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         return null;
     }
 
-    private void initializeSettings() {
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(1);
-        hpanInitiatives.setHpan("IDPAY_"+USERID);
-        hpanInitiatives.setUserId(USERID);
 
-        ActiveTimeInterval activeTimeInterval = ActiveTimeInterval.builder()
-                .startInterval(LocalDateTime.now().minusMonths(1L)).build();
-        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
-                .initiativeId(INITIATIVEID)
-                .activeTimeIntervals(List.of(activeTimeInterval))
-                .build();
-        hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
-
-        hpanInitiativesRepository.save(hpanInitiatives).block(); //TODO check if present into DB
-    }
-
-    private void publishRewardRules() {
-        InitiativeReward2BuildDTO rule = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(0, Collections.emptySet(), RewardValueDTO.class)
-                .initiativeId(INITIATIVEID)
-                .initiativeName("NAME_" + INITIATIVEID)
-                .organizationId("ORGANIZATIONID_" + INITIATIVEID)
-                .trxRule(InitiativeTrxConditions.builder()
-                        .threshold(ThresholdDTO.builder()
-                                .from(BigDecimal.valueOf(5))
-                                .fromIncluded(true)
-                                .build())
-                        .build())
-                .rewardRule(RewardValueDTO.builder()
-                        .rewardValue(BigDecimal.TEN)
-                        .build())
-                .build();
-        publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(1, rewardContextHolderService);
-    }
 }
