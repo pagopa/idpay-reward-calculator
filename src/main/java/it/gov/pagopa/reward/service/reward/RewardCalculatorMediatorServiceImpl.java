@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.utils.AuditUtilities;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -103,6 +104,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
     @Override
     protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message, Map<String, Object> ctx, Consumer<? super Signal<RewardTransactionDTO>> lockReleaser) {
         return Mono.just(payload)
+                .map(this::setChannel)
                 .map(transactionValidatorService::validate)
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
@@ -120,6 +122,13 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
                     auditUtilities.logExecute(r);
                 });
+    }
+
+    private TransactionDTO setChannel(TransactionDTO trx) {
+        if(StringUtils.isEmpty(trx.getChannel())){
+            trx.setChannel(RewardConstants.TRX_CHANNEL_RTD);
+        }
+        return trx;
     }
 
     @Override

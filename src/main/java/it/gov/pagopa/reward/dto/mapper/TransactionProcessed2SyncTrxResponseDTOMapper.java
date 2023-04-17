@@ -15,6 +15,7 @@ public class TransactionProcessed2SyncTrxResponseDTOMapper implements BiFunction
         SynchronousTransactionResponseDTO out = new SynchronousTransactionResponseDTO();
 
         out.setTransactionId(trx.getId());
+        out.setChannel(trx.getChannel());
         out.setInitiativeId(initiativeId);
         out.setUserId(trx.getUserId());
         out.setStatus(trx.getStatus());
