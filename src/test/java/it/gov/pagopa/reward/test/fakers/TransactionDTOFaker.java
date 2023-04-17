@@ -77,6 +77,7 @@ public class TransactionDTOFaker {
                 .userId("USERID%d".formatted(bias))
                 .maskedPan("MASKEDPAN%d".formatted(bias))
                 .brandLogo("BRANDLOGO%d".formatted(bias))
-                .brand("BRAND%d".formatted(bias));
+                .brand("BRAND%d".formatted(bias))
+                .channel(RewardConstants.TRX_CHANNEL_RTD);
     }
 }

@@ -33,4 +33,5 @@ public class SynchronousTransactionRequestDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private OperationType operationType;
+    private String channel;
 }

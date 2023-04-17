@@ -21,6 +21,7 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
                 .build();
         TransactionProcessed transactionProcessed = TransactionProcessed.builder()
                 .id("TRXID")
+                .channel("CHANNEL")
                 .userId("USERID")
                 .status("STATUS")
                 .rewards(Map.of(initiativeId,reward))
@@ -32,6 +33,7 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(transactionProcessed.getId(), result.getTransactionId());
+        Assertions.assertEquals(transactionProcessed.getChannel(), result.getChannel());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(transactionProcessed.getUserId(), result.getUserId());
         Assertions.assertEquals(transactionProcessed.getStatus(), result.getStatus());

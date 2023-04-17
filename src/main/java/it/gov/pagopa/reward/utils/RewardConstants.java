@@ -9,6 +9,10 @@ public final class RewardConstants {
 
     public static final ZoneId ZONEID = ZoneId.of("Europe/Rome");
 
+    //region transactions' channels
+    public static final String TRX_CHANNEL_RTD = "RTD";
+    //endregion
+
     //region initiative's build rejection reasons
     public static final String INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
     //endregion

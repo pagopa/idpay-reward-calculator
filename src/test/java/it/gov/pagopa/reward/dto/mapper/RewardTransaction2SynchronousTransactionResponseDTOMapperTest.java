@@ -15,9 +15,11 @@ import java.util.List;
 import java.util.Map;
 
 class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
-    String trxId = "TRXID";
-    String initiativeId = "INITIATIVEID";
-    String userId = "USERID";
+    private final String trxId = "TRXID";
+    private final String initiativeId = "INITIATIVEID";
+    private final String userId = "USERID";
+    private final String channel = "CHANNEL";
+
     @Test
     void applyRewardedTest(){
         // Given
@@ -32,6 +34,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
         rewards.put(initiativeId, reward);
         RewardTransactionDTO trxDto = RewardTransactionDTO.builder()
                 .userId(userId)
+                .channel(channel)
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .rewards(rewards)
                 .elaborationDateTime(LocalDateTime.now())
@@ -55,6 +58,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
         List<String> rejectionReasons = List.of(RewardConstants.TRX_REJECTION_REASON_INVALID_AMOUNT);
         RewardTransactionDTO trxDto = RewardTransactionDTO.builder()
                 .userId(userId)
+                .channel(channel)
                 .status(RewardConstants.REWARD_STATE_REJECTED)
                 .rejectionReasons(rejectionReasons)
                 .elaborationDateTime(LocalDateTime.now())
@@ -74,7 +78,9 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
 
     void checkCommonAssertions(SynchronousTransactionResponseDTO result){
         Assertions.assertEquals(trxId, result.getTransactionId());
+        Assertions.assertEquals(channel, result.getChannel());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(userId, result.getUserId());
+        Assertions.assertEquals(channel, result.getChannel());
     }
 }

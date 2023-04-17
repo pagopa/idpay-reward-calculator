@@ -16,6 +16,7 @@ public class RewardTransaction2SynchronousTransactionResponseDTOMapper implement
         SynchronousTransactionResponseDTO out = new SynchronousTransactionResponseDTO();
 
         out.setTransactionId(trxId);
+        out.setChannel(rewardTransactionDTO.getChannel());
         out.setInitiativeId(initiativeId);
         out.setUserId(rewardTransactionDTO.getUserId());
         out.setStatus(rewardTransactionDTO.getStatus());
