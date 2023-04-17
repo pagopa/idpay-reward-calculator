@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
@@ -14,8 +14,9 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.AuditUtilities;
+import it.gov.pagopa.reward.utils.RewardConstants;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
@@ -103,6 +104,7 @@ class RewardCalculatorMediatorServiceImplTest {
     void test() {
         // Given
         TransactionDTO trx = buildTrx(0);
+        trx.setChannel("DUMMYCHANNEL");
         TransactionDTO trxInvalidOpType = buildTrx(1);
         TransactionDTO trxInvalidAmount = buildTrx(2);
         TransactionDTO trxPartialRefund = buildTrx(3);
@@ -169,7 +171,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 .findFirst().orElseThrow();
         Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getRejectionReasons());
         Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getStatus());
-        Assertions.assertEquals(RewardConstants.TRX_CHANNEL_RTD, rewardedTrx.getChannel());
+        Assertions.assertEquals(ObjectUtils.firstNonNull(trx.getChannel(), RewardConstants.TRX_CHANNEL_RTD), rewardedTrx.getChannel());
     }
 
     private TransactionDTO buildTrx(int i) {
