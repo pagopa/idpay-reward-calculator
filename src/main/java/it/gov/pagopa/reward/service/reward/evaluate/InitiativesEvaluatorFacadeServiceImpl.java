@@ -50,12 +50,15 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
         final String userId = trx.getUserId();
 
-        return updateBudgets(
-                userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
+        return userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
                         .collectList()
                         .map(counters -> new UserInitiativeCountersWrapper(userId, counters.stream().collect(Collectors.toMap(UserInitiativeCounters::getInitiativeId, Function.identity()))))
-                        .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
-        );
+                        .flatMap(userCounters -> evaluateAndUpdateBudget(trx, initiatives, userCounters));
+    }
+
+    @Override
+    public Mono<RewardTransactionDTO> evaluateAndUpdateBudget(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper counters) {
+        return updateBudgets(Mono.just(evaluateInitiativesBudgetAndRules(trx, initiatives, counters)));
     }
 
     @Override

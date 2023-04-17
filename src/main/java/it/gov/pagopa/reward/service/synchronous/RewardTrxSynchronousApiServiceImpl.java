@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.synchronous;
 
-import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import it.gov.pagopa.reward.dto.mapper.TransactionProcessed2SyncTrxResponseDTOMapper;
@@ -21,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +77,10 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
                 .flatMap(transactionNotProcessed -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId))
                 .flatMap(isOnboarded -> userInitiativeCountersRepository.findByIdThrottled(UserInitiativeCounters.buildId(trxAuthorizeRequest.getUserId(), initiativeId)))
                 .switchIfEmpty(Mono.just(new UserInitiativeCounters(trxAuthorizeRequest.getUserId(), initiativeId)))
-                .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trxDTO,List.of(initiativeId)))
+                .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(
+                        trxDTO,
+                        List.of(initiativeId),
+                        new UserInitiativeCountersWrapper(trxDTO.getUserId(), new HashMap<>(Map.of(initiativeId, userInitiativeCounters)))))
                 .map(rewardTransaction -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxAuthorizeRequest.getTransactionId(),initiativeId, rewardTransaction));
 
 
