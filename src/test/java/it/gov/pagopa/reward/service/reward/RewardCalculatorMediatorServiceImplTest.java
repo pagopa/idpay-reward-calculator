@@ -169,6 +169,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 .findFirst().orElseThrow();
         Assertions.assertEquals(expectedRejectionReason != null ? List.of(expectedRejectionReason) : Collections.emptyList(), rewardedTrx.getRejectionReasons());
         Assertions.assertEquals(expectedRejectionReason != null ? "REJECTED" : "REWARDED", rewardedTrx.getStatus());
+        Assertions.assertEquals(RewardConstants.TRX_CHANNEL_RTD, rewardedTrx.getChannel());
     }
 
     private TransactionDTO buildTrx(int i) {

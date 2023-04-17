@@ -14,6 +14,7 @@ import java.util.List;
 @Builder
 public class SynchronousTransactionResponseDTO {
     private String transactionId;
+    private String channel;
     private String initiativeId;
     private String userId;
     private String status;

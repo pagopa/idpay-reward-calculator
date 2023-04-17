@@ -77,6 +77,7 @@ class RewardTrxSynchronousApiServiceImplTest {
 
         SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTOFaker.mockInstanceBuilder(1)
                         .initiativeId(initiativeId)
+                        .channel("CHANNEL")
                         .status(RewardConstants.REWARD_STATE_REJECTED)
                         .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                         .build();
@@ -111,6 +112,7 @@ class RewardTrxSynchronousApiServiceImplTest {
 
         SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTOFaker.mockInstanceBuilder(1)
                 .initiativeId(initiativeId)
+                .channel("CHANNEL")
                 .status(RewardConstants.REWARD_STATE_REJECTED)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
