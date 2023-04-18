@@ -71,6 +71,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
         log.trace("[REWARD] Starting reward preview calculation for transaction {}", trxAuthorizeRequest.getTransactionId());
         TransactionDTO trxDTO = syncTrxRequest2TransactionDtoMapper.apply(trxAuthorizeRequest);
+
         return checkInitiative(trxAuthorizeRequest, initiativeId)
                 .flatMap(initiativeFound -> checkSynTrxAlreadyProcessed(trxAuthorizeRequest, initiativeId))
                 .switchIfEmpty(Mono.just(Boolean.TRUE))
@@ -82,8 +83,6 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
                         List.of(initiativeId),
                         new UserInitiativeCountersWrapper(trxDTO.getUserId(), new HashMap<>(Map.of(initiativeId, userInitiativeCounters)))))
                 .map(rewardTransaction -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxAuthorizeRequest.getTransactionId(),initiativeId, rewardTransaction));
-
-
     }
 
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){
