@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -156,17 +157,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
 
             //expected response
-            SynchronousTransactionResponseDTO responseExpectedInitiativeNotFound = SynchronousTransactionResponseDTO.builder()
-                    .transactionId(trxRequest.getTransactionId())
-                    .channel(trxRequest.getChannel())
-                    .initiativeId(initiativeId)
-                    .userId(trxRequest.getUserId())
-                    .operationType(trxRequest.getOperationType())
-                    .amount(trxRequest.getAmountCents())
-                    .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                    .status(RewardConstants.REWARD_STATE_REJECTED)
-                    .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND))
-                    .build();
+            SynchronousTransactionResponseDTO responseExpectedInitiativeNotFound = getExpectedResponse(initiativeId, trxRequest,RewardConstants.REWARD_STATE_REJECTED,List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND) , null);
 
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> previewResponseInitiativeNotFound = extractResponse(previewTrx(trxRequest, initiativeId), HttpStatus.NOT_FOUND, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(previewResponseInitiativeNotFound);
@@ -185,17 +176,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             trxRequest.setUserId(userIdNotOnboarded);
 
             // Expected response
-            SynchronousTransactionResponseDTO responseExpectedInitiativeNotFound = SynchronousTransactionResponseDTO.builder()
-                    .transactionId(trxRequest.getTransactionId())
-                    .channel(trxRequest.getChannel())
-                    .initiativeId(INITIATIVEID)
-                    .userId(trxRequest.getUserId())
-                    .operationType(trxRequest.getOperationType())
-                    .amount(trxRequest.getAmountCents())
-                    .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                    .status(RewardConstants.REWARD_STATE_REJECTED)
-                    .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                    .build();
+            SynchronousTransactionResponseDTO responseExpectedInitiativeNotFound = getExpectedResponse(INITIATIVEID,trxRequest,RewardConstants.REWARD_STATE_REJECTED,List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), null);
 
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> previewResponseNotOnboarded = extractResponse(previewTrx(trxRequest, INITIATIVEID), HttpStatus.FORBIDDEN, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(previewResponseNotOnboarded);
@@ -206,84 +187,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             authorizeResponseNotOnboarded.isEqualTo(responseExpectedInitiativeNotFound);
         });
 
-        // UseCase 2: transaction already processed
-        useCases.add(i -> {
-            // Setting
-            String trxId = TRXIDPROCESSED+i;
-            String userId = USERID+i;
-
-            addedPaymentInstrument(1, userId, INITIATIVEID);
-
-            SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(i);
-            trxRequest.setTransactionId(trxId);
-            trxRequest.setChannel("SYNCPAYMENTCHANNEL");
-            trxRequest.setUserId(userId);
-            trxRequest.setAmountCents(1_000L);
-
-            Reward reward = Reward.builder()
-                    .initiativeId(INITIATIVEID)
-                    .organizationId("ORGANIZATIONID_"+INITIATIVEID)
-                    .providedReward(BigDecimal.valueOf(100,2))
-                    .accruedReward(BigDecimal.valueOf(100,2))
-                    .capped(false)
-                    .dailyCapped(false)
-                    .monthlyCapped(false)
-                    .yearlyCapped(false)
-                    .weeklyCapped(false)
-                    .refund(false)
-                    .completeRefund(false)
-                    .build();
-            TransactionProcessed transactionProcessed =  TransactionProcessed.builder()
-                    .id(trxId)
-                    .channel("SYNCPAYMENTCHANNEL")
-                    .operationTypeTranscoded(trxRequest.getOperationType())
-                    .amountCents(trxRequest.getAmountCents())
-                    .amount(BigDecimal.ONE)
-                    .effectiveAmount(BigDecimal.ONE)
-                    .userId(userId)
-                    .status(RewardConstants.REWARD_STATE_REWARDED)
-                    .rewards(Map.of(INITIATIVEID, reward))
-                    .build();
-
-            transactionProcessedRepository.save(transactionProcessed).block();
-
-
-            // Expected Response
-            SynchronousTransactionResponseDTO responseExpectedTrxAlreadyProcessed = SynchronousTransactionResponseDTO.builder()
-                    .transactionId(transactionProcessed.getId())
-                    .channel(trxRequest.getChannel())
-                    .initiativeId(INITIATIVEID)
-                    .userId(transactionProcessed.getUserId())
-                    .operationType(trxRequest.getOperationType())
-                    .amount(trxRequest.getAmountCents())
-                    .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                    .status(transactionProcessed.getStatus())
-                    .reward(transactionProcessed.getRewards().get(INITIATIVEID))
-                    .build();
-
-            WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> prevResponseAlreadyProcessed = extractResponse(previewTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
-            Assertions.assertNotNull(prevResponseAlreadyProcessed);
-            prevResponseAlreadyProcessed.isEqualTo(responseExpectedTrxAlreadyProcessed);
-
-
-            SynchronousTransactionResponseDTO responseAuthExpectedTrxAlreadyProcessed = SynchronousTransactionResponseDTO.builder()
-                    .transactionId(transactionProcessed.getId())
-                    .channel(transactionProcessed.getChannel())
-                    .initiativeId(INITIATIVEID)
-                    .userId(transactionProcessed.getUserId())
-                    .operationType(transactionProcessed.getOperationTypeTranscoded())
-                    .amount(transactionProcessed.getAmountCents())
-                    .effectiveAmount(transactionProcessed.getEffectiveAmount())
-                    .status(transactionProcessed.getStatus())
-                    .reward(transactionProcessed.getRewards().get(INITIATIVEID))
-                    .build();
-
-            WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> autResponseAlreadyProcessed = extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.CONFLICT, SynchronousTransactionResponseDTO.class);
-            Assertions.assertNotNull(autResponseAlreadyProcessed);
-            autResponseAlreadyProcessed.isEqualTo(responseAuthExpectedTrxAlreadyProcessed);
-        });
-
-        //UseCase 3: To many request userId-initiativeId (429)
+        //UseCase 2: To many request userId-initiativeId (429)
         useCases.add(i -> {
             String userId = "USERTHROTTLED_"+i;
 
@@ -308,7 +212,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
 
         });
 
-        //  UseCase 4: not rewarded
+        //  UseCase 3: not rewarded
         useCases.add(i -> {
             String userId = USERID+i;
 
@@ -319,17 +223,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             trxRequest.setAmountCents(100L);
 
             // Expected response
-            SynchronousTransactionResponseDTO responseExpectedTrxRejectedRule = SynchronousTransactionResponseDTO.builder()
-                    .transactionId(trxRequest.getTransactionId())
-                    .channel(trxRequest.getChannel())
-                    .initiativeId(INITIATIVEID)
-                    .userId(trxRequest.getUserId())
-                    .operationType(trxRequest.getOperationType())
-                    .amount(trxRequest.getAmountCents())
-                    .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                    .status(RewardConstants.REWARD_STATE_REJECTED)
-                    .rejectionReasons(List.of("TRX_RULE_THRESHOLD_FAIL"))
-                    .build();
+            SynchronousTransactionResponseDTO responseExpectedTrxRejectedRule = getExpectedResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REJECTED, List.of("TRX_RULE_THRESHOLD_FAIL"), null);
 
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> previewResponseRejected = extractResponse(previewTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(previewResponseRejected);
@@ -338,9 +232,12 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> authorizeResponseRejected = extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(authorizeResponseRejected);
             authorizeResponseRejected.isEqualTo(responseExpectedTrxRejectedRule);
+
+            Assertions.assertNotNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
+
         });
 
-        //useCase 5: rewarded
+        //useCase 4: rewarded and already processed
         useCases.add(i -> {
             //Settings
             String userId = USERID+i;
@@ -350,58 +247,20 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             trxRequest.setUserId(userId);
             trxRequest.setAmountCents(20000L);
 
-
-            //Response
-            Reward rewardExpected = Reward.builder()
-                    .initiativeId(INITIATIVEID)
-                    .organizationId("ORGANIZATIONID_"+INITIATIVEID)
-                    .providedReward(Utils.centsToEuro(2000L))
-                    .accruedReward(Utils.centsToEuro(2000L))
-                    .capped(false)
-                    .dailyCapped(false)
-                    .monthlyCapped(false)
-                    .yearlyCapped(false)
-                    .weeklyCapped(false)
-                    .refund(false)
-                    .completeRefund(false)
-                    .build();
-            SynchronousTransactionResponseDTO responseExpectedTrxRewardRule = SynchronousTransactionResponseDTO.builder()
-                    .transactionId(trxRequest.getTransactionId())
-                    .channel(trxRequest.getChannel())
-                    .initiativeId(INITIATIVEID)
-                    .operationType(trxRequest.getOperationType())
-                    .amount(trxRequest.getAmountCents())
-                    .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                    .userId(trxRequest.getUserId())
-                    .status(RewardConstants.REWARD_STATE_REWARDED)
-                    .reward(rewardExpected)
-                    .build();
+            // preview
+            Reward rewardExpected = getRewardExpected(null);
+            SynchronousTransactionResponseDTO responseExpectedTrxRewardRule = getExpectedResponse(INITIATIVEID,trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, rewardExpected);
 
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> previewResponseRewardRule= extractResponse(previewTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(previewResponseRewardRule);
             previewResponseRewardRule.isEqualTo(responseExpectedTrxRewardRule);
 
+            // auth
             RewardCounters rewardCounters = RewardCounters.builder()
                     .exhaustedBudget(false)
                     .initiativeBudget(beneficiaryBudget).build();
-            rewardExpected.setCounters(rewardCounters);
-            responseExpectedTrxRewardRule.setReward(rewardExpected);
 
-
-            Reward rewardAuthExpected = Reward.builder()
-                    .initiativeId(INITIATIVEID)
-                    .organizationId("ORGANIZATIONID_"+INITIATIVEID)
-                    .providedReward(Utils.centsToEuro(2000L))
-                    .accruedReward(Utils.centsToEuro(2000L))
-                    .capped(false)
-                    .dailyCapped(false)
-                    .monthlyCapped(false)
-                    .yearlyCapped(false)
-                    .weeklyCapped(false)
-                    .refund(false)
-                    .completeRefund(false)
-                    .counters(rewardCounters)
-                    .build();
+            Reward rewardAuthExpected = getRewardExpected(rewardCounters);
             SynchronousTransactionResponseDTO responseAuthExpectedTrxRewardRule = SynchronousTransactionResponseDTO.builder()
                     .transactionId(trxRequest.getTransactionId())
                     .channel(trxRequest.getChannel())
@@ -414,21 +273,39 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                     .reward(rewardAuthExpected)
                     .build();
 
-            System.out.println("expected" + responseAuthExpectedTrxRewardRule);
-
-
             WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> authorizeResponseRewardRule = extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.OK, SynchronousTransactionResponseDTO.class);
             Assertions.assertNotNull(authorizeResponseRewardRule);
-            authorizeResponseRewardRule.value(response -> {
-                Assertions.assertEquals(trxRequest.getTransactionId(),response.getTransactionId());
-                Assertions.assertEquals(trxRequest.getChannel(),response.getChannel());
-                Assertions.assertEquals(INITIATIVEID, response.getInitiativeId());
-                Assertions.assertEquals(trxRequest.getUserId(), response.getUserId()); //TODO add other fields
+            authorizeResponseRewardRule.value(response -> assertionsResponse(trxRequest, rewardCounters, rewardAuthExpected, responseAuthExpectedTrxRewardRule));
+
+            TransactionProcessed transactionProcessedResult = (TransactionProcessed) transactionProcessedRepository.findById(trxRequest.getTransactionId()).block();
+            Assertions.assertNotNull(transactionProcessedResult);
+
+            // case already processed 409
+            WebTestClient.BodySpec<SynchronousTransactionResponseDTO, ?> authorizeAlreadyProcessedRewardRule = extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.CONFLICT, SynchronousTransactionResponseDTO.class);
+            Assertions.assertNotNull(authorizeAlreadyProcessedRewardRule);
+            authorizeAlreadyProcessedRewardRule.value(expectedResponse -> {
+                Assertions.assertEquals(transactionProcessedResult.getId(), expectedResponse.getTransactionId());
+                Assertions.assertEquals(transactionProcessedResult.getChannel(), expectedResponse.getChannel());
+                Assertions.assertEquals(INITIATIVEID, expectedResponse.getInitiativeId());
+                Assertions.assertEquals(transactionProcessedResult.getUserId(), expectedResponse.getUserId());
+                Assertions.assertEquals(transactionProcessedResult.getOperationTypeTranscoded(), expectedResponse.getOperationType());
+                Assertions.assertEquals(transactionProcessedResult.getAmountCents(), expectedResponse.getAmount());
+                Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getEffectiveAmount());
+
+                Reward responseReward = expectedResponse.getReward();
+                Reward expectedReward = transactionProcessedResult.getRewards().get(INITIATIVEID);
+                Assertions.assertNotNull(responseReward);
+                assertRewardFields(responseReward, expectedReward);
+
+                RewardCounters responseCounter = responseReward.getCounters();
+                RewardCounters expectedCounter = expectedReward.getCounters();
+                Assertions.assertNotNull(responseCounter);
+                assertRewardCounterFields(responseCounter, expectedCounter);
             });
-//            authorizeResponseRewardRule.isEqualTo(responseAuthExpectedTrxRewardRule);
+
         });
 
-        // useCase 6: Budget exhausted
+        // useCase 5: Budget exhausted
         useCases.add(i -> {
             String userId = USERID+i;
 
@@ -468,6 +345,79 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         });
     }
 
+    private void assertRewardFields(Reward responseReward, Reward expectedReward) {
+        Assertions.assertEquals(expectedReward.getInitiativeId(), responseReward.getInitiativeId());
+        Assertions.assertEquals(expectedReward.getOrganizationId(), responseReward.getOrganizationId());
+        Assertions.assertEquals(expectedReward.getProvidedReward(), responseReward.getProvidedReward());
+        Assertions.assertEquals(expectedReward.getAccruedReward(), responseReward.getAccruedReward());
+        Assertions.assertEquals(expectedReward.isCapped(), responseReward.isCapped());
+        Assertions.assertEquals(expectedReward.isDailyCapped(), responseReward.isDailyCapped());
+        Assertions.assertEquals(expectedReward.isMonthlyCapped(), responseReward.isMonthlyCapped());
+        Assertions.assertEquals(expectedReward.isYearlyCapped(), responseReward.isYearlyCapped());
+        Assertions.assertEquals(expectedReward.isWeeklyCapped(), responseReward.isWeeklyCapped());
+        Assertions.assertEquals(expectedReward.isRefund(), responseReward.isRefund());
+        Assertions.assertEquals(expectedReward.isCompleteRefund(), responseReward.isCompleteRefund());
+    }
+
+    private void assertRewardCounterFields(RewardCounters responseCounter, RewardCounters expectedCounter) {
+        Assertions.assertEquals(expectedCounter.isExhaustedBudget(), responseCounter.isExhaustedBudget());
+        Assertions.assertEquals(expectedCounter.getInitiativeBudget(), responseCounter.getInitiativeBudget());
+    }
+
+    private void assertionsResponse(SynchronousTransactionRequestDTO trxRequest, RewardCounters expectedCounter, Reward expectedReward, SynchronousTransactionResponseDTO expectedResponse) {
+        Assertions.assertEquals(trxRequest.getTransactionId(), expectedResponse.getTransactionId());
+        Assertions.assertEquals(trxRequest.getChannel(), expectedResponse.getChannel());
+        Assertions.assertEquals(INITIATIVEID, expectedResponse.getInitiativeId());
+        Assertions.assertEquals(trxRequest.getUserId(), expectedResponse.getUserId());
+        Assertions.assertEquals(trxRequest.getOperationType(), expectedResponse.getOperationType());
+        Assertions.assertEquals(trxRequest.getAmountCents(), expectedResponse.getAmount());
+        Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
+
+        if(expectedReward != null) {
+            Reward responseReward = expectedResponse.getReward();
+            Assertions.assertNotNull(responseReward);
+            assertRewardFields(responseReward, expectedReward);
+
+            if (expectedCounter != null) {
+                RewardCounters responseCounter = responseReward.getCounters();
+                Assertions.assertNotNull(responseCounter);
+                assertRewardCounterFields(responseCounter, expectedCounter);
+            }
+        }
+    }
+
+    private Reward getRewardExpected(RewardCounters counters) {
+        return Reward.builder()
+                .initiativeId(INITIATIVEID)
+                .organizationId("ORGANIZATIONID_"+INITIATIVEID)
+                .providedReward(Utils.centsToEuro(2000L))
+                .accruedReward(Utils.centsToEuro(2000L))
+                .capped(false)
+                .dailyCapped(false)
+                .monthlyCapped(false)
+                .yearlyCapped(false)
+                .weeklyCapped(false)
+                .refund(false)
+                .completeRefund(false)
+                .counters(counters)
+                .build();
+    }
+
+    private SynchronousTransactionResponseDTO getExpectedResponse(String initiativeId, SynchronousTransactionRequestDTO trxRequest, String status, List<String> rejectionReasons, Reward reward) {
+        return SynchronousTransactionResponseDTO.builder()
+                .transactionId(trxRequest.getTransactionId())
+                .channel(trxRequest.getChannel())
+                .initiativeId(initiativeId)
+                .userId(trxRequest.getUserId())
+                .operationType(trxRequest.getOperationType())
+                .amount(trxRequest.getAmountCents())
+                .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
+                .status(status)
+                .rejectionReasons(rejectionReasons)
+                .reward(reward)
+                .build();
+    }
+
     private void addedPaymentInstrument(Integer bias, String userId, String initiativeId) {
         PaymentMethodInfoDTO infoHpan = PaymentMethodInfoDTO.builder()
                 .hpan("IDPAY_"+ userId)
@@ -487,7 +437,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         Long hpanInitiativeDB = hpanInitiativesRepository.count().block();
         long[] countSaved={0};
         publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
-        waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= hpanInitiativeDB+1, ()->"Expected %d saved initiatives, read %d".formatted(hpanInitiativeDB+1, countSaved[0]), 60, 1000);
+        waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= hpanInitiativeDB+1, ()->"Expected %d saved payment for initiative, read %d".formatted(hpanInitiativeDB+1, countSaved[0]), 60, 1000);
 
     }
 
