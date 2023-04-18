@@ -99,7 +99,8 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
                 .flatMapMany(bulk -> this.evaluate(bulk,evaluationDate))
                 .collectList()
                 .doOnNext(hpanList -> {
-                    if(!payload.getChannel().equals(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)){
+                    if(!payload.getChannel().equals(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER) &&
+                        !payload.getChannel().equals(HpanInitiativeConstants.CHANNEL_IDPAY_PAYMENT)){
                         HpanUpdateOutcomeDTO outcome = hpanList2HpanUpdateOutcomeDTOMapper.apply(hpanList, payload, evaluationDate);
                         try {
                             if (!hpanUpdateNotifierService.notify(outcome)) {
