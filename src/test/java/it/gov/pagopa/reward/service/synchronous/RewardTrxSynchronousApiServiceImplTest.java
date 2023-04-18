@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -23,6 +24,7 @@ import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,7 +79,10 @@ class RewardTrxSynchronousApiServiceImplTest {
 
         SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTOFaker.mockInstanceBuilder(1)
                         .initiativeId(initiativeId)
-                        .channel("CHANNEL")
+                        .channel(previewRequest.getChannel())
+                        .operationType(previewRequest.getOperationType())
+                        .amount(previewRequest.getAmountCents())
+                        .effectiveAmount(Utils.centsToEuro(previewRequest.getAmountCents()))
                         .status(RewardConstants.REWARD_STATE_REJECTED)
                         .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                         .build();
@@ -113,6 +118,9 @@ class RewardTrxSynchronousApiServiceImplTest {
         SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTOFaker.mockInstanceBuilder(1)
                 .initiativeId(initiativeId)
                 .channel("CHANNEL")
+                .operationType(OperationType.CHARGE)
+                .amount(previewRequest.getAmountCents())
+                .effectiveAmount(Utils.centsToEuro(previewRequest.getAmountCents()))
                 .status(RewardConstants.REWARD_STATE_REJECTED)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
@@ -163,10 +171,14 @@ class RewardTrxSynchronousApiServiceImplTest {
                 .initiatives(Map.of(initiativeId,userInitiativeCounters))
                 .build();
         Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> pair = Pair.of(userInitiativeCountersWrapper, rewardTransactionDTO);
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateInitiativesBudgetAndRules(transactionDTOMock, List.of(initiativeId), userInitiativeCountersWrapper)).thenReturn(pair);
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(transactionDTOMock), Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(pair);
 
         SynchronousTransactionResponseDTO synchronousTransactionResponseDTO = SynchronousTransactionResponseDTO.builder()
                 .initiativeId(initiativeId)
+                .channel("channel")
+                .operationType(OperationType.CHARGE)
+                .amount(previewRequest.getAmountCents())
+                .effectiveAmount(Utils.centsToEuro(previewRequest.getAmountCents()))
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
         Mockito.when(rewardTransaction2SynchronousTransactionResponseDTOMapperMock.apply(Mockito.same(previewRequest.getTransactionId()), Mockito.same(initiativeId), Mockito.same(rewardTransactionDTO))).thenReturn(synchronousTransactionResponseDTO);
@@ -265,7 +277,7 @@ class RewardTrxSynchronousApiServiceImplTest {
 
         RewardTransactionDTO rewardTransaction = RewardTransactionDTOFaker.mockInstance(1);
         rewardTransaction.setId(authorizeRequest.getTransactionId());
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(transactionDTOMock,List.of(initiativeId))).thenReturn(Mono.just(rewardTransaction));
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.eq(transactionDTOMock),Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(Mono.just(rewardTransaction));
 
         SynchronousTransactionResponseDTO responseDTO = SynchronousTransactionResponseDTO.builder()
                 .transactionId(authorizeRequest.getTransactionId())

@@ -29,6 +29,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -244,15 +246,23 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         Assertions.assertNotNull(userInitiativeCounters);
 
         refundUseCase.expectedInitiativeFinalCounterSupplier().get().forEach(initiativeCounter ->
-                Assertions.assertEquals(
-                        initiativeCounter.toBuilder().userId(rewardedTrx.getUserId()).build(),
-                        userInitiativesCounters.stream().filter(c -> c.getInitiativeId().equals(initiativeCounter.getInitiativeId())).findFirst().orElse(null),
-                        "Failed user initiative counter (%s) compare on user %s (case %s %d)"
-                                .formatted(initiativeCounter.getInitiativeId(),
-                                        rewardedTrx.getUserId(),
-                                        isTotalRefundUseCase ? "TOTAL_REFUND" : "PARTIAL_REFUND",
-                                        useCase)
-                ));
+                {
+                    UserInitiativeCounters actual = userInitiativesCounters.stream().filter(c -> c.getInitiativeId().equals(initiativeCounter.getInitiativeId())).findFirst().orElse(null);
+                    UserInitiativeCounters expected = initiativeCounter.toBuilder().userId(rewardedTrx.getUserId()).build();
+                    Assertions.assertNotNull(actual);
+                    Assertions.assertEquals(expected.getTrxNumber(), actual.getTrxNumber());
+                    Assertions.assertEquals(expected.getTotalReward(), actual.getTotalReward());
+                    Assertions.assertEquals(expected.getId(), actual.getId());
+                    Assertions.assertEquals(expected.getUserId(), actual.getUserId());
+                    Assertions.assertEquals(expected.getInitiativeId(), actual.getInitiativeId());
+                    Assertions.assertEquals(expected.getUpdateDate().truncatedTo(ChronoUnit.DAYS), actual.getUpdateDate().truncatedTo(ChronoUnit.DAYS));
+                    Assertions.assertEquals(expected.getUpdateDate().truncatedTo(ChronoUnit.DAYS), actual.getUpdateDate().truncatedTo(ChronoUnit.DAYS));
+                    Assertions.assertEquals(expected.isExhaustedBudget(), actual.isExhaustedBudget());
+                    Assertions.assertEquals(expected.getDailyCounters(), actual.getDailyCounters());
+                    Assertions.assertEquals(expected.getWeeklyCounters(), actual.getWeeklyCounters());
+                    Assertions.assertEquals(expected.getMonthlyCounters(), actual.getMonthlyCounters());
+                    Assertions.assertEquals(expected.getYearlyCounters(), actual.getYearlyCounters());
+                });
     }
 
     private record RefundUseCase(

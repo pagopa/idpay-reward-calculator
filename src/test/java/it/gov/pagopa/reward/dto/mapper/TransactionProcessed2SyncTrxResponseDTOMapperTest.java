@@ -2,8 +2,10 @@ package it.gov.pagopa.reward.dto.mapper;
 
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +25,10 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
                 .id("TRXID")
                 .channel("CHANNEL")
                 .userId("USERID")
+                .operationTypeTranscoded(OperationType.CHARGE)
+                .amount(Utils.centsToEuro(100L))
+                .amountCents(100L)
+                .effectiveAmount(Utils.centsToEuro(100L))
                 .status("STATUS")
                 .rewards(Map.of(initiativeId,reward))
                 .build();
@@ -36,6 +42,8 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
         Assertions.assertEquals(transactionProcessed.getChannel(), result.getChannel());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(transactionProcessed.getUserId(), result.getUserId());
+        Assertions.assertEquals(transactionProcessed.getAmountCents(), result.getAmount());
+        Assertions.assertEquals(transactionProcessed.getEffectiveAmount(), result.getEffectiveAmount());
         Assertions.assertEquals(transactionProcessed.getStatus(), result.getStatus());
         Assertions.assertEquals(reward, result.getReward());
         TestUtils.checkNotNullFields(result, "rejectionReasons");
