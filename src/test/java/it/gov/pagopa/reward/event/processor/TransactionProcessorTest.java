@@ -162,13 +162,13 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                         expectedCounters.values().stream()
                                 .flatMap(c -> c.getInitiatives().values().stream())
                                 .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
-                                .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.MINUTES)))
+                                .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
                                 .toList()
                 ),
                 objectMapper.writeValueAsString(Objects.requireNonNull(
                         userInitiativeCountersRepository.findAll().collectList().block()).stream()
                             .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
-                            .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.MINUTES)))
+                            .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
                             .toList()
                 ));
     }

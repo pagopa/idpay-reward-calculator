@@ -58,11 +58,11 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
     @Override
     public Mono<RewardTransactionDTO> evaluateAndUpdateBudget(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper counters) {
-        return updateBudgets(Mono.just(evaluateInitiativesBudgetAndRules(trx, initiatives, counters)));
+        return updateBudgets(evaluateInitiativesBudgetAndRules(trx, initiatives, counters));
     }
 
     @Override
-    public Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper userCounters) {
+    public Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper userCounters) {
         log.trace("[REWARD] Counter retrieved, evaluating initiatives: {} - {}", trx.getId(), initiatives.size());
 
         RewardTransactionDTO trxRewarded;
@@ -82,9 +82,8 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                 trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
             }
         }
-//        return userInitiativeCountersUpdateService.update(userCounters, trxRewarded) TODO and check test
-//                .then(Mono.just(Pair.of(userCounters, trxRewarded)));
-        return Pair.of(userCounters, trxRewarded);
+        return userInitiativeCountersUpdateService.update(userCounters, trxRewarded)
+                .then(Mono.just(Pair.of(userCounters, trxRewarded)));
     }
 
     private void handleCompleteRefund(TransactionDTO trx, RewardTransactionDTO trxRewarded) {
@@ -146,9 +145,6 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     @Override
     public Mono<RewardTransactionDTO> updateBudgets(Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> trxEvaluationMono) {
         return trxEvaluationMono
-                .flatMap(counters2rewardedTrx ->
-                        userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond())
-                                .then(Mono.just(counters2rewardedTrx)))
                 .flatMap(counters2rewardedTrx -> {
                     RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
 

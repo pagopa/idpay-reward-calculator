@@ -171,7 +171,7 @@ class RewardTrxSynchronousApiServiceImplTest {
                 .initiatives(Map.of(initiativeId,userInitiativeCounters))
                 .build();
         Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> pair = Pair.of(userInitiativeCountersWrapper, rewardTransactionDTO);
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(transactionDTOMock), Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(pair);
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(transactionDTOMock), Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(Mono.just(pair));
 
         SynchronousTransactionResponseDTO synchronousTransactionResponseDTO = SynchronousTransactionResponseDTO.builder()
                 .initiativeId(initiativeId)
