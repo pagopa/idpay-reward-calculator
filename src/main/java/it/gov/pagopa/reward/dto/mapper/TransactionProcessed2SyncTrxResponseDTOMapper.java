@@ -19,7 +19,8 @@ public class TransactionProcessed2SyncTrxResponseDTOMapper implements BiFunction
         out.setInitiativeId(initiativeId);
         out.setUserId(trx.getUserId());
         out.setOperationType(baseTransactionProcessed.getOperationTypeTranscoded());
-        out.setAmount(baseTransactionProcessed.getAmountCents());
+        out.setAmountCents(baseTransactionProcessed.getAmountCents());
+        out.setAmount(baseTransactionProcessed.getAmount());
         out.setEffectiveAmount(baseTransactionProcessed.getEffectiveAmount());
         out.setStatus(trx.getStatus());
         out.setReward(trx.getRewards().get(initiativeId));

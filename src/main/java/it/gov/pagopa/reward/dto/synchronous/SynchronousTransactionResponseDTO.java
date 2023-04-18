@@ -20,7 +20,8 @@ public class SynchronousTransactionResponseDTO {
     private String initiativeId;
     private String userId;
     private OperationType operationType;
-    private Long amount;
+    private Long amountCents;
+    private BigDecimal amount;
     private BigDecimal effectiveAmount;
     private String status;
     private Reward reward;

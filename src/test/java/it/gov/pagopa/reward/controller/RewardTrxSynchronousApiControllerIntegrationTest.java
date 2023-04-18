@@ -273,7 +273,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 Assertions.assertEquals(INITIATIVEID, expectedResponse.getInitiativeId());
                 Assertions.assertEquals(transactionProcessedResult.getUserId(), expectedResponse.getUserId());
                 Assertions.assertEquals(transactionProcessedResult.getOperationTypeTranscoded(), expectedResponse.getOperationType());
-                Assertions.assertEquals(transactionProcessedResult.getAmountCents(), expectedResponse.getAmount());
+                Assertions.assertEquals(transactionProcessedResult.getAmountCents(), expectedResponse.getAmountCents());
+                Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getAmount());
                 Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getEffectiveAmount());
 
                 Reward responseReward = expectedResponse.getReward();
@@ -343,7 +344,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         Assertions.assertEquals(INITIATIVEID, expectedResponse.getInitiativeId());
         Assertions.assertEquals(trxRequest.getUserId(), expectedResponse.getUserId());
         Assertions.assertEquals(trxRequest.getOperationType(), expectedResponse.getOperationType());
-        Assertions.assertEquals(trxRequest.getAmountCents(), expectedResponse.getAmount());
+        Assertions.assertEquals(trxRequest.getAmountCents(), expectedResponse.getAmountCents());
+        Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getAmount());
         Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
 
         if(expectedReward != null) {
@@ -383,7 +385,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 .initiativeId(initiativeId)
                 .userId(trxRequest.getUserId())
                 .operationType(trxRequest.getOperationType())
-                .amount(trxRequest.getAmountCents())
+                .amountCents(trxRequest.getAmountCents())
+                .amount(Utils.centsToEuro(trxRequest.getAmountCents()))
                 .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
                 .status(status)
                 .rejectionReasons(rejectionReasons)

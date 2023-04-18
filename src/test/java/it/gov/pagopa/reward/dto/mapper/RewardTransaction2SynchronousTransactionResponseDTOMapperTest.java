@@ -21,8 +21,9 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
     private final String userId = "USERID";
     private final String channel = "CHANNEL";
     private final OperationType operationType = OperationType.CHARGE;
+    private final long amountCents = 100L;
+    private final BigDecimal amount = BigDecimal.ONE;
     private final BigDecimal effectiveAmount = BigDecimal.ONE;
-    private final long amount = 100L;
 
     @Test
     void applyRewardedTest(){
@@ -41,8 +42,8 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
                 .channel(channel)
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .operationTypeTranscoded(operationType)
-                .amountCents(amount)
-                .amount(effectiveAmount)
+                .amountCents(amountCents)
+                .amount(amount)
                 .effectiveAmount(effectiveAmount)
                 .rewards(rewards)
                 .elaborationDateTime(LocalDateTime.now())
@@ -68,7 +69,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
                 .userId(userId)
                 .channel(channel)
                 .operationTypeTranscoded(operationType)
-                .amountCents(amount)
+                .amountCents(amountCents)
                 .amount(effectiveAmount)
                 .effectiveAmount(effectiveAmount)
                 .status(RewardConstants.REWARD_STATE_REJECTED)
@@ -94,6 +95,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(userId, result.getUserId());
         Assertions.assertEquals(operationType, result.getOperationType());
+        Assertions.assertEquals(amountCents, result.getAmountCents());
         Assertions.assertEquals(amount, result.getAmount());
         Assertions.assertEquals(effectiveAmount, result.getEffectiveAmount());
     }

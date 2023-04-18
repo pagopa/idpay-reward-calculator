@@ -101,7 +101,8 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getOperationType(), result.getOperationType());
-        Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmount());
+        Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
+        Assertions.assertEquals(Utils.centsToEuro(previewRequest.getAmountCents()), result.getAmount());
         Assertions.assertEquals(Utils.centsToEuro(previewRequest.getAmountCents()), result.getEffectiveAmount());
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(discardCause, result.getRejectionReasons());

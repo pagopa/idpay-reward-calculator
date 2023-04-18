@@ -42,7 +42,8 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
         Assertions.assertEquals(transactionProcessed.getChannel(), result.getChannel());
         Assertions.assertEquals(initiativeId, result.getInitiativeId());
         Assertions.assertEquals(transactionProcessed.getUserId(), result.getUserId());
-        Assertions.assertEquals(transactionProcessed.getAmountCents(), result.getAmount());
+        Assertions.assertEquals(transactionProcessed.getAmountCents(), result.getAmountCents());
+        Assertions.assertEquals(transactionProcessed.getAmount(), result.getAmount());
         Assertions.assertEquals(transactionProcessed.getEffectiveAmount(), result.getEffectiveAmount());
         Assertions.assertEquals(transactionProcessed.getStatus(), result.getStatus());
         Assertions.assertEquals(reward, result.getReward());
