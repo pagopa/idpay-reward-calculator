@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,10 +57,10 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
                 .flatMap(b -> checkOnboarded(trxPreviewRequest, trxDTO, initiativeId))
                 .flatMap(b -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(trxDTO.getUserId(),initiativeId)))
                 .switchIfEmpty(Mono.just(new UserInitiativeCounters(trxPreviewRequest.getUserId(), initiativeId)))
-                .map(userInitiativeCounters -> {
+                .flatMap(userInitiativeCounters -> {
                     UserInitiativeCountersWrapper counterWrapper = UserInitiativeCountersWrapper.builder()
                             .userId(userInitiativeCounters.getUserId())
-                            .initiatives(Map.of(initiativeId, userInitiativeCounters))
+                            .initiatives(new HashMap<>(Map.of(initiativeId, userInitiativeCounters)))
                             .build();
                     return initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), counterWrapper);
                 })
@@ -70,16 +71,18 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
         log.trace("[REWARD] Starting reward preview calculation for transaction {}", trxAuthorizeRequest.getTransactionId());
         TransactionDTO trxDTO = syncTrxRequest2TransactionDtoMapper.apply(trxAuthorizeRequest);
+
         return checkInitiative(trxAuthorizeRequest, initiativeId)
                 .flatMap(initiativeFound -> checkSynTrxAlreadyProcessed(trxAuthorizeRequest, initiativeId))
                 .switchIfEmpty(Mono.just(Boolean.TRUE))
                 .flatMap(transactionNotProcessed -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId))
                 .flatMap(isOnboarded -> userInitiativeCountersRepository.findByIdThrottled(UserInitiativeCounters.buildId(trxAuthorizeRequest.getUserId(), initiativeId)))
                 .switchIfEmpty(Mono.just(new UserInitiativeCounters(trxAuthorizeRequest.getUserId(), initiativeId)))
-                .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trxDTO,List.of(initiativeId)))
+                .flatMap(userInitiativeCounters -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(
+                        trxDTO,
+                        List.of(initiativeId),
+                        new UserInitiativeCountersWrapper(trxDTO.getUserId(), new HashMap<>(Map.of(initiativeId, userInitiativeCounters)))))
                 .map(rewardTransaction -> rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxAuthorizeRequest.getTransactionId(),initiativeId, rewardTransaction));
-
-
     }
 
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId){

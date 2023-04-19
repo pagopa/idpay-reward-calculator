@@ -19,6 +19,10 @@ public class RewardTransaction2SynchronousTransactionResponseDTOMapper implement
         out.setChannel(rewardTransactionDTO.getChannel());
         out.setInitiativeId(initiativeId);
         out.setUserId(rewardTransactionDTO.getUserId());
+        out.setOperationType(rewardTransactionDTO.getOperationTypeTranscoded());
+        out.setAmountCents(rewardTransactionDTO.getAmountCents());
+        out.setAmount(rewardTransactionDTO.getAmount());
+        out.setEffectiveAmount(rewardTransactionDTO.getEffectiveAmount());
         out.setStatus(rewardTransactionDTO.getStatus());
         if(rewardTransactionDTO.getStatus().equals(RewardConstants.REWARD_STATE_REWARDED)) {
             out.setReward(rewardTransactionDTO.getRewards().get(initiativeId));

@@ -43,9 +43,10 @@ public class SynchronousTransactionRequestDTOFaker {
     }
 
     public static SynchronousTransactionRequestDTO.SynchronousTransactionRequestDTOBuilder mockInstanceBuilder(Integer bias) {
-        OffsetDateTime offsetDateTimeNow = OffsetDateTime.of(2023, 4,11,10,0,0,0, ZoneOffset.UTC);
+        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now(ZoneOffset.UTC);
         return SynchronousTransactionRequestDTO.builder()
                 .transactionId("TRANSACTIONID%d".formatted(bias))
+                .channel("SYNCPAYMENTCHANNEL%d".formatted(bias))
                 .userId("USERID%d".formatted(bias))
                 .merchantId("MERCHANTID%d".formatted(bias))
                 .senderCode("SENDERCODE%d".formatted(bias))
@@ -62,7 +63,7 @@ public class SynchronousTransactionRequestDTOFaker {
                 .correlationId("CORRELATIONID%d".formatted(bias))
                 .operationType(OperationType.CHARGE)
                 .trxChargeDate(offsetDateTimeNow)
-                .channel("SYNCPAYMENTCHANNEL");
+                .channel("SYNCPAYMENTCHANNEL%d".formatted(bias));
     }
 
 

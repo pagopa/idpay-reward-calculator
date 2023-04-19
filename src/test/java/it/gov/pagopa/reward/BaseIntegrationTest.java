@@ -40,6 +40,7 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
@@ -112,6 +113,9 @@ public abstract class BaseIntegrationTest {
 
     @Value("${spring.application.name}")
     public String applicationName;
+
+    @Autowired
+    protected WebTestClient webTestClient;
 
     @Autowired
     protected EmbeddedKafkaBroker kafkaBroker;
