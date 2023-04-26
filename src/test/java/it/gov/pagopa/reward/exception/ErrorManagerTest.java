@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 
@@ -22,10 +21,10 @@ import java.util.List;
 class ErrorManagerTest extends BaseIntegrationTest {
 
     @SpyBean
-    RewardTrxSynchronousApiController rewardTrxSynchronousApiController;
+    private RewardTrxSynchronousApiController rewardTrxSynchronousApiController;
 
     @Autowired
-    WebTestClient webTestClient;
+    private WebTestClient webTestClient;
 
     @Test
     void handleExceptionClientExceptionNoBody() {
