@@ -28,7 +28,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         Query.query(criteriaById(id)
                                 .orOperator(
                                         Criteria.where(UserInitiativeCounters.Fields.updateDate).is(null),
-                                        Criteria.where(UserInitiativeCounters.Fields.updateDate).is(LocalDateTime.now().minusSeconds(throttlingSeconds)))),
+                                        Criteria.where(UserInitiativeCounters.Fields.updateDate).lt(LocalDateTime.now().minusSeconds(throttlingSeconds)))),
                         new Update()
                                 .set(UserInitiativeCounters.Fields.updateDate, LocalDateTime.now()),
                         UserInitiativeCounters.class

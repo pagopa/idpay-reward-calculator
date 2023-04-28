@@ -25,6 +25,7 @@ public interface BaseTransactionProcessed {
     BigDecimal getAmount();
     Long getAmountCents();
     BigDecimal getEffectiveAmount();
+    String getChannel();
     List<String> getRejectionReasons();
     Map<String, List<String>> getInitiativeRejectionReasons();
 

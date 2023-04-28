@@ -34,6 +34,7 @@ public class Transaction2TransactionProcessedMapper implements Function<RewardTr
             trxProcessed.setStatus(trx.getStatus());
             trxProcessed.setRejectionReasons(trx.getRejectionReasons());
             trxProcessed.setInitiativeRejectionReasons(trx.getInitiativeRejectionReasons());
+            trxProcessed.setChannel(trx.getChannel());
         }
         return trxProcessed;
     }

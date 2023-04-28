@@ -49,6 +49,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setEffectiveAmount(amount);
         out.setTrxChargeDate(trx.getTrxChargeDate());
         out.setUserId(trx.getUserId());
+        out.setChannel(trx.getChannel());
 
         return out;
     }
@@ -63,8 +64,13 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
     public SynchronousTransactionResponseDTO apply(SynchronousTransactionRequestDTO request, String initiativeId, List<String> discardCause){
         SynchronousTransactionResponseDTO out = new SynchronousTransactionResponseDTO();
         out.setTransactionId(request.getTransactionId());
+        out.setChannel(request.getChannel());
         out.setInitiativeId(initiativeId);
         out.setUserId(request.getUserId());
+        out.setOperationType(request.getOperationType());
+        out.setAmountCents(request.getAmountCents());
+        out.setAmount(Utils.centsToEuro(request.getAmountCents()));
+        out.setEffectiveAmount(Utils.centsToEuro(request.getAmountCents()));
         out.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         out.setRejectionReasons(discardCause);
         return out;

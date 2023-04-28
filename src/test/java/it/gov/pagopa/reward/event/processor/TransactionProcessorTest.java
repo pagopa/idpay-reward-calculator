@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -129,18 +130,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             Assertions.assertEquals(payload.getUserId(), p.key());
         }
 
-        Assertions.assertEquals(
-                objectMapper.writeValueAsString(
-                        expectedCounters.values().stream()
-                                .flatMap(c -> c.getInitiatives().values().stream())
-                                .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
-                                .toList()
-                ),
-                objectMapper.writeValueAsString(Objects.requireNonNull(
-                        userInitiativeCountersRepository.findAll().collectList().block()).stream()
-                            .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
-                            .toList()
-                ));
+        assertCounters();
 
         checkErrorsPublished(notValidTrx, maxWaitingMs, errorUseCases);
 
@@ -163,6 +153,24 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         );
 
         checkOffsets(totalSendMessages+1, validTrx); // +1 due to other applicationName useCase
+    }
+
+    private void assertCounters() throws JsonProcessingException {
+
+        Assertions.assertEquals(
+                objectMapper.writeValueAsString(
+                        expectedCounters.values().stream()
+                                .flatMap(c -> c.getInitiatives().values().stream())
+                                .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                                .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
+                                .toList()
+                ),
+                objectMapper.writeValueAsString(Objects.requireNonNull(
+                        userInitiativeCountersRepository.findAll().collectList().block()).stream()
+                            .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                            .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
+                            .toList()
+                ));
     }
 
     private List<String> buildValidPayloads(int bias, int validOnboardings) {

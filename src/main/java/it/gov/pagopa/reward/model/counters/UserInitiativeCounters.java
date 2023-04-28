@@ -44,6 +44,7 @@ public class UserInitiativeCounters extends Counters {
         this.id=buildId(userId, initiativeId);
         this.userId=userId;
         this.initiativeId=initiativeId;
+        this.updateDate = LocalDateTime.now();
 
         // for some reason, lombok is changing the code letting null these fields when using this constructor
         this.dailyCounters = new HashMap<>();
@@ -61,7 +62,8 @@ public class UserInitiativeCounters extends Counters {
         return UserInitiativeCounters.hiddenBuilder()
                 .id(buildId(userId, initiativeId))
                 .userId(userId)
-                .initiativeId(initiativeId);
+                .initiativeId(initiativeId)
+                .updateDate(LocalDateTime.now());
     }
 
     public abstract static class UserInitiativeCountersBuilder<C extends UserInitiativeCounters, B extends UserInitiativeCountersBuilder<C, B>> extends CountersBuilder<C,B> {

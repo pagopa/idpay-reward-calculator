@@ -252,7 +252,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 .mapToObj(i -> HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
                         .operationDate(LocalDateTime.now().plusDays(10L))
                         .operationType(i%2 == 0 ? HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT : HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
-                        .channel(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)
+                        .channel(i%2 == 0 ? HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER : HpanInitiativeConstants.CHANNEL_IDPAY_PAYMENT)
                         .build())
                 .map(TestUtils::jsonSerializer)
                 .toList();

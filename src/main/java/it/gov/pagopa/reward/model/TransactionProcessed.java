@@ -60,5 +60,6 @@ public class TransactionProcessed implements BaseTransactionProcessed {
     private OperationType operationTypeTranscoded;
 
     private LocalDateTime elaborationDateTime;
+    private String channel;
 }
 

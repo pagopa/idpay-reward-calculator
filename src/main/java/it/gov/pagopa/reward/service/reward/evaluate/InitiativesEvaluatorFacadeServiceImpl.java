@@ -50,16 +50,19 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
         final String userId = trx.getUserId();
 
-        return updateBudgets(
-                userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
+        return userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
                         .collectList()
                         .map(counters -> new UserInitiativeCountersWrapper(userId, counters.stream().collect(Collectors.toMap(UserInitiativeCounters::getInitiativeId, Function.identity()))))
-                        .map(userCounters -> evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters))
-        );
+                        .flatMap(userCounters -> evaluateAndUpdateBudget(trx, initiatives, userCounters));
     }
 
     @Override
-    public Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper userCounters) {
+    public Mono<RewardTransactionDTO> evaluateAndUpdateBudget(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper counters) {
+        return updateBudgets(evaluateInitiativesBudgetAndRules(trx, initiatives, counters));
+    }
+
+    @Override
+    public Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> evaluateInitiativesBudgetAndRules(TransactionDTO trx, List<String> initiatives, UserInitiativeCountersWrapper userCounters) {
         log.trace("[REWARD] Counter retrieved, evaluating initiatives: {} - {}", trx.getId(), initiatives.size());
 
         RewardTransactionDTO trxRewarded;
@@ -79,7 +82,8 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                 trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
             }
         }
-        return Pair.of(userCounters, trxRewarded);
+        return userInitiativeCountersUpdateService.update(userCounters, trxRewarded)
+                .then(Mono.just(Pair.of(userCounters, trxRewarded)));
     }
 
     private void handleCompleteRefund(TransactionDTO trx, RewardTransactionDTO trxRewarded) {
@@ -141,9 +145,6 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     @Override
     public Mono<RewardTransactionDTO> updateBudgets(Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> trxEvaluationMono) {
         return trxEvaluationMono
-                .flatMap(counters2rewardedTrx ->
-                        userInitiativeCountersUpdateService.update(counters2rewardedTrx.getFirst(), counters2rewardedTrx.getSecond())
-                                .then(Mono.just(counters2rewardedTrx)))
                 .flatMap(counters2rewardedTrx -> {
                     RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
 
