@@ -1,16 +1,38 @@
 package it.gov.pagopa.reward;
 
+import static org.awaitility.Awaitility.await;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import jakarta.annotation.PostConstruct;
+import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -30,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,27 +64,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.util.ReflectionUtils;
-
-import javax.annotation.PostConstruct;
-import javax.management.*;
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Field;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @EmbeddedKafka(topics = {
@@ -103,8 +105,8 @@ import static org.awaitility.Awaitility.await;
 
                 //region mongodb
                 "logging.level.org.mongodb.driver=WARN",
-                "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
-                "spring.mongodb.embedded.version=4.0.21",
+                "logging.level.de.flapdoodle.embed.mongo.spring.autoconfigure=WARN",
+                "de.flapdoodle.mongodb.embedded.version=4.0.21",
                 //endregion
         })
 @AutoConfigureDataMongo
@@ -122,11 +124,8 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected KafkaTemplate<byte[], byte[]> template;
 
-    @Autowired(required = false)
-    private MongodExecutable embeddedMongoServer;
-
-    @Value("${spring.data.mongodb.uri}")
-    private String mongodbUri;
+    @Autowired
+    private MongoProperties mongoProperties;
 
     @Autowired
     protected DroolsRuleRepository droolsRuleRepository;
@@ -182,18 +181,8 @@ public abstract class BaseIntegrationTest {
     }
 
     @PostConstruct
-    public void logEmbeddedServerConfig() throws NoSuchFieldException, UnknownHostException {
-        String mongoUrl;
-        if(embeddedMongoServer != null) {
-            Field mongoEmbeddedServerConfigField = Executable.class.getDeclaredField("config");
-            mongoEmbeddedServerConfigField.setAccessible(true);
-            MongodConfig mongodConfig = (MongodConfig) ReflectionUtils.getField(mongoEmbeddedServerConfigField, embeddedMongoServer);
-            Net mongodNet = Objects.requireNonNull(mongodConfig).net();
-
-            mongoUrl="mongodb://%s:%s".formatted(mongodNet.getServerAddress().getHostAddress(), mongodNet.getPort());
-        } else {
-            mongoUrl=mongodbUri.replaceFirst(":[^:]+(?=:[0-9]+)", "");
-        }
+    public void logEmbeddedServerConfig() {
+        String mongoUrl = mongoProperties.getUri().replaceFirst("(?<=//)[^@]+@", "");
 
         System.out.printf("""
                         ************************

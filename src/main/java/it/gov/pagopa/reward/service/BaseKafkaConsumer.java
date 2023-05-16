@@ -65,7 +65,7 @@ public abstract class BaseKafkaConsumer<T, R> {
     }
 
     private static Integer getMessagePartitionId(Message<?> message) {
-        return Utils.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION_ID);
+        return Utils.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION);
     }
 
     private static Long getMessageOffset(Message<?> message) {
