@@ -7,8 +7,9 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
+import it.gov.pagopa.reward.utils.PerformanceLogger;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
@@ -40,7 +41,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     }
 
     @Override
-    public RewardTransactionDTO applyRules(TransactionDTO transaction, List<String> initiatives, UserInitiativeCounters userInitiativeCounters) {
+    public RewardTransactionDTO applyRules(TransactionDTO transaction, List<String> initiatives, UserInitiativeCountersWrapper userInitiativeCountersWrapper) {
         TransactionDroolsDTO trx = transaction2TransactionDroolsMapper.apply(transaction);
 
         if(!initiatives.isEmpty()){
@@ -49,11 +50,11 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
 
-            userInitiativeCounters = setRefundCounters(transaction, userInitiativeCounters);
+            userInitiativeCountersWrapper = setRefundCounters(transaction, userInitiativeCountersWrapper);
 
             List<Command<?>> cmds = new ArrayList<>();
             cmds.add(CommandFactory.newInsert(ruleEngineConfig));
-            cmds.add(CommandFactory.newInsert(userInitiativeCounters));
+            cmds.add(CommandFactory.newInsert(userInitiativeCountersWrapper));
             cmds.add(CommandFactory.newInsert(trx));
             for (String initiative: initiatives) {
                 cmds.add(new AgendaGroupSetFocusCommand(initiative));
@@ -61,21 +62,20 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
             long before=System.currentTimeMillis();
             statelessKieSession.execute(CommandFactory.newBatchExecution(cmds));
-            long after=System.currentTimeMillis();
 
-            log.info("[PERFORMANCE_LOG] [REWARD] [RULE_ENGINE] - Time between before and after fireAllRules {} ms transaction evaluated  ({}) and resulted into rewards:({}), initiativeRejectionReason:{}",
-                    after-before, trx.getId(), trx.getRewards(), trx.getInitiativeRejectionReasons());
+            PerformanceLogger.logTiming("REWARD_RULE_ENGINE", before , "transaction evaluated (%s) and resulted into rewards:(%s), initiativeRejectionReason:%s".formatted(
+                    trx.getId(), trx.getRewards(), trx.getInitiativeRejectionReasons()));
         }else {
             trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE);
         }
         return transactionDroolsDTO2RewardTransactionMapper.apply(trx);
     }
 
-    private UserInitiativeCounters setRefundCounters(TransactionDTO transaction, UserInitiativeCounters userInitiativeCounters) {
+    private UserInitiativeCountersWrapper setRefundCounters(TransactionDTO transaction, UserInitiativeCountersWrapper userInitiativeCountersWrapper) {
         if(OperationType.REFUND.equals(transaction.getOperationTypeTranscoded()) && transaction.getRefundInfo()!=null && !CollectionUtils.isEmpty(transaction.getRefundInfo().getPreviousTrxs())) {
-            userInitiativeCounters = userInitiativeCounters.toBuilder()
+            userInitiativeCountersWrapper = userInitiativeCountersWrapper.toBuilder()
                     .initiatives(
-                            userInitiativeCounters.getInitiatives().entrySet().stream()
+                            userInitiativeCountersWrapper.getInitiatives().entrySet().stream()
                                     .collect(Collectors.toMap(
                                             Map.Entry::getKey,
                                             e -> e.getValue().toBuilder()
@@ -88,6 +88,6 @@ public class RuleEngineServiceImpl implements RuleEngineService {
                                     )))
                     .build();
         }
-        return userInitiativeCounters;
+        return userInitiativeCountersWrapper;
     }
 }

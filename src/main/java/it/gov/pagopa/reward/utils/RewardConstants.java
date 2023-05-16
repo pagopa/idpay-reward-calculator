@@ -9,6 +9,10 @@ public final class RewardConstants {
 
     public static final ZoneId ZONEID = ZoneId.of("Europe/Rome");
 
+    //region transactions' channels
+    public static final String TRX_CHANNEL_RTD = "RTD";
+    //endregion
+
     //region initiative's build rejection reasons
     public static final String INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
     //endregion
@@ -44,11 +48,13 @@ public final class RewardConstants {
     //endregion
 
     //region reward evaluation rejection reasons
+    public static final String TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID = "DUPLICATE_CORRELATION_ID";
     public static final String TRX_REJECTION_REASON_NO_INITIATIVE = "NO_ACTIVE_INITIATIVES";
     public static final String TRX_REJECTION_REASON_INVALID_OPERATION_TYPE = "INVALID_OPERATION_TYPE";
     public static final String TRX_REJECTION_REASON_INVALID_AMOUNT = "INVALID_AMOUNT";
     public static final String TRX_REJECTION_REASON_INVALID_REFUND = "INVALID_REFUND";
     public static final String TRX_REJECTION_REASON_REFUND_NOT_MATCH = "REFUND_NOT_MATCH";
+    public static final String TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND = "INITIATIVE_NOT_FOUND";
     //endregion
 
     //region reward status

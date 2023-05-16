@@ -64,7 +64,7 @@ class Transaction2TransactionProcessedMapperTest {
 
         Assertions.assertEquals(id, result.getId());
 
-        TestUtils.checkNotNullFields(result, "timestamp");
+        TestUtils.checkNotNullFields(result, "elaborationDateTime");
     }
 
     private void assertCommonFieldValues(RewardTransactionDTO trx, TransactionProcessed result) {
@@ -86,6 +86,7 @@ class Transaction2TransactionProcessedMapperTest {
         Assertions.assertEquals(trx.getStatus(), result.getStatus());
         Assertions.assertEquals(trx.getRejectionReasons(), result.getRejectionReasons());
         Assertions.assertEquals(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
+        Assertions.assertEquals(trx.getChannel(), result.getChannel());
     }
 
 

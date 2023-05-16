@@ -4,6 +4,7 @@ import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 
 import java.math.BigDecimal;
@@ -61,12 +62,14 @@ public class TransactionProcessedFaker {
                 .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))
                 .acquirerCode("ACQUIRERCODE%s".formatted(bias))
                 .trxDate(trxDateTime)
-                .operationType("OPERATIONTYPE%s".formatted(bias))
+                .operationType("00")
+                .operationTypeTranscoded(OperationType.CHARGE)
                 .correlationId("CORRELATIONID%s".formatted(bias))
                 .amount(amountEuro)
                 .amountCents(amountEuro.longValue()*100)
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
-                .rewards(rewards);
+                .rewards(rewards)
+                .elaborationDateTime(LocalDateTime.now());
     }
 }

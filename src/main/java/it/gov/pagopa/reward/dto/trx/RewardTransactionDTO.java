@@ -1,20 +1,24 @@
 package it.gov.pagopa.reward.dto.trx;
 
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** When stored into mongo, it will represent a transaction that has NOT been elaborated */
 @Data
 @ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class RewardTransactionDTO extends TransactionDTO {
+@Document(collection = "transactions_processed")
+public class RewardTransactionDTO extends TransactionDTO implements BaseTransactionProcessed {
 
     private String status;
 

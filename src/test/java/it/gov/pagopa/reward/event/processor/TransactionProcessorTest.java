@@ -12,8 +12,8 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -69,6 +70,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     @SpyBean
     private RewardNotifierService rewardNotifierServiceSpy;
 
+    private TransactionDTO trxDuplicated;
+
     @Test
     void testTransactionProcessor() throws JsonProcessingException {
         int validTrx = 1000; // use even number
@@ -78,7 +81,12 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
         publishRewardRules();
 
-        TransactionDTO trxDuplicated = TransactionDTOFaker.mockInstance(1);
+        trxDuplicated = TransactionDTOFaker.mockInstance(1);
+        trxDuplicated.setOperationTypeTranscoded(OperationType.CHARGE);
+        trxDuplicated.setAmount(TestUtils.bigDecimalValue(1));
+        trxDuplicated.setAmountCents(1_00L);
+        trxDuplicated.setEffectiveAmount(trxDuplicated.getAmount());
+        trxDuplicated.setTrxChargeDate(trxDuplicated.getTrxDate());
         trxDuplicated.setIdTrxAcquirer("ALREADY_PROCESSED_TRX");
         transactionProcessedService.save(transaction2RewardTransactionMapper.apply(trxDuplicated)).block();
 
@@ -122,13 +130,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             Assertions.assertEquals(payload.getUserId(), p.key());
         }
 
-        Assertions.assertEquals(
-                objectMapper.writeValueAsString(expectedCounters.values().stream()
-                        .sorted(Comparator.comparing(UserInitiativeCounters::getUserId))
-                        .toList()),
-                objectMapper.writeValueAsString(Objects.requireNonNull(userInitiativeCountersRepository.findAll().collectList().block()).stream()
-                        .sorted(Comparator.comparing(UserInitiativeCounters::getUserId))
-                        .toList()));
+        assertCounters();
 
         checkErrorsPublished(notValidTrx, maxWaitingMs, errorUseCases);
 
@@ -153,6 +155,24 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         checkOffsets(totalSendMessages+1, validTrx); // +1 due to other applicationName useCase
     }
 
+    private void assertCounters() throws JsonProcessingException {
+
+        Assertions.assertEquals(
+                objectMapper.writeValueAsString(
+                        expectedCounters.values().stream()
+                                .flatMap(c -> c.getInitiatives().values().stream())
+                                .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                                .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
+                                .toList()
+                ),
+                objectMapper.writeValueAsString(Objects.requireNonNull(
+                        userInitiativeCountersRepository.findAll().collectList().block()).stream()
+                            .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                            .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
+                            .toList()
+                ));
+    }
+
     private List<String> buildValidPayloads(int bias, int validOnboardings) {
         return IntStream.range(bias, bias + validOnboardings)
                 .mapToObj(this::mockInstance)
@@ -169,6 +189,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private static final String INITIATIVE_ID_EXHAUSTED = "ID_5_EXHAUSTED";
     private static final String INITIATIVE_ID_EXHAUSTING = "ID_6_EXHAUSTING";
     private static final String INITIATIVE_ID_EXPIRED = "ID_7_EXPIRED";
+    private static final String INITIATIVE_ID_NOT_STARTED = "ID_8_NOTSTARTED";
 
     private void publishRewardRules() {
         int[] expectedRules = {0};
@@ -286,7 +307,18 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                         .rewardValue(BigDecimal.TEN)
                                         .build())
                                 .general(InitiativeGeneralDTO.builder()
-                                        .endDate(trxDate.minusDays(1).toLocalDate())
+                                        .endDate(trxDate.minusDays(2).toLocalDate())
+                                        .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), null)
+                                .initiativeId(INITIATIVE_ID_NOT_STARTED)
+                                .initiativeName("NAME_"+INITIATIVE_ID_NOT_STARTED)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_NOT_STARTED)
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
+                                .general(InitiativeGeneralDTO.builder()
+                                        .startDate(trxDate.plusYears(1L).toLocalDate())
                                         .build())
                                 .build()
                 )
@@ -298,8 +330,9 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     //endregion
 
     private TransactionDTO mockInstance(int bias) {
-        final TransactionDTO trx = useCases.get(bias % useCases.size()).getFirst().apply(bias);
-        onboardTrxHPan(trx, INITIATIVE_ID_EXPIRED);
+        int useCase = bias % useCases.size();
+        final TransactionDTO trx = useCases.get(useCase).getFirst().apply(bias);
+        onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED);
         return trx;
     }
 
@@ -315,7 +348,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
-    private final Map<String, UserInitiativeCounters> expectedCounters = new HashMap<>();
+    private final Map<String, UserInitiativeCountersWrapper> expectedCounters = new HashMap<>();
     private final Map<String, BigDecimal> initiative2ExpectedReward = Map.of(
             INITIATIVE_ID_THRESHOLD_BASED, TestUtils.bigDecimalValue(0.5),
             INITIATIVE_ID_DAYOFWEEK_BASED, TestUtils.bigDecimalValue(5),
@@ -327,7 +360,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     );
 
     private final List<Pair<Function<Integer, TransactionDTO>, java.util.function.Consumer<RewardTransactionDTO>>> useCases = List.of(
-            // rewarded by threshold based initiative
+            // useCase 0: rewarded by threshold based initiative
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
@@ -336,7 +369,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             INITIATIVE_ID_THRESHOLD_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_THRESHOLD_BASED, false, 1L, 5, 0, false)
             ),
-            // rewarded by dayOfWeek based initiative (testing amountCents)
+            // useCase 1: rewarded by dayOfWeek based initiative (testing amountCents)
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
@@ -347,7 +380,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             INITIATIVE_ID_DAYOFWEEK_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_DAYOFWEEK_BASED, false, 1L, 50, 0, false)
             ),
-            // rewarded by MccFilter based initiative (filled both amount and amountCents)
+            // useCase 2: rewarded by MccFilter based initiative (filled both amount and amountCents)
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
@@ -358,15 +391,14 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             INITIATIVE_ID_MCC_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_MCC_BASED, false, 1, 60, 0, false)
             ),
-            // rewarded by TrxCount based initiative (to proof the amountCents rewrite logic)
+            // useCase 3: rewarded by TrxCount based initiative (to proof the amountCents rewrite logic)
             Pair.of(
                     i -> {
                         final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                                 .amountCents(70_00L)
                                 .amount(BigDecimal.ZERO)
                                 .build();
-                        saveUserInitiativeCounter(trx, InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                        saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
                                 .build());
 
@@ -376,25 +408,24 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     },
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_TRXCOUNT_BASED, false, TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT + 1, 70, 0, false)
             ),
-            // rejected by TrxCount based initiative lower than min
+            // useCase 4: rejected by TrxCount based initiative lower than min
             Pair.of(
                     i -> {
                         final TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                                 .amount(BigDecimal.valueOf(70_00))
                                 .build();
-                        saveUserInitiativeCounter(trx, InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                        saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT-1)
                                 .build());
 
-                        UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                        UserInitiativeCountersWrapper userInitiativeCountersWrapper = onboardTrxHPan(
                                 trx,
                                 INITIATIVE_ID_TRXCOUNT_BASED);
 
-                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_TRXCOUNT_BASED, InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
-                                .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
-                                .build());
+                        userInitiativeCountersWrapper.getInitiatives().put(INITIATIVE_ID_TRXCOUNT_BASED,
+                                UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_TRXCOUNT_BASED)
+                                        .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
+                                        .build());
 
                         return trx;
                     },
@@ -402,7 +433,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             Map.of(INITIATIVE_ID_TRXCOUNT_BASED, List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())),
                             Collections.emptyList())
             ),
-            // rewarded by RewardLimits based initiative
+            // useCase 5: rewarded by RewardLimits based initiative
             Pair.of(
                     i -> onboardTrxHpanAndIncreaseCounters(
                             TransactionDTOFaker.mockInstanceBuilder(i)
@@ -411,15 +442,15 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             INITIATIVE_ID_REWARDLIMITS_BASED),
                     evaluation -> assertRewardedState(evaluation, INITIATIVE_ID_REWARDLIMITS_BASED, false, 1, 8, 0, false)
             ),
-            // rewarded by RewardLimits based initiative, daily capped
+            // useCase 6: rewarded by RewardLimits based initiative, daily capped
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.DAILY),
-            // rewarded by RewardLimits based initiative, weekly capped
+            // useCase 7: rewarded by RewardLimits based initiative, weekly capped
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.WEEKLY),
-            // rewarded by RewardLimits based initiative, monthly capped
+            // useCase 8: rewarded by RewardLimits based initiative, monthly capped
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.MONTHLY),
-            // rewarded by RewardLimits based initiative, yearly capped
+            // useCase 9: rewarded by RewardLimits based initiative, yearly capped
             buildRewardLimitsCappedUseCase(RewardLimitsDTO.RewardLimitFrequency.YEARLY),
-            // not rewarded due to no initiatives
+            // useCase 10: not rewarded due to no initiatives
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
@@ -434,7 +465,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                         Assertions.assertEquals("REJECTED", evaluation.getStatus());
                     }
             ),
-            // not rewarded
+            // useCase 11: not rewarded
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
@@ -443,8 +474,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .mcc("NOTALLOWED")
                                 .build();
 
-                        final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
+                        final UserInitiativeCounters initiativeRewardCounter = UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_REWARDLIMITS_BASED)
                                 .dailyCounters(new HashMap<>(Map.of("2021-12-31", Counters.builder().totalReward(BigDecimal.valueOf(40)).build())))
                                 .weeklyCounters(new HashMap<>(Map.of("2021-12-5", Counters.builder().totalReward(BigDecimal.valueOf(200)).build())))
                                 .monthlyCounters(new HashMap<>(Map.of("2021-12", Counters.builder().totalReward(BigDecimal.valueOf(1000)).build())))
@@ -452,7 +482,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .build();
                         saveUserInitiativeCounter(trx, initiativeRewardCounter);
 
-                        final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                        final UserInitiativeCountersWrapper userInitiativeCountersWrapper = onboardTrxHPan(
                                 trx,
                                 INITIATIVE_ID_THRESHOLD_BASED,
                                 INITIATIVE_ID_DAYOFWEEK_BASED,
@@ -460,11 +490,11 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 INITIATIVE_ID_TRXCOUNT_BASED,
                                 INITIATIVE_ID_REWARDLIMITS_BASED
                         );
-                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_REWARDLIMITS_BASED, initiativeRewardCounter);
-                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_TRXCOUNT_BASED, InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
-                                .trxNumber(1L)
-                                .build());
+                        userInitiativeCountersWrapper.getInitiatives().put(INITIATIVE_ID_REWARDLIMITS_BASED, initiativeRewardCounter);
+                        userInitiativeCountersWrapper.getInitiatives().put(INITIATIVE_ID_TRXCOUNT_BASED,
+                                UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_TRXCOUNT_BASED)
+                                        .trxNumber(1L)
+                                        .build());
                         return trx;
                     },
                     evaluation -> assertRejectedInitiativesState(evaluation,
@@ -482,24 +512,23 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             ),
                             Collections.emptyList())
             ),
-            // useCase initiative budget exhausted
+            // useCase 12: useCase initiative budget exhausted
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                                 .amount(BigDecimal.valueOf(10_00))
                                 .build();
 
-                        final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_EXHAUSTED)
+                        final UserInitiativeCounters initiativeRewardCounter = UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_EXHAUSTED)
                                 .exhaustedBudget(true)
                                 .build();
                         saveUserInitiativeCounter(trx, initiativeRewardCounter);
 
-                        final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                        final UserInitiativeCountersWrapper userInitiativeCountersWrapper = onboardTrxHPan(
                                 trx,
                                 INITIATIVE_ID_EXHAUSTED
                         );
-                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_EXHAUSTED, initiativeRewardCounter);
+                        userInitiativeCountersWrapper.getInitiatives().put(INITIATIVE_ID_EXHAUSTED, initiativeRewardCounter);
                         return trx;
                     },
                     evaluation -> assertRejectedInitiativesState(evaluation,
@@ -508,24 +537,23 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             ),
                             List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
             ),
-            // useCase exhausting initiative budget
+            // useCase 13: useCase exhausting initiative budget
             Pair.of(
                     i -> {
                         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
                                 .amount(BigDecimal.valueOf(100_00))
                                 .build();
 
-                        final InitiativeCounters initiativeRewardCounter = InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_EXHAUSTING)
+                        final UserInitiativeCounters initiativeRewardCounter = UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_EXHAUSTING)
                                 .totalReward(BigDecimal.valueOf(999))
                                 .build();
                         saveUserInitiativeCounter(trx, initiativeRewardCounter);
 
-                        final UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(
+                        final UserInitiativeCountersWrapper userInitiativeCountersWrapper = onboardTrxHPan(
                                 trx,
                                 INITIATIVE_ID_EXHAUSTING
                         );
-                        userInitiativeCounters.getInitiatives().put(INITIATIVE_ID_EXHAUSTING, initiativeRewardCounter);
+                        userInitiativeCountersWrapper.getInitiatives().put(INITIATIVE_ID_EXHAUSTING, initiativeRewardCounter);
                         updateCounters(initiativeRewardCounter, trx, BigDecimal.valueOf(1));
                         initiativeRewardCounter.setExhaustedBudget(true);
                         return trx;
@@ -536,6 +564,24 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                         TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(10), reward.getProvidedReward());
                         assertTrue(reward.isCapped());
                     }
+            ),
+
+            // useCase 14: discarded due to correlationId duplicated
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(i)
+                                .amount(BigDecimal.valueOf(5_00))
+                                .acquirerId(trxDuplicated.getAcquirerId())
+                                .correlationId(trxDuplicated.getCorrelationId())
+                                .build();
+
+                        onboardTrxHPanNoCreateUserCounter(trx,INITIATIVE_ID_THRESHOLD_BASED);
+
+                        return trx;
+                    },
+                    evaluation -> assertRejectedInitiativesState(evaluation,
+                            Collections.emptyMap(),
+                            List.of(RewardConstants.TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID))
             )
     );
 
@@ -552,8 +598,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                             .amount(BigDecimal.valueOf(80_00))
                             .build();
 
-                    final InitiativeCounters initialStateOfCounters = InitiativeCounters.builder()
-                            .initiativeId(INITIATIVE_ID_REWARDLIMITS_BASED)
+                    final UserInitiativeCounters initialStateOfCounters = UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_REWARDLIMITS_BASED)
                             .dailyCounters(new HashMap<>(Map.of("2022-01-01", Counters.builder().totalReward(BigDecimal.valueOf(isDailyCapped ? 39.2 : 32)).build())))
                             .weeklyCounters(new HashMap<>(Map.of("2022-01-0", Counters.builder().totalReward(BigDecimal.valueOf(isWeeklyCapped ? 199.2 : 199)).build())))
                             .monthlyCounters(new HashMap<>(Map.of("2022-01", Counters.builder().totalReward(BigDecimal.valueOf(isMonthlyCapped ? 999.2 : 999)).build())))
@@ -610,45 +655,47 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             Assertions.assertTrue(evaluation.getRewards().values().stream().noneMatch(r->BigDecimal.ZERO.compareTo(r.getAccruedReward()) !=0), "Expected rejection: %s".formatted(evaluation.getRewards()));
         }
         Assertions.assertEquals(expectedRejectionReasons, evaluation.getRejectionReasons());
-        Assertions.assertFalse(evaluation.getInitiativeRejectionReasons().isEmpty());
         Assertions.assertEquals(expectedInitiativeRejectionReasons, evaluation.getInitiativeRejectionReasons());
         Assertions.assertEquals("REJECTED", evaluation.getStatus());
     }
 
     private TransactionDTO onboardTrxHpanAndIncreaseCounters(TransactionDTO trx, String... initiativeIds) {
-        UserInitiativeCounters userInitiativeCounters = onboardTrxHPan(trx, initiativeIds);
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = onboardTrxHPan(trx, initiativeIds);
 
         Arrays.stream(initiativeIds).forEach(id -> {
             InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
             // the use case of the initiative INITIATIVE_ID_TRXCOUNT_BASED start with a count of 9 trx
             if (INITIATIVE_ID_TRXCOUNT_BASED.equals(id)) {
-                userInitiativeCounters.getInitiatives().computeIfAbsent(
+                userInitiativeCountersWrapper.getInitiatives().computeIfAbsent(
                         INITIATIVE_ID_TRXCOUNT_BASED,
-                        i -> InitiativeCounters.builder()
-                                .initiativeId(INITIATIVE_ID_TRXCOUNT_BASED)
+                        i -> UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID_TRXCOUNT_BASED)
                                 .trxNumber(TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT)
                                 .build()
                 );
             }
-            updateInitiativeCounters(userInitiativeCounters
-                            .getInitiatives().computeIfAbsent(id, x -> InitiativeCounters.builder().initiativeId(id).build()),
+            updateInitiativeCounters(userInitiativeCountersWrapper
+                            .getInitiatives().computeIfAbsent(id, x -> UserInitiativeCounters.builder(trx.getUserId(), id).build()),
                     trx, initiative2ExpectedReward.get(id), initiativeConfig);
         });
 
         return trx;
     }
 
-    private UserInitiativeCounters onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
-        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
+    private UserInitiativeCountersWrapper onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
+        onboardTrxHPanNoCreateUserCounter(trx, initiativeIds);
 
         return createUserCounter(trx);
     }
 
-    private UserInitiativeCounters createUserCounter(TransactionDTO trx) {
-        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCounters(u, new LinkedHashMap<>()));
+    private void onboardTrxHPanNoCreateUserCounter(TransactionDTO trx, String... initiativeIds) {
+        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
     }
 
-    private void updateInitiativeCounters(InitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
+    private UserInitiativeCountersWrapper createUserCounter(TransactionDTO trx) {
+        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCountersWrapper(u, new LinkedHashMap<>()));
+    }
+
+    private void updateInitiativeCounters(UserInitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
         updateCounters(counters, trx, expectedReward);
         if (initiativeConfig.isDailyThreshold()) {
             updateCounters(

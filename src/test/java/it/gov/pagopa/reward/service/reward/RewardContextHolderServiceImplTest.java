@@ -1,6 +1,9 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
+import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
@@ -47,7 +50,7 @@ class RewardContextHolderServiceImplTest {
             Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString())).thenReturn(Mono.just(expectedKieBaseSerialized));
         }
 
-        rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock, isRedisCacheEnabled);
+        rewardContextHolderService = new RewardContextHolderServiceImpl(kieContainerBuilderServiceMock, droolsRuleRepositoryMock, applicationEventPublisherMock, reactiveRedisTemplateMock, isRedisCacheEnabled, true);
     }
 
     @ParameterizedTest
@@ -75,7 +78,7 @@ class RewardContextHolderServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.findById(Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
         // When
-        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId).block();
 
         //Then
         Assertions.assertNull(result);
@@ -93,7 +96,7 @@ class RewardContextHolderServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.findById(Mockito.same(initiativeId))).thenReturn(Mono.just(droolsRule));
 
         // When
-        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId).block();
 
         //Then
         Assertions.assertNotNull(result);
@@ -111,15 +114,20 @@ class RewardContextHolderServiceImplTest {
                 .initiativeName("NAME")
                 .organizationId("ORGANIZATIONID")
                 .beneficiaryBudget(BigDecimal.valueOf(100))
+                .startDate(LocalDate.MIN)
                 .endDate(LocalDate.MAX)
                 .dailyThreshold(true)
                 .monthlyThreshold(false)
-                .yearlyThreshold(false).build();
+                .yearlyThreshold(false)
+                .trxRule(new InitiativeTrxConditions())
+                .rewardRule(new RewardValueDTO())
+                .initiativeRewardType(InitiativeRewardType.REFUND.name())
+                .build();
 
 
         // When
         rewardContextHolderService.setInitiativeConfig(initiativeConfig);
-        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId);
+        InitiativeConfig result = rewardContextHolderService.getInitiativeConfig(initiativeId).block();
 
         //Then
         Assertions.assertNotNull(result);

@@ -22,7 +22,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -75,7 +74,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected void subscribeAfterCommits(Flux<List<HpanInitiativeBulkDTO>> afterCommits2subscribe) {
-        afterCommits2subscribe.subscribe(updateResult -> log.debug("[HPAN_INITIATIVE_OP] A change has occurred"));
+        afterCommits2subscribe.subscribe(updateResult -> log.info("[HPAN_INITIATIVE_OP] Processed offsets committed successfully"));
     }
 
     @Override
@@ -95,12 +94,13 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected Mono<HpanInitiativeBulkDTO> execute(HpanInitiativeBulkDTO payload, Message<String> message, Map<String, Object> ctx) {
-        LocalDateTime evaluationDate = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
+        LocalDateTime evaluationDate = LocalDateTime.now();
         return Mono.just(payload)
                 .flatMapMany(bulk -> this.evaluate(bulk,evaluationDate))
                 .collectList()
                 .doOnNext(hpanList -> {
-                    if(!payload.getChannel().equals(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)){
+                    if(!payload.getChannel().equals(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER) &&
+                        !payload.getChannel().equals(HpanInitiativeConstants.CHANNEL_IDPAY_PAYMENT)){
                         HpanUpdateOutcomeDTO outcome = hpanList2HpanUpdateOutcomeDTOMapper.apply(hpanList, payload, evaluationDate);
                         try {
                             if (!hpanUpdateNotifierService.notify(outcome)) {

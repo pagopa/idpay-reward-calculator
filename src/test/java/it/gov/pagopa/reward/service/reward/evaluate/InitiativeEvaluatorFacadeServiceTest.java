@@ -7,6 +7,8 @@ import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -21,10 +23,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.StreamSupport;
 
 @ExtendWith(MockitoExtension.class)
 class InitiativeEvaluatorFacadeServiceTest {
@@ -77,7 +81,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         mockUseCases(trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
 
         // When
-        @SuppressWarnings("ConstantConditions") List<RewardTransactionDTO> result = trxs.stream().map(t -> initiativesEvaluatorFacadeService.evaluate(t, initiatives).block()).toList();
+        @SuppressWarnings("ConstantConditions") List<RewardTransactionDTO> result = trxs.stream().map(t -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(t, initiatives).block()).toList();
 
         // Then
         Assertions.assertNotNull(result);
@@ -89,7 +93,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         assertRejectionReasons(result, trxTotalRefund, null);
         assertRejectionReasons(result, trxTotalRefundNoCharge, "NO_ACTIVE_INITIATIVES");
 
-        verifyUserInitiativeCounterFindByIdCalls(trx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
+        verifyUserInitiativeCounterFindByIdCalls(initiatives, trx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
         verifyInitiativeEvaluatorCalls(initiatives, trx, trxPartialRefund);
         verifyTransactionProcessedSaveCalls(trx);
         verifyUserInitiativeCounterSaveCalls(trx, trxPartialRefund, trxTotalRefund);
@@ -112,6 +116,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
     private TransactionDTO buildTrx(int i) {
         final TransactionDTO trx = TransactionDTOFaker.mockInstance(i);
+        trx.setUserId("USERID_" + i);
         trx.setAmount(BigDecimal.valueOf(i + 1));
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
@@ -122,12 +127,17 @@ class InitiativeEvaluatorFacadeServiceTest {
     private void mockUseCases(TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund, TransactionDTO trxTotalRefundNoCharge) {
         Mockito.when(transactionProcessedService.save(Mockito.any())).thenAnswer(i -> Mono.just(reward2ProcessedMapper.apply(i.getArgument(0))));
 
-        Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.<String>any())).thenReturn(Mono.empty());
-        Mockito.when(userInitiativeCountersRepositoryMock.save(Mockito.any())).thenReturn(Mono.empty());
+        Mockito.when(userInitiativeCountersRepositoryMock.findByUserIdAndInitiativeIdIn(Mockito.any(), Mockito.any())).thenReturn(Flux.empty());
+        Mockito.when(userInitiativeCountersRepositoryMock.saveAll(Mockito.<Iterable<UserInitiativeCounters>>any())).thenReturn(Flux.empty());
 
         Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenAnswer(i -> rewardTransactionMapper.apply(i.getArgument(0)));
 
+        Mockito.when(userInitiativeCountersUpdateServiceMock.update(Mockito.any(),Mockito.any())).thenAnswer(i-> {
+            UserInitiativeCountersWrapper counters = i.getArgument(0, UserInitiativeCountersWrapper.class);
+            counters.setInitiatives(Map.of("INITIATIVE", new UserInitiativeCounters(counters.getUserId(), "INITIATIVE")));
+            return Mono.just(i.getArgument(1));
+        });
 
         Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(trxPartialReverse), Mockito.any(), Mockito.any()))
                 .thenAnswer(i -> {
@@ -153,9 +163,9 @@ class InitiativeEvaluatorFacadeServiceTest {
         trxTotalRefund.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
     }
 
-    private void verifyUserInitiativeCounterFindByIdCalls(TransactionDTO... expectedTrxs) {
+    private void verifyUserInitiativeCounterFindByIdCalls(List<String> initiativeIds, TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(userInitiativeCountersRepositoryMock).findById(t.getUserId());
+            Mockito.verify(userInitiativeCountersRepositoryMock).findByUserIdAndInitiativeIdIn(t.getUserId(), initiativeIds);
         }
     }
 
@@ -177,7 +187,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
     private void verifyUserInitiativeCounterSaveCalls(TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(userInitiativeCountersRepositoryMock).save(Mockito.argThat(i -> i.getUserId().equals(t.getUserId())));
+            Mockito.verify(userInitiativeCountersRepositoryMock).saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(i -> i.iterator().hasNext() && StreamSupport.stream(i.spliterator(), false).allMatch(c -> c.getUserId().equals(t.getUserId()))));
         }
     }
 

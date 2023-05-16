@@ -1,15 +1,14 @@
 package it.gov.pagopa.reward.event.processor;
 
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
@@ -17,6 +16,7 @@ import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.LockServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -41,6 +41,8 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=WARN",
+        "logging.level.it.gov.pagopa.reward.utils.PerformanceLogger=WARN",
+        "logging.level.AUDIT=WARN",
 })
 @Slf4j
 abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
@@ -86,7 +88,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         });
 
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
-        initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())));
+        initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId()).block()));
     }
 
     protected void onboardHpan(String hpan, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
@@ -111,20 +113,22 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 .block();
     }
 
-    protected void saveUserInitiativeCounter(TransactionDTO trx, InitiativeCounters initiativeRewardCounter) {
-        userInitiativeCountersRepository.save(UserInitiativeCounters.builder()
-                .userId(trx.getUserId())
-                .initiatives(new HashMap<>(Map.of(
-                        initiativeRewardCounter.getInitiativeId(),
-                        initiativeRewardCounter
-                )))
-                .build()).block();
+    protected void saveUserInitiativeCounter(TransactionDTO trx, UserInitiativeCounters initiativeRewardCounter) {
+        userInitiativeCountersRepository.save(
+                initiativeRewardCounter.toBuilder()
+                        .userId(trx.getUserId())
+                        .id(UserInitiativeCounters.buildId(trx.getUserId(), initiativeRewardCounter.getInitiativeId()))
+                        .build())
+                .block();
     }
 
+    /** To assert rewarded charge transactions */
     protected void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted) {
         assertRewardedState(evaluation, 1, rewardedInitiativeId, expectedReward, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, false, false);
     }
-    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
+    /** To assert rewarded refunds (also negative is a refund) */
+    protected void assertRewardedState(RewardTransactionDTO evaluation, int expectedInitiativeRewarded, String rewardedInitiativeId, BigDecimal expectedReward, boolean expectedDifferentAccrued, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
+        Assertions.assertEquals(RewardConstants.TRX_CHANNEL_RTD, evaluation.getChannel());
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
         Assertions.assertFalse(evaluation.getRewards().isEmpty());
@@ -136,7 +140,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         Assertions.assertEquals(rewardedInitiativeId, initiativeReward.getInitiativeId());
         Assertions.assertEquals("ORGANIZATIONID_" + rewardedInitiativeId, initiativeReward.getOrganizationId());
         TestUtils.assertBigDecimalEquals(expectedReward, initiativeReward.getAccruedReward());
-        if (!expectedCap) {
+        if (!expectedDifferentAccrued) {
             TestUtils.assertBigDecimalEquals(initiativeReward.getProvidedReward(), initiativeReward.getAccruedReward());
         } else {
             Assertions.assertTrue(initiativeReward.getProvidedReward().compareTo(initiativeReward.getAccruedReward())>0);
@@ -156,6 +160,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         Assertions.assertEquals(isCompleteRefund, initiativeReward.isCompleteRefund());
     }
 
+    /** Valid trx, processed by the ruleEngine, but which has been discarded by the initiative configuration */
     protected void assertRejectedState(RewardTransactionDTO evaluation, String initiativeId, List<String> expectedRejectionReasons, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double expectedCounterTotalReward, boolean expectedCounterBudgetExhausted, boolean isRefund, boolean isCompleteRefund) {
         Assertions.assertEquals(Collections.emptyList(), evaluation.getRejectionReasons());
         boolean expectedZeroReward = expectedRejectionReasons == null;
@@ -176,6 +181,15 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
             checkInitiativeRewardCounters(expectedCounterTrxNumber, expectedCounterTotalAmount, expectedCounterTotalReward, expectedCounterBudgetExhausted, isRefund, isCompleteRefund, initiativeReward);
         }
+    }
+
+    /** assert on rejected trx (which has skipped the ruleEngine) */
+    protected void assertRejectedTrx(RewardTransactionDTO evaluation, List<String> expectedRejectionReasons) {
+        Assertions.assertEquals(expectedRejectionReasons, evaluation.getRejectionReasons());
+
+        Assertions.assertEquals(Collections.emptyMap(), evaluation.getInitiativeRejectionReasons());
+        Assertions.assertEquals("REJECTED", evaluation.getStatus());
+        Assertions.assertEquals(Collections.emptyMap(), evaluation.getRewards());
     }
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){

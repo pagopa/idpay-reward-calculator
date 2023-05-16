@@ -75,11 +75,13 @@ public class TransactionDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;
+    private String channel;
     //endregion
 
     //region fields added by splitter
     private String userId;
     private String brandLogo;
+    private String brand;
     private String maskedPan;
     //endregion
 

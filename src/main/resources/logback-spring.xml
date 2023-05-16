@@ -9,6 +9,8 @@
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [${appName:-}] %-5level [%15.15t] [%-40.40logger{39}] - %msg%n"/>
     <property name="FILE_LOG_PATTERN"
               value="${CONSOLE_LOG_PATTERN}"/>
+    <property name="AUDIT_LOG_PATTERN"
+              value="%msg"/>
 
     <appender name="STDOUT"
               class="ch.qos.logback.core.ConsoleAppender">
@@ -16,6 +18,23 @@
                 class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </encoder>
+    </appender>
+
+
+    <appender name="SYNC_AUDIT"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <encoder
+                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="AUDIT"
+              class="ch.qos.logback.classic.AsyncAppender">
+        <neverBlock>true</neverBlock>
+        <queueSize>20000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="SYNC_AUDIT"/>
     </appender>
 
     <appender name="ASYNC_STDOUT"
@@ -45,6 +64,10 @@
             </root>
         </then>
     </if>
+
+    <logger name="AUDIT" additivity="false">
+        <appender-ref ref="AUDIT"/>
+    </logger>
 
     <root level="INFO">
         <appender-ref ref="ASYNC_STDOUT"/>

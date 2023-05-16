@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -39,6 +40,7 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.ReflectionUtils;
 
 import javax.annotation.PostConstruct;
@@ -64,7 +66,7 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.trxProcessor-in-0.destination}",
-        "${spring.cloud.stream.bindings.trxProcessor-out-0.destination}",
+        "${spring.cloud.stream.bindings.trxProcessorOut-out-0.destination}",
         "${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
@@ -90,6 +92,7 @@ import static org.awaitility.Awaitility.await;
                 "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-idpay-splitter.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-idpay-splitter-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-rule.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
@@ -105,8 +108,14 @@ import static org.awaitility.Awaitility.await;
                 //endregion
         })
 @AutoConfigureDataMongo
+@AutoConfigureWebTestClient
 public abstract class BaseIntegrationTest {
-    public static final String APPLICATION_NAME = "idpay-reward-calculator";
+
+    @Value("${spring.application.name}")
+    public String applicationName;
+
+    @Autowired
+    protected WebTestClient webTestClient;
 
     @Autowired
     protected EmbeddedKafkaBroker kafkaBroker;
@@ -135,7 +144,7 @@ public abstract class BaseIntegrationTest {
 
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.destination}")
     protected String topicRewardProcessorRequest;
-    @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}")
+    @Value("${spring.cloud.stream.bindings.trxProcessorOut-out-0.destination}")
     protected String topicRewardProcessorOutcome;
     @Value("${spring.cloud.stream.bindings.rewardRuleConsumer-in-0.destination}")
     protected String topicRewardRuleConsumer;
@@ -275,7 +284,7 @@ public abstract class BaseIntegrationTest {
     private int totaleMessageSentCounter =0;
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
         final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes(StandardCharsets.UTF_8));
-        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, APPLICATION_NAME.getBytes(StandardCharsets.UTF_8));
+        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, applicationName.getBytes(StandardCharsets.UTF_8));
 
         AtomicBoolean containAppNameHeader = new AtomicBoolean(false);
         if(headers!= null){
@@ -388,7 +397,7 @@ public abstract class BaseIntegrationTest {
         checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true);
     }
     protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
-        Assertions.assertEquals(expectedAppNameHeader? APPLICATION_NAME : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+        Assertions.assertEquals(expectedAppNameHeader? applicationName : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
         Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
 
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
@@ -406,10 +415,11 @@ public abstract class BaseIntegrationTest {
     }
 
     protected String normalizePayload(String expectedPayload) {
-        return removeElaborationDateTime(expectedPayload);
+        String temp = removeDateTimeField(expectedPayload, "elaborationDateTime");
+        return removeDateTimeField(temp,"timestamp");
     }
 
-    private String removeElaborationDateTime(String payload){
-        return payload.replaceAll("(\"elaborationDateTime\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
+    private String removeDateTimeField(String payload, String fieldName){
+        return payload.replaceAll("(\""+fieldName+"\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
     }
 }

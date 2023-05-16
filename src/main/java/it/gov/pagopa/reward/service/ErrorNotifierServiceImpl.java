@@ -4,12 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
@@ -66,7 +70,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay.type}") String trxRewardedMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay.environment.spring.cloud.stream.kafka.binder.brokers}") String trxRewardedServer,
-                                    @Value("${spring.cloud.stream.bindings.trxProcessor-out-0.destination}") String trxRewardedTopic,
+                                    @Value("${spring.cloud.stream.bindings.trxProcessorOut-out-0.destination}") String trxRewardedTopic,
 
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.type}") String hpanUpdateMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateServer,
@@ -101,6 +105,15 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         this.hpanUpdateOutcomeMessagingServiceType = hpanUpdateOutcomeMessagingServiceType;
         this.hpanUpdateOutcomeServer = hpanUpdateOutcomeServer;
         this.hpanUpdateOutcomeTopic = hpanUpdateOutcomeTopic;
+    }
+
+    /** Declared just to let know Spring to connect the producer at startup */
+    @Configuration
+    static class ErrorNotifierProducerConfig {
+        @Bean
+        public Supplier<Flux<Message<Object>>> errors() {
+            return Flux::empty;
+        }
     }
 
     @Override

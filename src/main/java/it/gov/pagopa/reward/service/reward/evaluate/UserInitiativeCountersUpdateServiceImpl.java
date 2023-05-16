@@ -6,12 +6,15 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
-import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.RewardCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
 
@@ -60,27 +64,43 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     @Override
-    public void update(UserInitiativeCounters userInitiativeCounters, RewardTransactionDTO ruleEngineResult) {
-        ruleEngineResult.getRewards().forEach((initiativeId, reward) -> {
-            boolean justTrxCountRejection = isJustTrxCountRejection(ruleEngineResult, initiativeId);
+    public Mono<RewardTransactionDTO> update(UserInitiativeCountersWrapper userInitiativeCountersWrapper, RewardTransactionDTO ruleEngineResult) {
+        return Flux.fromIterable(ruleEngineResult.getRewards().values())
+                        .flatMap(reward -> {
+                            String initiativeId = reward.getInitiativeId();
+                            capRewardToEffectiveAmount(ruleEngineResult, reward, initiativeId);
 
-            InitiativeConfig initiativeConfig = rewardContextHolderService.getInitiativeConfig(initiativeId);
-            InitiativeCounters initiativeCounter = userInitiativeCounters.getInitiatives()
-                    .computeIfAbsent(initiativeId, k -> InitiativeCounters.builder().initiativeId(k).build());
+                            return rewardContextHolderService.getInitiativeConfig(initiativeId)
+                                    .doOnNext(initiativeConfig -> {
+                                        boolean justTrxCountRejection = isJustTrxCountRejection(ruleEngineResult, initiativeId);
 
-            if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
-                evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
-                final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedReward).orElse(null) : null;
-                updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
-                updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
-            }
+                                        UserInitiativeCounters initiativeCounter = userInitiativeCountersWrapper.getInitiatives()
+                                                .computeIfAbsent(initiativeId, k -> UserInitiativeCounters.builder(ruleEngineResult.getUserId(), k).build());
 
-            /* set RewardCounters in RewardTransactionDTO object */
-            reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
-        });
+                                        if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
+                                            evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
+                                            final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedReward).orElse(null) : null;
+                                            updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
+                                            updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
+                                        }
+
+                                        /* set RewardCounters in RewardTransactionDTO object */
+                                        reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
+                                    });
+                        })
+                .then(Mono.just(ruleEngineResult));
     }
 
-    private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, InitiativeCounters initiativeCounter) {
+    private void capRewardToEffectiveAmount(RewardTransactionDTO ruleEngineResult, Reward reward, String initiativeId) {
+        if(reward.getAccruedReward().compareTo(ruleEngineResult.getEffectiveAmount() )> 0){
+            log.warn("[REWARD] The following initiative calculated a reward greater than the amount: initiativeId={}, amount={}, reward={}, trxId={}",
+                    initiativeId, ruleEngineResult.getEffectiveAmount(), reward.getAccruedReward(), ruleEngineResult.getId());
+
+            reward.setAccruedReward(ruleEngineResult.getEffectiveAmount());
+        }
+    }
+
+    private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, UserInitiativeCounters initiativeCounter) {
         initiativeCounter.setExhaustedBudget(initiativeConfig.getBeneficiaryBudget() != null && initiativeCounter.getTotalReward().add(reward.getAccruedReward()).compareTo(initiativeConfig.getBeneficiaryBudget()) > -1);
         if (initiativeCounter.isExhaustedBudget()) {
             BigDecimal newAccruedReward = initiativeConfig.getBeneficiaryBudget().subtract(initiativeCounter.getTotalReward()).setScale(2, RoundingMode.HALF_DOWN);
@@ -144,18 +164,18 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         }
     }
 
-    private void updateTemporalCounters(InitiativeCounters initiativeCounters, OperationType operationType, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, BigDecimal previousRewards, InitiativeConfig initiativeConfig, boolean justTrxCountRejection) {
+    private void updateTemporalCounters(UserInitiativeCounters userInitiativeCounters, OperationType operationType, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, BigDecimal previousRewards, InitiativeConfig initiativeConfig, boolean justTrxCountRejection) {
         if (initiativeConfig.isDailyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
         if (initiativeConfig.isWeeklyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
         if (initiativeConfig.isMonthlyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
         if (initiativeConfig.isYearlyThreshold()) {
-            updateTemporalCounter(initiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
     }
 
@@ -163,13 +183,13 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), operationType, initiativeReward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
     }
 
-    private RewardCounters mapRewardCounters(InitiativeCounters initiativeCounters, InitiativeConfig initiativeConfig) {
+    private RewardCounters mapRewardCounters(UserInitiativeCounters userInitiativeCounters, InitiativeConfig initiativeConfig) {
         RewardCounters rewardCounters = new RewardCounters();
-        rewardCounters.setExhaustedBudget(initiativeCounters.isExhaustedBudget());
-        rewardCounters.setTrxNumber(initiativeCounters.getTrxNumber());
-        rewardCounters.setTotalReward(initiativeCounters.getTotalReward());
+        rewardCounters.setExhaustedBudget(userInitiativeCounters.isExhaustedBudget());
+        rewardCounters.setTrxNumber(userInitiativeCounters.getTrxNumber());
+        rewardCounters.setTotalReward(userInitiativeCounters.getTotalReward());
         rewardCounters.setInitiativeBudget(initiativeConfig.getBeneficiaryBudget());
-        rewardCounters.setTotalAmount(initiativeCounters.getTotalAmount());
+        rewardCounters.setTotalAmount(userInitiativeCounters.getTotalAmount());
 
         return rewardCounters;
     }

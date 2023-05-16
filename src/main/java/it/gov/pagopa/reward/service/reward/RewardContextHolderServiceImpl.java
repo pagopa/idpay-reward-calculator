@@ -17,7 +17,7 @@ import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -26,20 +26,32 @@ import java.util.function.Consumer;
 @Slf4j
 public class RewardContextHolderServiceImpl implements RewardContextHolderService {
 
+    public static final String REWARD_CONTEXT_HOLDER_CACHE_NAME = "reward_rule";
+
     private final KieContainerBuilderService kieContainerBuilderService;
     private final Map<String, InitiativeConfig> initiativeId2Config=new ConcurrentHashMap<>();
     private final DroolsRuleRepository droolsRuleRepository;
     private final ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     private final boolean isRedisCacheEnabled;
-    public static final String REWARD_CONTEXT_HOLDER_CACHE_NAME = "reward_rule";
+
+    private final boolean preLoadContainer;
 
     private KieBase kieBase;
+    private byte[] kieBaseSerialized;
 
-    public RewardContextHolderServiceImpl(KieContainerBuilderService kieContainerBuilderService, DroolsRuleRepository droolsRuleRepository, ApplicationEventPublisher applicationEventPublisher, @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate, @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled) {
+    public RewardContextHolderServiceImpl(
+            KieContainerBuilderService kieContainerBuilderService,
+            DroolsRuleRepository droolsRuleRepository,
+            ApplicationEventPublisher applicationEventPublisher,
+            @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate,
+            @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled,
+            @Value("${app.reward-rule.pre-load}") boolean preLoadContainer) {
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.isRedisCacheEnabled = isRedisCacheEnabled;
+        this.preLoadContainer = preLoadContainer;
+
         refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
     }
 
@@ -56,16 +68,23 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     @Override
-    public void setRewardRulesKieBase(KieBase kieBase) {
-        this.kieBase = kieBase;
+    public void setRewardRulesKieBase(KieBase newKieBase) {
+        preLoadKieBase(newKieBase);
+        this.kieBase = newKieBase;
 
         if (isRedisCacheEnabled) {
-            byte[] kieBaseSerialized = SerializationUtils.serialize(kieBase);
+            kieBaseSerialized = SerializationUtils.serialize(newKieBase);
             if (kieBaseSerialized != null) {
-                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> log.debug("Saving KieContainer in cache"));
+                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> log.info("KieContainer build and stored in cache"));
             } else {
-                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.debug("Clearing KieContainer in cache"));
+                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.info("KieContainer removed from the cache"));
             }
+        }
+    }
+
+    private void preLoadKieBase(KieBase kieBase){
+        if(preLoadContainer) {
+            kieContainerBuilderService.preLoadKieBase(kieBase);
         }
     }
 
@@ -77,8 +96,21 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     public void refreshKieContainer(Consumer<? super KieBase> subscriber) {
         if (isRedisCacheEnabled) {
             reactiveRedisTemplate.opsForValue().get(REWARD_CONTEXT_HOLDER_CACHE_NAME)
-                    .map(c -> (KieBase) SerializationUtils.deserialize(c))
-                    .doOnNext(c -> this.kieBase = c)
+                    .mapNotNull(c -> {
+                        if(!Arrays.equals(c, kieBaseSerialized)){
+                            this.kieBaseSerialized = c;
+                            try{
+                                KieBase newKieBase = (KieBase) SerializationUtils.deserialize(c);
+                                preLoadKieBase(newKieBase);
+
+                                this.kieBase=newKieBase;
+                            } catch (Exception e){
+                                log.warn("[REWARD_RULE_BUILD] Cached KieContainer cannot be executed! refreshing it!");
+                                return null;
+                            }
+                        }
+                        return this.kieBase;
+                    })
                     .switchIfEmpty(refreshKieContainerCacheMiss())
                     .subscribe(subscriber);
         } else {
@@ -87,17 +119,26 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     }
 
     private Mono<KieBase> refreshKieContainerCacheMiss() {
-        log.trace("Refreshing KieContainer");
-        final Flux<DroolsRule> droolsRuleFlux = droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig()));
+        final Flux<DroolsRule> droolsRuleFlux = Mono.defer(() -> {
+            log.info("[REWARD_RULE_BUILD] Refreshing KieContainer");
+            initiativeId2Config.clear();
+            return Mono.empty();
+        }).thenMany(droolsRuleRepository.findAll().doOnNext(dr -> setInitiativeConfig(dr.getInitiativeConfig())));
         return kieContainerBuilderService.build(droolsRuleFlux).doOnNext(this::setRewardRulesKieBase);
     }
-
     //endregion
 
     //region initiativeConfig holder
     @Override
-    public InitiativeConfig getInitiativeConfig(String initiativeId) {
-        return initiativeId2Config.computeIfAbsent(initiativeId, this::retrieveInitiativeConfig);
+    public Mono<InitiativeConfig> getInitiativeConfig(String initiativeId) {
+        InitiativeConfig cachedInitiativeConfig = initiativeId2Config.get(initiativeId);
+        if(cachedInitiativeConfig==null){
+        return retrieveInitiativeConfig(initiativeId)
+                    .doOnNext(initiativeConfig -> initiativeId2Config.put(initiativeId, initiativeConfig))
+                ;
+        } else {
+            return Mono.just(cachedInitiativeConfig);
+        }
     }
 
     @Override
@@ -105,17 +146,16 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         initiativeId2Config.put(initiativeConfig.getInitiativeId(),initiativeConfig);
     }
 
-    private InitiativeConfig retrieveInitiativeConfig(String initiativeId) {
+    private Mono<InitiativeConfig> retrieveInitiativeConfig(String initiativeId) {
         log.debug("[CACHE_MISS] Cannot find locally initiativeId {}", initiativeId);
         long startTime = System.currentTimeMillis();
-        DroolsRule droolsRule = droolsRuleRepository.findById(initiativeId).block(Duration.ofSeconds(10));
-        log.info("[CACHE_MISS] [PERFORMANCE_LOG] Time spent fetching initiativeId: {} ms", System.currentTimeMillis() - startTime);
-        if (droolsRule==null){
-            log.error("cannot find initiative having id %s".formatted(initiativeId));
-            return null;
-        }
-        return droolsRule.getInitiativeConfig();
+        return droolsRuleRepository.findById(initiativeId)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("[REWARD_CONTEXT] cannot find initiative having id %s".formatted(initiativeId));
+                    return Mono.empty();
+                }))
+                .map(DroolsRule::getInitiativeConfig)
+                .doFinally(x -> log.info("[CACHE_MISS] [PERFORMANCE_LOG] Time spent fetching initiativeId {} ({}): {} ms", initiativeId, x.toString(), System.currentTimeMillis() - startTime));
     }
     //endregion
-
 }

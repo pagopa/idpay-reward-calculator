@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.build;
 
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRuleTransformerFacade;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacade;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
@@ -47,14 +48,21 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
 
         DroolsRule out = new DroolsRule();
         out.setId(initiative.getInitiativeId());
-        out.setName(String.format("%s-%s", initiative.getInitiativeId(), initiative.getInitiativeName()));
+        out.setName(initiative.getInitiativeName());
+        out.setInitiativeConfig(initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
+        out.setRuleVersion("20230404");
 
         out.setRule("""
                 package %s;
+                
+                // %s
+                // ruleVersion: %s
                 %s
                 """.formatted(
                 KieContainerBuilderServiceImpl.RULES_BUILT_PACKAGE,
-                buildRules(out.getId(), out.getName(), initiative))
+                out.getName(),
+                out.getRuleVersion(),
+                buildRules(out.getId(), out.getId(), out.getInitiativeConfig()))
         );
         out.setUpdateDate(LocalDateTime.now());
 
@@ -63,13 +71,11 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
             builderService.build(Flux.just(out)).block();
         }
 
-        out.setInitiativeConfig(initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
-
         log.debug("Conversion into drools rule completed; storing it. id: %s".formatted(initiative.getInitiativeId()));
         return out;
     }
 
-    private String buildRules(String initiativeId, String ruleNamePrefix, InitiativeReward2BuildDTO initiative) {
+    private String buildRules(String initiativeId, String ruleNamePrefix, InitiativeConfig initiative) {
         StringBuilder initiativeRulesBuilder = new StringBuilder();
 
         buildRuleConditions(initiativeId, ruleNamePrefix, initiative, initiativeRulesBuilder);
@@ -78,7 +84,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
         return initiativeRulesBuilder.toString();
     }
 
-    private void buildRuleConditions(String initiativeId, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
+    private void buildRuleConditions(String initiativeId, String ruleNamePrefix, InitiativeConfig initiative, StringBuilder initiativeRulesBuilder) {
         InitiativeTrxConditions trxRules = initiative.getTrxRule();
         if (trxRules != null) {
             initiativeRulesBuilder.append(trxCondition2DroolsRuleTransformerFacade.apply(initiativeId, ruleNamePrefix, trxRules.getDaysOfWeek()));
@@ -100,7 +106,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
         }
     }
 
-    private void buildRuleConsequences(String initiativeId, String ruleNamePrefix, InitiativeReward2BuildDTO initiative, StringBuilder initiativeRulesBuilder) {
+    private void buildRuleConsequences(String initiativeId, String ruleNamePrefix, InitiativeConfig initiative, StringBuilder initiativeRulesBuilder) {
         initiativeRulesBuilder.append(trxConsequence2DroolsRuleTransformerFacade.apply(initiativeId, initiative.getOrganizationId(), ruleNamePrefix, initiative.getRewardRule()));
         if (!CollectionUtils.isEmpty(initiative.getTrxRule().getRewardLimits())) {
             initiative.getTrxRule().getRewardLimits().forEach(rl ->

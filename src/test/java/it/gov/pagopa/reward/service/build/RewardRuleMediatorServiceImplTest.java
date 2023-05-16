@@ -20,6 +20,7 @@ import org.kie.api.KieBase;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
@@ -56,7 +57,7 @@ class RewardRuleMediatorServiceImplTest {
     void testSetUp() {
         Mockito.when(rewardRule2DroolsRuleServiceMock.apply(Mockito.any())).thenAnswer(invocation -> {
             InitiativeReward2BuildDTO i = invocation.getArgument(0);
-            return new DroolsRule(i.getInitiativeId(), i.getInitiativeName(),"RULE",
+            return new DroolsRule(i.getInitiativeId(), i.getInitiativeName(),"RULE","RULEVERSION",
                     InitiativeConfig.builder()
                             .initiativeId(i.getInitiativeId())
                             .beneficiaryBudget(new BigDecimal("1000.00"))
@@ -78,7 +79,14 @@ class RewardRuleMediatorServiceImplTest {
         // Given
         int N = 10;
         List<InitiativeReward2BuildDTO> initiatives = IntStream.range(0, N).mapToObj(InitiativeReward2BuildDTOFaker::mockInstance).collect(Collectors.toList());
-        Flux<Message<String>> inputFlux = Flux.fromIterable(initiatives).map(TestUtils::jsonSerializer).map(MessageBuilder::withPayload).map(MessageBuilder::build);
+        Flux<Message<String>> inputFlux = Flux.fromIterable(initiatives)
+                .map(TestUtils::jsonSerializer)
+                .map(payload -> MessageBuilder
+                        .withPayload(payload)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.OFFSET, 0L)
+                )
+                .map(MessageBuilder::build);
 
         RewardRuleMediatorService rewardRuleMediatorService = new RewardRuleMediatorServiceImpl(
                 "appName",
@@ -134,7 +142,11 @@ class RewardRuleMediatorServiceImplTest {
 
         Flux<Message<String>> msgs = Flux.just(initiative1, initiative2)
                 .map(TestUtils::jsonSerializer)
-                .map(MessageBuilder::withPayload)
+                .map(payload -> MessageBuilder
+                        .withPayload(payload)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.OFFSET, 0L)
+                )
                 .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 

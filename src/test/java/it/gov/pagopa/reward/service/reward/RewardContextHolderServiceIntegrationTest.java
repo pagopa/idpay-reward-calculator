@@ -6,8 +6,8 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -24,6 +23,7 @@ import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +39,6 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private KieContainerBuilderService kieContainerBuilderService;
     @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
-    @Autowired
     private ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate;
     @Autowired
     private RewardContextHolderServiceImpl rewardContextHolderService;
@@ -54,6 +52,10 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         int startingRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
 
         Assertions.assertEquals(0, startingRuleBuiltSize);
+
+        // Caching invalid rules
+        reactiveRedisTemplate.opsForValue().set(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME, "INVALIDOBJECT".getBytes()).block();
+        refreshAndAssertKieContainerRuleSize(0);
 
         // Build a valid KieBase that produces a rule of size 1, assert KieBase is null after Reflection
         DroolsRule dr = new DroolsRule();
@@ -77,33 +79,15 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
                 )
         );
 
-        KieBase kieBase = kieContainerBuilderService.build(Flux.just(dr)).block();
-        rewardContextHolderService.setRewardRulesKieBase(kieBase);
-        waitFor(
-                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
-                ()->"KieBase not saved in cache",
-                10,
-                500
-        );
+        buildAndCacheRules(List.of(dr));
 
-        Field kieBaseField = ReflectionUtils.findField(RewardContextHolderServiceImpl.class, "kieBase");
-        Assertions.assertNotNull(kieBaseField);
-        ReflectionUtils.makeAccessible(kieBaseField);
-        ReflectionUtils.setField(kieBaseField, rewardContextHolderService, null);
+        setContextHolderFieldToNull("kieBase");
+        setContextHolderFieldToNull("kieBaseSerialized");
 
         Assertions.assertNull(rewardContextHolderService.getRewardRulesKieBase());
 
         // Refresh KieBase and assert the built rules has expected size
-        rewardContextHolderService.refreshKieContainer();
-        waitFor(
-                ()->rewardContextHolderService.getRewardRulesKieBase() != null,
-                ()->"KieBase is null",
-                10,
-                500
-        );
-
-        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
-        Assertions.assertEquals(1, ruleBuiltSize);
+        refreshAndAssertKieContainerRuleSize(1);
 
         // Execute rule and assert transaction has the expected rejection reason
         TransactionDTO trxMock = TransactionDTOFaker.mockInstance(1);
@@ -135,15 +119,45 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(0, resultRuleBuiltSize);
     }
 
+    private void refreshAndAssertKieContainerRuleSize(int expected) {
+        rewardContextHolderService.refreshKieContainer();
+        waitFor(
+                ()->rewardContextHolderService.getRewardRulesKieBase() != null,
+                ()->"KieBase is null",
+                10,
+                500
+        );
+        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        Assertions.assertEquals(expected, ruleBuiltSize);
+    }
+
+    private void buildAndCacheRules(Collection<DroolsRule> drs) {
+        KieBase kieBase = kieContainerBuilderService.build(Flux.fromIterable(drs)).block();
+        rewardContextHolderService.setRewardRulesKieBase(kieBase);
+        waitFor(
+                ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
+                ()->"KieBase not saved in cache",
+                10,
+                500
+        );
+    }
+
+    private void setContextHolderFieldToNull(String fieldName) {
+        Field field = ReflectionUtils.findField(RewardContextHolderServiceImpl.class, fieldName);
+        Assertions.assertNotNull(field);
+        ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.setField(field, rewardContextHolderService, null);
+    }
+
     private RewardTransactionDTO executeRules(TransactionDTO trx) {
 
         List<String> initiatives = List.of("INITIATIVE1");
-        UserInitiativeCounters counters = UserInitiativeCounters.builder()
+        UserInitiativeCountersWrapper counters = UserInitiativeCountersWrapper.builder()
                 .userId("USER1")
                 .initiatives(
                         new HashMap<>(Map.of(
                                 "INITIATIVE1",
-                                new InitiativeCounters("INITIATIVE1")
+                                new UserInitiativeCounters(trx.getUserId(), "INITIATIVE1")
                         ))
                 )
                 .build();

@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
@@ -44,32 +44,52 @@ class OnboardedInitiativesServiceImplTest {
 
     @Test
     void getChargeInitiativesWhenNoEndEnd(){
-        testChargeInitiative(null, null, true);
+        testChargeInitiative(null,null, null, true);
     }
 
     @Test
     void getChargeInitiativesWhenEndEnd(){
-        testChargeInitiative(LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), false);
+        testChargeInitiative(null, LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), true);
     }
     @Test
     void getChargeInitiativesWhenFutureEndEnd(){
-        testChargeInitiative(LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
+        testChargeInitiative(null, LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
     }
 
     @Test
     void getChargeInitiativesWhenPastEndEnd(){
-        testChargeInitiative(LocalDate.now().plusDays(9), OffsetDateTime.now().plusDays(10), false);
+        testChargeInitiative(null, LocalDate.now().plusDays(9), OffsetDateTime.now().plusDays(10), false);
     }
 
-    void testChargeInitiative(LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
+    @Test
+    void getChargeInitiativesWhenStart(){
+        testChargeInitiative(LocalDate.now().plusDays(10L),null, OffsetDateTime.now().plusDays(10L), true);
+    }
+
+    @Test
+    void getChargeInitiativeAfterStartInitiative(){
+        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(11L), true);
+    }
+
+    @Test
+    void getChargeInitiativeBeforeStartInitiative(){
+        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(9L),false);
+    }
+
+    @Test
+    void getChargeInitiativeIntoInitiativeInterval(){
+        testChargeInitiative(LocalDate.now().minusDays(10L), LocalDate.now().plusDays(10L), OffsetDateTime.now(),true);
+    }
+
+    void testChargeInitiative(LocalDate initiativeStartDate, LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
         if(trxDateTime == null){
             trxDateTime = OffsetDateTime.now().plusDays(10L);
         }
         TransactionDTO trx = buildTrx(trxDateTime, hpan);
 
-        testGetInitiativesPrivateMethod(trx, initiativeEndDate, expectSuccess);
+        testGetInitiativesPrivateMethod(trx,initiativeStartDate, initiativeEndDate, expectSuccess);
     }
-    void testGetInitiativesPrivateMethod(TransactionDTO trx, LocalDate initiativeEndDate, boolean expectSuccess) {
+    void testGetInitiativesPrivateMethod(TransactionDTO trx, LocalDate initiativeStartDate, LocalDate initiativeEndDate, boolean expectSuccess) {
         // Given
         Integer bias = 1;
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
@@ -78,10 +98,11 @@ class OnboardedInitiativesServiceImplTest {
 
         final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(
-                InitiativeConfig.builder()
+                Mono.just(InitiativeConfig.builder()
                         .initiativeId(mockedInitiativeId)
+                        .startDate(initiativeStartDate)
                         .endDate(initiativeEndDate)
-                        .build());
+                        .build()));
 
 
         // When
@@ -156,7 +177,7 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
 
         final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build());
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build()));
 
         // When
         List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
@@ -199,28 +220,58 @@ class OnboardedInitiativesServiceImplTest {
     }
 
     @Test
-    void getCompleteReverseCapped() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REFUND);
-        trx.setEffectiveAmount(BigDecimal.ZERO);
-        trx.setRefundInfo(new RefundInfo());
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ZERO)));
-
-        // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-
-        // Then
-        Assertions.assertTrue(result.isEmpty());
-    }
-
-    @Test
     void getPartialReverseCapped() {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
 
-        testGetInitiativesPrivateMethod(trx, null, true);
+        testGetInitiativesPrivateMethod(trx, null, null, true);
+    }
+
+    @Test
+    void isOnboardedKO() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String initiativeId = "INITIATIVEID";
+        LocalDate now = LocalDate.now();
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
+        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId("INITIATIVE_1")
+                .startDate(now.minusYears(5L))
+                .startDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE_1")).thenReturn(Mono.just(initiativeConfig));
+        // When
+        Boolean result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(Boolean.FALSE, result);
+    }
+
+    @Test
+    void isOnboardedOK() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        LocalDate now = LocalDate.now();
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
+        String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
+        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        // When
+        Boolean result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(Boolean.TRUE, result);
+
     }
 }

@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
-import it.gov.pagopa.reward.model.counters.InitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,7 +24,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
     private static final LocalDateTime TRX_DATE = LocalDateTime.of(LocalDate.of(2022, 3, 15), LocalTime.NOON);
 
     private final RewardLimitsTrxCondition2DroolsRuleTransformer transformer = new RewardLimitsTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
-    private InitiativeCounters counters;
+    private UserInitiativeCounters counters;
     private String useCase;
     private final RewardLimitsDTO rewardLimitRule = RewardLimitsDTO.builder()
             .frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY)
@@ -56,9 +56,9 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 agenda-group "agendaGroup"
                 when
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
-                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters()
-                   $initiativeCounters: it.gov.pagopa.reward.model.counters.InitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.InitiativeCounters("agendaGroup"))
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !((it.gov.pagopa.reward.enums.OperationType.valueOf("REFUND").equals($trx.getOperationTypeTranscoded()) || $initiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal("10")) < 0)))
+                   $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper()
+                   $userInitiativeCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.UserInitiativeCounters("DUMMYUSERID", "agendaGroup"))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !((it.gov.pagopa.reward.enums.OperationType.valueOf("REFUND").equals($trx.getOperationTypeTranscoded()) || $userInitiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal("10")) < 0)))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_%s_FAIL");
                 end
                 """.formatted(
@@ -74,7 +74,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return List.of(
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setDailyCounters(new HashMap<>(Map.of(
                             "2022-03-15", new Counters(0L, BigDecimal.ZERO, BigDecimal.ZERO)
                     )));
@@ -83,7 +83,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setWeeklyCounters(new HashMap<>(Map.of(
                             "2022-03-3", new Counters(1L, BigDecimal.valueOf(5), BigDecimal.valueOf(5))
                     )));
@@ -92,7 +92,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setMonthlyCounters(new HashMap<>(Map.of(
                             "2022-03", new Counters(1L, BigDecimal.valueOf(9), BigDecimal.valueOf(5))
                     )));
@@ -101,7 +101,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     useCase="";
                     return buildTrx();
                 },
@@ -119,7 +119,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return List.of(
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setDailyCounters(new HashMap<>(Map.of(
                             "2022-03-15", new Counters(0L, BigDecimal.TEN, BigDecimal.ZERO)
                     )));
@@ -128,7 +128,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setWeeklyCounters(new HashMap<>(Map.of(
                             "2022-03-3", new Counters(1L, BigDecimal.valueOf(10), BigDecimal.ONE)
                     )));
@@ -137,7 +137,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setMonthlyCounters(new HashMap<>(Map.of(
                             "2022-03", new Counters(1L, BigDecimal.valueOf(11), BigDecimal.valueOf(5))
                     )));
@@ -146,7 +146,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                    counters = new InitiativeCounters("agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
                     counters.setYearlyCounters(new HashMap<>(Map.of(
                             "2022", new Counters(1L, BigDecimal.valueOf(12), BigDecimal.ONE)
                     )));
@@ -157,7 +157,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
     }
 
     @Override
-    protected InitiativeCounters getInitiativeCounters() {
+    protected UserInitiativeCounters getInitiativeCounters() {
         return counters;
     }
 
