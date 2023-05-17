@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.dto.mapper;
+package it.gov.pagopa.reward.dto.mapper.trx;
 
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -26,13 +26,14 @@ public class Transaction2TransactionProcessedMapper implements Function<RewardTr
             trxProcessed.setUserId(trx.getUserId());
             trxProcessed.setCorrelationId(trx.getCorrelationId());
             trxProcessed.setAmount(trx.getAmount());
-            trxProcessed.setRewards(trx.getRewards());
-            trxProcessed.setEffectiveAmount(trx.getEffectiveAmount());
             trxProcessed.setAmountCents(trx.getAmountCents());
+            trxProcessed.setEffectiveAmount(trx.getEffectiveAmount());
+            trxProcessed.setRewards(trx.getRewards());
             trxProcessed.setTrxChargeDate(trx.getTrxChargeDate() != null ? trx.getTrxChargeDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime() : null);
             trxProcessed.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
             trxProcessed.setStatus(trx.getStatus());
             trxProcessed.setRejectionReasons(trx.getRejectionReasons());
+            trxProcessed.setRefundInfo(trx.getRefundInfo());
             trxProcessed.setInitiativeRejectionReasons(trx.getInitiativeRejectionReasons());
             trxProcessed.setChannel(trx.getChannel());
         }

@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.dto.mapper;
+package it.gov.pagopa.reward.dto.mapper.lookup;
 
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;

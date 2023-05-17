@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.dto.mapper;
+package it.gov.pagopa.reward.dto.mapper.trx;
 
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
@@ -86,6 +86,7 @@ class Transaction2TransactionProcessedMapperTest {
         Assertions.assertEquals(trx.getStatus(), result.getStatus());
         Assertions.assertEquals(trx.getRejectionReasons(), result.getRejectionReasons());
         Assertions.assertEquals(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
+        Assertions.assertSame(trx.getRefundInfo(), result.getRefundInfo());
         Assertions.assertEquals(trx.getChannel(), result.getChannel());
     }
 

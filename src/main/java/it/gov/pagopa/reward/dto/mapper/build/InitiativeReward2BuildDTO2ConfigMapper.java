@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.dto.mapper;
+package it.gov.pagopa.reward.dto.mapper.build;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;

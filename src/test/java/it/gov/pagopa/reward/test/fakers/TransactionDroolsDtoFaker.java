@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.test.fakers;
 
-import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionDroolsMapper;
+import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.Utils;

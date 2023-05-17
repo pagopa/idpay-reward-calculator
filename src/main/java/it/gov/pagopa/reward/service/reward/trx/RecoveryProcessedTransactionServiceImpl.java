@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
-import it.gov.pagopa.reward.dto.mapper.RecoveredTrx2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.mapper.trx.recover.RecoveredTrx2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.model.TransactionProcessed;
