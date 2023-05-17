@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service;
 
+import it.gov.pagopa.reward.exception.UncommittableError;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -56,7 +57,12 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .flatMap(m -> execute(m, message, ctx, lockReleaser))
-                .doOnEach(lockReleaser);
+                .doOnEach(lockReleaser)
+
+                .onErrorResume(UncommittableError.class, e -> {
+                    lockReleaser.accept(null);
+                    return Mono.error(e);
+                });
     }
 
     /** as default behavior, let's the base class to to release the lock. Override this method if it's possible to anticipate the release lock */

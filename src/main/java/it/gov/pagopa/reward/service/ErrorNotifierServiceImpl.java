@@ -117,32 +117,32 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
-    public void notifyRewardRuleBuilder(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(rewardRuleBuilderMessagingServiceType, rewardRuleBuilderServer, rewardRuleBuilderTopic, rewardRuleBuilderGroup, message, description, retryable, true, exception);
+    public boolean notifyRewardRuleBuilder(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(rewardRuleBuilderMessagingServiceType, rewardRuleBuilderServer, rewardRuleBuilderTopic, rewardRuleBuilderGroup, message, description, retryable, true, exception);
     }
 
     @Override
-    public void notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(trxMessagingServiceType, trxServer, trxTopic, trxGroup, message, description, retryable, true, exception);
+    public boolean notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(trxMessagingServiceType, trxServer, trxTopic, trxGroup, message, description, retryable, true, exception);
     }
 
     @Override
-    public void notifyRewardedTransaction(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(trxRewardedMessagingServiceType, trxRewardedServer, trxRewardedTopic,null, message, description, retryable, false, exception);
+    public boolean notifyRewardedTransaction(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(trxRewardedMessagingServiceType, trxRewardedServer, trxRewardedTopic,null, message, description, retryable, false, exception);
     }
 
     @Override
-    public void notifyHpanUpdateEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(hpanUpdateMessagingServiceType, hpanUpdateServer, hpanUpdateTopic, hpanUpdateGroup, message, description, retryable, true, exception);
+    public boolean notifyHpanUpdateEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(hpanUpdateMessagingServiceType, hpanUpdateServer, hpanUpdateTopic, hpanUpdateGroup, message, description, retryable, true, exception);
     }
 
     @Override
-    public void notifyHpanUpdateOutcome(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(hpanUpdateOutcomeMessagingServiceType, hpanUpdateOutcomeServer, hpanUpdateOutcomeTopic,null, message, description, retryable, false, exception);
+    public boolean notifyHpanUpdateOutcome(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(hpanUpdateOutcomeMessagingServiceType, hpanUpdateOutcomeServer, hpanUpdateOutcomeTopic,null, message, description, retryable, false, exception);
     }
 
     @Override
-    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
+    public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
@@ -167,6 +167,9 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {
             log.error("[ERROR_NOTIFIER] Something gone wrong while notifying error");
+            return false;
+        } else {
+            return true;
         }
     }
 

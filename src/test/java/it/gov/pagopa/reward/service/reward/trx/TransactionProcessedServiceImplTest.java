@@ -35,6 +35,8 @@ class TransactionProcessedServiceImplTest {
     private TransactionProcessedRepository transactionProcessedRepositoryMock;
     @Mock
     private TrxRePublisherService trxRePublisherServiceMock;
+    @Mock
+    private RecoveryProcessedTransactionService recoveryProcessedTransactionServiceMock;
 
     private TransactionProcessedService service;
 
@@ -43,14 +45,14 @@ class TransactionProcessedServiceImplTest {
 
     @BeforeEach
     void init() {
-        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock);
+        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock, recoveryProcessedTransactionServiceMock);
 
         Mockito.lenient().when(operationTypeHandlerServiceMock.isChargeOperation(Mockito.any())).thenAnswer(i -> i.getArgument(0, TransactionDTO.class).getOperationType().equals("00"));
     }
 
     @AfterEach
     void checkMock() {
-        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, transactionProcessedRepositoryMock, trxRePublisherServiceMock);
+        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, transactionProcessedRepositoryMock, trxRePublisherServiceMock, recoveryProcessedTransactionServiceMock);
     }
 
     // region checkDuplicateTransactions based on findById search
@@ -104,6 +106,7 @@ class TransactionProcessedServiceImplTest {
     private void checkDuplicateTransaction_findByIdBased_Ko(TransactionDTO trx) {
         TransactionProcessed trxDuplicate = TransactionProcessedFaker.mockInstance(1);
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trxDuplicate));
+        Mockito.when(recoveryProcessedTransactionServiceMock.checkIf2Recover(trx, trxDuplicate)).thenReturn(Mono.empty());
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();
@@ -227,6 +230,7 @@ class TransactionProcessedServiceImplTest {
         trxDuplicate.setAcquirerId(trx.getAcquirerId());
         trxDuplicate.setCorrelationId(trx.getCorrelationId());
         Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.just(trxDuplicate));
+        Mockito.when(recoveryProcessedTransactionServiceMock.checkIf2Recover(trx, trxDuplicate)).thenReturn(Mono.empty());
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();

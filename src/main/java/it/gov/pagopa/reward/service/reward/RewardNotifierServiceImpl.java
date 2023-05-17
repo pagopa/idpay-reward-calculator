@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.exception.UncommittableError;
+import it.gov.pagopa.reward.service.ErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +20,11 @@ import java.util.function.Supplier;
 public class RewardNotifierServiceImpl implements RewardNotifierService {
 
     private final StreamBridge streamBridge;
+    private final ErrorNotifierService errorNotifierService;
 
-    public RewardNotifierServiceImpl(StreamBridge streamBridge) {
+    public RewardNotifierServiceImpl(StreamBridge streamBridge, ErrorNotifierService errorNotifierService) {
         this.streamBridge = streamBridge;
+        this.errorNotifierService = errorNotifierService;
     }
 
     /** Declared just to let know Spring to connect the producer at startup */
@@ -41,5 +45,19 @@ public class RewardNotifierServiceImpl implements RewardNotifierService {
     public static Message<RewardTransactionDTO> buildMessage(RewardTransactionDTO reward){
         return MessageBuilder.withPayload(reward)
                 .setHeader(KafkaHeaders.MESSAGE_KEY,reward.getUserId()).build();
+    }
+
+    @Override
+    public void notifyFallbackToErrorTopic(RewardTransactionDTO r) {
+        try {
+            if (!notify(r)) {
+                throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
+            }
+        } catch (Exception e) {
+            log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r);
+            if(!errorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e)){
+                throw new UncommittableError("[UNEXPECTED_TRX_PROCESSOR_ERROR] Cannot publish result neither in error topic!");
+            }
+        }
     }
 }

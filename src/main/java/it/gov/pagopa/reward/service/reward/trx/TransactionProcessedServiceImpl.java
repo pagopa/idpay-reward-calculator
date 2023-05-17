@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.service.reward.TrxRePublisherService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
@@ -25,12 +26,14 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     private final Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper;
     private final TransactionProcessedRepository transactionProcessedRepository;
     private final TrxRePublisherService trxRePublisherService;
+    private final RecoveryProcessedTransactionService recoveryProcessedTransactionService;
 
-    public TransactionProcessedServiceImpl(OperationTypeHandlerService operationTypeHandlerService, Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper, TransactionProcessedRepository transactionProcessedRepository, TrxRePublisherService trxRePublisherService) {
+    public TransactionProcessedServiceImpl(OperationTypeHandlerService operationTypeHandlerService, Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper, TransactionProcessedRepository transactionProcessedRepository, TrxRePublisherService trxRePublisherService, RecoveryProcessedTransactionService recoveryProcessedTransactionService) {
         this.operationTypeHandlerService = operationTypeHandlerService;
         this.transaction2TransactionProcessedMapper = transaction2TransactionProcessedMapper;
         this.transactionProcessedRepository = transactionProcessedRepository;
         this.trxRePublisherService = trxRePublisherService;
+        this.recoveryProcessedTransactionService = recoveryProcessedTransactionService;
     }
 
     @Override
@@ -49,13 +52,20 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
                             return Mono.empty();
                         } else {
                             log.info("[REWARD][DUPLICATE_TRX] Already processed transaction found searching by id {}", result.getId());
-                            return Mono.<TransactionDTO>error(new IllegalStateException("[DUPLICATE_TRX] Already processed transaction found searching by id"));
+                            return checkIfDuplicate2Recover(trx, result,
+                                    Mono.error(new IllegalStateException("[DUPLICATE_TRX] Already processed transaction found searching by id")));
                         }
                     })
                     .defaultIfEmpty(trx)
                     .onErrorResume(e -> Mono.empty())
                     .doOnNext(x -> log.trace("[REWARD] Duplicate check by id successful ended: {}", trx.getId()));
         }
+    }
+
+    private Mono<TransactionDTO> checkIfDuplicate2Recover(TransactionDTO trx, BaseTransactionProcessed result, Mono<TransactionDTO> then) {
+        return result instanceof TransactionProcessed trxProcessed
+                ? recoveryProcessedTransactionService.checkIf2Recover(trx, trxProcessed).then(then)
+                : then;
     }
 
     private static boolean isRefundNotMatchRejection(BaseTransactionProcessed result) {
@@ -67,7 +77,7 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
         for (BaseTransactionProcessed t : trxs) {
             if (trx.getId().equals(t.getId())) {
                 log.info("[REWARD][DUPLICATE_TRX] Already processed transaction found searching by acquirerId and correlationId {}: acquirerId: {}; correlationId: {}", trx.getId(), trx.getAcquirerId(), trx.getCorrelationId());
-                return Mono.empty();
+                return checkIfDuplicate2Recover(trx, t, Mono.empty());
             } else if(!foundDuplicateCorrelation && OperationType.CHARGE.equals(t.getOperationTypeTranscoded())){
                 log.info("[REWARD][DUPLICATE_CORRELATIONID] Found an other CHARGE transaction having same acquirerId and correlationId trx id {} retrieved id {}: acquirerId: {}; correlationId: {}", trx.getId(), t.getId(), trx.getAcquirerId(), trx.getCorrelationId());
                 trx.getRejectionReasons()

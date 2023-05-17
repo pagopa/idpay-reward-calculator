@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.exception.UncommittableError;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -19,10 +20,7 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -148,9 +146,13 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                 .flatMap(counters2rewardedTrx -> {
                     RewardTransactionDTO rewardedTrx = counters2rewardedTrx.getSecond();
 
+                    Collection<UserInitiativeCounters> counters = counters2rewardedTrx.getFirst().getInitiatives().values();
                     return transactionProcessedService.save(rewardedTrx)
                             .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", rewardedTrx.getId()))
-                            .thenMany(userInitiativeCountersRepository.saveAll(counters2rewardedTrx.getFirst().getInitiatives().values()))
+                            .thenMany(
+                                    userInitiativeCountersRepository.saveAll(counters)
+                                            .onErrorResume(e -> Mono.error(new UncommittableError("An error occurred while storing counters updated evaluating trx %s".formatted(counters2rewardedTrx.getSecond().getId()))))
+                            )
                             .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", rewardedTrx.getId()))
                             .then(Mono.just(rewardedTrx));
                 });

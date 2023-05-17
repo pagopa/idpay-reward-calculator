@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service;
 
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.reward.exception.UncommittableError;
 import it.gov.pagopa.reward.utils.PerformanceLogger;
 import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -124,8 +125,12 @@ public abstract class BaseKafkaConsumer<T, R> {
                 .defaultIfEmpty(defaultAck)
 
                 .onErrorResume(e -> {
-                    notifyError(message, e);
-                    return Mono.just(defaultAck);
+                    if(e instanceof UncommittableError) {
+                        return Mono.error(e);
+                    } else {
+                        notifyError(message, e);
+                        return Mono.just(defaultAck);
+                    }
                 })
                 .doOnNext(r -> doFinally(message, r.result, ctx))
                 ;

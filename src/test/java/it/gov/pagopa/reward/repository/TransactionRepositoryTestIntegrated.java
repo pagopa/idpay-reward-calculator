@@ -10,6 +10,5 @@ import org.springframework.test.context.TestPropertySource;
         "classpath:/mongodbEmbeddedDisabled.properties",
         "classpath:/secrets/mongodbConnectionString.properties"
 })
-class HpanInitiativesAtomicOpsRepositoryImplTestIntegrated extends HpanInitiativesAtomicOpsRepositoryImplTest{
-
+class TransactionRepositoryTestIntegrated extends TransactionRepositoryTest{
 }
