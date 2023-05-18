@@ -74,9 +74,9 @@ public abstract class BaseKafkaConsumer<T, R> {
     }
 
     /** It will ask the superclass to handle the messages, then sequentially it will acknowledge them */
-    public final void execute(Flux<Message<String>> initiativeBeneficiaryRuleDTOFlux) {
+    public final void execute(Flux<Message<String>> messagesFlux) {
         Flux<List<R>> processUntilCommits =
-                initiativeBeneficiaryRuleDTOFlux
+                messagesFlux
                         .flatMapSequential(this::executeAcknowledgeAware)
 
                         .buffer(getCommitDelay())
@@ -133,7 +133,11 @@ public abstract class BaseKafkaConsumer<T, R> {
                     }
                 })
                 .doOnNext(r -> doFinally(message, r.result, ctx))
-                ;
+
+                .onErrorResume(e -> {
+                    log.info("Retrying after reactive pipeline error: ", e);
+                    return executeAcknowledgeAware(message);
+                });
     }
 
     /** to perform some operation at the end of business logic execution, thus before to wait for commit. As default, it will perform an INFO logging with performance time */

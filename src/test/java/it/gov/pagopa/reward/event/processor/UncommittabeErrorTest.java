@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.event.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
-import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
@@ -15,9 +14,6 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.service.reward.RewardNotifierService;
-import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
-import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
@@ -28,39 +24,36 @@ import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
+import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.service.ErrorNotifierServiceImpl=INFO", // TODO removeme
+        "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=INFO", // TODO removeme
+})
 class UncommittabeErrorTest extends BaseTransactionProcessorTest {
 
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
 
     @Autowired
     private TransactionProcessedService transactionProcessedService;
-    @Autowired
-    private Transaction2RewardTransactionMapper transaction2RewardTransactionMapper;
-
-    @SpyBean
-    private RuleEngineService ruleEngineServiceSpy;
-    @SpyBean
-    private UserInitiativeCountersUpdateService userInitiativeCountersUpdateServiceSpy;
-    @SpyBean
-    private RewardNotifierService rewardNotifierServiceSpy;
 
     @Test
     void test() throws JsonProcessingException {
@@ -135,7 +128,7 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
                                 .toList()
                 ),
                 objectMapper.writeValueAsString(Objects.requireNonNull(
-                                userInitiativeCountersRepository.findAll().collectList().block()).stream()
+                                userInitiativeCountersRepositorySpy.findAll().collectList().block()).stream()
                         .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
                         .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
                         .toList()
@@ -264,9 +257,37 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
                         assertInitiative1RewardedStateWhenAlreadyProcessed(evaluation);
                         assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
                     }
-            )
+            ),
 
-            // useCase 3: rewarded with errors storing just INITIATIVE_ID TODO
+            // useCase 3: rewarded with errors storing just INITIATIVE_ID
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+
+                        AtomicBoolean storedOnce = new AtomicBoolean(false);
+
+                        Mockito
+                                .doAnswer(a -> {
+                                    //noinspection unchecked
+                                    Iterable<UserInitiativeCounters> storingCounters = a.getArgument(0, Iterable.class);
+
+                                    if (storedOnce.getAndSet(true)) {
+                                        return Flux.fromIterable(storingCounters)
+                                                .flatMap(userInitiativeCountersRepositorySpy::save);
+                                    } else {
+                                        return userInitiativeCountersRepositorySpy.save(storingCounters.iterator().next())
+                                                .thenMany(Flux.error(new RuntimeException("DUMMYEXCEPTIONSTORINGALLCOUNTERS")));
+                                    }
+                                })
+                                .when(userInitiativeCountersRepositorySpy)
+                                .saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(ctrs -> ctrs.iterator().next().getUserId().equals(trx.getUserId())));
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertRewardedState(evaluation, INITIATIVE_ID1, false, 1L, 5, 0, false);
+                        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
+                    }
+            )
 
             // useCase 4: rewarded with errors storing just INITIATIVE_ID2 TODO
 
@@ -317,7 +338,7 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
         userCounter.getInitiatives().put(INITIATIVE_ID1, UserInitiativeCounters.builder(rewarded.getUserId(), INITIATIVE_ID1)
                 .version(2)
                 .trxNumber(2L)
-                .totalReward(EXPECTED_REWARD.multiply(BigDecimal.valueOf(2)).setScale(2,RoundingMode.UNNECESSARY))
+                .totalReward(EXPECTED_REWARD.multiply(BigDecimal.valueOf(2)).setScale(2, RoundingMode.UNNECESSARY))
                 .totalAmount(TestUtils.bigDecimalValue(10))
                 .build());
 

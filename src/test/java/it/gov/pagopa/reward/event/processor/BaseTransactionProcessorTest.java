@@ -67,8 +67,8 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected RewardContextHolderService rewardContextHolderService;
     @Autowired
     protected HpanInitiativesRepository hpanInitiativesRepository;
-    @Autowired
-    protected UserInitiativeCountersRepository userInitiativeCountersRepository;
+    @SpyBean
+    protected UserInitiativeCountersRepository userInitiativeCountersRepositorySpy;
     @Autowired
     protected TransactionProcessedRepository transactionProcessedRepository;
     @Autowired
@@ -90,7 +90,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     @AfterEach
     void clearData(){
         transactionProcessedRepository.deleteAll().block();
-        userInitiativeCountersRepository.deleteAll().block();
+        userInitiativeCountersRepositorySpy.deleteAll().block();
         hpanInitiativesRepository.deleteAll().block();
         droolsRuleRepository.deleteAll().block();
     }
@@ -186,7 +186,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     }
 
     protected UserInitiativeCounters saveUserInitiativeCounter(TransactionDTO trx, UserInitiativeCounters initiativeRewardCounter) {
-        return userInitiativeCountersRepository.save(
+        return userInitiativeCountersRepositorySpy.save(
                 initiativeRewardCounter.toBuilder()
                         .userId(trx.getUserId())
                         .id(UserInitiativeCounters.buildId(trx.getUserId(), initiativeRewardCounter.getInitiativeId()))

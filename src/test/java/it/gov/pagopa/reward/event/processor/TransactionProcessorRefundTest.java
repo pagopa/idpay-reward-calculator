@@ -233,7 +233,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     }
 
     private void checkUserInitiativeCounter(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
-        final List<UserInitiativeCounters> userInitiativesCounters = userInitiativeCountersRepository.findByUserId(rewardedTrx.getUserId()).collectList().block();
+        final List<UserInitiativeCounters> userInitiativesCounters = userInitiativeCountersRepositorySpy.findByUserId(rewardedTrx.getUserId()).collectList().block();
         Assertions.assertNotNull(userInitiativesCounters);
         Assertions.assertFalse(userInitiativesCounters.isEmpty());
 
