@@ -1,13 +1,14 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.mapper.trx.RewardCountersMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,14 +48,14 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
 
     @Mock
-    private RewardContextHolderService rewardContextHolderService;
-    @InjectMocks
+    private RewardContextHolderService rewardContextHolderServiceMock;
+
     private UserInitiativeCountersUpdateServiceImpl userInitiativeCountersUpdateService;
 
     private InitiativeConfig initiativeConfig;
 
     @BeforeEach
-    public void configureMocks() {
+    public void init() {
         initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID1")
                 .beneficiaryBudget(BigDecimal.valueOf(10000.00))
@@ -64,17 +64,19 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .monthlyThreshold(true)
                 .yearlyThreshold(true)
                 .build();
-        Mockito.when(rewardContextHolderService.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
+
+        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper());
     }
 
     @Test
     void testGetFormatters() {
-        Assertions.assertSame(UserInitiativeCountersUpdateServiceImpl.dayDateFormatter, UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter());
-        Assertions.assertSame(UserInitiativeCountersUpdateServiceImpl.weekDateFormatter, UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter());
-        Assertions.assertSame(UserInitiativeCountersUpdateServiceImpl.monthDateFormatter, UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter());
-        Assertions.assertSame(UserInitiativeCountersUpdateServiceImpl.yearDateFormatter, UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter());
+        Assertions.assertSame(RewardConstants.dayDateFormatter, UserInitiativeCountersUpdateServiceImpl.getDayDateFormatter());
+        Assertions.assertSame(RewardConstants.weekDateFormatter, UserInitiativeCountersUpdateServiceImpl.getWeekDateFormatter());
+        Assertions.assertSame(RewardConstants.monthDateFormatter, UserInitiativeCountersUpdateServiceImpl.getMonthDateFormatter());
+        Assertions.assertSame(RewardConstants.yearDateFormatter, UserInitiativeCountersUpdateServiceImpl.getYearDateFormatter());
 
-        rewardContextHolderService.getInitiativeConfig(null); // useless, provided only to avoid to configure mock explicitly in each test only because this will not use it
+        rewardContextHolderServiceMock.getInitiativeConfig(null); // useless, provided only to avoid to configure mock explicitly in each test only because this will not use it
     }
 
     @Test
@@ -113,6 +115,10 @@ class UserInitiativeCountersUpdateServiceImplTest {
     }
 
     private void checkRewardCounters(RewardCounters rewardCounters, long expectedTrxCount, boolean expectedExhaustedBudget, double expectedTotalReward, double expectedInitiativeBudget, double expectedTotalAmount) {
+        checkRewardCounters(rewardCounters, 1L, expectedTrxCount, expectedExhaustedBudget, expectedTotalReward, expectedInitiativeBudget, expectedTotalAmount);
+    }
+    private void checkRewardCounters(RewardCounters rewardCounters, long expectedVersion, long expectedTrxCount, boolean expectedExhaustedBudget, double expectedTotalReward, double expectedInitiativeBudget, double expectedTotalAmount) {
+        assertEquals(expectedVersion, rewardCounters.getVersion());
         assertEquals(expectedTrxCount, rewardCounters.getTrxNumber());
         assertEquals(expectedExhaustedBudget, rewardCounters.isExhaustedBudget());
         TestUtils.assertBigDecimalEquals(BigDecimal.valueOf(expectedTotalAmount), rewardCounters.getTotalAmount());
@@ -220,7 +226,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkRewardCounters(rewardTransactionDTO.getRewards().get("2").getCounters(), 21L, false, 250, 10000, 4100);
         // Third initiate (reward is 0)
         checkCounters(userInitiativeCountersWrapper.getInitiatives().get("3"), 20L, 200, 4000);
-        checkRewardCounters(rewardTransactionDTO.getRewards().get("3").getCounters(), 20L, false, 200, 10000, 4000);
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("3").getCounters(), 0L, 20L, false, 200, 10000, 4000);
 
         Assertions.assertFalse(rewardMock.get("2").isCompleteRefund());
         Assertions.assertFalse(rewardMock.get("3").isCompleteRefund());

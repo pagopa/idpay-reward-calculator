@@ -3,6 +3,8 @@ package it.gov.pagopa.reward.utils;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public final class RewardConstants {
     private RewardConstants(){}
@@ -60,5 +62,12 @@ public final class RewardConstants {
     //region reward status
     public static final String REWARD_STATE_REWARDED = "REWARDED";
     public static final String REWARD_STATE_REJECTED = "REJECTED";
+    //endregion
+
+    //region dateFormatters
+    public static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter weekDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
+    public static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    public static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
     //endregion
 }
