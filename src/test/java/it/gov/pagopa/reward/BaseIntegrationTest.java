@@ -161,7 +161,7 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}")
     protected String groupIdHpanInitiativeLookupConsumer;
 
-    @Value("${spring.redis.url}")
+    @Value("${spring.data.redis.url}")
     protected String redisUrl;
 
     @BeforeAll
