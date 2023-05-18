@@ -74,13 +74,13 @@ public class RecoveryProcessedTransactionServiceImpl implements RecoveryProcesse
 
     private Mono<?> checkIfNotExistsIntoTransactionCollection(TransactionProcessed trxStored) {
         return transactionRepository.checkIfExists(trxStored.getId())
-                .mapNotNull(r -> Boolean.TRUE.equals(r)? true : null);
+                .mapNotNull(r -> Boolean.TRUE.equals(r)? null : false);
     }
 
     private Mono<?> publishTrxIfNotEmpty(TransactionDTO trx, TransactionProcessed trxStored, Mono<?> mono) {
         return mono.doOnNext(x -> {
             RewardTransactionDTO rewardedTrx = recoveredTrx2RewardTransactionMapper.apply(trx, trxStored);
-            rewardNotifierService.notify(rewardedTrx);
+            rewardNotifierService.notifyFallbackToErrorTopic(rewardedTrx);
         });
     }
 }
