@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.repository.TransactionRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class RecoveryProcessedTransactionServiceImpl implements RecoveryProcessedTransactionService {
 
     private final UserInitiativeCountersRepository countersRepository;
@@ -41,7 +43,7 @@ public class RecoveryProcessedTransactionServiceImpl implements RecoveryProcesse
                     .collectMap(UserInitiativeCounters::getInitiativeId)
                     .flatMap(storedCounters -> compareCounters(trx, trxStored, storedCounters));
         } else {
-            return publishTrxIfNotEmpty(trx, trxStored, checkIfNotExistsIntoTransactionCollection(trxStored))
+            return publishTrxIfNotEmpty(trx, trxStored, checkIf2PublishWhenNotCountersUpdated(trx, trxStored))
                     .then();
         }
     }
@@ -63,13 +65,24 @@ public class RecoveryProcessedTransactionServiceImpl implements RecoveryProcesse
         Mono<?> mono;
 
         if (!CollectionUtils.isEmpty(countersToStore)) {
+            log.info("[REWARD][RECOVERY_TRX] Found recovered transaction with updated counters {}", trxStored.getId());
             mono = countersRepository.saveAll(countersToStore).collectList();
         } else {
-            mono = checkIfNotExistsIntoTransactionCollection(trxStored);
+            mono = checkIf2PublishWhenNotCountersUpdated(trx, trxStored);
         }
 
         return publishTrxIfNotEmpty(trx, trxStored, mono)
                 .then();
+    }
+
+    private Mono<?> checkIf2PublishWhenNotCountersUpdated(TransactionDTO trx, TransactionProcessed trxStored){
+        // only if we are reading again the same message we should notify it when not counters 2 update are involved
+        // otherwise we could assume that the original message has been published
+        if(trxStored.getRuleEngineTopicOffset().equals(trx.getRuleEngineTopicOffset())){
+            return checkIfNotExistsIntoTransactionCollection(trxStored);
+        } else {
+            return Mono.empty();
+        }
     }
 
     private Mono<?> checkIfNotExistsIntoTransactionCollection(TransactionProcessed trxStored) {

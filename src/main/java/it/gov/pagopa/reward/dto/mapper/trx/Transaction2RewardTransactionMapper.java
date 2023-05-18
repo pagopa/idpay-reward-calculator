@@ -66,5 +66,7 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setBrandLogo(src.getBrandLogo());
         dest.setBrand(src.getBrand());
         dest.setChannel(src.getChannel());
+        dest.setRuleEngineTopicPartition(src.getRuleEngineTopicPartition());
+        dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());
     }
 }

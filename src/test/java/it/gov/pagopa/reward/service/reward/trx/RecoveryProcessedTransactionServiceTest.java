@@ -115,54 +115,67 @@ class RecoveryProcessedTransactionServiceTest {
                 .build();
     }
 
-    //region testNoStoredRewards
+//region testNoStoredRewards
     @Test
-    void testNoStoredRewardsNoPublished() {
-        testNoStoredRewards(false);
+    void testNoStoredRewards_NoPublishedDifferentOffset() {
+        testNoStoredRewards(true, false);
     }
-
     @Test
-    void testNoStoredRewardsAlreadyPublished() {
-        testNoStoredRewards(true);
+    void testNoStoredRewards_NoPublished() {
+        testNoStoredRewards(false, true);
     }
-
-    void testNoStoredRewards(boolean expected2bePublished) {
+    @Test
+    void testNoStoredRewards_AlreadyPublished() {
+        testNoStoredRewards(true, true);
+    }
+    void testNoStoredRewards(boolean expected2bePublished, boolean sameOffset) {
         // Given
         trxStored.setRewards(null);
         expectedRewarded.setRewards(null);
 
-        configureTransactionRepositoryCheck(expected2bePublished);
+        if(!sameOffset){
+            trxStored.setRuleEngineTopicOffset(-1L);
+        } else {
+            configureTransactionRepositoryCheck(expected2bePublished);
+        }
+
 
         // When
         service.checkIf2Recover(trx, trxStored).block();
 
         // Then
-        verifyNotify(expected2bePublished);
+        verifyNotify(expected2bePublished && sameOffset);
     }
 //endregion
 
-    //region testCountersUpdated
+//region testCountersAlreadyUpdated
     @Test
-    void testCountersUpdatedNoPublished() {
-        testCountersUpdated(false);
+    void testCountersAlreadyUpdated_NoPublished() {
+        testCountersAlreadyUpdated(false, true);
     }
-
     @Test
-    void testCountersUpdatedAlreadyPublished() {
-        testCountersUpdated(true);
+    void testCountersAlreadyUpdated_AlreadyPublished() {
+        testCountersAlreadyUpdated(true, true);
     }
-
-    private void testCountersUpdated(boolean expected2bePublished) {
+    @Test
+    void testCountersAlreadyUpdated_AlreadyPublishedDifferentOffset() {
+        testCountersAlreadyUpdated(true, false);
+    }
+    private void testCountersAlreadyUpdated(boolean expected2bePublished, boolean sameOffset) {
         // Given
         configureCountersFind(r1.getCounters().getVersion(), r2.getCounters().getVersion() + 1);
 
-        configureTransactionRepositoryCheck(expected2bePublished);
+        if(!sameOffset){
+            trxStored.setRuleEngineTopicOffset(-1L);
+        } else {
+            configureTransactionRepositoryCheck(expected2bePublished);
+        }
 
         // When
         service.checkIf2Recover(trx, trxStored).block();
 
         // Then
-        verifyNotify(expected2bePublished);
+        verifyNotify(expected2bePublished && sameOffset);
     }
 //endregion
 
@@ -171,7 +184,7 @@ class RecoveryProcessedTransactionServiceTest {
         // Given
         List<UserInitiativeCounters> storedCounters = configureCountersFind(null, r2.getCounters().getVersion() - 1);
 
-        List<UserInitiativeCounters> expectedCountersUpdated = new ArrayList<>();
+        Set<UserInitiativeCounters> expectedCountersUpdated = new HashSet<>();
         expectedCountersUpdated.add(buildUserCounter(r1, r1.getCounters().getVersion()));
 
         expectedCountersUpdated.addAll(storedCounters.stream()
@@ -180,7 +193,7 @@ class RecoveryProcessedTransactionServiceTest {
                         .build())
                 .toList());
 
-        Mockito.when(countersRepositoryMock.saveAll(expectedCountersUpdated))
+        Mockito.when(countersRepositoryMock.saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(i->new HashSet<>((List<UserInitiativeCounters>)i).equals(expectedCountersUpdated))))
                 .thenReturn(Flux.fromIterable(expectedCountersUpdated));
 
         // When

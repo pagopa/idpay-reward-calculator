@@ -416,10 +416,16 @@ public abstract class BaseIntegrationTest {
 
     protected String normalizePayload(String expectedPayload) {
         String temp = removeDateTimeField(expectedPayload, "elaborationDateTime");
+        temp = removeFieldValue(temp, "ruleEngineTopicPartition");
+        temp = removeFieldValue(temp, "ruleEngineTopicOffset");
         return removeDateTimeField(temp,"timestamp");
     }
 
-    private String removeDateTimeField(String payload, String fieldName){
+    protected String removeDateTimeField(String payload, String fieldName){
         return payload.replaceAll("(\""+fieldName+"\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
+    }
+
+    protected String removeFieldValue(String payload, String fieldName) {
+        return payload.replaceAll("(\""+fieldName+"\":)(?:[^,}]+)", "$1:null");
     }
 }

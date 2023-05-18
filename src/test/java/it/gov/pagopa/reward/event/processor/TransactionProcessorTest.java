@@ -35,7 +35,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -342,13 +341,14 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
         Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
         Assertions.assertEquals(Utils.centsToEuro(rewardedTrx.getAmountCents()), rewardedTrx.getAmount());
+        Assertions.assertNotNull(rewardedTrx.getRuleEngineTopicPartition());
+        Assertions.assertNotNull(rewardedTrx.getRuleEngineTopicOffset());
     }
 
     //region useCases
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
-    private final Map<String, UserInitiativeCountersWrapper> expectedCounters = new HashMap<>();
     private final Map<String, BigDecimal> initiative2ExpectedReward = Map.of(
             INITIATIVE_ID_THRESHOLD_BASED, TestUtils.bigDecimalValue(0.5),
             INITIATIVE_ID_DAYOFWEEK_BASED, TestUtils.bigDecimalValue(5),
@@ -683,57 +683,6 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         });
 
         return trx;
-    }
-
-    private UserInitiativeCountersWrapper onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
-        onboardTrxHPanNoCreateUserCounter(trx, initiativeIds);
-
-        return createUserCounter(trx);
-    }
-
-    private void onboardTrxHPanNoCreateUserCounter(TransactionDTO trx, String... initiativeIds) {
-        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
-    }
-
-    private UserInitiativeCountersWrapper createUserCounter(TransactionDTO trx) {
-        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCountersWrapper(u, new LinkedHashMap<>()));
-    }
-
-    private void updateInitiativeCounters(UserInitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
-        counters.setVersion(counters.getVersion()+1);
-        updateCounters(counters, trx, expectedReward);
-        if (initiativeConfig.isDailyThreshold()) {
-            updateCounters(
-                    counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-        if (initiativeConfig.isWeeklyThreshold()) {
-            updateCounters(
-                    counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-        if (initiativeConfig.isMonthlyThreshold()) {
-            updateCounters(
-                    counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-        if (initiativeConfig.isYearlyThreshold()) {
-            updateCounters(
-                    counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-    }
-
-    private void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
-        BigDecimal amountEuro;
-        if(trx.getAmountCents()!=null){
-            amountEuro=Utils.centsToEuro(trx.getAmountCents());
-        } else {
-            amountEuro=Utils.centsToEuro(trx.getAmount().longValue());
-        }
-        counters.setTrxNumber(counters.getTrxNumber() + 1);
-        counters.setTotalAmount(counters.getTotalAmount().add(amountEuro));
-        counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
     //endregion
 

@@ -10,7 +10,6 @@ import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
-import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
@@ -31,7 +30,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -60,7 +58,7 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
     private RewardNotifierService rewardNotifierServiceSpy;
 
     @Test
-    void testTransactionProcessor() throws JsonProcessingException { //TODO
+    void test() throws JsonProcessingException {
         int trx = 1000; // use even number
         int duplicateTrx = Math.min(100, trx);
         long maxWaitingMs = 60000;
@@ -210,8 +208,6 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
-    private final Map<String, UserInitiativeCountersWrapper> expectedCounters = new HashMap<>();
-
     private final List<Pair<Function<Integer, TransactionDTO>, Consumer<RewardTransactionDTO>>> useCases = List.of(
             // useCase 0: rewarded with no previous counter and no errors
             Pair.of(
@@ -219,8 +215,11 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
                             TransactionDTOFaker.mockInstanceBuilder(i)
                                     .amount(BigDecimal.valueOf(5_00))
                                     .build(),
-                            INITIATIVE_ID),
-                    evaluation -> assertRewardedState(evaluation, INITIATIVE_ID, false, 1L, 5, 0, false)
+                            INITIATIVE_ID, INITIATIVE_ID2),
+                    evaluation -> {
+                        assertRewardedState(evaluation, INITIATIVE_ID, false, 1L, 5, 0, false);
+                        assertRewardedState(evaluation, INITIATIVE_ID2, false, 1L, 5, 0, false);
+                    }
             )
 
             // useCase 1: rewarded with previous counter and no errors TODO
@@ -231,11 +230,13 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
 
             // useCase 4: rewarded with errors storing both INITIATIVE_ID and INITIATIVE_ID2 TODO
 
-            // useCase 5: cannot publish result neither in error topic
+            // useCase 5: cannot publish result neither in error topic TODO
+
+            // useCase 6: cannot publish result neither in error topic when recovering TODO
     );
 
     private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double preCurrentTrxCounterTotalReward, boolean expectedCounterBudgetExhausted) {
-        assertRewardedState(evaluation, rewardedInitiativeId, EXPECTED_REWARD, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, EXPECTED_REWARD.doubleValue() + preCurrentTrxCounterTotalReward, expectedCounterBudgetExhausted);
+        assertRewardedState(evaluation, 2, rewardedInitiativeId, EXPECTED_REWARD, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, EXPECTED_REWARD.doubleValue() + preCurrentTrxCounterTotalReward, expectedCounterBudgetExhausted, false, false);
     }
 
     private TransactionDTO onboardTrxHpanAndIncreaseCounters(TransactionDTO trx, String... initiativeIds) {
@@ -249,56 +250,6 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
         });
 
         return trx;
-    }
-
-    private UserInitiativeCountersWrapper onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
-        onboardTrxHPanNoCreateUserCounter(trx, initiativeIds);
-
-        return createUserCounter(trx);
-    }
-
-    private void onboardTrxHPanNoCreateUserCounter(TransactionDTO trx, String... initiativeIds) {
-        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
-    }
-
-    private UserInitiativeCountersWrapper createUserCounter(TransactionDTO trx) {
-        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCountersWrapper(u, new LinkedHashMap<>()));
-    }
-
-    private void updateInitiativeCounters(UserInitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
-        updateCounters(counters, trx, expectedReward);
-        if (initiativeConfig.isDailyThreshold()) {
-            updateCounters(
-                    counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-        if (initiativeConfig.isWeeklyThreshold()) {
-            updateCounters(
-                    counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-        if (initiativeConfig.isMonthlyThreshold()) {
-            updateCounters(
-                    counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-        if (initiativeConfig.isYearlyThreshold()) {
-            updateCounters(
-                    counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d -> new Counters()),
-                    trx, expectedReward);
-        }
-    }
-
-    private void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
-        BigDecimal amountEuro;
-        if(trx.getAmountCents()!=null){
-            amountEuro=Utils.centsToEuro(trx.getAmountCents());
-        } else {
-            amountEuro=Utils.centsToEuro(trx.getAmount().longValue());
-        }
-        counters.setTrxNumber(counters.getTrxNumber() + 1);
-        counters.setTotalAmount(counters.getTotalAmount().add(amountEuro));
-        counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
     //endregion
 

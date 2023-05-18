@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.event.processor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
@@ -9,7 +11,9 @@ import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
@@ -17,17 +21,23 @@ import it.gov.pagopa.reward.service.LockServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.test.context.TestPropertySource;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -60,9 +70,13 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected UserInitiativeCountersRepository userInitiativeCountersRepository;
     @Autowired
     protected TransactionProcessedRepository transactionProcessedRepository;
+    @Autowired
+    protected ReactiveMongoTemplate mongoTemplate;
 
     @Autowired
     protected LockServiceImpl lockService;
+
+    protected final Map<String, UserInitiativeCountersWrapper> expectedCounters = new HashMap<>();
 
     @AfterEach
     void checkLockBouquet() throws NoSuchFieldException, IllegalAccessException {
@@ -78,6 +92,12 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         userInitiativeCountersRepository.deleteAll().block();
         hpanInitiativesRepository.deleteAll().block();
         droolsRuleRepository.deleteAll().block();
+    }
+
+    @KafkaListener(topics = "${spring.cloud.stream.bindings.trxProcessorOut-out-0.destination}", groupId = "BaseTransactionProcessorTest")
+    protected void transactionOutcomeListener(ConsumerRecord<String, byte[]> trxMessage) throws JsonProcessingException {
+        RewardTransactionDTO trx = objectMapper.readValue(new String(trxMessage.value(), StandardCharsets.UTF_8), RewardTransactionDTO.class);
+        mongoTemplate.save(new HashMap<>(Map.of("_id", trx.getId())), "transaction").block();
     }
 
     protected void publishRewardRules(List<InitiativeReward2BuildDTO> initiatives) {
@@ -111,6 +131,57 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 })
                 .flatMap(hpanInitiativesRepository::save)
                 .block();
+    }
+
+    protected UserInitiativeCountersWrapper onboardTrxHPan(TransactionDTO trx, String... initiativeIds) {
+        onboardTrxHPanNoCreateUserCounter(trx, initiativeIds);
+
+        return createUserCounter(trx);
+    }
+
+    protected void onboardTrxHPanNoCreateUserCounter(TransactionDTO trx, String... initiativeIds) {
+        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
+    }
+
+    protected UserInitiativeCountersWrapper createUserCounter(TransactionDTO trx) {
+        return expectedCounters.computeIfAbsent(trx.getUserId(), u -> new UserInitiativeCountersWrapper(u, new LinkedHashMap<>()));
+    }
+
+    protected void updateInitiativeCounters(UserInitiativeCounters counters, TransactionDTO trx, BigDecimal expectedReward, InitiativeConfig initiativeConfig) {
+        counters.setVersion(counters.getVersion()+1);
+        updateCounters(counters, trx, expectedReward);
+        if (initiativeConfig.isDailyThreshold()) {
+            updateCounters(
+                    counters.getDailyCounters().computeIfAbsent(trx.getTrxDate().format(dayFormatter), d -> new Counters()),
+                    trx, expectedReward);
+        }
+        if (initiativeConfig.isWeeklyThreshold()) {
+            updateCounters(
+                    counters.getWeeklyCounters().computeIfAbsent(trx.getTrxDate().format(weekFormatter), d -> new Counters()),
+                    trx, expectedReward);
+        }
+        if (initiativeConfig.isMonthlyThreshold()) {
+            updateCounters(
+                    counters.getMonthlyCounters().computeIfAbsent(trx.getTrxDate().format(monthlyFormatter), d -> new Counters()),
+                    trx, expectedReward);
+        }
+        if (initiativeConfig.isYearlyThreshold()) {
+            updateCounters(
+                    counters.getYearlyCounters().computeIfAbsent(trx.getTrxDate().format(yearFormatter), d -> new Counters()),
+                    trx, expectedReward);
+        }
+    }
+
+    protected void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
+        BigDecimal amountEuro;
+        if(trx.getAmountCents()!=null){
+            amountEuro= Utils.centsToEuro(trx.getAmountCents());
+        } else {
+            amountEuro=Utils.centsToEuro(trx.getAmount().longValue());
+        }
+        counters.setTrxNumber(counters.getTrxNumber() + 1);
+        counters.setTotalAmount(counters.getTotalAmount().add(amountEuro));
+        counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
 
     protected void saveUserInitiativeCounter(TransactionDTO trx, UserInitiativeCounters initiativeRewardCounter) {

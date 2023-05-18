@@ -18,6 +18,7 @@ import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -103,8 +104,9 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     @Override
     protected Mono<RewardTransactionDTO> execute(TransactionDTO payload, Message<String> message, Map<String, Object> ctx, Consumer<? super Signal<RewardTransactionDTO>> lockReleaser) {
+        setMessageData(payload, message);
+
         return Mono.just(payload)
-                .map(this::setChannel)
                 .map(transactionValidatorService::validate)
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
@@ -117,11 +119,12 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
                 });
     }
 
-    private TransactionDTO setChannel(TransactionDTO trx) {
+    private void setMessageData(TransactionDTO trx, Message<String> message) {
         if(StringUtils.isEmpty(trx.getChannel())){
             trx.setChannel(RewardConstants.TRX_CHANNEL_RTD);
         }
-        return trx;
+        trx.setRuleEngineTopicPartition(Utils.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION_ID));
+        trx.setRuleEngineTopicOffset(Utils.getHeaderValue(message, KafkaHeaders.OFFSET));
     }
 
     @Override

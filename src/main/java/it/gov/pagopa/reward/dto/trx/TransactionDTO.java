@@ -76,6 +76,9 @@ public class TransactionDTO {
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;
     private String channel;
+
+    private Integer ruleEngineTopicPartition;
+    private Long ruleEngineTopicOffset;
     //endregion
 
     //region fields added by splitter

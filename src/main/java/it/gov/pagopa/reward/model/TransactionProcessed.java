@@ -63,5 +63,8 @@ public class TransactionProcessed implements BaseTransactionProcessed {
 
     private LocalDateTime elaborationDateTime;
     private String channel;
+
+    private Integer ruleEngineTopicPartition;
+    private Long ruleEngineTopicOffset;
 }
 

@@ -88,6 +88,8 @@ class Transaction2TransactionProcessedMapperTest {
         Assertions.assertEquals(trx.getInitiativeRejectionReasons(), result.getInitiativeRejectionReasons());
         Assertions.assertSame(trx.getRefundInfo(), result.getRefundInfo());
         Assertions.assertEquals(trx.getChannel(), result.getChannel());
+        Assertions.assertSame(trx.getRuleEngineTopicPartition(), result.getRuleEngineTopicPartition());
+        Assertions.assertSame(trx.getRuleEngineTopicOffset(), result.getRuleEngineTopicOffset());
     }
 
 

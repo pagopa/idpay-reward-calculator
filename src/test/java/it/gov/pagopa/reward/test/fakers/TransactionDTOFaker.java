@@ -78,6 +78,8 @@ public class TransactionDTOFaker {
                 .maskedPan("MASKEDPAN%d".formatted(bias))
                 .brandLogo("BRANDLOGO%d".formatted(bias))
                 .brand("BRAND%d".formatted(bias))
-                .channel(RewardConstants.TRX_CHANNEL_RTD);
+                .channel(RewardConstants.TRX_CHANNEL_RTD)
+                .ruleEngineTopicPartition(0)
+                .ruleEngineTopicOffset(bias.longValue());
     }
 }
