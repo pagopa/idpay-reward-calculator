@@ -7,9 +7,12 @@ import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.model.TransactionProcessed;
+import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
@@ -17,6 +20,7 @@ import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
+import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -30,6 +34,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -67,16 +72,16 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
 
         List<String> trxs = buildValidPayloads(0, trx);
 
-        long totalSendMessages = trxs.size()+duplicateTrx;
+        long totalSendMessages = trxs.size() + duplicateTrx;
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        int[] i=new int[]{0};
+        int[] i = new int[]{0};
         trxs.forEach(p -> {
             final String userId = Utils.readUserId(p);
-            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId,p);
+            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p);
 
             // to test duplicate trx and their right processing order
-            if(i[0]<duplicateTrx){
+            if (i[0] < duplicateTrx) {
                 i[0]++;
                 publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
@@ -130,10 +135,10 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
                                 .toList()
                 ),
                 objectMapper.writeValueAsString(Objects.requireNonNull(
-                        userInitiativeCountersRepository.findAll().collectList().block()).stream()
-                            .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
-                            .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
-                            .toList()
+                                userInitiativeCountersRepository.findAll().collectList().block()).stream()
+                        .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                        .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
+                        .toList()
                 ));
     }
 
@@ -145,14 +150,14 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
     }
 
     // region initiative build
-    private static final String INITIATIVE_ID = "INITIATIVEID";
+    private static final String INITIATIVE_ID1 = "INITIATIVEID";
     private static final String INITIATIVE_ID2 = "INITIATIVEID2";
     public static final BigDecimal EXPECTED_REWARD = TestUtils.bigDecimalValue(0.5);
 
     private void publishRewardRules() {
         int[] expectedRules = {0};
         Stream.of(
-                        buildInitiative(INITIATIVE_ID),
+                        buildInitiative(INITIATIVE_ID1),
                         buildInitiative(INITIATIVE_ID2)
                 )
                 .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
@@ -182,22 +187,22 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
     private TransactionDTO mockInstance(int bias) {
         int useCase = bias % useCases.size();
         final TransactionDTO trx = useCases.get(useCase).getFirst().apply(bias);
-        onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID, INITIATIVE_ID2);
+        onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID1, INITIATIVE_ID2);
         return trx;
     }
 
     private void checkResponse(RewardTransactionDTO rewardedTrx) {
         String hpan = rewardedTrx.getHpan();
         int biasRetrieve = Integer.parseInt(hpan.substring(4));
-        try{
+        try {
             useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
             Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
             Assertions.assertEquals(Utils.centsToEuro(rewardedTrx.getAmountCents()), rewardedTrx.getAmount());
         } catch (Exception e) {
             System.err.printf("UseCase %d (bias %d) failed: %n", biasRetrieve % useCases.size(), biasRetrieve);
-            if(e instanceof RuntimeException runtimeException){
+            if (e instanceof RuntimeException runtimeException) {
                 throw runtimeException;
-            } else if(e.getCause() instanceof AssertionFailedError assertionFailedError){
+            } else if (e.getCause() instanceof AssertionFailedError assertionFailedError) {
                 throw assertionFailedError;
             }
             Assertions.fail(e);
@@ -206,34 +211,126 @@ class UncommittabeErrorTest extends BaseTransactionProcessorTest {
 
     //region useCases
     private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
-    private final OffsetDateTime trxDate = OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime));
 
     private final List<Pair<Function<Integer, TransactionDTO>, Consumer<RewardTransactionDTO>>> useCases = List.of(
             // useCase 0: rewarded with no previous counter and no errors
             Pair.of(
-                    i -> onboardTrxHpanAndIncreaseCounters(
-                            TransactionDTOFaker.mockInstanceBuilder(i)
-                                    .amount(BigDecimal.valueOf(5_00))
-                                    .build(),
-                            INITIATIVE_ID, INITIATIVE_ID2),
+                    this::buildTrx,
                     evaluation -> {
-                        assertRewardedState(evaluation, INITIATIVE_ID, false, 1L, 5, 0, false);
-                        assertRewardedState(evaluation, INITIATIVE_ID2, false, 1L, 5, 0, false);
+                        assertRewardedState(evaluation, INITIATIVE_ID1, false, 1L, 5, 0, false);
+                        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
+                    }
+            ),
+
+            // useCase 1: rewarded with previous counter 2 update and not counters and no errors
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+                        storeAsAlreadyProcessed(i);
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertInitiative1RewardedStateWhenAlreadyProcessed(evaluation);
+                        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
+                    }
+            ),
+
+            // useCase 2: rewarded with previous counter 2 update and old counters stored and no errors
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+                        TransactionProcessed transactionProcessed = storeAsAlreadyProcessed(i);
+
+                        RewardCounters rc1 = transactionProcessed.getRewards().get(INITIATIVE_ID1).getCounters();
+                        saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID1)
+                                .version(rc1.getVersion() - 1)
+                                .trxNumber(1L)
+                                .build());
+
+                        RewardCounters rc2 = transactionProcessed.getRewards().get(INITIATIVE_ID2).getCounters();
+                        UserInitiativeCounters c2 = saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID2)
+                                .version(rc2.getVersion())
+                                .trxNumber(2L)
+                                .totalAmount(TestUtils.bigDecimalValue(10))
+                                .totalReward(EXPECTED_REWARD)
+                                .build());
+
+                        UserInitiativeCountersWrapper userCounter = createUserCounter(trx);
+                        userCounter.getInitiatives().put(INITIATIVE_ID2, c2);
+
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertInitiative1RewardedStateWhenAlreadyProcessed(evaluation);
+                        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
                     }
             )
 
-            // useCase 1: rewarded with previous counter and no errors TODO
+            // useCase 3: rewarded with errors storing just INITIATIVE_ID TODO
 
-            // useCase 2: rewarded with errors storing just INITIATIVE_ID TODO
+            // useCase 4: rewarded with errors storing just INITIATIVE_ID2 TODO
 
-            // useCase 3: rewarded with errors storing just INITIATIVE_ID2 TODO
+            // useCase 5: rewarded with errors storing both INITIATIVE_ID and INITIATIVE_ID2 TODO
 
-            // useCase 4: rewarded with errors storing both INITIATIVE_ID and INITIATIVE_ID2 TODO
+            // useCase 6: cannot publish result neither in error topic TODO
 
-            // useCase 5: cannot publish result neither in error topic TODO
-
-            // useCase 6: cannot publish result neither in error topic when recovering TODO
+            // useCase 7: cannot publish result neither in error topic when recovering TODO
     );
+
+    private void assertInitiative2RewardedStateWhenAlreadyProcessed(RewardTransactionDTO evaluation) {
+        assertRewardedState(evaluation, INITIATIVE_ID2, false, 1L, 5, 0, false);
+    }
+
+    private void assertInitiative1RewardedStateWhenAlreadyProcessed(RewardTransactionDTO evaluation) {
+        assertRewardedState(evaluation, INITIATIVE_ID1, false, 2L, 10, 0.5, false);
+    }
+
+    private TransactionProcessed storeAsAlreadyProcessed(Integer bias) {
+        RewardTransactionDTO rewarded = RewardTransactionDTOFaker.mockInstance(bias);
+        rewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
+        rewarded.setElaborationDateTime(LocalDateTime.now());
+
+        Reward r1 = new Reward(INITIATIVE_ID1, "ORGANIZATIONID_" + INITIATIVE_ID1, EXPECTED_REWARD);
+        RewardCounters rc1 = RewardCounters.builder()
+                .version(2L)
+                .trxNumber(2L)
+                .totalAmount(TestUtils.bigDecimalValue(10))
+                .totalReward(EXPECTED_REWARD.multiply(TestUtils.bigDecimalValue(2)).setScale(2, RoundingMode.UNNECESSARY))
+                .build();
+        r1.setCounters(rc1
+        );
+        Reward r2 = new Reward(INITIATIVE_ID2, "ORGANIZATIONID_" + INITIATIVE_ID2, EXPECTED_REWARD);
+        RewardCounters rc2 = RewardCounters.builder()
+                .version(1L)
+                .trxNumber(1L)
+                .totalAmount(TestUtils.bigDecimalValue(5))
+                .totalReward(EXPECTED_REWARD)
+                .build();
+        r2.setCounters(rc2
+        );
+
+        rewarded.setRewards(Map.of(
+                INITIATIVE_ID1, r1,
+                INITIATIVE_ID2, r2));
+
+        UserInitiativeCountersWrapper userCounter = createUserCounter(rewarded);
+        userCounter.getInitiatives().put(INITIATIVE_ID1, UserInitiativeCounters.builder(rewarded.getUserId(), INITIATIVE_ID1)
+                .version(2)
+                .trxNumber(2L)
+                .totalReward(EXPECTED_REWARD.multiply(BigDecimal.valueOf(2)).setScale(2,RoundingMode.UNNECESSARY))
+                .totalAmount(TestUtils.bigDecimalValue(10))
+                .build());
+
+        return (TransactionProcessed) transactionProcessedService.save(rewarded).block();
+    }
+
+    private TransactionDTO buildTrx(Integer i) {
+        return onboardTrxHpanAndIncreaseCounters(
+                TransactionDTOFaker.mockInstanceBuilder(i)
+                        .amount(BigDecimal.valueOf(5_00))
+                        .build(),
+                INITIATIVE_ID1, INITIATIVE_ID2);
+    }
 
     private void assertRewardedState(RewardTransactionDTO evaluation, String rewardedInitiativeId, boolean expectedCap, long expectedCounterTrxNumber, double expectedCounterTotalAmount, double preCurrentTrxCounterTotalReward, boolean expectedCounterBudgetExhausted) {
         assertRewardedState(evaluation, 2, rewardedInitiativeId, EXPECTED_REWARD, expectedCap, expectedCounterTrxNumber, expectedCounterTotalAmount, EXPECTED_REWARD.doubleValue() + preCurrentTrxCounterTotalReward, expectedCounterBudgetExhausted, false, false);

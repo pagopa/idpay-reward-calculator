@@ -50,6 +50,7 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.reward.trx.RecoveryProcessedTransactionServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=WARN",
         "logging.level.it.gov.pagopa.reward.utils.PerformanceLogger=WARN",
         "logging.level.AUDIT=WARN",
@@ -184,8 +185,8 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         counters.setTotalReward(counters.getTotalReward().add(expectedReward).setScale(2, RoundingMode.UNNECESSARY));
     }
 
-    protected void saveUserInitiativeCounter(TransactionDTO trx, UserInitiativeCounters initiativeRewardCounter) {
-        userInitiativeCountersRepository.save(
+    protected UserInitiativeCounters saveUserInitiativeCounter(TransactionDTO trx, UserInitiativeCounters initiativeRewardCounter) {
+        return userInitiativeCountersRepository.save(
                 initiativeRewardCounter.toBuilder()
                         .userId(trx.getUserId())
                         .id(UserInitiativeCounters.buildId(trx.getUserId(), initiativeRewardCounter.getInitiativeId()))
