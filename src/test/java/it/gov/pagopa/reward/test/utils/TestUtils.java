@@ -2,8 +2,8 @@ package it.gov.pagopa.reward.test.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.reward.config.JsonConfig;
-import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.common.config.JsonConfig;
+import it.gov.pagopa.common.utils.CommonConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.junit.jupiter.api.Assertions;
@@ -22,7 +22,7 @@ public class TestUtils {
     }
 
     static {
-        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
+        TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.ZONEID));
     }
 
     /**

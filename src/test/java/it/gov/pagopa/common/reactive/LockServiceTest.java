@@ -2,6 +2,8 @@ package it.gov.pagopa.common.reactive;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import it.gov.pagopa.common.reactive.service.LockService;
+import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -25,12 +27,12 @@ class LockServiceTest {
 
     @BeforeAll
     static void traceLogs(){
-        ((Logger) LoggerFactory.getLogger("it.gov.pagopa.common.reactive.LockServiceImpl")).setLevel(Level.TRACE);
+        ((Logger) LoggerFactory.getLogger("it.gov.pagopa.common.reactive.service.LockServiceImpl")).setLevel(Level.TRACE);
     }
 
     @AfterAll
     static void resetLogs(){
-        ((Logger) LoggerFactory.getLogger("it.gov.pagopa.common.reactive.LockServiceImpl")).setLevel(Level.INFO);
+        ((Logger) LoggerFactory.getLogger("it.gov.pagopa.common.reactive.service.LockServiceImpl")).setLevel(Level.INFO);
     }
 
     @Test

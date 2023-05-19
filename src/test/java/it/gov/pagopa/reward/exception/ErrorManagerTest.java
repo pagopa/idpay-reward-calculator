@@ -1,8 +1,12 @@
 package it.gov.pagopa.reward.exception;
 
+import it.gov.pagopa.common.web.dto.ErrorDTO;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.Severity;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.controller.RewardTrxSynchronousApiController;
-import it.gov.pagopa.reward.dto.ErrorDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;

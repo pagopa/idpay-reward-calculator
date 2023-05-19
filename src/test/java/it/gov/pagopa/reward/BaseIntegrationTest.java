@@ -7,10 +7,10 @@ import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
-import it.gov.pagopa.common.service.StreamsHealthIndicator;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.common.stream.StreamsHealthIndicator;
+import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.test.utils.TestUtils;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -167,7 +167,7 @@ public abstract class BaseIntegrationTest {
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
-        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
+        TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.ZONEID));
 
         unregisterMBean("kafka.*:*");
         unregisterMBean("org.springframework.*:*");

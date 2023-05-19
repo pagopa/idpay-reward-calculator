@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.config.EmbeddedRedisTestConfiguration;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;

@@ -1,7 +1,8 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
-import it.gov.pagopa.common.reactive.LockService;
+import it.gov.pagopa.common.reactive.service.LockService;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
@@ -51,7 +52,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
     @BeforeAll
     public static void setDefaultTimezone() {
-        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
+        TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.ZONEID));
     }
 
     @Mock private LockService lockServiceMock;

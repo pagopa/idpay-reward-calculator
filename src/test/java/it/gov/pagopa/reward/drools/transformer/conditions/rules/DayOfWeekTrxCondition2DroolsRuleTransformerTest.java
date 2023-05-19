@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
@@ -49,7 +50,7 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 45));
-        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, CommonConstants.ZONEID.getRules().getOffset(localDateTime)));
         return List.of(() -> trx);
     }
 
@@ -57,7 +58,7 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 44));
-        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, RewardConstants.ZONEID.getRules().getOffset(localDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, CommonConstants.ZONEID.getRules().getOffset(localDateTime)));
         return List.of(() -> trx);
     }
 

@@ -2,14 +2,11 @@ package it.gov.pagopa.reward.utils;
 
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public final class RewardConstants {
     private RewardConstants(){}
-
-    public static final ZoneId ZONEID = ZoneId.of("Europe/Rome");
 
     //region transactions' channels
     public static final String TRX_CHANNEL_RTD = "RTD";

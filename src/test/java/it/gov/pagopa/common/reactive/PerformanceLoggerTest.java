@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.reactive;
 
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;

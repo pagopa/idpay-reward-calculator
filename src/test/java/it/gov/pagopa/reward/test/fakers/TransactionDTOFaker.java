@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
@@ -54,7 +55,7 @@ public class TransactionDTOFaker {
                 .acquirerCode("ACQUIRERCODE%d".formatted(bias))
                 .trxDate(OffsetDateTime.of(
                         trxDateTime,
-                        RewardConstants.ZONEID.getRules().getOffset(trxDateTime)
+                        CommonConstants.ZONEID.getRules().getOffset(trxDateTime)
                 ))
                 .hpan("HPAN%d".formatted(bias))
                 .operationType("00")

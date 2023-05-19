@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.controller;
 
-import it.gov.pagopa.common.reactive.PerformanceLogger;
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
-import it.gov.pagopa.reward.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;
 import org.drools.core.definitions.rule.impl.RuleImpl;

@@ -15,7 +15,7 @@ import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDroolsDtoFaker;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;

@@ -11,13 +11,13 @@ import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
@@ -50,7 +50,7 @@ import java.util.stream.IntStream;
 @TestPropertySource(
         properties = {
                 "logging.level.it.gov.pagopa.reward=WARN",
-                "logging.level.it.gov.pagopa.reward.exception.ErrorManager=INFO",
+                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=INFO",
         })
 class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationTest {
     public static final String INITIATIVEID = "INITIATIVEID";

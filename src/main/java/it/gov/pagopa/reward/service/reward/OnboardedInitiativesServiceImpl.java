@@ -1,11 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.utils.RewardConstants;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -57,7 +57,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate: {} - {}", hpan, trxDate);
         return hpanInitiativesRepository.findById(hpan)
                 .flatMapMany(initiativesForHpan -> {
-                    LocalDateTime trxDateTime = trxDate.atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
+                    LocalDateTime trxDateTime = trxDate.atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime();
 
                     if (initiativesForHpan != null && initiativesForHpan.getOnboardedInitiatives() != null) {
                         return Flux.fromIterable(initiativesForHpan.getOnboardedInitiatives())

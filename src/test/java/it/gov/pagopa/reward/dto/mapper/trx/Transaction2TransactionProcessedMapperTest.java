@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper.trx;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -9,7 +10,6 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +37,7 @@ class Transaction2TransactionProcessedMapperTest {
     void mapWithNotNullTransactionDTO(){
         // Given
         LocalDateTime dateTime = LocalDateTime.of(2000, 1, 1, 23, 59, 57);
-        OffsetDateTime trxDate = OffsetDateTime.of(dateTime, RewardConstants.ZONEID.getRules().getOffset(dateTime));
+        OffsetDateTime trxDate = OffsetDateTime.of(dateTime, CommonConstants.ZONEID.getRules().getOffset(dateTime));
         Map<String, Reward> rewards = Map.of(
                 "REWARDS0",
                 new Reward("REWARDS0", "ORGANIZATION0", BigDecimal.valueOf(100))
@@ -70,8 +70,8 @@ class Transaction2TransactionProcessedMapperTest {
     }
 
     private void assertCommonFieldValues(RewardTransactionDTO trx, TransactionProcessed result) {
-        LocalDateTime trxDate = trx.getTrxDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
-        final LocalDateTime trxChargeDate = trx.getTrxChargeDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime();
+        LocalDateTime trxDate = trx.getTrxDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime();
+        final LocalDateTime trxChargeDate = trx.getTrxChargeDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime();
 
         Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());

@@ -1,11 +1,12 @@
 package it.gov.pagopa.reward.service.reward.ops;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
+import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -94,7 +95,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
 
     private static OffsetDateTime readChargeDate(TransactionProcessed trxCharge) {
         LocalDateTime trxChargeLocalDateTime = trxCharge.getTrxChargeDate();
-        return OffsetDateTime.of(trxChargeLocalDateTime, RewardConstants.ZONEID.getRules().getOffset(trxChargeLocalDateTime));
+        return OffsetDateTime.of(trxChargeLocalDateTime, CommonConstants.ZONEID.getRules().getOffset(trxChargeLocalDateTime));
     }
 
     private void reduceRewards(Map<String, RefundInfo.PreviousReward> pastRewards, BaseTransactionProcessed pt) {
