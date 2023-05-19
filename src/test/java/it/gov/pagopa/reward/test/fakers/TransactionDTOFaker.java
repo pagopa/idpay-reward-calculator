@@ -80,6 +80,6 @@ public class TransactionDTOFaker {
                 .brand("BRAND%d".formatted(bias))
                 .channel(RewardConstants.TRX_CHANNEL_RTD)
                 .ruleEngineTopicPartition(0)
-                .ruleEngineTopicOffset(bias.longValue());
+                .ruleEngineTopicOffset(-1L);
     }
 }

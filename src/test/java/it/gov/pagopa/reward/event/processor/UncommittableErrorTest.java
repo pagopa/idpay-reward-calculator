@@ -33,9 +33,7 @@ import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,7 +57,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
 
         publishRewardRules();
 
-        List<String> trxs = buildValidPayloads(0, trx);
+        List<String> trxs = buildValidPayloads(trx);
 
         long totalSendMessages = trxs.size() + duplicateTrx;
 
@@ -131,8 +129,8 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                 ));
     }
 
-    private List<String> buildValidPayloads(int bias, int validOnboardings) {
-        return IntStream.range(bias, bias + validOnboardings)
+    private List<String> buildValidPayloads(int bias) {
+        return IntStream.range(0, bias)
                 .mapToObj(this::mockInstance)
                 .map(TestUtils::jsonSerializer)
                 .toList();
@@ -199,8 +197,6 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
     }
 
     //region useCases
-    private final LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
-
     private final List<Pair<Function<Integer, TransactionDTO>, Consumer<RewardTransactionDTO>>> useCases = List.of(
             // useCase 0: rewarded with no previous counter and no errors
             Pair.of(
