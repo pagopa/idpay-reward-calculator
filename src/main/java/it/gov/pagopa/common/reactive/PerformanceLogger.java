@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.utils;
+package it.gov.pagopa.common.reactive;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;

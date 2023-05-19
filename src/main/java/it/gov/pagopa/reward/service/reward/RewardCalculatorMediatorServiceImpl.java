@@ -2,12 +2,13 @@ package it.gov.pagopa.reward.service.reward;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.common.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
+import it.gov.pagopa.common.reactive.LockService;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.service.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
-import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -111,10 +112,9 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
                 .flatMap(transactionProcessedService::checkDuplicateTransactions)
                 .flatMap(operationTypeHandlerService::handleOperationType)
                 .flatMap(this::retrieveInitiativesAndEvaluate)
-                .doOnEach(lockReleaser)
                 .doOnNext(r -> {
+                    lockReleaser.accept(null);
                     rewardNotifierService.notifyFallbackToErrorTopic(r);
-
                     auditUtilities.logExecute(r);
                 });
     }
@@ -123,8 +123,8 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
         if(StringUtils.isEmpty(trx.getChannel())){
             trx.setChannel(RewardConstants.TRX_CHANNEL_RTD);
         }
-        trx.setRuleEngineTopicPartition(Utils.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION_ID));
-        trx.setRuleEngineTopicOffset(Utils.getHeaderValue(message, KafkaHeaders.OFFSET));
+        trx.setRuleEngineTopicPartition(CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION_ID));
+        trx.setRuleEngineTopicOffset(CommonUtilities.getHeaderValue(message, KafkaHeaders.OFFSET));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
+import it.gov.pagopa.common.reactive.PerformanceLogger;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.TransactionDroolsDTO2RewardTransactionMapper;
@@ -9,7 +10,6 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.utils.PerformanceLogger;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.drools.core.command.runtime.rule.AgendaGroupSetFocusCommand;

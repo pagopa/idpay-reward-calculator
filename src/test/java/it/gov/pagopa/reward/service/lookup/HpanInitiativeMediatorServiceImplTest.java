@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.lookup;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
@@ -13,7 +14,6 @@ import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
@@ -246,7 +246,7 @@ class HpanInitiativeMediatorServiceImplTest {
         Flux<Message<String>> msgs = Flux.just(initiative1, initiative2)
                 .map(TestUtils::jsonSerializer)
                 .map(MessageBuilder::withPayload)
-                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 
         // When

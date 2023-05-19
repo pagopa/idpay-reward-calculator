@@ -1,10 +1,10 @@
 package it.gov.pagopa.reward.event.consumer;
 
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImplTest;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -64,7 +64,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
         long timeStart=System.currentTimeMillis();
         initiativePayloads.forEach(i->publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
-        publishIntoEmbeddedKafka(topicRewardRuleConsumer, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        publishIntoEmbeddedKafka(topicRewardRuleConsumer, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingEnd=System.currentTimeMillis();
 
         long countSaved = waitForDroolsRulesStored(validRules);

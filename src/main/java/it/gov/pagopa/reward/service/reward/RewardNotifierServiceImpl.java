@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.kafka.exception.UncommittableError;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.exception.UncommittableError;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;

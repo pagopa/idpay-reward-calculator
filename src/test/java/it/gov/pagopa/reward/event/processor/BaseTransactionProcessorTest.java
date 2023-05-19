@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.reactive.LockServiceImpl;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -17,11 +19,9 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
-import it.gov.pagopa.reward.service.LockServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -51,8 +51,9 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.RecoveryProcessedTransactionServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.BaseKafkaConsumer=WARN",
-        "logging.level.it.gov.pagopa.reward.utils.PerformanceLogger=WARN",
+        "logging.level.it.gov.pagopa.common.kafka.consumer.BaseKafkaConsumer=WARN",
+        "logging.level.it.gov.pagopa.common.kafka.consumer.BaseKafkaBlockingPartitionConsumer=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.PerformanceLogger=WARN",
         "logging.level.AUDIT=WARN",
 })
 @Slf4j
@@ -176,9 +177,9 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected void updateCounters(Counters counters, TransactionDTO trx, BigDecimal expectedReward) {
         BigDecimal amountEuro;
         if(trx.getAmountCents()!=null){
-            amountEuro= Utils.centsToEuro(trx.getAmountCents());
+            amountEuro= CommonUtilities.centsToEuro(trx.getAmountCents());
         } else {
-            amountEuro=Utils.centsToEuro(trx.getAmount().longValue());
+            amountEuro=CommonUtilities.centsToEuro(trx.getAmount().longValue());
         }
         counters.setTrxNumber(counters.getTrxNumber() + 1);
         counters.setTotalAmount(counters.getTotalAmount().add(amountEuro));

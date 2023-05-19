@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.utils;
+package it.gov.pagopa.common.reactive;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

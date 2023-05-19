@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.dto.mapper.trx.sync;
 
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -8,7 +9,6 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -74,8 +74,9 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getCorrelationId(), result.getCorrelationId());
         Assertions.assertEquals(previewRequest.getTrxChargeDate(),result.getTrxChargeDate());
         Assertions.assertEquals(previewRequest.getChannel(),result.getChannel());
+
         TestUtils.checkNotNullFields(result, "circuitType", "terminalId", "bin", "senderCode",
-                "posType","par", "refundInfo", "brandLogo", "brand", "maskedPan");
+                "posType","par", "refundInfo", "brandLogo", "brand", "maskedPan", "ruleEngineTopicPartition", "ruleEngineTopicOffset");
     }
 
     @Test
@@ -102,8 +103,8 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getOperationType(), result.getOperationType());
         Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
-        Assertions.assertEquals(Utils.centsToEuro(previewRequest.getAmountCents()), result.getAmount());
-        Assertions.assertEquals(Utils.centsToEuro(previewRequest.getAmountCents()), result.getEffectiveAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(previewRequest.getAmountCents()), result.getAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(previewRequest.getAmountCents()), result.getEffectiveAmount());
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(discardCause, result.getRejectionReasons());
         Assertions.assertNull(result.getReward());

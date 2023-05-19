@@ -1,7 +1,8 @@
-package it.gov.pagopa.reward.service;
+package it.gov.pagopa.common.kafka.consumer;
 
-import it.gov.pagopa.reward.exception.UncommittableError;
-import it.gov.pagopa.reward.utils.Utils;
+import it.gov.pagopa.common.kafka.exception.UncommittableError;
+import it.gov.pagopa.common.reactive.LockService;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,14 +28,16 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
 
     @Override
     protected Mono<R> execute(Message<String> message, Map<String, Object> ctx) {
-        return Mono.fromSupplier(() -> {
-                    int lockId = ObjectUtils.firstNonNull(calculateLockId(message), -1);
-                    if (lockId>-1) {
-                        lockService.acquireLock(lockId);
-                        log.debug("{}[LOCK_ACQUIRED] Message acquired lockId {}", getFlowName(), lockId);
-                    }
-                    return new MutablePair<>(message, lockId);
-                })
+        int lockId = ObjectUtils.firstNonNull(calculateLockId(message), -1);
+
+        Mono<Pair<Message<String>, Integer>> acquiringLock = Mono.just(new MutablePair<>(message, lockId));
+        if(lockId > -1) {
+            acquiringLock = lockService.acquireLock(lockId)
+                    .doOnNext(x -> log.debug("{}[LOCK_ACQUIRED] Message acquired lockId {}", getFlowName(), lockId))
+                    .then(acquiringLock);
+        }
+
+        return acquiringLock
                 .flatMap(m -> executeAfterLock(m, ctx));
     }
 
@@ -57,43 +60,49 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
         return Mono.just(message)
                 .mapNotNull(this::deserializeMessage)
                 .flatMap(m -> execute(m, message, ctx, lockReleaser))
-                .doOnEach(lockReleaser)
 
                 .onErrorResume(UncommittableError.class, e -> {
-                    lockReleaser.accept(null);
-                    return Mono.error(e);
-                });
+                    log.info("Retrying after reactive pipeline error: ", e);
+                    return executeAfterLock(messageAndLockId, ctx);
+                })
+
+                .doOnEach(lockReleaser);
     }
 
-    /** as default behavior, let's the base class to to release the lock. Override this method if it's possible to anticipate the release lock */
+    /**
+     * as default behavior, let's the base class to to release the lock. Override this method if it's possible to anticipate the release lock
+     */
     @SuppressWarnings("squid:S1128") // ignore unused parameter, could be useful in subclass
     protected Mono<R> execute(T payload, Message<String> message, Map<String, Object> ctx, Consumer<? super Signal<R>> lockReleaser) {
         return execute(payload, message, ctx);
     }
 
-    /** Given a message, it will calculate the lockId */
-    public int calculateLockId(Message<String> message) {
-        return Math.floorMod(Math.abs(getMessagePartitionKey(message)), lockService.getBuketSize());
-    }
-
-    /** Given a message, it will return the first not null of:
+    /**
+     * Given a message, it will return the first not null of:
      * <ol>
      *     <li>hashcode of its MessageKey</li>
      *     <li>partitionNumber</li>
      * </ol>
-     * */
+     */
     protected int getMessagePartitionKey(Message<String> message) {
-        String messageKey = Utils.getByteArrayHeaderValue(message, KafkaHeaders.RECEIVED_MESSAGE_KEY);
-        if(!StringUtils.isEmpty(messageKey)){
+        String messageKey = CommonUtilities.getByteArrayHeaderValue(message, KafkaHeaders.RECEIVED_MESSAGE_KEY);
+        if (!StringUtils.isEmpty(messageKey)) {
             return messageKey.hashCode();
         } else {
-            String partitionId = Utils.getByteArrayHeaderValue(message, KafkaHeaders.PARTITION_ID);
-            if(partitionId!=null){
+            String partitionId = CommonUtilities.getByteArrayHeaderValue(message, KafkaHeaders.PARTITION_ID);
+            if (partitionId != null) {
                 return Integer.parseInt(partitionId);
             } else {
                 return message.getPayload().hashCode();
             }
         }
+    }
+
+    /**
+     * Given a message, it will calculate the lockId
+     */
+    public int calculateLockId(Message<String> message) {
+        return Math.floorMod(Math.abs(getMessagePartitionKey(message)), lockService.getBuketSize());
     }
 
 }

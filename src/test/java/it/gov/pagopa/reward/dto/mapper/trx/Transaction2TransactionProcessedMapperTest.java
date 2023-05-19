@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.dto.mapper.trx;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -8,7 +10,6 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,11 +47,12 @@ class Transaction2TransactionProcessedMapperTest {
         trx.setTrxDate(trxDate);
         trx.setTrxChargeDate(trxDate);
         trx.setAmountCents(trx.getAmount().longValue());
-        trx.setAmount(Utils.centsToEuro(trx.getAmountCents()));
+        trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
         trx.setEffectiveAmount(trx.getAmount());
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setRewards(rewards);
         trx.setId(TransactionDTO.computeTrxId(trx));
+        trx.setRefundInfo(new RefundInfo());
 
         String id = "IDTRXACQUIRER0ACQUIRERCODE020000101T23595700ACQUIRERID0";
 

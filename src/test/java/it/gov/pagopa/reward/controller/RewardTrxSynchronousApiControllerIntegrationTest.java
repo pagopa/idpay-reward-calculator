@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.controller;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
@@ -23,7 +24,6 @@ import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -274,8 +274,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 Assertions.assertEquals(transactionProcessedResult.getUserId(), expectedResponse.getUserId());
                 Assertions.assertEquals(transactionProcessedResult.getOperationTypeTranscoded(), expectedResponse.getOperationType());
                 Assertions.assertEquals(transactionProcessedResult.getAmountCents(), expectedResponse.getAmountCents());
-                Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getAmount());
-                Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getEffectiveAmount());
+                Assertions.assertEquals(CommonUtilities.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getAmount());
+                Assertions.assertEquals(CommonUtilities.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getEffectiveAmount());
 
                 Reward responseReward = expectedResponse.getReward();
                 Reward expectedReward = transactionProcessedResult.getRewards().get(INITIATIVEID);
@@ -345,8 +345,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         Assertions.assertEquals(trxRequest.getUserId(), expectedResponse.getUserId());
         Assertions.assertEquals(trxRequest.getOperationType(), expectedResponse.getOperationType());
         Assertions.assertEquals(trxRequest.getAmountCents(), expectedResponse.getAmountCents());
-        Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getAmount());
-        Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
 
         if(expectedReward != null) {
             Reward responseReward = expectedResponse.getReward();
@@ -365,8 +365,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         return Reward.builder()
                 .initiativeId(INITIATIVEID)
                 .organizationId("ORGANIZATIONID_"+INITIATIVEID)
-                .providedReward(Utils.centsToEuro(2000L))
-                .accruedReward(Utils.centsToEuro(2000L))
+                .providedReward(CommonUtilities.centsToEuro(2000L))
+                .accruedReward(CommonUtilities.centsToEuro(2000L))
                 .capped(false)
                 .dailyCapped(false)
                 .monthlyCapped(false)
@@ -386,8 +386,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 .userId(trxRequest.getUserId())
                 .operationType(trxRequest.getOperationType())
                 .amountCents(trxRequest.getAmountCents())
-                .amount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
+                .amount(CommonUtilities.centsToEuro(trxRequest.getAmountCents()))
+                .effectiveAmount(CommonUtilities.centsToEuro(trxRequest.getAmountCents()))
                 .status(status)
                 .rejectionReasons(rejectionReasons)
                 .reward(reward)

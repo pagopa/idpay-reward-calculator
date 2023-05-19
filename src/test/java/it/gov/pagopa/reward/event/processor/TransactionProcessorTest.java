@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -14,7 +16,6 @@ import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.RuleEngineService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
@@ -111,7 +112,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
             }
         });
         // to test trx sent from other application
-        publishIntoEmbeddedKafka(topicRewardProcessorRequest, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        publishIntoEmbeddedKafka(topicRewardProcessorRequest, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
@@ -340,7 +341,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         int biasRetrieve = Integer.parseInt(hpan.substring(4));
         useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
         Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
-        Assertions.assertEquals(Utils.centsToEuro(rewardedTrx.getAmountCents()), rewardedTrx.getAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(rewardedTrx.getAmountCents()), rewardedTrx.getAmount());
         Assertions.assertNotNull(rewardedTrx.getRuleEngineTopicPartition());
         Assertions.assertNotNull(rewardedTrx.getRuleEngineTopicOffset());
     }
@@ -742,7 +743,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 .userId(failingRewardPublishingUserId)
                 .build();
         TransactionDTO expectedFailingRewardPublishing = failingRewardPublishing.toBuilder()
-                .amount(Utils.centsToEuro(failingRewardPublishing.getAmount().longValue()))
+                .amount(CommonUtilities.centsToEuro(failingRewardPublishing.getAmount().longValue()))
                 .amountCents(failingRewardPublishing.getAmount().longValue())
                 .build();
         errorUseCases.add(Pair.of(
@@ -760,7 +761,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                 .amount(BigDecimal.valueOf(88_00))
                 .build();
         TransactionDTO expectedExceptionWhenRewardPublish = exceptionWhenRewardPublish.toBuilder()
-                .amount(Utils.centsToEuro(exceptionWhenRewardPublish.getAmount().longValue()))
+                .amount(CommonUtilities.centsToEuro(exceptionWhenRewardPublish.getAmount().longValue()))
                 .amountCents(exceptionWhenRewardPublish.getAmount().longValue())
                 .build();
         errorUseCases.add(Pair.of(

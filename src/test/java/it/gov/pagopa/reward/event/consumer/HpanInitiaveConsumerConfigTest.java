@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.event.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
@@ -9,7 +10,6 @@ import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.lookup.HpanUpdateNotifierService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
@@ -79,7 +79,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
 
         long startTest = System.currentTimeMillis();
         hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, readUserId(e),e));
-        publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, List.of(new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
         waitForDB(dbElementsNumbers+1+((updatedHpanNumbers-dbElementsNumbers)/2)+dbElementsNumbers);

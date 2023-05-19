@@ -1,11 +1,16 @@
-package it.gov.pagopa.reward.service;
+package it.gov.pagopa.common.reactive;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
+import javax.annotation.PreDestroy;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -16,19 +21,30 @@ import java.util.stream.IntStream;
 public class LockServiceImpl implements LockService {
 
     private final int bucketSize;
+    private final int maxThreads;
     private final int lockSecondsTimeout;
     private final Map<Integer, Semaphore> locks;
+    private final Map<Integer, Scheduler> schedulers;
 
     public LockServiceImpl(
             @Value("${app.trx-lock.bucket-size}") int bucketSize,
+            @Value("${app.trx-lock.max-threads}") int maxThreads,
             @Value("${app.trx-lock.timeout}") int lockSecondsTimeout
     ) {
-        locks = IntStream.range(0, bucketSize)
+        this.locks = IntStream.range(0, bucketSize)
                 .mapToObj(i-> Pair.of(i, new Semaphore(1, true)))
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
 
         this.bucketSize = bucketSize;
+        this.maxThreads = maxThreads;
         this.lockSecondsTimeout = lockSecondsTimeout;
+        this.schedulers = new ConcurrentHashMap<>(maxThreads);
+    }
+
+    @PreDestroy
+    void releaseResources(){
+        this.schedulers.values().forEach(Scheduler::dispose);
+        this.schedulers.clear();
     }
 
     @Override
@@ -37,7 +53,18 @@ public class LockServiceImpl implements LockService {
     }
 
     @Override
-    public void acquireLock(int lockId) {
+    public Mono<Integer> acquireLock(int lockId) {
+        return Mono.just(lockId)
+                .publishOn(getScheduler(lockId))
+                .doOnNext(this::blockCurrentThread);
+    }
+
+    private Scheduler getScheduler(int lockId) {
+        int schedulerId = lockId % maxThreads;
+        return schedulers.computeIfAbsent(schedulerId, x -> Schedulers.newBoundedElastic(1, 500, "lockedQueue-"+schedulerId));
+    }
+
+    private void blockCurrentThread(int lockId) {
         final Semaphore lock = locks.get(lockId);
         if(lock!=null){
             try {

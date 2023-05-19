@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.synchronous;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
@@ -24,7 +25,6 @@ import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,8 +82,8 @@ class RewardTrxSynchronousApiServiceImplTest {
                         .channel(previewRequest.getChannel())
                         .operationType(previewRequest.getOperationType())
                         .amountCents(previewRequest.getAmountCents())
-                        .amount(Utils.centsToEuro(previewRequest.getAmountCents()))
-                        .effectiveAmount(Utils.centsToEuro(previewRequest.getAmountCents()))
+                        .amount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
+                        .effectiveAmount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
                         .status(RewardConstants.REWARD_STATE_REJECTED)
                         .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                         .build();
@@ -121,8 +121,8 @@ class RewardTrxSynchronousApiServiceImplTest {
                 .channel("CHANNEL")
                 .operationType(OperationType.CHARGE)
                 .amountCents(previewRequest.getAmountCents())
-                .amount(Utils.centsToEuro(previewRequest.getAmountCents()))
-                .effectiveAmount(Utils.centsToEuro(previewRequest.getAmountCents()))
+                .amount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
+                .effectiveAmount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
                 .status(RewardConstants.REWARD_STATE_REJECTED)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
@@ -180,8 +180,8 @@ class RewardTrxSynchronousApiServiceImplTest {
                 .channel("channel")
                 .operationType(OperationType.CHARGE)
                 .amountCents(previewRequest.getAmountCents())
-                .amount(Utils.centsToEuro(previewRequest.getAmountCents()))
-                .effectiveAmount(Utils.centsToEuro(previewRequest.getAmountCents()))
+                .amount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
+                .effectiveAmount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
         Mockito.when(rewardTransaction2SynchronousTransactionResponseDTOMapperMock.apply(Mockito.same(previewRequest.getTransactionId()), Mockito.same(initiativeId), Mockito.same(rewardTransactionDTO))).thenReturn(synchronousTransactionResponseDTO);

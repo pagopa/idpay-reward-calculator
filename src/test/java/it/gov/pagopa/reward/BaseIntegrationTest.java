@@ -6,9 +6,9 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
-import it.gov.pagopa.reward.service.StreamsHealthIndicator;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -281,22 +281,22 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    private int totaleMessageSentCounter =0;
+    private int totalMessageSentCounter = 0;
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
         final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes(StandardCharsets.UTF_8));
-        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, applicationName.getBytes(StandardCharsets.UTF_8));
+        final RecordHeader applicationNameHeader = new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, applicationName.getBytes(StandardCharsets.UTF_8));
 
         AtomicBoolean containAppNameHeader = new AtomicBoolean(false);
         if(headers!= null){
             headers.forEach(h -> {
-                if(h.key().equals(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME)){
+                if(h.key().equals(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME)){
                     containAppNameHeader.set(true);
                 }
             });
         }
 
         final RecordHeader[] additionalHeaders;
-        if(totaleMessageSentCounter++%2 == 0 || containAppNameHeader.get()){
+        if(totalMessageSentCounter++%2 == 0 || containAppNameHeader.get()){
             additionalHeaders= new RecordHeader[]{retryHeader};
         } else {
             additionalHeaders= new RecordHeader[]{retryHeader, applicationNameHeader};
@@ -397,14 +397,14 @@ public abstract class BaseIntegrationTest {
         checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true);
     }
     protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
-        Assertions.assertEquals(expectedAppNameHeader? applicationName : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
-        Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
+        Assertions.assertEquals(expectedAppNameHeader? applicationName : null, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME));
+        Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_GROUP));
 
-        Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
-        Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
-        Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
-        Assertions.assertNotNull(errorMessage.headers().lastHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE));
-        Assertions.assertEquals(errorDescription, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_DESCRIPTION));
+        Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE));
+        Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER));
+        Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC));
+        Assertions.assertNotNull(errorMessage.headers().lastHeader(KafkaConstants.ERROR_MSG_HEADER_STACKTRACE));
+        Assertions.assertEquals(errorDescription, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_DESCRIPTION));
         if(expectRetryHeader){
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "RETRY")); // to test if headers are correctly propagated
         }

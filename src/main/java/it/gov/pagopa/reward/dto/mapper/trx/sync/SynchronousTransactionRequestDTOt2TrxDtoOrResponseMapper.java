@@ -1,11 +1,11 @@
 package it.gov.pagopa.reward.dto.mapper.trx.sync;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
 
     public TransactionDTO apply(SynchronousTransactionRequestDTO trx) {
         TransactionDTO out = new TransactionDTO();
-        BigDecimal amount = Utils.centsToEuro(trx.getAmountCents());
+        BigDecimal amount = CommonUtilities.centsToEuro(trx.getAmountCents());
 
         out.setId(trx.getTransactionId());
         out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
@@ -69,8 +69,8 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setUserId(request.getUserId());
         out.setOperationType(request.getOperationType());
         out.setAmountCents(request.getAmountCents());
-        out.setAmount(Utils.centsToEuro(request.getAmountCents()));
-        out.setEffectiveAmount(Utils.centsToEuro(request.getAmountCents()));
+        out.setAmount(CommonUtilities.centsToEuro(request.getAmountCents()));
+        out.setEffectiveAmount(CommonUtilities.centsToEuro(request.getAmountCents()));
         out.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         out.setRejectionReasons(discardCause);
         return out;

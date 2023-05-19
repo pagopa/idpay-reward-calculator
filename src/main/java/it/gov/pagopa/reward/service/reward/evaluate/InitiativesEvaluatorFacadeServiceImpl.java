@@ -1,12 +1,12 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
+import it.gov.pagopa.common.kafka.exception.UncommittableError;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.UncommittableError;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -151,6 +151,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                             .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", rewardedTrx.getId()))
                             .thenMany(
                                     userInitiativeCountersRepository.saveAll(counters)
+                                            // TODO instead of retry the entire message, just retry this saveAll at least once!
                                             .onErrorResume(e -> Mono.error(new UncommittableError("An error occurred while storing counters updated evaluating trx %s".formatted(counters2rewardedTrx.getSecond().getId()))))
                             )
                             .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", rewardedTrx.getId()))

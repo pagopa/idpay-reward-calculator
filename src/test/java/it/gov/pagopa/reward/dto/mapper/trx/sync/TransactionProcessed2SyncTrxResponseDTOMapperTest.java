@@ -1,11 +1,11 @@
 package it.gov.pagopa.reward.dto.mapper.trx.sync;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.test.utils.TestUtils;
-import it.gov.pagopa.reward.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +26,9 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
                 .channel("CHANNEL")
                 .userId("USERID")
                 .operationTypeTranscoded(OperationType.CHARGE)
-                .amount(Utils.centsToEuro(100L))
+                .amount(CommonUtilities.centsToEuro(100L))
                 .amountCents(100L)
-                .effectiveAmount(Utils.centsToEuro(100L))
+                .effectiveAmount(CommonUtilities.centsToEuro(100L))
                 .status("STATUS")
                 .rewards(Map.of(initiativeId,reward))
                 .build();
