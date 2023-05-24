@@ -101,6 +101,18 @@
             <!-- Forced to 2.0 due to https://nvd.nist.gov/vuln/detail/CVE-2022-1471 -->
             <version>2.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-core</artifactId>
+            <!-- Forced to 1.1.7 due to https://nvd.nist.gov/vuln/detail/CVE-2021-37136 -->
+            <version>1.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-http</artifactId>
+            <!-- Forced to 1.1.7 due to https://nvd.nist.gov/vuln/detail/CVE-2021-37136 -->
+            <version>1.1.7</version>
+        </dependency>
 
         <!--TEST-->
         <dependency>
