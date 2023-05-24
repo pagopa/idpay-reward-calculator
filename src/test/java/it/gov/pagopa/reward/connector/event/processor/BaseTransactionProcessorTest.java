@@ -51,8 +51,8 @@ import java.util.concurrent.Semaphore;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.RecoveryProcessedTransactionServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.common.kafka.consumer.BaseKafkaConsumer=WARN",
-        "logging.level.it.gov.pagopa.common.kafka.consumer.BaseKafkaBlockingPartitionConsumer=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
         "logging.level.AUDIT=WARN",
 })

@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
-import it.gov.pagopa.common.kafka.exception.UncommittableError;
+import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -10,16 +11,18 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,13 +31,27 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluatorFacadeService {
 
+    private final long countersUpdateMaxRetries;
+    private final Duration countersUpdatedRetryDelay;
+
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final InitiativesEvaluatorService initiativesEvaluatorService;
     private final UserInitiativeCountersUpdateService userInitiativeCountersUpdateService;
     private final TransactionProcessedService transactionProcessedService;
     private final Transaction2RewardTransactionMapper rewardTransactionMapper;
 
-    public InitiativesEvaluatorFacadeServiceImpl(UserInitiativeCountersRepository userInitiativeCountersRepository, InitiativesEvaluatorService initiativesEvaluatorService, UserInitiativeCountersUpdateService userInitiativeCountersUpdateService, TransactionProcessedService transactionProcessedService, Transaction2RewardTransactionMapper rewardTransactionMapper) {
+    public InitiativesEvaluatorFacadeServiceImpl(
+            @Value("${app.trx-retries.counters-update.retries}") long countersUpdateMaxRetries,
+            @Value("${app.trx-retries.counters-update.delayMillis}") long countersUpdatedRetryDelayMills,
+
+            UserInitiativeCountersRepository userInitiativeCountersRepository,
+            InitiativesEvaluatorService initiativesEvaluatorService,
+            UserInitiativeCountersUpdateService userInitiativeCountersUpdateService,
+            TransactionProcessedService transactionProcessedService,
+            Transaction2RewardTransactionMapper rewardTransactionMapper) {
+        this.countersUpdateMaxRetries = countersUpdateMaxRetries;
+        this.countersUpdatedRetryDelay = Duration.ofMillis(countersUpdatedRetryDelayMills);
+
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.initiativesEvaluatorService = initiativesEvaluatorService;
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
@@ -151,7 +168,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                             .doOnNext(r -> log.trace("[REWARD] Transaction stored: {}", rewardedTrx.getId()))
                             .thenMany(
                                     userInitiativeCountersRepository.saveAll(counters)
-                                            // TODO instead of retry the entire message, just retry this saveAll at least once!
+                                            .retryWhen(Retry.fixedDelay(countersUpdateMaxRetries, countersUpdatedRetryDelay))
                                             .onErrorResume(e -> Mono.error(new UncommittableError("An error occurred while storing counters updated evaluating trx %s".formatted(counters2rewardedTrx.getSecond().getId()))))
                             )
                             .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", rewardedTrx.getId()))

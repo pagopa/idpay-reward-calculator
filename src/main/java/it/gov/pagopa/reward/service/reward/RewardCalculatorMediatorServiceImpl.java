@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.service.reward;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.common.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;

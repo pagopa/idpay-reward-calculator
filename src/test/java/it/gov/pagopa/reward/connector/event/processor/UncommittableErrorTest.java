@@ -26,9 +26,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Stubber;
 import org.opentest4j.AssertionFailedError;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.util.Pair;
+import org.springframework.messaging.Message;
+import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
@@ -36,28 +41,51 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@TestPropertySource(properties = {
+        "app.trx-retries.counters-update.delayMillis:2",
+
+        "logging.level.it.gov.pagopa.reward.service.reward.RewardNotifierServiceImpl=OFF",
+        "logging.level.it.gov.pagopa.common.utils.MethodRetryUtils=OFF",
+        "logging.level.it.gov.pagopa.reward.service.ErrorNotifierServiceImpl=OFF",
+})
 class UncommittableErrorTest extends BaseTransactionProcessorTest {
 
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
 
-    @Autowired
-    private TransactionProcessedService transactionProcessedService;
+    public static final String BINDER_TRX_PROCESSOR_OUT_OUT_0 = "trxProcessorOut-out-0";
+    public static final String BINDER_ERRORS_OUT_0 = "errors-out-0";
+
+    @SpyBean
+    private StreamBridge streamBridgeSpy;
+
+    @Value("${app.trx-retries.counters-update.retries}")
+    private int maxCountersUpdateRetries;
+    @Value("${app.trx-retries.reward-notify.retries}")
+    private int maxRewardNotifyRetries;
+
+    @SpyBean
+    private TransactionProcessedService transactionProcessedServiceSpy;
+
+    private final int N = 1000;
+
+    private int publishedIntoErrorTopicInstead=0;
+
+    private final Map<String, AtomicInteger> trxId2InvocationCounts=new HashMap<>();
 
     @Test
     void test() throws JsonProcessingException {
-        int trx = 1000;
-        int duplicateTrx = Math.min(100, trx);
+        int duplicateTrx = Math.min(100, N);
         long maxWaitingMs = 60000;
 
         publishRewardRules();
 
-        List<String> trxs = buildValidPayloads(trx);
+        List<String> trxs = buildValidPayloads(N);
 
         long totalSendMessages = trxs.size() + duplicateTrx;
 
@@ -76,18 +104,24 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
-        List<ConsumerRecord<String, String>> payloadConsumed = consumeMessages(topicRewardProcessorOutcome, trx, maxWaitingMs); // TODO probably more than trx
+        List<ConsumerRecord<String, String>> payloadConsumed = consumeMessages(topicRewardProcessorOutcome, N - publishedIntoErrorTopicInstead, maxWaitingMs);
+        List<ConsumerRecord<String, String>> errorsConsumed = consumeMessages(topicErrors, publishedIntoErrorTopicInstead, maxWaitingMs);
         long timeEnd = System.currentTimeMillis();
 
         long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;
-//        Assertions.assertEquals(trx, payloadConsumed.size()); TODO restore
-        Assertions.assertEquals(trx, transactionProcessedRepository.count().block());
+        Assertions.assertEquals(N - publishedIntoErrorTopicInstead, payloadConsumed.size());
+        Assertions.assertEquals(publishedIntoErrorTopicInstead, errorsConsumed.size());
+        Assertions.assertEquals(N, transactionProcessedRepository.count().block());
 
-        for (ConsumerRecord<String, String> p : payloadConsumed) {
-            RewardTransactionDTO payload = objectMapper.readValue(p.value(), RewardTransactionDTO.class);
-            checkResponse(payload);
-            Assertions.assertEquals(payload.getUserId(), p.key());
-        }
+        Stream.concat(payloadConsumed.stream(), errorsConsumed.stream()).forEach(p -> {
+            try {
+                RewardTransactionDTO payload = objectMapper.readValue(p.value(), RewardTransactionDTO.class);
+                checkResponse(payload);
+                Assertions.assertEquals(payload.getUserId(), p.key());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         assertCounters();
 
@@ -100,15 +134,14 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                         ************************
                         """,
                 totalSendMessages,
-                trx,
+                N,
                 duplicateTrx,
                 timePublishingOnboardingRequest,
                 timeConsumerResponseEnd,
                 timeEnd - timePublishOnboardingStart
         );
 
-        // TODO too expensive?
-        //checkOffsets(totalSendMessages, trx); // +1 due to other applicationName useCase
+        checkOffsets(totalSendMessages, N - publishedIntoErrorTopicInstead);
     }
 
     private void assertCounters() throws JsonProcessingException {
@@ -185,7 +218,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
             useCases.get(biasRetrieve % useCases.size()).getSecond().accept(rewardedTrx);
             Assertions.assertFalse(rewardedTrx.getSenderCode().endsWith(DUPLICATE_SUFFIX), "Unexpected senderCode: " + rewardedTrx.getSenderCode());
             Assertions.assertEquals(CommonUtilities.centsToEuro(rewardedTrx.getAmountCents()), rewardedTrx.getAmount());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             System.err.printf("UseCase %d (bias %d) failed: %n", biasRetrieve % useCases.size(), biasRetrieve);
             if (e instanceof RuntimeException runtimeException) {
                 throw runtimeException;
@@ -201,10 +234,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
             // useCase 0: rewarded with no previous counter and no errors
             Pair.of(
                     this::buildTrx,
-                    evaluation -> {
-                        assertRewardedState(evaluation, INITIATIVE_ID1, false, 1L, 5, 0, false);
-                        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
-                    }
+                    this::assertRewardedState
             ),
 
             // useCase 1: rewarded with previous counter 2 update and not counters and no errors
@@ -251,51 +281,88 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                     }
             ),
 
-            // useCase 3: rewarded with errors storing just INITIATIVE_ID
+            // useCase 3: rewarded with errors storing just INITIATIVE_ID counter
             Pair.of(
                     i -> {
                         TransactionDTO trx = buildTrx(i);
-
-                        AtomicBoolean storedOnce = new AtomicBoolean(false);
-
-                        Mockito
-                                .doAnswer(a -> {
-                                    //noinspection unchecked
-                                    Iterable<UserInitiativeCounters> storingCounters = a.getArgument(0, Iterable.class);
-
-                                    if (storedOnce.getAndSet(true)) {
-                                        return Flux.fromIterable(storingCounters)
-                                                .flatMap(userInitiativeCountersRepositorySpy::save);
-                                    } else {
-                                        return userInitiativeCountersRepositorySpy.save(storingCounters.iterator().next())
-                                                .thenMany(Flux.error(new RuntimeException("DUMMYEXCEPTIONSTORINGALLCOUNTERS")));
-                                    }
-                                })
-                                .when(userInitiativeCountersRepositorySpy)
-                                .saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(ctrs -> ctrs.iterator().next().getUserId().equals(trx.getUserId())));
+                        configureErrorWhenStoringCounter( 1, trx, true);
                         return trx;
                     },
                     evaluation -> {
-                        assertRewardedState(evaluation, INITIATIVE_ID1, false, 1L, 5, 0, false);
-                        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
+                        assertRewardedState(evaluation);
+                        verifyMessageProcessingExecutionTimes(evaluation, 1);
+                        Assertions.assertEquals(2, trxId2InvocationCounts.get(evaluation.getId()).get());
+                    }
+            ),
+
+            // useCase 4: rewarded with errors storing both INITIATIVE_ID and INITIATIVE_ID2 counters
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+                        configureErrorWhenStoringCounter(1, trx, false);
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertRewardedState(evaluation);
+                        verifyMessageProcessingExecutionTimes(evaluation, 1);
+                        Assertions.assertEquals(2, trxId2InvocationCounts.get(evaluation.getId()).get());
+                    }
+            ),
+
+            // useCase 5: rewarded with errors storing both INITIATIVE_ID and INITIATIVE_ID2 counters exceeding max retry
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+                        configureErrorWhenStoringCounter(maxCountersUpdateRetries +1, trx, false);
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertRewardedState(evaluation);
+                        verifyMessageProcessingExecutionTimes(evaluation, 2);
+                        Assertions.assertEquals(maxCountersUpdateRetries +2, trxId2InvocationCounts.get(evaluation.getId()).get());
+                    }
+            ),
+
+            // useCase 6: cannot publish result, it will try to send into error topic, but at first try it will go into error also here
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+                        configureErrorWhenPublishingResults(1, trx, i);
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertRewardedState(evaluation);
+                        verifyMessageProcessingExecutionTimes(evaluation, 1);
+                        verifyNotifyAttempts(2, evaluation);
+                    }
+            ),
+
+            // useCase 7: cannot publish result, it will try to send into error topic, but at first try it will go into error also here exceeding max retry
+            Pair.of(
+                    i -> {
+                        TransactionDTO trx = buildTrx(i);
+                        configureErrorWhenPublishingResults(maxRewardNotifyRetries +1, trx, i);
+                        return trx;
+                    },
+                    evaluation -> {
+                        assertRewardedState(evaluation);
+                        verifyMessageProcessingExecutionTimes(evaluation, 2);
+                        verifyNotifyAttempts(maxRewardNotifyRetries + 2, evaluation);
                     }
             )
-
-            // useCase 4: rewarded with errors storing just INITIATIVE_ID2 TODO
-
-            // useCase 5: rewarded with errors storing both INITIATIVE_ID and INITIATIVE_ID2 TODO
-
-            // useCase 6: cannot publish result neither in error topic TODO
-
-            // useCase 7: cannot publish result neither in error topic when recovering TODO
     );
 
-    private void assertInitiative2RewardedStateWhenAlreadyProcessed(RewardTransactionDTO evaluation) {
-        assertRewardedState(evaluation, INITIATIVE_ID2, false, 1L, 5, 0, false);
+    private void assertRewardedState(RewardTransactionDTO evaluation) {
+        assertRewardedState(evaluation, INITIATIVE_ID1, false, 1L, 5, 0, false);
+        assertInitiative2RewardedStateWhenAlreadyProcessed(evaluation);
     }
 
     private void assertInitiative1RewardedStateWhenAlreadyProcessed(RewardTransactionDTO evaluation) {
         assertRewardedState(evaluation, INITIATIVE_ID1, false, 2L, 10, 0.5, false);
+    }
+
+    private void assertInitiative2RewardedStateWhenAlreadyProcessed(RewardTransactionDTO evaluation) {
+        assertRewardedState(evaluation, INITIATIVE_ID2, false, 1L, 5, 0, false);
     }
 
     private TransactionProcessed storeAsAlreadyProcessed(Integer bias) {
@@ -334,7 +401,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                 .totalAmount(TestUtils.bigDecimalValue(10))
                 .build());
 
-        return (TransactionProcessed) transactionProcessedService.save(rewarded).block();
+        return (TransactionProcessed) transactionProcessedServiceSpy.save(rewarded).block();
     }
 
     private TransactionDTO buildTrx(Integer i) {
@@ -360,6 +427,93 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
         });
 
         return trx;
+    }
+
+    private void configureErrorWhenStoringCounter(int attemptsBeforeOk, TransactionDTO trx, boolean storeFirst) {
+        AtomicInteger storedAttempts = new AtomicInteger();
+        trxId2InvocationCounts.put(trx.getId(), storedAttempts);
+        Mockito
+                .doAnswer(a -> {
+                    //noinspection unchecked
+                    Iterable<UserInitiativeCounters> storingCounters = a.getArgument(0, Iterable.class);
+
+                    return Flux.<UserInitiativeCounters>defer(
+                            () -> {
+                                if (storedAttempts.incrementAndGet() > attemptsBeforeOk) {
+                                    return Flux.fromIterable(storingCounters)
+                                            .flatMap(userInitiativeCountersRepositorySpy::save);
+                                } else {
+                                    if (storeFirst) {
+                                        return userInitiativeCountersRepositorySpy.save(storingCounters.iterator().next())
+                                                .thenMany(Flux.error(new RuntimeException("DUMMYEXCEPTIONSTORINGSECONDCOUNTER")));
+                                    } else {
+                                        return Flux.error(new RuntimeException("DUMMYEXCEPTIONSTORINGALLCOUNTERS"));
+                                    }
+                                }
+                            });
+                })
+                .when(userInitiativeCountersRepositorySpy)
+                .saveAll(configureMockitoArgListCounters(trx));
+    }
+
+    private void configureErrorWhenPublishingResults(int attemptsBeforeOk, TransactionDTO trx, int bias) {
+        AtomicInteger publishedAttempts = new AtomicInteger(0);
+        boolean throwException = bias < N / 2;
+
+        Stubber rewardNotifyStub;
+        if(throwException){
+            rewardNotifyStub = Mockito.doThrow(new RuntimeException("DUMMYEXCEPTIONPUBLISHINGRESULTS"));
+        } else {
+            rewardNotifyStub = Mockito.doReturn(false);
+        }
+        rewardNotifyStub
+                        .when(streamBridgeSpy)
+                                .send(Mockito.eq(BINDER_TRX_PROCESSOR_OUT_OUT_0), configureMockitoArgMessageTrx(trx));
+
+        publishedIntoErrorTopicInstead++;
+
+        Mockito
+                .doAnswer(a -> {
+                    if (publishedAttempts.getAndIncrement() >= attemptsBeforeOk) {
+                        return a.callRealMethod();
+                    } else {
+                        if(throwException){
+                            throw new RuntimeException("DUMMYEXCEPTIONPUBLISHINGRESULTSINTOERRORTOPIC");
+                        } else {
+                            return false;
+                        }
+                    }
+                })
+                .when(streamBridgeSpy)
+                .send(Mockito.eq(BINDER_ERRORS_OUT_0), configureMockitoArgMessageTrx(trx));
+    }
+
+    private void verifyMessageProcessingExecutionTimes(RewardTransactionDTO evaluation, int executionTimes) {
+        Mockito.verify(transactionProcessedServiceSpy, Mockito.times(executionTimes)).checkDuplicateTransactions(configureMockitoArgTransaction(evaluation));
+        Mockito.verify(transactionProcessedServiceSpy).save(configureMockitoArgRewardTransaction(evaluation));
+    }
+
+    private void verifyNotifyAttempts(int maxRewardNotifyAttempts, RewardTransactionDTO evaluation) {
+        Mockito.verify(streamBridgeSpy, Mockito.times(maxRewardNotifyAttempts))
+                .send(Mockito.eq(BINDER_TRX_PROCESSOR_OUT_OUT_0), configureMockitoArgMessageTrx(evaluation));
+        Mockito.verify(streamBridgeSpy, Mockito.times(maxRewardNotifyAttempts))
+                .send(Mockito.eq(BINDER_ERRORS_OUT_0), configureMockitoArgMessageTrx(evaluation));
+    }
+
+    private static TransactionDTO configureMockitoArgTransaction(TransactionDTO trx) {
+        return Mockito.argThat(t -> t.getUserId().equals(trx.getUserId()) && !t.getSenderCode().endsWith(DUPLICATE_SUFFIX));
+    }
+
+    private static RewardTransactionDTO configureMockitoArgRewardTransaction(TransactionDTO trx) {
+        return Mockito.argThat(t -> t.getUserId().equals(trx.getUserId()) && !t.getSenderCode().endsWith(DUPLICATE_SUFFIX));
+    }
+
+    private static Iterable<UserInitiativeCounters> configureMockitoArgListCounters(TransactionDTO trx) {
+        return Mockito.argThat(ctrs -> ctrs.iterator().next().getUserId().equals(trx.getUserId()));
+    }
+
+    private static Message<RewardTransactionDTO> configureMockitoArgMessageTrx(TransactionDTO trx) {
+        return Mockito.argThat(r -> r.getPayload().getUserId().equals(trx.getUserId()) && !r.getPayload().getSenderCode().endsWith(DUPLICATE_SUFFIX));
     }
     //endregion
 

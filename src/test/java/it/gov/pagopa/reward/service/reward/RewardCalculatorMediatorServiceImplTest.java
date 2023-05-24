@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;

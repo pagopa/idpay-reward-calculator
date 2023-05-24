@@ -57,7 +57,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     @BeforeEach
     public void initMocks() {
         initiativesEvaluatorFacadeService = new InitiativesEvaluatorFacadeServiceImpl(
-                userInitiativeCountersRepositoryMock,
+                3, 1, userInitiativeCountersRepositoryMock,
                 initiativesEvaluatorServiceMock,
                 userInitiativeCountersUpdateServiceMock,
                 transactionProcessedService,

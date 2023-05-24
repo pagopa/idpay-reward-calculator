@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.connector.event.consumer;
 
-import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;

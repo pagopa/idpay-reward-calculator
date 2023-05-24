@@ -1,6 +1,6 @@
-package it.gov.pagopa.common.kafka.consumer;
+package it.gov.pagopa.common.reactive.kafka.consumer;
 
-import it.gov.pagopa.common.kafka.exception.UncommittableError;
+import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import lombok.extern.slf4j.Slf4j;
