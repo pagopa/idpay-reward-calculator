@@ -227,7 +227,7 @@ class HpanInitiativeMediatorServiceImplTest {
         return MessageBuilder
                 .withPayload(hpanInitiativeBulkDTONotHpanList)
                 .setHeader(KafkaHeaders.ACKNOWLEDGMENT, hpanInitiativeBulkDTONotHpanListAck)
-                .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
                 .setHeader(KafkaHeaders.OFFSET, 0L)
                 .build();
     }
