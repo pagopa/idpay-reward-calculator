@@ -1,14 +1,18 @@
 package it.gov.pagopa.reward;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.stream.StreamsHealthIndicator;
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -26,6 +30,7 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
@@ -428,4 +433,40 @@ public abstract class BaseIntegrationTest {
     protected String removeFieldValue(String payload, String fieldName) {
         return payload.replaceAll("(\""+fieldName+"\":)(?:[^,}]+)", "$1:null");
     }
+
+//region check commit by logs
+    protected MemoryAppender commitLogMemoryAppender;
+    public void setupCommitLogMemoryAppender() {
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BaseKafkaConsumer.class.getName());
+        commitLogMemoryAppender = new MemoryAppender();
+        commitLogMemoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(ch.qos.logback.classic.Level.INFO);
+        logger.addAppender(commitLogMemoryAppender);
+        commitLogMemoryAppender.start();
+    }
+
+    private final Pattern partitionCommitsPattern = Pattern.compile("partition (\\d+): (\\d+) - (\\d+)");
+    protected void assertCommitOrder(String flowName, int totalSendMessages) {
+        Map<Integer, Integer> partition2last = new HashMap<>(Map.of(0, -1, 1, -1));
+        for (ILoggingEvent loggedEvent : commitLogMemoryAppender.getLoggedEvents()) {
+            if(loggedEvent.getMessage().equals("[KAFKA_COMMIT][{}] Committing {} messages: {}") && flowName.equals(loggedEvent.getArgumentArray()[0])){
+                Arrays.stream(((String)loggedEvent.getArgumentArray()[2]).split(";"))
+                        .forEach(s -> {
+                            Matcher matcher = partitionCommitsPattern.matcher(s);
+                            Assertions.assertTrue(matcher.matches(), "Unexpected partition commit string: " + s);
+                            int partition = Integer.parseInt(matcher.group(1));
+                            int startOffset = Integer.parseInt(matcher.group(2));
+                            int endOffset = Integer.parseInt(matcher.group(3));
+                            Assertions.assertTrue(endOffset>=startOffset, "EndOffset less than StartOffset!: " + s);
+
+                            Integer lastCommittedOffset = partition2last.get(partition);
+                            Assertions.assertEquals(lastCommittedOffset, startOffset-1);
+                            partition2last.put(partition, endOffset);
+                        });
+            }
+        }
+
+        Assertions.assertEquals(totalSendMessages, partition2last.values().stream().mapToInt(x->x+1).sum());
+    }
+//endregion
 }

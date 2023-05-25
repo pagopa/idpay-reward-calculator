@@ -36,6 +36,7 @@ import org.springframework.messaging.Message;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -73,21 +74,26 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
     private TransactionProcessedService transactionProcessedServiceSpy;
 
     private final int N = 1000;
+    private final int duplicateTrx = Math.min(100, N);
 
     private int publishedIntoErrorTopicInstead=0;
 
     private final Map<String, AtomicInteger> trxId2InvocationCounts=new HashMap<>();
 
+    @PostConstruct
+    void init(){
+        setupCommitLogMemoryAppender();
+    }
+
     @Test
     void test() throws JsonProcessingException {
-        int duplicateTrx = Math.min(100, N);
         long maxWaitingMs = 60000;
 
         publishRewardRules();
 
         List<String> trxs = buildValidPayloads(N);
 
-        long totalSendMessages = trxs.size() + duplicateTrx;
+        int totalSendMessages = trxs.size() + duplicateTrx;
 
         long timePublishOnboardingStart = System.currentTimeMillis();
         int[] i = new int[]{0};
@@ -124,6 +130,8 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
         });
 
         assertCounters();
+
+        assertCommitOrder("REWARD", totalSendMessages);
 
         System.out.printf("""
                         ************************

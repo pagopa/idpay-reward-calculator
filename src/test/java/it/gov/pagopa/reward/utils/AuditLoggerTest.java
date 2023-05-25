@@ -2,12 +2,12 @@ package it.gov.pagopa.reward.utils;
 
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.AuditLogger;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.reward.dto.mapper.trx.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.test.fakers.TransactionDroolsDtoFaker;
-import it.gov.pagopa.reward.test.utils.MemoryAppender;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
