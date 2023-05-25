@@ -1,7 +1,12 @@
 package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -11,17 +16,12 @@ import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
@@ -126,7 +126,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                         .build())
                 .build();
         rule.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
-        publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(1, rewardContextHolderService);
     }
 
@@ -201,7 +201,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             extractResponse(authorizeTrx(trxRequestThrottled, INITIATIVEID), HttpStatus.TOO_MANY_REQUESTS, null);
 
 
-            wait(throttlingSeconds, TimeUnit.SECONDS);
+            TestUtils.wait(throttlingSeconds, TimeUnit.SECONDS);
             SynchronousTransactionRequestDTO trxRequestThrottledPassed = SynchronousTransactionRequestDTOFaker.mockInstance(i);
             trxRequestThrottledPassed.setTransactionId("THROTTLEDPASSEDTRXID%d".formatted(i));
             trxRequestThrottledPassed.setUserId(userId);
@@ -412,8 +412,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
 
         Long hpanInitiativeDB = hpanInitiativesRepository.count().block();
         long[] countSaved={0};
-        publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
-        waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= hpanInitiativeDB+1, ()->"Expected %d saved payment for initiative, read %d".formatted(hpanInitiativeDB+1, countSaved[0]), 60, 1000);
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
+        TestUtils.waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= hpanInitiativeDB+1, ()->"Expected %d saved payment for initiative, read %d".formatted(hpanInitiativeDB+1, countSaved[0]), 60, 1000);
 
     }
 

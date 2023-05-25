@@ -19,7 +19,7 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -82,7 +82,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
 
     @PostConstruct
     void init(){
-        setupCommitLogMemoryAppender();
+        kafkaTestUtilitiesService.setupCommitLogMemoryAppender();
     }
 
     @Test
@@ -99,19 +99,19 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
         int[] i = new int[]{0};
         trxs.forEach(p -> {
             final String userId = Utils.readUserId(p);
-            publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p);
+            kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p);
 
             // to test duplicate trx and their right processing order
             if (i[0] < duplicateTrx) {
                 i[0]++;
-                publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
+                kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, userId, p.replaceFirst("(senderCode\":\"[^\"]+)", "$1%s".formatted(DUPLICATE_SUFFIX)));
             }
         });
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
-        List<ConsumerRecord<String, String>> payloadConsumed = consumeMessages(topicRewardProcessorOutcome, N - publishedIntoErrorTopicInstead, maxWaitingMs);
-        List<ConsumerRecord<String, String>> errorsConsumed = consumeMessages(topicErrors, publishedIntoErrorTopicInstead, maxWaitingMs);
+        List<ConsumerRecord<String, String>> payloadConsumed = kafkaTestUtilitiesService.consumeMessages(topicRewardProcessorOutcome, N - publishedIntoErrorTopicInstead, maxWaitingMs);
+        List<ConsumerRecord<String, String>> errorsConsumed = kafkaTestUtilitiesService.consumeMessages(topicErrors, publishedIntoErrorTopicInstead, maxWaitingMs);
         long timeEnd = System.currentTimeMillis();
 
         long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;
@@ -131,7 +131,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
 
         assertCounters();
 
-        assertCommitOrder("REWARD", totalSendMessages);
+        kafkaTestUtilitiesService.assertCommitOrder("REWARD", totalSendMessages);
 
         System.out.printf("""
                         ************************
@@ -189,7 +189,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                         buildInitiative(INITIATIVE_ID2)
                 )
                 .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
-                .forEach(i -> publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
+                .forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
 
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
     }

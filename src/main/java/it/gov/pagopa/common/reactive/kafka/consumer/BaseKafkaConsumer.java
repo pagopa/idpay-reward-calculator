@@ -153,7 +153,7 @@ public abstract class BaseKafkaConsumer<T, R> {
     }
 
     /** Name used for logging purpose */
-    protected String getFlowName() {
+    public String getFlowName() {
         return getClass().getSimpleName();
     }
 

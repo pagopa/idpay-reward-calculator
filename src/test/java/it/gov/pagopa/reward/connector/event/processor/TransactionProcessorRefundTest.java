@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.connector.event.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
@@ -17,7 +18,6 @@ import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -149,12 +149,12 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         trxs.forEach(t -> onboardHpan(t.getHpan(), trxDateLocalDateTime, trxDateLocalDateTime.plusDays(10), initiativeId));
 
         long timePublishOnboardingStart = System.currentTimeMillis();
-        trxs.forEach(i -> publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getUserId(), i));
-        publishIntoEmbeddedKafka(topicRewardProcessorRequest, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        trxs.forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getUserId(), i));
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardProcessorRequest, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timePublishingOnboardingRequest = System.currentTimeMillis() - timePublishOnboardingStart;
 
         long timeConsumerResponse = System.currentTimeMillis();
-        List<ConsumerRecord<String, String>> payloadConsumed = consumeMessages(topicRewardProcessorOutcome, trxs.size(), maxWaitingMs);
+        List<ConsumerRecord<String, String>> payloadConsumed = kafkaTestUtilitiesService.consumeMessages(topicRewardProcessorOutcome, trxs.size(), maxWaitingMs);
         long timeEnd = System.currentTimeMillis();
 
         long timeConsumerResponseEnd = timeEnd - timeConsumerResponse;

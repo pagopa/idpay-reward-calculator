@@ -20,7 +20,7 @@ import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -106,7 +106,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         int[] expectedRules = {0};
         initiatives.forEach(i -> {
             expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i);
-            publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i);
+            kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i);
         });
 
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
@@ -267,9 +267,9 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
 
     protected void checkOffsets(long expectedReadMessages, long exptectedPublishedResults){
         long timeStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 20, 1000);
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = kafkaTestUtilitiesService.checkCommittedOffsets(topicRewardProcessorRequest, groupIdRewardProcessorRequest,expectedReadMessages, 20, 1000);
         long timeCommitChecked = System.currentTimeMillis();
-        final Map<TopicPartition, Long> destPublishedOffsets = checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
+        final Map<TopicPartition, Long> destPublishedOffsets = kafkaTestUtilitiesService.checkPublishedOffsets(topicRewardProcessorOutcome, exptectedPublishedResults);
         long timePublishChecked = System.currentTimeMillis();
 
         System.out.printf("""

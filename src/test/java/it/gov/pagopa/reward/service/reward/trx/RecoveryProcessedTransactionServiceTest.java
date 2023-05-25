@@ -134,7 +134,7 @@ class RecoveryProcessedTransactionServiceTest {
         expectedRewarded.setRewards(null);
 
         if(!sameOffset){
-            trxStored.setRuleEngineTopicOffset(-1L);
+            trxStored.setRuleEngineTopicOffset(-10L);
         } else {
             configureTransactionRepositoryCheck(expected2bePublished);
         }
@@ -166,7 +166,7 @@ class RecoveryProcessedTransactionServiceTest {
         configureCountersFind(r1.getCounters().getVersion(), r2.getCounters().getVersion() + 1);
 
         if(!sameOffset){
-            trxStored.setRuleEngineTopicOffset(-1L);
+            trxStored.setRuleEngineTopicOffset(-10L);
         } else {
             configureTransactionRepositoryCheck(expected2bePublished);
         }

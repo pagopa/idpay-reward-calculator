@@ -118,7 +118,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "HPAN_INITIATIVE_OP";
     }
 

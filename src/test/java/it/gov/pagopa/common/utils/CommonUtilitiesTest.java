@@ -1,6 +1,5 @@
 package it.gov.pagopa.common.utils;
 
-import it.gov.pagopa.reward.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;

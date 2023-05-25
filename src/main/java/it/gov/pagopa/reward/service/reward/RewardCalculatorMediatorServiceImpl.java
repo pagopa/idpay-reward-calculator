@@ -148,7 +148,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "REWARD";
     }
 

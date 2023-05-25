@@ -13,7 +13,7 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.lookup.HpanUpdateNotifierService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -78,8 +78,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         hpanUpdatedEvents.addAll(buildValidPayloadsNotPaymentManagerChennel(0,dbElementsNumbers));
 
         long startTest = System.currentTimeMillis();
-        hpanUpdatedEvents.forEach(e -> publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, readUserId(e),e));
-        publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
+        hpanUpdatedEvents.forEach(e -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer,null, readUserId(e),e));
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
         waitForDB(dbElementsNumbers+1+((updatedHpanNumbers-dbElementsNumbers)/2)+dbElementsNumbers);
@@ -102,7 +102,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         );
 
         long timeCommitCheckStart = System.currentTimeMillis();
-        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = checkCommittedOffsets(topicHpanInitiativeLookupConsumer, groupIdHpanInitiativeLookupConsumer,hpanUpdatedEvents.size()+1); // +1 due to other applicationName useCase
+        final Map<TopicPartition, OffsetAndMetadata> srcCommitOffsets = kafkaTestUtilitiesService.checkCommittedOffsets(topicHpanInitiativeLookupConsumer, groupIdHpanInitiativeLookupConsumer,hpanUpdatedEvents.size()+1); // +1 due to other applicationName useCase
         long timeCommitCheckEnd = System.currentTimeMillis();
 
         System.out.printf("""
@@ -244,7 +244,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private void waitForDB(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= N, ()->"Expected %d saved initiatives, read %d".formatted(N, countSaved[0]), 60, 1000);
+        TestUtils.waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= N, ()->"Expected %d saved initiatives, read %d".formatted(N, countSaved[0]), 60, 1000);
     }
 
     private List<String> buildValidPayloads(int start, int end) {
@@ -397,7 +397,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private void checkHpanUpdatePublished(int updatedHpanNumbers, long maxWaitingMs) {
-        List<ConsumerRecord<String, String>> consumerRecords = consumeMessages(topicHpanUpdateOutcome, updatedHpanNumbers, maxWaitingMs);
+        List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicHpanUpdateOutcome, updatedHpanNumbers, maxWaitingMs);
         Assertions.assertEquals(updatedHpanNumbers,consumerRecords.size());
         consumerRecords.forEach(cr -> {
             try {

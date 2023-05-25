@@ -104,7 +104,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "REWARD_RULE_BUILD";
     }
 }
