@@ -83,7 +83,7 @@ class RewardRuleMediatorServiceImplTest {
                 .map(TestUtils::jsonSerializer)
                 .map(payload -> MessageBuilder
                         .withPayload(payload)
-                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
                         .setHeader(KafkaHeaders.OFFSET, 0L)
                 )
                 .map(MessageBuilder::build);
@@ -144,7 +144,7 @@ class RewardRuleMediatorServiceImplTest {
                 .map(TestUtils::jsonSerializer)
                 .map(payload -> MessageBuilder
                         .withPayload(payload)
-                        .setHeader(KafkaHeaders.RECEIVED_PARTITION_ID, 0)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
                         .setHeader(KafkaHeaders.OFFSET, 0L)
                 )
                 .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))

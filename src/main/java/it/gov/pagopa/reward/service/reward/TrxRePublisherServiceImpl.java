@@ -46,6 +46,6 @@ public class TrxRePublisherServiceImpl implements TrxRePublisherService {
 
     public static Message<TransactionDTO> buildMessage(TransactionDTO trx){
         return MessageBuilder.withPayload(trx)
-                .setHeader(KafkaHeaders.MESSAGE_KEY,trx.getUserId()).build();
+                .setHeader(KafkaHeaders.KEY,trx.getUserId()).build();
     }
 }

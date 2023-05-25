@@ -52,7 +52,7 @@ public class RewardNotifierServiceImpl implements RewardNotifierService {
 
     public static Message<RewardTransactionDTO> buildMessage(RewardTransactionDTO reward){
         return MessageBuilder.withPayload(reward)
-                .setHeader(KafkaHeaders.MESSAGE_KEY,reward.getUserId()).build();
+                .setHeader(KafkaHeaders.KEY,reward.getUserId()).build();
     }
 
     @Override

@@ -100,7 +100,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
                         if(!Arrays.equals(c, kieBaseSerialized)){
                             this.kieBaseSerialized = c;
                             try{
-                                KieBase newKieBase = (KieBase) SerializationUtils.deserialize(c);
+                                KieBase newKieBase = org.apache.commons.lang3.SerializationUtils.deserialize(c);
                                 preLoadKieBase(newKieBase);
 
                                 this.kieBase=newKieBase;

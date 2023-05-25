@@ -3,12 +3,12 @@ package it.gov.pagopa.common.web.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
 import it.gov.pagopa.common.web.exception.Severity;
+import it.gov.pagopa.reward.exception.Severity;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotBlank;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor

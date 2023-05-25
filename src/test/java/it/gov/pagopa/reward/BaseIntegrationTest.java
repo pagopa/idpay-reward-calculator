@@ -71,8 +71,8 @@ import java.util.regex.Pattern;
 
                 //region mongodb
                 "logging.level.org.mongodb.driver=WARN",
-                "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
-                "spring.mongodb.embedded.version=4.0.21",
+                "logging.level.de.flapdoodle.embed.mongo.spring.autoconfigure=WARN",
+                "de.flapdoodle.mongodb.embedded.version=4.0.21",
                 //endregion
         })
 @AutoConfigureDataMongo
@@ -117,7 +117,7 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}")
     protected String groupIdHpanInitiativeLookupConsumer;
 
-    @Value("${spring.redis.url}")
+    @Value("${spring.data.redis.url}")
     protected String redisUrl;
 
     @BeforeAll
