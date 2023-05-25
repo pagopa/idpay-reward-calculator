@@ -7,6 +7,7 @@ import it.gov.pagopa.common.stream.StreamsHealthIndicator;
 import it.gov.pagopa.common.utils.TestIntegrationUtils;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
+import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,7 +24,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import javax.annotation.PostConstruct;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;

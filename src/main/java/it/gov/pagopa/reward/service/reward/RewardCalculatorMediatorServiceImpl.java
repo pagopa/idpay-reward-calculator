@@ -123,7 +123,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
         if(StringUtils.isEmpty(trx.getChannel())){
             trx.setChannel(RewardConstants.TRX_CHANNEL_RTD);
         }
-        trx.setRuleEngineTopicPartition(CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION_ID));
+        trx.setRuleEngineTopicPartition(CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION));
         trx.setRuleEngineTopicOffset(CommonUtilities.getHeaderValue(message, KafkaHeaders.OFFSET));
     }
 

@@ -46,7 +46,7 @@ import java.util.concurrent.Semaphore;
 @TestPropertySource(properties = {
         "app.reward-rule.build-delay-duration=PT1S",
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
-        "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=INFO",
         "logging.level.it.gov.pagopa.reward.service.reward.evaluate.RuleEngineServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl=WARN",

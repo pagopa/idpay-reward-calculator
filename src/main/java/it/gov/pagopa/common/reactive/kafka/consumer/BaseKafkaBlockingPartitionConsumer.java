@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -89,12 +90,8 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
         if (!StringUtils.isEmpty(messageKey)) {
             return messageKey.hashCode();
         } else {
-            String partitionId = CommonUtilities.getByteArrayHeaderValue(message, KafkaHeaders.PARTITION);
-            if (partitionId != null) {
-                return Integer.parseInt(partitionId);
-            } else {
-                return message.getPayload().hashCode();
-            }
+            Integer partitionId = CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION);
+            return Objects.requireNonNullElseGet(partitionId, () -> message.getPayload().hashCode());
         }
     }
 
