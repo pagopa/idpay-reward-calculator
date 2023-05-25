@@ -1,16 +1,16 @@
 package it.gov.pagopa.reward.service.build;
 
+import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -147,7 +147,7 @@ class RewardRuleMediatorServiceImplTest {
                         .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
                         .setHeader(KafkaHeaders.OFFSET, 0L)
                 )
-                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 
         // When

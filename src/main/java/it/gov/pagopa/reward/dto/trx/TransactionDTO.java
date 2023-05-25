@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.dto.trx;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
+import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -76,6 +76,9 @@ public class TransactionDTO {
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;
     private String channel;
+
+    private Integer ruleEngineTopicPartition;
+    private Long ruleEngineTopicOffset;
     //endregion
 
     //region fields added by splitter
@@ -97,7 +100,7 @@ public class TransactionDTO {
     public static String computeTrxId(TransactionDTO trx) {
         return trx.getIdTrxAcquirer()
                 .concat(trx.getAcquirerCode())
-                .concat(trx.getTrxDate().atZoneSameInstant(RewardConstants.ZONEID).toLocalDateTime().format(DATETIME_FORMATTER))
+                .concat(trx.getTrxDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime().format(DATETIME_FORMATTER))
                 .concat(trx.getOperationType())
                 .concat(trx.getAcquirerId());
     }

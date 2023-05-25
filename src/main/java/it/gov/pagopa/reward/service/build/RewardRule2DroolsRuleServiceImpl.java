@@ -4,7 +4,7 @@ import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsRul
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRuleTransformerFacade;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
-import it.gov.pagopa.reward.dto.mapper.InitiativeReward2BuildDTO2ConfigMapper;
+import it.gov.pagopa.reward.dto.mapper.build.InitiativeReward2BuildDTO2ConfigMapper;
 import it.gov.pagopa.reward.dto.rule.reward.RewardGroupsDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;

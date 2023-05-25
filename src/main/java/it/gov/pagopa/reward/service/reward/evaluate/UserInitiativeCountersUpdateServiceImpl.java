@@ -1,13 +1,13 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.mapper.trx.RewardCountersMapper;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,39 +27,36 @@ import java.util.Optional;
 @Service
 public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCountersUpdateService {
 
-    public static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    public static final DateTimeFormatter weekDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
-    public static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-    public static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
-
     //region getter's for constants due to allow Drools recognize and obtain them
     @SuppressWarnings("unused")
     public static DateTimeFormatter getDayDateFormatter() {
-        return dayDateFormatter;
+        return RewardConstants.dayDateFormatter;
     }
 
     @SuppressWarnings("unused")
     public static DateTimeFormatter getWeekDateFormatter() {
-        return weekDateFormatter;
+        return RewardConstants.weekDateFormatter;
     }
 
     @SuppressWarnings("unused")
     public static DateTimeFormatter getMonthDateFormatter() {
-        return monthDateFormatter;
+        return RewardConstants.monthDateFormatter;
     }
 
     @SuppressWarnings("unused")
     public static DateTimeFormatter getYearDateFormatter() {
-        return yearDateFormatter;
+        return RewardConstants.yearDateFormatter;
     }
     //endregion
 
     private final RewardContextHolderService rewardContextHolderService;
+    private final RewardCountersMapper rewardCountersMapper;
 
     private final List<String> justTrxCountRejectionReason = List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason());
 
-    public UserInitiativeCountersUpdateServiceImpl(RewardContextHolderService rewardContextHolderService) {
+    public UserInitiativeCountersUpdateServiceImpl(RewardContextHolderService rewardContextHolderService, RewardCountersMapper rewardCountersMapper) {
         this.rewardContextHolderService = rewardContextHolderService;
+        this.rewardCountersMapper = rewardCountersMapper;
     }
 
     @Override
@@ -80,12 +76,13 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                         if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
                                             evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
                                             final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedReward).orElse(null) : null;
+                                            initiativeCounter.setVersion(initiativeCounter.getVersion()+1L);
                                             updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
                                             updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
                                         }
 
                                         /* set RewardCounters in RewardTransactionDTO object */
-                                        reward.setCounters(mapRewardCounters(initiativeCounter, initiativeConfig));
+                                        reward.setCounters(rewardCountersMapper.apply(initiativeCounter, ruleEngineResult, initiativeConfig));
                                     });
                         })
                 .then(Mono.just(ruleEngineResult));
@@ -166,16 +163,16 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateTemporalCounters(UserInitiativeCounters userInitiativeCounters, OperationType operationType, Reward initiativeReward, RewardTransactionDTO ruleEngineResult, BigDecimal previousRewards, InitiativeConfig initiativeConfig, boolean justTrxCountRejection) {
         if (initiativeConfig.isDailyThreshold()) {
-            updateTemporalCounter(userInitiativeCounters.getDailyCounters(), dayDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getDailyCounters(), RewardConstants.dayDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
         if (initiativeConfig.isWeeklyThreshold()) {
-            updateTemporalCounter(userInitiativeCounters.getWeeklyCounters(), weekDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getWeeklyCounters(), RewardConstants.weekDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
         if (initiativeConfig.isMonthlyThreshold()) {
-            updateTemporalCounter(userInitiativeCounters.getMonthlyCounters(), monthDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getMonthlyCounters(), RewardConstants.monthDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
         if (initiativeConfig.isYearlyThreshold()) {
-            updateTemporalCounter(userInitiativeCounters.getYearlyCounters(), yearDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
+            updateTemporalCounter(userInitiativeCounters.getYearlyCounters(), RewardConstants.yearDateFormatter, ruleEngineResult, operationType, previousRewards, initiativeReward, justTrxCountRejection);
         }
     }
 
@@ -183,14 +180,4 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), operationType, initiativeReward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
     }
 
-    private RewardCounters mapRewardCounters(UserInitiativeCounters userInitiativeCounters, InitiativeConfig initiativeConfig) {
-        RewardCounters rewardCounters = new RewardCounters();
-        rewardCounters.setExhaustedBudget(userInitiativeCounters.isExhaustedBudget());
-        rewardCounters.setTrxNumber(userInitiativeCounters.getTrxNumber());
-        rewardCounters.setTotalReward(userInitiativeCounters.getTotalReward());
-        rewardCounters.setInitiativeBudget(initiativeConfig.getBeneficiaryBudget());
-        rewardCounters.setTotalAmount(userInitiativeCounters.getTotalAmount());
-
-        return rewardCounters;
-    }
 }

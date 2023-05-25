@@ -23,6 +23,8 @@ public class UserInitiativeCounters extends Counters {
     @Id
     private String id;
 
+    private long version;
+
     @NonNull
     private String userId;
     @NonNull

@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.enums.OperationType;
@@ -33,7 +34,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
 
     private TransactionDroolsDTO buildTrx() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, RewardConstants.ZONEID.getRules().getOffset(TRX_DATE)));
+        trx.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, CommonConstants.ZONEID.getRules().getOffset(TRX_DATE)));
         return trx;
     }
 

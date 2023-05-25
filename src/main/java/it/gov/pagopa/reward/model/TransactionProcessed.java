@@ -1,9 +1,10 @@
 package it.gov.pagopa.reward.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.utils.json.BigDecimalScale2Deserializer;
+import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +53,7 @@ public class TransactionProcessed implements BaseTransactionProcessed {
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
     private Map<String, List<String>> initiativeRejectionReasons;
+    private RefundInfo refundInfo;
 
     private BigDecimal effectiveAmount;
     private Long amountCents;
@@ -61,5 +63,8 @@ public class TransactionProcessed implements BaseTransactionProcessed {
 
     private LocalDateTime elaborationDateTime;
     private String channel;
+
+    private Integer ruleEngineTopicPartition;
+    private Long ruleEngineTopicOffset;
 }
 

@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
@@ -9,7 +10,6 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -164,7 +164,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     protected TransactionDroolsDTO getTransaction() {
         final TransactionDroolsDTO trx = new TransactionDroolsDTO();
         LocalDateTime trxDateTime = LocalDateTime.of(LocalDate.of(2022, 3, 15), LocalTime.NOON);
-        trx.setTrxChargeDate(OffsetDateTime.of(trxDateTime, RewardConstants.ZONEID.getRules().getOffset(trxDateTime)));
+        trx.setTrxChargeDate(OffsetDateTime.of(trxDateTime, CommonConstants.ZONEID.getRules().getOffset(trxDateTime)));
         if(this.useCase.equals(USECASES.REFUNDED_NO_PREVIOUS) || this.useCase.equals(USECASES.REFUNDED_WITH_PREVIOUS)){
             trx.setOperationTypeTranscoded(OperationType.REFUND);
             if(this.useCase.equals(USECASES.REFUNDED_WITH_PREVIOUS)){

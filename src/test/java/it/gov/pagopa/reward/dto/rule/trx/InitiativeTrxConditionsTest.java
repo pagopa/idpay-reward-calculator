@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.dto.rule.trx;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,12 @@
 package it.gov.pagopa.reward.controller;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -10,20 +16,14 @@ import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import it.gov.pagopa.reward.utils.Utils;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ import java.util.stream.IntStream;
 @TestPropertySource(
         properties = {
                 "logging.level.it.gov.pagopa.reward=WARN",
-                "logging.level.it.gov.pagopa.reward.exception.ErrorManager=INFO",
+                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=INFO",
         })
 class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationTest {
     public static final String INITIATIVEID = "INITIATIVEID";
@@ -126,7 +126,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                         .build())
                 .build();
         rule.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
-        publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(1, rewardContextHolderService);
     }
 
@@ -201,7 +201,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
             extractResponse(authorizeTrx(trxRequestThrottled, INITIATIVEID), HttpStatus.TOO_MANY_REQUESTS, null);
 
 
-            wait(throttlingSeconds, TimeUnit.SECONDS);
+            TestUtils.wait(throttlingSeconds, TimeUnit.SECONDS);
             SynchronousTransactionRequestDTO trxRequestThrottledPassed = SynchronousTransactionRequestDTOFaker.mockInstance(i);
             trxRequestThrottledPassed.setTransactionId("THROTTLEDPASSEDTRXID%d".formatted(i));
             trxRequestThrottledPassed.setUserId(userId);
@@ -274,8 +274,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 Assertions.assertEquals(transactionProcessedResult.getUserId(), expectedResponse.getUserId());
                 Assertions.assertEquals(transactionProcessedResult.getOperationTypeTranscoded(), expectedResponse.getOperationType());
                 Assertions.assertEquals(transactionProcessedResult.getAmountCents(), expectedResponse.getAmountCents());
-                Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getAmount());
-                Assertions.assertEquals(Utils.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getEffectiveAmount());
+                Assertions.assertEquals(CommonUtilities.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getAmount());
+                Assertions.assertEquals(CommonUtilities.centsToEuro(transactionProcessedResult.getAmountCents()), expectedResponse.getEffectiveAmount());
 
                 Reward responseReward = expectedResponse.getReward();
                 Reward expectedReward = transactionProcessedResult.getRewards().get(INITIATIVEID);
@@ -345,8 +345,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         Assertions.assertEquals(trxRequest.getUserId(), expectedResponse.getUserId());
         Assertions.assertEquals(trxRequest.getOperationType(), expectedResponse.getOperationType());
         Assertions.assertEquals(trxRequest.getAmountCents(), expectedResponse.getAmountCents());
-        Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getAmount());
-        Assertions.assertEquals(Utils.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getAmount());
+        Assertions.assertEquals(CommonUtilities.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
 
         if(expectedReward != null) {
             Reward responseReward = expectedResponse.getReward();
@@ -365,8 +365,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         return Reward.builder()
                 .initiativeId(INITIATIVEID)
                 .organizationId("ORGANIZATIONID_"+INITIATIVEID)
-                .providedReward(Utils.centsToEuro(2000L))
-                .accruedReward(Utils.centsToEuro(2000L))
+                .providedReward(CommonUtilities.centsToEuro(2000L))
+                .accruedReward(CommonUtilities.centsToEuro(2000L))
                 .capped(false)
                 .dailyCapped(false)
                 .monthlyCapped(false)
@@ -386,8 +386,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 .userId(trxRequest.getUserId())
                 .operationType(trxRequest.getOperationType())
                 .amountCents(trxRequest.getAmountCents())
-                .amount(Utils.centsToEuro(trxRequest.getAmountCents()))
-                .effectiveAmount(Utils.centsToEuro(trxRequest.getAmountCents()))
+                .amount(CommonUtilities.centsToEuro(trxRequest.getAmountCents()))
+                .effectiveAmount(CommonUtilities.centsToEuro(trxRequest.getAmountCents()))
                 .status(status)
                 .rejectionReasons(rejectionReasons)
                 .reward(reward)
@@ -412,8 +412,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
 
         Long hpanInitiativeDB = hpanInitiativesRepository.count().block();
         long[] countSaved={0};
-        publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
-        waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= hpanInitiativeDB+1, ()->"Expected %d saved payment for initiative, read %d".formatted(hpanInitiativeDB+1, countSaved[0]), 60, 1000);
+        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
+        TestUtils.waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= hpanInitiativeDB+1, ()->"Expected %d saved payment for initiative, read %d".formatted(hpanInitiativeDB+1, countSaved[0]), 60, 1000);
 
     }
 

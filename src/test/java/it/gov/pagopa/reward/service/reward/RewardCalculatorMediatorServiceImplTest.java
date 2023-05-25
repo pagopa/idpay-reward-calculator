@@ -1,19 +1,20 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.reactive.service.LockService;
+import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
-import it.gov.pagopa.reward.service.ErrorNotifierServiceImpl;
-import it.gov.pagopa.reward.service.LockService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.ObjectUtils;
@@ -51,7 +52,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
     @BeforeAll
     public static void setDefaultTimezone() {
-        TimeZone.setDefault(TimeZone.getTimeZone(RewardConstants.ZONEID));
+        TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.ZONEID));
     }
 
     @Mock private LockService lockServiceMock;
@@ -109,23 +110,25 @@ class RewardCalculatorMediatorServiceImplTest {
         TransactionDTO trxInvalidAmount = buildTrx(2);
         TransactionDTO trxPartialRefund = buildTrx(3);
         TransactionDTO trxTotalRefund = buildTrx(4);
-        TransactionDTO trxInErrorDuringPublish = buildTrx(5);
-        TransactionDTO trxDuplicated = buildTrx(6);
-        TransactionDTO trxDuplicatedCorrelationId = buildTrx(7);
-        Pair<List<Acknowledgment>, Flux<Message<String>>> trxFluxAndAckMocks = buildTrxFlux(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicated, trxDuplicatedCorrelationId);
+        TransactionDTO trxDuplicated = buildTrx(5);
+        TransactionDTO trxDuplicatedCorrelationId = buildTrx(6);
+        Pair<List<Acknowledgment>, Flux<Message<String>>> trxFluxAndAckMocks = buildTrxFlux(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicated, trxDuplicatedCorrelationId);
+
+        int trxNumber = 6;
 
         List<String> expectedInitiatives = List.of("INITIATIVE");
 
-        mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicated, trxDuplicatedCorrelationId);
+        mockUseCases(expectedInitiatives, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicated, trxDuplicatedCorrelationId);
 
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+        Mockito.when(lockServiceMock.acquireLock(Mockito.anyInt())).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
         // When
         rewardCalculatorMediatorService.execute(trxFluxAndAckMocks.getValue());
 
         // Then
         try {
-            Awaitility.await().atMost(1, TimeUnit.SECONDS).until(() -> Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations().size() == 7);
+            Awaitility.await().atMost(1, TimeUnit.SECONDS).until(() -> Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations().size() == trxNumber);
         } catch (ConditionTimeoutException e){
             Collection<Invocation> invocations = Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations();
             throw new IllegalStateException("Unexpected invocation size: %d;\n%s".formatted(invocations.size(), invocations), e);
@@ -133,7 +136,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
         List<RewardTransactionDTO> publishedRewards = Mockito.mockingDetails(rewardNotifierServiceMock).getInvocations().stream().map(i -> i.getArgument(0, RewardTransactionDTO.class)).toList();
         Assertions.assertNotNull(publishedRewards);
-        Assertions.assertEquals(7, publishedRewards.size());
+        Assertions.assertEquals(trxNumber, publishedRewards.size());
 
         assertRejectionReasons(publishedRewards, trx, null);
         assertRejectionReasons(publishedRewards, trxInvalidOpType, "REJECTED");
@@ -143,13 +146,12 @@ class RewardCalculatorMediatorServiceImplTest {
         assertRejectionReasons(publishedRewards, trxTotalRefund, null);
         assertRejectionReasons(publishedRewards, trxDuplicatedCorrelationId, "DUPLICATE_CORRELATION_ID");
 
-        verifyLockAcquireReleaseCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicated, trxDuplicatedCorrelationId);
-        verifyDuplicateCheckCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicated, trxDuplicatedCorrelationId);
-        verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicatedCorrelationId);
-        verifyOnboardedInitiativeCalls(trx, trxPartialRefund, trxInErrorDuringPublish);
-        verifyInitiativeEvaluatorCalls(expectedInitiatives, trx, trxPartialRefund, trxInErrorDuringPublish);
-        verifyRewardNotifyCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxInErrorDuringPublish, trxDuplicatedCorrelationId);
-        verifyRewardNotifyErrorsCalls(trxInErrorDuringPublish);
+        verifyLockAcquireReleaseCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicated, trxDuplicatedCorrelationId);
+        verifyDuplicateCheckCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicated, trxDuplicatedCorrelationId);
+        verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicatedCorrelationId);
+        verifyOnboardedInitiativeCalls(trx, trxPartialRefund);
+        verifyInitiativeEvaluatorCalls(expectedInitiatives, trx, trxPartialRefund);
+        verifyRewardNotifyCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicatedCorrelationId);
 
         Mockito.verifyNoMoreInteractions(
                 transactionProcessedServiceMock,
@@ -180,7 +182,7 @@ class RewardCalculatorMediatorServiceImplTest {
         return trx;
     }
 
-    private void mockUseCases(List<String> initiatives, TransactionDTO trxInvalidOpType, TransactionDTO trxInvalidAmount, TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund, TransactionDTO trxInErrorDuringPublish, TransactionDTO trxDuplicated, TransactionDTO trxDuplicatedCorrelationId) {
+    private void mockUseCases(List<String> initiatives, TransactionDTO trxInvalidOpType, TransactionDTO trxInvalidAmount, TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund, TransactionDTO trxDuplicated, TransactionDTO trxDuplicatedCorrelationId) {
         Mockito.when(transactionProcessedServiceMock.checkDuplicateTransactions(Mockito.any())).thenAnswer(i -> Mono.just(i.getArgument(0)));
         Mockito.when(transactionProcessedServiceMock.checkDuplicateTransactions(trxDuplicated)).thenAnswer(i -> Mono.empty());
         Mockito.when(transactionProcessedServiceMock.checkDuplicateTransactions(trxDuplicatedCorrelationId)).thenAnswer(i -> {
@@ -200,9 +202,6 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(transactionValidatorServiceMock.validate(Mockito.any())).thenAnswer(i -> i.getArgument(0));
 
         Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.any(), Mockito.any())).thenAnswer(i -> Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
-
-        Mockito.when(rewardNotifierServiceMock.notify(Mockito.any())).thenReturn(true);
-        Mockito.when(rewardNotifierServiceMock.notify(Mockito.argThat(i -> i.getIdTrxAcquirer().equals(trxInErrorDuringPublish.getIdTrxAcquirer())))).thenReturn(false);
 
         Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any()))
                 .thenReturn(Flux.fromIterable(initiatives));
@@ -300,17 +299,7 @@ class RewardCalculatorMediatorServiceImplTest {
 
     private void verifyRewardNotifyCalls(TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(rewardNotifierServiceMock).notify(Mockito.argThat(i -> t.getIdTrxAcquirer().equals(i.getIdTrxAcquirer())));
-        }
-    }
-
-    private void verifyRewardNotifyErrorsCalls(TransactionDTO... expectedTrxs) {
-        for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(errorNotifierServiceMock).notifyRewardedTransaction(
-                    Mockito.argThat(i -> t.getIdTrxAcquirer().equals(((RewardTransactionDTO) i.getPayload()).getIdTrxAcquirer())),
-                    Mockito.eq("[REWARD] An error occurred while publishing the transaction evaluation result"),
-                    Mockito.eq(true),
-                    Mockito.notNull());
+            Mockito.verify(rewardNotifierServiceMock).notifyFallbackToErrorTopic(Mockito.argThat(i -> t.getIdTrxAcquirer().equals(i.getIdTrxAcquirer())));
         }
     }
 
@@ -341,7 +330,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.PARTITION, "%d".formatted(i).getBytes(StandardCharsets.UTF_8)).build()))
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.RECEIVED_PARTITION, "%d".formatted(i).getBytes(StandardCharsets.UTF_8)).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         checkLockIdValues(lockId2Count);
@@ -374,7 +363,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Flux<Message<String>> msgs = Flux.just(trx1, trx2)
                 .map(TestUtils::jsonSerializer)
                 .map(MessageBuilder::withPayload)
-                .doOnNext(m->m.setHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
+                .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
                 .map(MessageBuilder::build);
 
         // When

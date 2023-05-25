@@ -2,15 +2,15 @@ package it.gov.pagopa.reward.service.lookup;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanList2HpanUpdateOutcomeDTOMapper;
-import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
-import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
+import it.gov.pagopa.reward.dto.mapper.lookup.HpanList2HpanUpdateOutcomeDTOMapper;
+import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
+import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.service.BaseKafkaConsumer;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.ErrorNotifierService;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +118,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "HPAN_INITIATIVE_OP";
     }
 

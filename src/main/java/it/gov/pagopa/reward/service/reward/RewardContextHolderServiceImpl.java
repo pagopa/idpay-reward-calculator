@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.KieBase;
