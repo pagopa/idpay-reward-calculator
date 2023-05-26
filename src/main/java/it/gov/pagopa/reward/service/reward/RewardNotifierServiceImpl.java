@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
 import it.gov.pagopa.common.utils.MethodRetryUtils;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -22,17 +22,17 @@ import java.util.function.Supplier;
 public class RewardNotifierServiceImpl implements RewardNotifierService {
 
     private final StreamBridge streamBridge;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
     private final int rewardNotifyMaxRetries;
 
     public RewardNotifierServiceImpl(
             @Value("${app.trx-retries.reward-notify.retries}") int rewardNotifyMaxRetries,
 
-            StreamBridge streamBridge, ErrorNotifierService errorNotifierService) {
+            StreamBridge streamBridge, RewardErrorNotifierService rewardErrorNotifierService) {
         this.rewardNotifyMaxRetries = rewardNotifyMaxRetries;
         this.streamBridge = streamBridge;
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
     }
 
     /** Declared just to let know Spring to connect the producer at startup */
@@ -68,7 +68,7 @@ public class RewardNotifierServiceImpl implements RewardNotifierService {
         } catch (Exception e) {
             log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r, e);
             try{
-                if(!errorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e)){
+                if(!rewardErrorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e)){
                     throw new IllegalStateException("[REWARD] Something gone wrong while reward notify into error topic");
                 }
             } catch (Exception exWhenError){

@@ -113,13 +113,13 @@ public abstract class BaseKafkaConsumer<T, R> {
 
         byte[] retryingApplicationName = message.getHeaders().get(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, byte[].class);
         if(retryingApplicationName != null && !new String(retryingApplicationName, StandardCharsets.UTF_8).equals(this.applicationName)){
-            log.info("[{}] Discarding message due to other application retry ({}): {}", getFlowName(), retryingApplicationName, message.getPayload());
+            log.info("[{}] Discarding message due to other application retry ({}): {}", getFlowName(), retryingApplicationName,  CommonUtilities.readMessagePayload(message));
             return Mono.just(defaultAck);
         }
 
         Map<String, Object> ctx=new HashMap<>();
         ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());
-        ctx.put(CONTEXT_KEY_MSG_ID, message.getPayload());
+        ctx.put(CONTEXT_KEY_MSG_ID,  CommonUtilities.readMessagePayload(message));
 
         return execute(message, ctx)
                 .map(r -> new KafkaAcknowledgeResult<>(message, r))

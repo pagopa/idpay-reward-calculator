@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:src/test/java/it/gov/pagopa/common/reactive/LockServiceTest.java
 package it.gov.pagopa.common.reactive;
+========
+package it.gov.pagopa.common.reactive.service;
+>>>>>>>> fix2merge:src/test/java/it/gov/pagopa/common/reactive/service/LockServiceTest.java
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

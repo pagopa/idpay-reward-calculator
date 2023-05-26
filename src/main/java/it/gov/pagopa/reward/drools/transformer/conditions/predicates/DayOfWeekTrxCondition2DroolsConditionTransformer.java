@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
-import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
+import it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtils;
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
 import org.springframework.util.CollectionUtils;
 

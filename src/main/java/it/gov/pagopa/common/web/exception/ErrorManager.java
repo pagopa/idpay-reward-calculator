@@ -15,7 +15,7 @@ import org.springframework.web.server.ServerWebExchange;
 public class ErrorManager {
     private static final ErrorDTO defaultErrorDTO;
     static {
-        defaultErrorDTO =new ErrorDTO(Severity.ERROR, "Error", "Something gone wrong");
+        defaultErrorDTO =new ErrorDTO("Error", "Something gone wrong");
     }
     @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerWebExchange exchange) {
@@ -38,7 +38,7 @@ public class ErrorManager {
             HttpStatus httpStatus;
             if (error instanceof ClientExceptionWithBody clientExceptionWithBody){
                 httpStatus=clientExceptionWithBody.getHttpStatus();
-                errorDTO = new ErrorDTO(Severity.ERROR, clientExceptionWithBody.getTitle(),  error.getMessage());
+                errorDTO = new ErrorDTO(clientExceptionWithBody.getCode(),  error.getMessage());
             }
             else {
                 httpStatus=HttpStatus.INTERNAL_SERVER_ERROR;

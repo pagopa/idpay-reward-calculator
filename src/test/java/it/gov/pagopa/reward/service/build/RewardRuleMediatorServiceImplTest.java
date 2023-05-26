@@ -1,12 +1,12 @@
 package it.gov.pagopa.reward.service.build;
 
-import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
@@ -50,7 +50,7 @@ class RewardRuleMediatorServiceImplTest {
     private RewardContextHolderService rewardContextHolderServiceMock;
 
     @Mock
-    private ErrorNotifierService errorNotifierServiceMock;
+    private RewardErrorNotifierService rewardErrorNotifierServiceMock;
 
     private final KieBase newKieBaseBuiltMock = Mockito.mock(KieBase.class);
 
@@ -96,7 +96,7 @@ class RewardRuleMediatorServiceImplTest {
                 droolsRuleRepositoryMock,
                 kieContainerBuilderServiceMock,
                 rewardContextHolderServiceMock,
-                errorNotifierServiceMock,
+                rewardErrorNotifierServiceMock,
                 TestUtils.objectMapper);
 
         testSetUp();
@@ -113,7 +113,7 @@ class RewardRuleMediatorServiceImplTest {
 
         Mockito.verify(kieContainerBuilderServiceMock, Mockito.atLeast(1)).buildAll();
         Mockito.verify(rewardContextHolderServiceMock, Mockito.atLeast(1)).setRewardRulesKieBase(Mockito.same(newKieBaseBuiltMock));
-        Mockito.verifyNoInteractions(errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(rewardErrorNotifierServiceMock);
     }
 
     @Test
@@ -127,7 +127,7 @@ class RewardRuleMediatorServiceImplTest {
                 droolsRuleRepositoryMock,
                 kieContainerBuilderServiceMock,
                 rewardContextHolderServiceMock,
-                errorNotifierServiceMock,
+                rewardErrorNotifierServiceMock,
                 TestUtils.objectMapper);
 
         Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));
@@ -157,6 +157,6 @@ class RewardRuleMediatorServiceImplTest {
         Mockito.verify(kieContainerBuilderServiceMock,Mockito.atLeast(1)).buildAll();
         Mockito.verify(rewardContextHolderServiceMock, Mockito.atLeast(1)).setRewardRulesKieBase(newKieBaseBuiltMock);
 
-        Mockito.verifyNoInteractions(rewardRule2DroolsRuleServiceMock, droolsRuleRepositoryMock, errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(rewardRule2DroolsRuleServiceMock, droolsRuleRepositoryMock, rewardErrorNotifierServiceMock);
     }
 }

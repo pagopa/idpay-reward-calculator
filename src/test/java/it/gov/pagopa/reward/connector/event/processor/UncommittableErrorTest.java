@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.connector.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -20,9 +19,9 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
-import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,6 +36,7 @@ import org.springframework.messaging.Message;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 
         "logging.level.it.gov.pagopa.reward.service.reward.RewardNotifierServiceImpl=OFF",
         "logging.level.it.gov.pagopa.common.utils.MethodRetryUtils=OFF",
-        "logging.level.it.gov.pagopa.reward.service.ErrorNotifierServiceImpl=OFF",
+        "logging.level.it.gov.pagopa.common.kafka.service.ErrorNotifierServiceImpl=OFF",
 })
 class UncommittableErrorTest extends BaseTransactionProcessorTest {
 

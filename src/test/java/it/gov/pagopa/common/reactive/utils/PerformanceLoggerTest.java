@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:src/test/java/it/gov/pagopa/common/reactive/PerformanceLoggerTest.java
 package it.gov.pagopa.common.reactive;
+========
+package it.gov.pagopa.common.reactive.utils;
+>>>>>>>> fix2merge:src/test/java/it/gov/pagopa/common/reactive/utils/PerformanceLoggerTest.java
 
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import org.junit.jupiter.api.Assertions;

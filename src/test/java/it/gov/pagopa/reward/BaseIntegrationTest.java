@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 
                 //region common feature disabled
                 "app.reward-rule.cache.refresh-ms-rate=60000",
-                "logging.level.it.gov.pagopa.reward.service.ErrorNotifierServiceImpl=WARN",
+                "logging.level.it.gov.pagopa.common.kafka.service.ErrorNotifierServiceImpl=WARN",
                 //endregion
 
                 //region kafka brokers
@@ -82,9 +82,7 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected WebTestClient webTestClient;
 
-    @Autowired
     protected KafkaTestUtilitiesService kafkaTestUtilitiesService;
-
     @Autowired
     protected MongoTestUtilitiesService mongoTestUtilitiesService;
 
