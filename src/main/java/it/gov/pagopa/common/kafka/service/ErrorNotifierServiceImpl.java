@@ -40,9 +40,9 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         addExceptionInfo(errorMessage, "rootCause", ExceptionUtils.getRootCause(exception));
         addExceptionInfo(errorMessage, "cause", exception.getCause());
 
-        byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_MESSAGE_KEY, byte[].class);
+        byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_KEY, byte[].class);
         if(receivedKey!=null){
-            errorMessage.setHeader(KafkaHeaders.MESSAGE_KEY, new String(receivedKey, StandardCharsets.UTF_8));
+            errorMessage.setHeader(KafkaHeaders.KEY, new String(receivedKey, StandardCharsets.UTF_8));
         }
 
         if (resendApplication){

@@ -330,7 +330,7 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
 
         final Map<Integer, Long> lockId2Count = IntStream.range(0, LOCK_SERVICE_BUKET_SIZE)
-                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.RECEIVED_PARTITION, "%d".formatted(i).getBytes(StandardCharsets.UTF_8)).build()))
+                .mapToObj(i -> rewardCalculatorMediatorService.calculateLockId(MessageBuilder.withPayload("").setHeader(KafkaHeaders.RECEIVED_PARTITION, i).build()))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
         checkLockIdValues(lockId2Count);

@@ -82,6 +82,7 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected WebTestClient webTestClient;
 
+    @Autowired
     protected KafkaTestUtilitiesService kafkaTestUtilitiesService;
     @Autowired
     protected MongoTestUtilitiesService mongoTestUtilitiesService;
@@ -146,7 +147,6 @@ public abstract class BaseIntegrationTest {
     protected Pattern getErrorUseCaseIdPatternMatch() {
         return Pattern.compile("\"initiativeId\":\"id_([0-9]+)_?[^\"]*\"");
     }
-
 
     protected void checkErrorsPublished(int expectedErrorMessagesNumber, long maxWaitingMs, List<Pair<Supplier<String>, java.util.function.Consumer<ConsumerRecord<String, String>>>> errorUseCases) {
         kafkaTestUtilitiesService.checkErrorsPublished(topicErrors, getErrorUseCaseIdPatternMatch(), expectedErrorMessagesNumber, maxWaitingMs, errorUseCases);

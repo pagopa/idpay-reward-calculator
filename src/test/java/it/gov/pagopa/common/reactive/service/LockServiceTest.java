@@ -1,13 +1,7 @@
-<<<<<<<< HEAD:src/test/java/it/gov/pagopa/common/reactive/LockServiceTest.java
-package it.gov.pagopa.common.reactive;
-========
 package it.gov.pagopa.common.reactive.service;
->>>>>>>> fix2merge:src/test/java/it/gov/pagopa/common/reactive/service/LockServiceTest.java
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import it.gov.pagopa.common.reactive.service.LockService;
-import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;

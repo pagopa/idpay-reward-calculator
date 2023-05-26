@@ -22,6 +22,7 @@ import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
+import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,6 @@ import org.springframework.messaging.Message;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
