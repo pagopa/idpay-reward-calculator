@@ -9,8 +9,6 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 
-import javax.management.*;
-import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
@@ -46,6 +44,21 @@ public class TestUtils {
                 f -> {
                     f.setAccessible(true);
                     Assertions.assertNotNull(f.get(o), "The field %s of the input object of type %s is null!".formatted(f.getName(), o.getClass()));
+                },
+                f -> !excludedFieldsSet.contains(f.getName()));
+
+    }
+
+    /**
+     * It will assert null on all o's fields
+     */
+    public static void checkNullFields(Object o, String... excludedFields) {
+        Set<String> excludedFieldsSet = new HashSet<>(Arrays.asList(excludedFields));
+        org.springframework.util.ReflectionUtils.doWithFields(o.getClass(),
+                f -> {
+                    f.setAccessible(true);
+                    Object value = f.get(o);
+                    Assertions.assertNull(value, "The field %s of the input object of type %s is not null: %s".formatted(f.getName(), o.getClass(), value));
                 },
                 f -> !excludedFieldsSet.contains(f.getName()));
 

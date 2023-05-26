@@ -38,7 +38,7 @@ public class ErrorManager {
             HttpStatus httpStatus;
             if (error instanceof ClientExceptionWithBody clientExceptionWithBody){
                 httpStatus=clientExceptionWithBody.getHttpStatus();
-                errorDTO = new ErrorDTO(clientExceptionWithBody.getTitle(),  error.getMessage());
+                errorDTO = new ErrorDTO(clientExceptionWithBody.getCode(),  error.getMessage());
             }
             else {
                 httpStatus=HttpStatus.INTERNAL_SERVER_ERROR;

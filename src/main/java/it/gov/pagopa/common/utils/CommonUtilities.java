@@ -7,10 +7,20 @@ import org.springframework.messaging.Message;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.function.Consumer;
 
 public class CommonUtilities {
     private CommonUtilities() {}
+
+    public static final DecimalFormatSymbols decimalFormatterSymbols = new DecimalFormatSymbols();
+    public static final DecimalFormat decimalFormatter;
+
+    static {
+        decimalFormatterSymbols.setDecimalSeparator(',');
+        decimalFormatter = new DecimalFormat("0.00", CommonUtilities.decimalFormatterSymbols);
+    }
 
     /** It will try to deserialize a message, eventually notifying the error  */
     public static <T> T deserializeMessage(Message<?> message, ObjectReader objectReader, Consumer<Throwable> onError) {
@@ -49,6 +59,11 @@ public class CommonUtilities {
     /** To convert cents into euro */
     public static BigDecimal centsToEuro(Long cents) {
         return BigDecimal.valueOf(cents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN);
+    }
+
+    /** To format as String a Cents into euro */
+    public static String centsToEuroString(Long cents) {
+        return decimalFormatter.format(centsToEuro(cents));
     }
 
     public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);

@@ -227,7 +227,7 @@ public class KafkaTestUtilitiesService {
         for(;maxAttempts>0; maxAttempts--){
             try {
                 final Map<TopicPartition, OffsetAndMetadata> commits = getCommittedOffsets(topic, groupId);
-                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().mapToLong(OffsetAndMetadata::offset).sum());
+                Assertions.assertEquals(expectedCommittedMessages, commits.values().stream().filter(Objects::nonNull).mapToLong(OffsetAndMetadata::offset).sum());
                 return commits;
             } catch (Throwable e){
                 lastException = new RuntimeException(e);
