@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.drools.model;
+package it.gov.pagopa.common.drools.model;
 
 import lombok.Value;
 

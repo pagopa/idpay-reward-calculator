@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.service;
 
 import org.springframework.messaging.Message;
 
-public interface ErrorNotifierService {
+public interface RewardErrorNotifierService {
     boolean notifyRewardRuleBuilder(Message<?> message, String description, boolean retryable, Throwable exception);
     boolean notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception);
     boolean notifyRewardedTransaction(Message<?> message, String description, boolean retryable, Throwable exception);

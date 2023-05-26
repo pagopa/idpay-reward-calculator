@@ -6,7 +6,7 @@ import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -29,7 +29,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     private final DroolsRuleRepository droolsRuleRepository;
     private final KieContainerBuilderService kieContainerBuilderService;
     private final RewardContextHolderService rewardContextHolderService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
     private final ObjectReader objectReader;
 
@@ -43,7 +43,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
             DroolsRuleRepository droolsRuleRepository,
             KieContainerBuilderService kieContainerBuilderService,
             RewardContextHolderService rewardContextHolderService,
-            ErrorNotifierService errorNotifierService,
+            RewardErrorNotifierService rewardErrorNotifierService,
 
             ObjectMapper objectMapper) {
         super(applicationName);
@@ -57,7 +57,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
         this.droolsRuleRepository = droolsRuleRepository;
         this.kieContainerBuilderService = kieContainerBuilderService;
         this.rewardContextHolderService = rewardContextHolderService;
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
 
         this.objectReader = objectMapper.readerFor(InitiativeReward2BuildDTO.class);
     }
@@ -82,12 +82,12 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyRewardRuleBuilder(message, "[REWARD_RULE_BUILD] Unexpected JSON", true, e);
+        return e -> rewardErrorNotifierService.notifyRewardRuleBuilder(message, "[REWARD_RULE_BUILD] Unexpected JSON", true, e);
     }
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyRewardRuleBuilder(message, "[REWARD_RULE_BUILD] An error occurred handling initiative", true, e);
+        rewardErrorNotifierService.notifyRewardRuleBuilder(message, "[REWARD_RULE_BUILD] An error occurred handling initiative", true, e);
     }
 
     @Override

@@ -54,7 +54,7 @@ class ErrorManagerTest {
         Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody"))
                 .when(testController).testEndpoint();
 
-        ErrorDTO errorClientExceptionWithBody= new ErrorDTO(Severity.ERROR,"Error","Error ClientExceptionWithBody");
+        ErrorDTO errorClientExceptionWithBody= new ErrorDTO("Error","Error ClientExceptionWithBody");
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/test").build())
@@ -65,7 +65,7 @@ class ErrorManagerTest {
 
         Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody", new Throwable()))
                 .when(testController).testEndpoint();
-        ErrorDTO errorClientExceptionWithBodyWithStatusAndTitleAndMessageAndThrowable= new ErrorDTO(Severity.ERROR,"Error","Error ClientExceptionWithBody");
+        ErrorDTO errorClientExceptionWithBodyWithStatusAndTitleAndMessageAndThrowable= new ErrorDTO("Error","Error ClientExceptionWithBody");
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/test").build())
@@ -76,7 +76,7 @@ class ErrorManagerTest {
 
     @Test
     void handleExceptionClientExceptionTest(){
-        ErrorDTO expectedErrorClientException = new ErrorDTO(Severity.ERROR,"Error","Something gone wrong");
+        ErrorDTO expectedErrorClientException = new ErrorDTO("Error","Something gone wrong");
 
         Mockito.doThrow(ClientException.class)
                 .when(testController).testEndpoint();
@@ -108,7 +108,7 @@ class ErrorManagerTest {
 
     @Test
     void handleExceptionRuntimeException(){
-        ErrorDTO expectedErrorDefault = new ErrorDTO(Severity.ERROR,"Error","Something gone wrong");
+        ErrorDTO expectedErrorDefault = new ErrorDTO("Error","Something gone wrong");
 
         Mockito.doThrow(RuntimeException.class)
                 .when(testController).testEndpoint();

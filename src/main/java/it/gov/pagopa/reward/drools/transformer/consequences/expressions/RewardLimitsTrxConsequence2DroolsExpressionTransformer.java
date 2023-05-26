@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.consequences.expressions;
 
 import it.gov.pagopa.reward.drools.transformer.conditions.predicates.RewardLimitsTrxCondition2DroolsConditionTransformer;
-import it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtils;
+import it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtils;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 
 public class RewardLimitsTrxConsequence2DroolsExpressionTransformer implements InitiativeTrxConsequence2DroolsExpressionTransformer<RewardLimitsDTO> {

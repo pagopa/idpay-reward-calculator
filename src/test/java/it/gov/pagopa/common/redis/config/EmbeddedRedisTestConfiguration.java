@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.config;
+package it.gov.pagopa.common.redis.config;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

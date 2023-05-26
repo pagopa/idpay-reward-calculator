@@ -2,7 +2,7 @@ package it.gov.pagopa.common.reactive.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
-import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -113,13 +113,13 @@ public abstract class BaseKafkaConsumer<T, R> {
 
         byte[] retryingApplicationName = message.getHeaders().get(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, byte[].class);
         if(retryingApplicationName != null && !new String(retryingApplicationName, StandardCharsets.UTF_8).equals(this.applicationName)){
-            log.info("[{}] Discarding message due to other application retry ({}): {}", getFlowName(), retryingApplicationName, message.getPayload());
+            log.info("[{}] Discarding message due to other application retry ({}): {}", getFlowName(), retryingApplicationName,  CommonUtilities.readMessagePayload(message));
             return Mono.just(defaultAck);
         }
 
         Map<String, Object> ctx=new HashMap<>();
         ctx.put(CONTEXT_KEY_START_TIME, System.currentTimeMillis());
-        ctx.put(CONTEXT_KEY_MSG_ID, message.getPayload());
+        ctx.put(CONTEXT_KEY_MSG_ID,  CommonUtilities.readMessagePayload(message));
 
         return execute(message, ctx)
                 .map(r -> new KafkaAcknowledgeResult<>(message, r))

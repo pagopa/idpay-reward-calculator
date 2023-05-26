@@ -8,7 +8,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -43,7 +43,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
     private final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
     private final Transaction2RewardTransactionMapper rewardTransactionMapper;
     private final RewardNotifierService rewardNotifierService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
     private final Duration commitDelay;
 
@@ -62,7 +62,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             Transaction2RewardTransactionMapper rewardTransactionMapper,
             RewardNotifierService rewardNotifierService,
-            ErrorNotifierService errorNotifierService,
+            RewardErrorNotifierService rewardErrorNotifierService,
             AuditUtilities auditUtilities,
 
             @Value("${spring.cloud.stream.kafka.bindings.trxProcessor-in-0.consumer.ackTime}") long commitMillis,
@@ -76,7 +76,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
         this.rewardTransactionMapper = rewardTransactionMapper;
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
         this.rewardNotifierService = rewardNotifierService;
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.auditUtilities = auditUtilities;
 
@@ -95,7 +95,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] An error occurred evaluating transaction", true, e);
+        rewardErrorNotifierService.notifyTransactionEvaluation(message, "[REWARD] An error occurred evaluating transaction", true, e);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     @Override
     protected int getMessagePartitionKey(Message<String> message) {
-        String userId=Utils.readUserId(message.getPayload());
+        String userId=Utils.readUserId( CommonUtilities.readMessagePayload(message));
         if(!StringUtils.isEmpty(userId)){
             return userId.hashCode();
         } else {
@@ -144,7 +144,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
+        return e -> rewardErrorNotifierService.notifyTransactionEvaluation(message, "[REWARD] Unexpected JSON", true, e);
     }
 
     @Override

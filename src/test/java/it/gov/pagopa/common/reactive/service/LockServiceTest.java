@@ -1,9 +1,7 @@
-package it.gov.pagopa.common.reactive;
+package it.gov.pagopa.common.reactive.service;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import it.gov.pagopa.common.reactive.service.LockService;
-import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
