@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.config;
+package it.gov.pagopa.common.redis.config;
 
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.test.context.TestConfiguration;

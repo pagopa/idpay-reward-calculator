@@ -1,6 +1,6 @@
-package it.gov.pagopa.reward.drools.utils;
+package it.gov.pagopa.common.drools.utils;
 
-import it.gov.pagopa.reward.drools.model.DroolsRuleTemplateParam;
+import it.gov.pagopa.common.drools.model.DroolsRuleTemplateParam;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -186,7 +186,7 @@ class DroolsTemplateRuleUtilsTest {
 
     @Test
     void testToTemplateParamFromCustomObjectWithNoSetters() {
-        Assertions.assertEquals("((it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters)(new java.util.function.Supplier<it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters>(){public it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters get(){it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters varTestModelSampleNoSetters = new it.gov.pagopa.reward.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters();return varTestModelSampleNoSetters;}}).get())"
+        Assertions.assertEquals("((it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters)(new java.util.function.Supplier<it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters>(){public it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters get(){it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters varTestModelSampleNoSetters = new it.gov.pagopa.common.drools.utils.DroolsTemplateRuleUtilsTest.TestModelSampleNoSetters();return varTestModelSampleNoSetters;}}).get())"
                 , DroolsTemplateRuleUtils.buildNewObjectDroolsParam(new TestModelSampleNoSetters()).getParam());
     }
 

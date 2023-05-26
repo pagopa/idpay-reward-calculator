@@ -28,6 +28,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -139,6 +140,13 @@ public class KafkaTestUtilitiesService {
 //end region
 
 //region publish messages
+    /** It will send the input message */
+    public void publishIntoEmbeddedKafka(String topic, String key, Message<String> message) {
+        publishIntoEmbeddedKafka(topic,
+                message.getHeaders().entrySet().stream().map(e -> (Header) new RecordHeader(e.getKey(), e.getValue().toString().getBytes(StandardCharsets.UTF_8))).toList()
+                , key, message.getPayload());
+    }
+
     /** It will serialize the payload before to invoke {@link #publishIntoEmbeddedKafka(String, Iterable, String, String)} */
     public void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, Object payload) {
         try {
@@ -174,8 +182,8 @@ public class KafkaTestUtilitiesService {
             headers = new RecordHeaders(additionalHeaders);
         } else {
             headers = Stream.concat(
-                            StreamSupport.stream(headers.spliterator(), false),
-                            Arrays.stream(additionalHeaders))
+                            Arrays.stream(additionalHeaders),
+                            StreamSupport.stream(headers.spliterator(), false))
                     .collect(Collectors.toList());
         }
         ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
@@ -285,14 +293,20 @@ public class KafkaTestUtilitiesService {
     }
 
     public void checkErrorMessageHeaders(String srcTopic,String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, Function<String, String> normalizePayload) {
-        checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true, normalizePayload);
+        checkErrorMessageHeaders(bootstrapServers, srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true, normalizePayload);
+    }
+    public void checkErrorMessageHeaders(String srcServer, String srcTopic,String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, Function<String, String> normalizePayload) {
+        checkErrorMessageHeaders(srcServer, srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true, normalizePayload);
     }
     public void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader, Function<String, String> normalizePayload) {
+        checkErrorMessageHeaders(bootstrapServers, srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, expectRetryHeader, expectedAppNameHeader, normalizePayload);
+    }
+    public void checkErrorMessageHeaders(String srcServer, String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader, Function<String, String> normalizePayload) {
         Assertions.assertEquals(expectedAppNameHeader? applicationName : null, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME));
         Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_GROUP));
 
         Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE));
-        Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER));
+        Assertions.assertEquals(srcServer, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER));
         Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC));
         Assertions.assertNotNull(errorMessage.headers().lastHeader(KafkaConstants.ERROR_MSG_HEADER_STACKTRACE));
         Assertions.assertEquals(errorDescription, TestUtils.getHeaderValue(errorMessage, KafkaConstants.ERROR_MSG_HEADER_DESCRIPTION));

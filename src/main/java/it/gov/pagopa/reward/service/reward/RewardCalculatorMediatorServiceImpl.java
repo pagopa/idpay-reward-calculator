@@ -129,7 +129,7 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     @Override
     protected int getMessagePartitionKey(Message<String> message) {
-        String userId=Utils.readUserId(message.getPayload());
+        String userId=Utils.readUserId( CommonUtilities.readMessagePayload(message));
         if(!StringUtils.isEmpty(userId)){
             return userId.hashCode();
         } else {

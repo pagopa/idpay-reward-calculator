@@ -13,13 +13,25 @@ public class CommonUtilities {
     private CommonUtilities() {}
 
     /** It will try to deserialize a message, eventually notifying the error  */
-    public static <T> T deserializeMessage(Message<String> message, ObjectReader objectReader, Consumer<Throwable> onError) {
+    public static <T> T deserializeMessage(Message<?> message, ObjectReader objectReader, Consumer<Throwable> onError) {
         try {
-            return objectReader.readValue(message.getPayload());
+            String payload = readMessagePayload(message);
+            return objectReader.readValue(payload);
         } catch (JsonProcessingException e) {
             onError.accept(e);
             return null;
         }
+    }
+
+    /** It will read message payload checking if it's a byte[] or String */
+    public static String readMessagePayload(Message<?> message) {
+        String payload;
+        if(message.getPayload() instanceof byte[] bytes){
+            payload=new String(bytes);
+        } else {
+            payload= message.getPayload().toString();
+        }
+        return payload;
     }
 
     /** To read Message header value */
@@ -39,8 +51,9 @@ public class CommonUtilities {
         return BigDecimal.valueOf(cents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN);
     }
 
+    public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
     /** To convert euro into cents */
-    public static Long euroToCents(BigDecimal euro) {
-        return euro.longValue() * 100L;
+    public static Long euroToCents(BigDecimal euro){
+        return euro == null? null : euro.multiply(ONE_HUNDRED).longValue();
     }
 }

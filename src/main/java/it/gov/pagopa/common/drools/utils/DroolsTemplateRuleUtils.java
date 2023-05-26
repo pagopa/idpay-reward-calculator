@@ -1,6 +1,6 @@
-package it.gov.pagopa.reward.drools.utils;
+package it.gov.pagopa.common.drools.utils;
 
-import it.gov.pagopa.reward.drools.model.DroolsRuleTemplateParam;
+import it.gov.pagopa.common.drools.model.DroolsRuleTemplateParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 

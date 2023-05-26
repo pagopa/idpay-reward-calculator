@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.BaseIntegrationTest;
-import it.gov.pagopa.reward.config.EmbeddedRedisTestConfiguration;
+import it.gov.pagopa.common.redis.config.EmbeddedRedisTestConfiguration;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;

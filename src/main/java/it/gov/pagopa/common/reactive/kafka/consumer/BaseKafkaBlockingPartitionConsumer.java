@@ -42,7 +42,7 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
     }
 
     private Mono<R> executeAfterLock(Pair<Message<String>, Integer> messageAndLockId, Map<String, Object> ctx) {
-        log.trace("{} Received payload: {}", getFlowName(), messageAndLockId.getKey().getPayload());
+        log.trace("{} Received payload: {}", getFlowName(),  CommonUtilities.readMessagePayload(messageAndLockId.getKey()));
 
         final Message<String> message = messageAndLockId.getKey();
 
@@ -93,7 +93,7 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
             if (partitionId != null) {
                 return Integer.parseInt(partitionId);
             } else {
-                return message.getPayload().hashCode();
+                return  CommonUtilities.readMessagePayload(message).hashCode();
             }
         }
     }
