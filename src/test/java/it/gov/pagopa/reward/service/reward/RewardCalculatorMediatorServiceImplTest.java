@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -8,7 +8,7 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
@@ -62,7 +62,7 @@ class RewardCalculatorMediatorServiceImplTest {
     @Mock private OnboardedInitiativesService onboardedInitiativesServiceMock;
     @Mock private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock private RewardNotifierService rewardNotifierServiceMock;
-    @Mock private ErrorNotifierService errorNotifierServiceMock;
+    @Mock private RewardErrorNotifierService rewardErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
 
     private RewardCalculatorMediatorServiceImpl rewardCalculatorMediatorService;
@@ -81,7 +81,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransactionMapper,
                 rewardNotifierServiceMock,
-                errorNotifierServiceMock,
+                rewardErrorNotifierServiceMock,
                 auditUtilitiesMock,
                 500,
                 TestUtils.objectMapper);
@@ -160,7 +160,7 @@ class RewardCalculatorMediatorServiceImplTest {
                 initiativesEvaluatorFacadeServiceMock,
                 lockServiceMock,
                 rewardNotifierServiceMock,
-                errorNotifierServiceMock);
+                rewardErrorNotifierServiceMock);
 
         trxFluxAndAckMocks.getKey().stream().limit(trxFluxAndAckMocks.getKey().size()-1).forEach(ackMock -> Mockito.verify(ackMock, Mockito.never()).acknowledge());
 
@@ -370,6 +370,6 @@ class RewardCalculatorMediatorServiceImplTest {
         rewardCalculatorMediatorService.execute(msgs);
 
         // Then
-        Mockito.verifyNoInteractions(lockServiceMock, transactionProcessedServiceMock, operationTypeHandlerServiceMock, transactionValidatorServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock,rewardNotifierServiceMock,errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(lockServiceMock, transactionProcessedServiceMock, operationTypeHandlerServiceMock, transactionValidatorServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock,rewardNotifierServiceMock, rewardErrorNotifierServiceMock);
     }
 }

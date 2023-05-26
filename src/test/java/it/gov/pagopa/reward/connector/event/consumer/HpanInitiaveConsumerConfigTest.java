@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.connector.event.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import it.gov.pagopa.common.reactive.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;

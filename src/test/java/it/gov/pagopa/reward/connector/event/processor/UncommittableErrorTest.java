@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 
         "logging.level.it.gov.pagopa.reward.service.reward.RewardNotifierServiceImpl=OFF",
         "logging.level.it.gov.pagopa.common.utils.MethodRetryUtils=OFF",
-        "logging.level.it.gov.pagopa.reward.service.ErrorNotifierServiceImpl=OFF",
+        "logging.level.it.gov.pagopa.common.kafka.service.ErrorNotifierServiceImpl=OFF",
 })
 class UncommittableErrorTest extends BaseTransactionProcessorTest {
 

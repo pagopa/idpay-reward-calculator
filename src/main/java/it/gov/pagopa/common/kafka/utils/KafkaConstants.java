@@ -1,4 +1,4 @@
-package it.gov.pagopa.common.reactive.kafka.utils;
+package it.gov.pagopa.common.kafka.utils;
 
 public class KafkaConstants {
     private KafkaConstants(){}

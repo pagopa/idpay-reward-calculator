@@ -11,7 +11,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -47,7 +47,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     @Mock
     private InitiativesEvaluatorService initiativesEvaluatorServiceMock;
     @Mock
-    private ErrorNotifierService errorNotifierServiceMock;
+    private RewardErrorNotifierService rewardErrorNotifierServiceMock;
 
     private InitiativesEvaluatorFacadeServiceImpl initiativesEvaluatorFacadeService;
 
@@ -100,7 +100,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
         Mockito.verifyNoMoreInteractions(transactionProcessedService, userInitiativeCountersRepositoryMock, initiativesEvaluatorServiceMock);
 
-        Mockito.verifyNoInteractions(errorNotifierServiceMock);
+        Mockito.verifyNoInteractions(rewardErrorNotifierServiceMock);
 
         checkPartialRefundResult(result.get(2));
         checkTotalRefundResult(result.get(3));
