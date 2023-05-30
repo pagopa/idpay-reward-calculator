@@ -12,7 +12,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -21,12 +20,11 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
-@EnableReactiveMongoRepositories(basePackages = "it.gov.pagopa")
-public class DbConfig {
+public class MongoConfig {
 
     @Configuration
     @ConfigurationProperties(prefix = "spring.data.mongodb.config")
-    static class MongoDbCustomProperties {
+    public static class MongoDbCustomProperties {
         @Setter
         ConnectionPoolSettings connectionPool;
 
@@ -44,16 +42,15 @@ public class DbConfig {
 
     @Bean
     public MongoClientSettingsBuilderCustomizer customizer(MongoDbCustomProperties mongoDbCustomProperties) {
-        return builder -> builder
-                .applyToConnectionPoolSettings(
-                        connectionPool -> {
-                            connectionPool.maxSize(mongoDbCustomProperties.connectionPool.maxSize);
-                            connectionPool.minSize(mongoDbCustomProperties.connectionPool.minSize);
-                            connectionPool.maxWaitTime(mongoDbCustomProperties.connectionPool.maxWaitTimeMS, TimeUnit.MILLISECONDS);
-                            connectionPool.maxConnectionLifeTime(mongoDbCustomProperties.connectionPool.maxConnectionLifeTimeMS, TimeUnit.MILLISECONDS);
-                            connectionPool.maxConnectionIdleTime(mongoDbCustomProperties.connectionPool.maxConnectionIdleTimeMS, TimeUnit.MILLISECONDS);
-                            connectionPool.maxConnecting(mongoDbCustomProperties.connectionPool.maxConnecting);
-                        });
+        return builder -> builder.applyToConnectionPoolSettings(
+                connectionPool -> {
+                    connectionPool.maxSize(mongoDbCustomProperties.connectionPool.maxSize);
+                    connectionPool.minSize(mongoDbCustomProperties.connectionPool.minSize);
+                    connectionPool.maxWaitTime(mongoDbCustomProperties.connectionPool.maxWaitTimeMS, TimeUnit.MILLISECONDS);
+                    connectionPool.maxConnectionLifeTime(mongoDbCustomProperties.connectionPool.maxConnectionLifeTimeMS, TimeUnit.MILLISECONDS);
+                    connectionPool.maxConnectionIdleTime(mongoDbCustomProperties.connectionPool.maxConnectionIdleTimeMS, TimeUnit.MILLISECONDS);
+                    connectionPool.maxConnecting(mongoDbCustomProperties.connectionPool.maxConnecting);
+                });
     }
 
     @Bean
