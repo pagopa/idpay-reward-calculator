@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 @Service
@@ -23,7 +24,9 @@ public class TransactionProcessed2SyncTrxResponseDTOMapper implements BiFunction
         out.setAmount(baseTransactionProcessed.getAmount());
         out.setEffectiveAmount(baseTransactionProcessed.getEffectiveAmount());
         out.setStatus(trx.getStatus());
-        out.setReward(trx.getRewards().get(initiativeId));
+        if(initiativeId!=null){
+            out.setReward(Optional.ofNullable(trx.getRewards()).map(r->r.get(initiativeId)).orElse(null));
+        }
         return out;
     }
 }

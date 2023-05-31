@@ -23,7 +23,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Document(collection = "transactions_processed")
 public class TransactionProcessed implements BaseTransactionProcessed {
     @Id

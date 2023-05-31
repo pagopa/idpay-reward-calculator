@@ -16,7 +16,10 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     private final int throttlingSeconds;
     private final ReactiveMongoTemplate mongoTemplate;
 
-    public UserInitiativeCountersAtomicOpsRepositoryImpl(@Value("${app.synchronousTransactions.throttlingSeconds}") int throttlingSeconds, ReactiveMongoTemplate mongoTemplate) {
+    public UserInitiativeCountersAtomicOpsRepositoryImpl(
+            @Value("${app.synchronousTransactions.throttlingSeconds:1}") int throttlingSeconds,
+
+            ReactiveMongoTemplate mongoTemplate) {
         this.throttlingSeconds = throttlingSeconds;
         this.mongoTemplate = mongoTemplate;
     }

@@ -16,6 +16,7 @@ import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -343,7 +344,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
         Assertions.assertEquals(trxRequest.getChannel(), expectedResponse.getChannel());
         Assertions.assertEquals(INITIATIVEID, expectedResponse.getInitiativeId());
         Assertions.assertEquals(trxRequest.getUserId(), expectedResponse.getUserId());
-        Assertions.assertEquals(trxRequest.getOperationType(), expectedResponse.getOperationType());
         Assertions.assertEquals(trxRequest.getAmountCents(), expectedResponse.getAmountCents());
         Assertions.assertEquals(CommonUtilities.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getAmount());
         Assertions.assertEquals(CommonUtilities.centsToEuro(trxRequest.getAmountCents()), expectedResponse.getEffectiveAmount());
@@ -384,12 +384,12 @@ class RewardTrxSynchronousApiControllerIntegrationTest  extends BaseIntegrationT
                 .channel(trxRequest.getChannel())
                 .initiativeId(initiativeId)
                 .userId(trxRequest.getUserId())
-                .operationType(trxRequest.getOperationType())
                 .amountCents(trxRequest.getAmountCents())
                 .amount(CommonUtilities.centsToEuro(trxRequest.getAmountCents()))
                 .effectiveAmount(CommonUtilities.centsToEuro(trxRequest.getAmountCents()))
                 .status(status)
                 .rejectionReasons(rejectionReasons)
+                .operationType(OperationType.CHARGE)
                 .reward(reward)
                 .build();
     }

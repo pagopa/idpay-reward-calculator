@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.dto.synchronous;
 
-import it.gov.pagopa.reward.enums.OperationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,6 +31,5 @@ public class SynchronousTransactionRequestDTO {
     private String correlationId;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
-    private OperationType operationType;
     private String channel;
 }
