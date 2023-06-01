@@ -28,7 +28,6 @@ public class SynchronousTransactionRequestDTO {
     private String acquirerCode;
     private String acquirerId;
     private String idTrxAcquirer;
-    private String correlationId;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private String channel;

@@ -50,7 +50,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
         Assertions.assertEquals(expectedAmountEur, result.getEffectiveAmount());
-        Assertions.assertEquals(previewRequest.getCorrelationId(), result.getCorrelationId());
+        Assertions.assertEquals(previewRequest.getTransactionId(), result.getCorrelationId());
         Assertions.assertEquals(previewRequest.getTrxChargeDate(),result.getTrxChargeDate());
         Assertions.assertEquals(previewRequest.getChannel(),result.getChannel());
 

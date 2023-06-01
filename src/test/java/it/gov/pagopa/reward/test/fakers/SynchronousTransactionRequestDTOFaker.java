@@ -59,7 +59,6 @@ public class SynchronousTransactionRequestDTOFaker {
                 .acquirerId("ACQUIRERID%d".formatted(bias))
                 .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-                .correlationId("CORRELATIONID%d".formatted(bias))
                 .trxChargeDate(offsetDateTimeNow)
                 .channel("SYNCPAYMENTCHANNEL%d".formatted(bias));
     }

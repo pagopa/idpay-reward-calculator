@@ -33,7 +33,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setHpan(getPaymentInstrument(trx.getUserId()));
         out.setOperationType(chargeOperation);
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
-        out.setCorrelationId(trx.getCorrelationId());
+        out.setCorrelationId(trx.getTransactionId());
         out.setAmount(amount);
         out.setAmountCurrency(trx.getAmountCurrency());
         out.setMcc(trx.getMcc());

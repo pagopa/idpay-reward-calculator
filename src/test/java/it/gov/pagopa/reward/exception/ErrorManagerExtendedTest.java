@@ -34,7 +34,7 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
                 .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionInitiativeNotFound"));
 
         webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
                         .build("TransactionSynchronousExceptionInitiativeNotFound"))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
@@ -52,7 +52,7 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
                 .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionNotOnboarded"));
 
         webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
                         .build("TransactionSynchronousExceptionNotOnboarded"))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
@@ -70,7 +70,7 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
                 .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionInternalServerError"));
 
         webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/preview/{initiativeId}")
+                .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
                         .build("TransactionSynchronousExceptionInternalServerError"))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
