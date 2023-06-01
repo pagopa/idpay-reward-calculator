@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +66,11 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                     }
 
                     return transactionProcessedRepository.findById(buildRefundId(trxId))
-                            .doOnNext(x -> log.info("[SYNC_CANCEL_TRANSACTION] Transaction has already been refunded: {}", trxId))
-                            .map(refund -> transactionProcessed2SyncTrxResponseDTOMapper.apply(refund, initiativeId))
+                            .map(refund -> {
+                                log.info("[SYNC_CANCEL_TRANSACTION] Transaction has already been refunded: {}", trxId);
+                                return transactionProcessed2SyncTrxResponseDTOMapper.apply(refund, initiativeId);
+                            })
+                            .doOnNext(t -> {throw new TransactionSynchronousException(HttpStatus.CONFLICT,t);})
 
                             .switchIfEmpty(Mono.defer(() -> refundTransaction((TransactionProcessed) trx, initiativeId)));
                 });

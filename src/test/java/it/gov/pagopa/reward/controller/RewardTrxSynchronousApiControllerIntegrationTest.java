@@ -43,6 +43,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -313,7 +314,12 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
 
             waitThrottling();
 
-            assertCancel(authorizeResponse, HttpStatus.OK);
+            SynchronousTransactionResponseDTO cancelResponse1 = assertCancel(authorizeResponse, HttpStatus.OK);
+
+            waitThrottling();
+
+            SynchronousTransactionResponseDTO cancelResponse2 = assertCancel(authorizeResponse, HttpStatus.CONFLICT);
+            Assertions.assertEquals(cancelResponse1, cancelResponse2);
         });
 
         // useCase 7: cancelling REJECTED authorize
@@ -348,20 +354,47 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         Assertions.assertNotNull(authorizeResponse);
         Assertions.assertEquals(expectedResponse, authorizeResponse);
 
-        BaseTransactionProcessed stored = transactionProcessedRepository.findById(trxRequest.getTransactionId()).block();
+        assertStoredTransactionProcessed(initiativeId, expectedHttpStatus, expectedResponse);
+
+        return authorizeResponse;
+    }
+
+    private void assertStoredTransactionProcessed(String initiativeId, HttpStatus expectedHttpStatus, SynchronousTransactionResponseDTO expectedResponse) {
+        BaseTransactionProcessed stored = transactionProcessedRepository.findById(expectedResponse.getTransactionId()).block();
         if(HttpStatus.OK.equals(expectedHttpStatus) || HttpStatus.CONFLICT.equals(expectedHttpStatus)){
             Assertions.assertNotNull(stored);
+
+            if(RewardConstants.REWARD_STATE_REWARDED.equals(expectedResponse.getStatus())) {
+                RewardCounters authCounter = expectedResponse.getReward().getCounters();
+
+                UserInitiativeCounters storedCounter = userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(expectedResponse.getUserId(), initiativeId)).block();
+                Assertions.assertNotNull(storedCounter);
+
+                Assertions.assertEquals(authCounter.getVersion(), storedCounter.getVersion());
+
+                Assertions.assertEquals(authCounter.getTrxNumber(), storedCounter.getTrxNumber());
+                Assertions.assertEquals(authCounter.getTotalAmount(), storedCounter.getTotalAmount());
+                Assertions.assertEquals(authCounter.getTotalReward(), storedCounter.getTotalReward());
+
+                Assertions.assertEquals(authCounter.isExhaustedBudget(), storedCounter.isExhaustedBudget());
+
+                Assertions.assertEquals(Optional.ofNullable(authCounter.getDailyCounters()).orElse(Collections.emptyMap()), storedCounter.getDailyCounters());
+                Assertions.assertEquals(Optional.ofNullable(authCounter.getWeeklyCounters()).orElse(Collections.emptyMap()), storedCounter.getWeeklyCounters());
+                Assertions.assertEquals(Optional.ofNullable(authCounter.getMonthlyCounters()).orElse(Collections.emptyMap()), storedCounter.getMonthlyCounters());
+                Assertions.assertEquals(Optional.ofNullable(authCounter.getYearlyCounters()).orElse(Collections.emptyMap()), storedCounter.getYearlyCounters());
+            }
         } else {
             Assertions.assertNull(stored);
         }
-
-        return authorizeResponse;
     }
 
     private SynchronousTransactionResponseDTO assertCancel(SynchronousTransactionResponseDTO authorizeResponse, HttpStatus expectedHttpStatus){
         SynchronousTransactionResponseDTO cancelResponse = extractResponse(cancelTrx(authorizeResponse.getTransactionId()), expectedHttpStatus, SynchronousTransactionResponseDTO.class);
         Assertions.assertNotNull(cancelResponse);
         assertionsRefundResponse(authorizeResponse, cancelResponse);
+
+        assertStoredTransactionProcessed(INITIATIVEID, expectedHttpStatus, cancelResponse);
+
         return cancelResponse;
     }
 

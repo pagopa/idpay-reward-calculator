@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -87,7 +88,9 @@ public class CancelTrxSynchronousServiceTest {
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId() + "_REFUND")).thenReturn(Mono.just(trxRefund));
 
         // When
-        SynchronousTransactionResponseDTO result = service.cancelTransaction(trx.getId()).block();
+        Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
+        TransactionSynchronousException resultException = Assertions.assertThrows(TransactionSynchronousException.class, mono::block);
+        SynchronousTransactionResponseDTO result = resultException.getResponse();
 
         // Then
         Assertions.assertNotNull(result);
