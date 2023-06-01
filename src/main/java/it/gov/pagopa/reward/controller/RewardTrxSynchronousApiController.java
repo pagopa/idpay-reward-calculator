@@ -8,11 +8,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/reward")
 public interface RewardTrxSynchronousApiController {
 
-    @PostMapping("/preview/{initiativeId}")
+    @PostMapping("/initiative/preview/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
                                                                @PathVariable("initiativeId") String initiativeId);
 
-    @PostMapping("/{initiativeId}")
+    @PostMapping("/initiative/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestBody SynchronousTransactionRequestDTO trxAuthorizeRequest,
                                                                @PathVariable("initiativeId") String initiativeId);
     @DeleteMapping("/{transactionId}")

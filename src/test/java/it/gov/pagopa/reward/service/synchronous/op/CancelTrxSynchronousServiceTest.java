@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
-class CancelTrxSynchronousServiceTest {
+public class CancelTrxSynchronousServiceTest {
 
     @Mock
     private TransactionProcessedRepository transactionProcessedRepositoryMock;
@@ -140,14 +140,14 @@ class CancelTrxSynchronousServiceTest {
         Assertions.assertEquals(rewardTransaction2SynchronousTransactionResponseDTOMapper.apply(trxRefundId, "INITIATIVEID0", expectedReward), result);
     }
 
-    private boolean assertRefundTrx(TransactionDTO t, TransactionProcessed trx, String trxRefundId) {
+    public static boolean assertRefundTrx(TransactionDTO t, TransactionProcessed trx, String trxRefundId) {
         Assertions.assertEquals(trxRefundId, t.getId());
         Assertions.assertTrue(t.getTrxDate().toLocalDateTime().isAfter(trx.getTrxDate()));
         Assertions.assertEquals("01", t.getOperationType());
         Assertions.assertEquals(OperationType.REFUND, t.getOperationTypeTranscoded());
-        Assertions.assertEquals(-trx.getAmountCents(), t.getAmountCents());
+        Assertions.assertEquals(trx.getAmount(), t.getAmount());
+        Assertions.assertEquals(trx.getAmountCents(), t.getAmountCents());
         Assertions.assertEquals(TestUtils.bigDecimalValue(0), t.getEffectiveAmount());
-        Assertions.assertEquals(trx.getAmount().negate(), t.getAmount());
         Assertions.assertEquals(new RefundInfo(List.of(trx), Map.of("INITIATIVEID0", new RefundInfo.PreviousReward("INITIATIVEID0", "ORGANIZATION_INITIATIVEID0", trx.getRewards().get("INITIATIVEID0").getAccruedReward()))), t.getRefundInfo());
 
         Assertions.assertEquals(trx.getIdTrxAcquirer(), t.getIdTrxAcquirer());

@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
@@ -14,6 +15,7 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -58,6 +60,10 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                     log.debug("[SYNC_CANCEL_TRANSACTION] Transaction to be refunded has been found: {}", trxId);
                     String initiativeId = Optional.ofNullable(trx.getRewards()).filter(map -> !CollectionUtils.isEmpty(map)).map(m -> m.keySet().iterator().next()).orElse(null);
 
+                    if(initiativeId==null){
+                        return Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "REJECTED authorization"));
+                    }
+
                     return transactionProcessedRepository.findById(buildRefundId(trxId))
                             .doOnNext(x -> log.info("[SYNC_CANCEL_TRANSACTION] Transaction has already been refunded: {}", trxId))
                             .map(refund -> transactionProcessed2SyncTrxResponseDTOMapper.apply(refund, initiativeId))
@@ -94,8 +100,8 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         refundTrx.setOperationType(refundOperationType);
         refundTrx.setOperationTypeTranscoded(OperationType.REFUND);
         refundTrx.setTrxDate(OffsetDateTime.now());
-        refundTrx.setAmountCents(-trx.getAmountCents());
-        refundTrx.setAmount(trx.getAmount().negate());
+        refundTrx.setAmountCents(trx.getAmountCents());
+        refundTrx.setAmount(trx.getAmount());
         refundTrx.setEffectiveAmount(BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY));
 
         Map<String, RefundInfo.PreviousReward> previousRewardMap = null;
