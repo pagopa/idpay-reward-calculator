@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
+import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -43,10 +44,11 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
             TransactionProcessedRepository transactionProcessedRepository,
             UserInitiativeCountersRepository userInitiativeCountersRepository,
+            HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxService,
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
             TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper) {
-        super(userInitiativeCountersRepository, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
+        super(userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
 
         this.refundOperationType = refundOperationType;
 

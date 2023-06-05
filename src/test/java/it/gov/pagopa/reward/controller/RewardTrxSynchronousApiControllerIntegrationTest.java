@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.exception.ErrorManager;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
@@ -28,6 +29,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,24 +38,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
+import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
 
 @TestPropertySource(
         properties = {
                 "logging.level.it.gov.pagopa.reward=WARN",
-                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=WARN",
+                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
                 "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
                 "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
@@ -69,8 +68,10 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
 
-    @Autowired
-    private UserInitiativeCountersRepository userInitiativeCountersRepository;
+    @SpyBean
+    private UserInitiativeCountersRepository userInitiativeCountersRepositorySpy;
+    @Value("${app.trx-retries.counters-update.retries}")
+    private int maxRetries;
 
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
@@ -80,10 +81,15 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
     @SpyBean
     protected RewardContextHolderService rewardContextHolderService;
 
+    @SpyBean
+    protected ErrorManager errorManagerSpy;
+
     @Value("${app.synchronousTransactions.throttlingSeconds}")
     private int throttlingSeconds;
 
     private final List<FailableConsumer<Integer, Exception>> useCases = new ArrayList<>();
+
+    private final Map<String, AtomicInteger> userId2ConfiguredFailingAttemptsCountdown = new ConcurrentHashMap<>();
 
     @Test
     void test() {
@@ -91,6 +97,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         int N = Math.max(useCases.size(), 50);
 
         publishRewardRules();
+
+        configureSpies();
 
         List<? extends Future<?>> tasks = IntStream.range(0, N)
                 .mapToObj(i -> executor.submit(() -> {
@@ -107,6 +115,10 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
                 tasks.get(i).get();
             } catch (Exception e) {
                 System.err.printf("UseCase %d (bias %d) failed %n", i % useCases.size(), i);
+                Mockito.mockingDetails(errorManagerSpy).getInvocations()
+                        .stream()
+                        .filter(ex->!ex.getArgument(0).getClass().equals(RuntimeException.class))
+                        .forEach(ex -> System.err.println("ErrorManager invocation: " + ex));
                 if (e instanceof RuntimeException runtimeException) {
                     throw runtimeException;
                 } else if (e.getCause() instanceof AssertionFailedError assertionFailedError) {
@@ -115,6 +127,33 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
                 Assertions.fail(e);
             }
         }
+    }
+
+    private void configureSpies() {
+        // configuring userInitiativeCounterSpy 2 fail during saveAll
+        Mockito.doAnswer(i -> {
+                    @SuppressWarnings("unchecked")
+                    Iterable<UserInitiativeCounters> ctrs = i.getArgument(0, Iterable.class);
+                    UserInitiativeCounters ctr = ctrs.iterator().next();
+                    AtomicInteger countdown = userId2ConfiguredFailingAttemptsCountdown.get(ctr.getUserId());
+
+                    return Flux.defer(()-> {
+                        if (countdown != null && countdown.decrementAndGet() >= 0) {
+                            return Flux.error(new RuntimeException("DUMMY_EXCEPTION_WHEN_STORING_COUNTERS"));
+                        } else {
+                            try {
+                                return userInitiativeCountersRepositorySpy.save(ctr).thenMany(Flux.just(ctr));
+                            } catch (Throwable e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+                })
+                .when(userInitiativeCountersRepositorySpy)
+                .saveAll(Mockito.argThat((Iterable<UserInitiativeCounters> ctrs) ->
+                        StreamSupport.stream(ctrs.spliterator(), false)
+                                .anyMatch(t -> userId2ConfiguredFailingAttemptsCountdown.get(t.getUserId()) != null
+                                )));
     }
 
     private void publishRewardRules() {
@@ -137,7 +176,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(1, rewardContextHolderService);
     }
 
-    //region API invokes
+//region API invokes
     private WebTestClient.ResponseSpec previewTrx(SynchronousTransactionRequestDTO trxRequest, String initiativeId) {
         return webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
@@ -162,7 +201,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
     }
 //endregion
 
-    //region utility methods
+//region utility methods
     private void onboardUser(SynchronousTransactionRequestDTO trxRequest) {
         String userId = trxRequest.getUserId();
 
@@ -283,7 +322,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(trxRequest.getUserId(), INITIATIVEID);
             userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusDays(1));
             userInitiativeCounters.setExhaustedBudget(true);
-            userInitiativeCountersRepository.save(userInitiativeCounters).block();
+            userInitiativeCountersRepositorySpy.save(userInitiativeCounters).block();
 
             SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest,
                     RewardConstants.REWARD_STATE_REJECTED,
@@ -330,9 +369,61 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
 
             onboardUser(trxRequest);
 
+            configureUserCounterSpy2ThrowException(trxRequest, maxRetries); // until maxRetries attempts, it will retry the update
+
             assertAuthorize(trxRequest, HttpStatus.OK, expectedResponse);
             waitThrottling();
             extractResponse(cancelTrx(trxRequest.getTransactionId()), HttpStatus.NOT_FOUND, null);
+        });
+
+        //useCase 8: handling stuck authorization at first store, second attempt ok
+        useCases.add(i -> {
+            //Settings
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+
+            configureUserCounterSpy2ThrowException(trxRequest, maxRetries+1);
+
+            onboardUser(trxRequest);
+
+            assertPreview(trxRequest, HttpStatus.OK, expectedResponse);
+            extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.INTERNAL_SERVER_ERROR, null);
+
+            BaseTransactionProcessed stored = transactionProcessedRepository.findById(trxRequest.getTransactionId()).block();
+            Assertions.assertNotNull(stored);
+            Assertions.assertEquals(expectedResponse.getReward(), stored.getRewards().get(INITIATIVEID));
+
+            waitThrottling();
+
+            assertAuthorize(trxRequest, HttpStatus.OK, expectedResponse);
+        });
+
+        //useCase 9: handling stuck authorization, rollback at successive trx
+        useCases.add(i -> {
+            //Settings
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+
+            configureUserCounterSpy2ThrowException(trxRequest, maxRetries+1);
+
+            onboardUser(trxRequest);
+
+            assertPreview(trxRequest, HttpStatus.OK, expectedResponse);
+            extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.INTERNAL_SERVER_ERROR, null);
+
+            BaseTransactionProcessed stored = transactionProcessedRepository.findById(trxRequest.getTransactionId()).block();
+            Assertions.assertNotNull(stored);
+            Assertions.assertEquals(expectedResponse.getReward(), stored.getRewards().get(INITIATIVEID));
+
+            waitThrottling();
+
+            SynchronousTransactionRequestDTO trxRequest2 = buildTrxRequest(i);
+            trxRequest2.setTransactionId(trxRequest.getTransactionId()+"_SUCCESSIVE");
+            SynchronousTransactionResponseDTO expectedResponse2 = getExpectedChargeResponse(INITIATIVEID, trxRequest2, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+
+            assertAuthorize(trxRequest2, HttpStatus.OK, expectedResponse2);
+
+            Assertions.assertNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
         });
     }
 
@@ -367,7 +458,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             if(RewardConstants.REWARD_STATE_REWARDED.equals(expectedResponse.getStatus())) {
                 RewardCounters authCounter = expectedResponse.getReward().getCounters();
 
-                UserInitiativeCounters storedCounter = userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(expectedResponse.getUserId(), initiativeId)).block();
+                UserInitiativeCounters storedCounter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(expectedResponse.getUserId(), initiativeId)).block();
                 Assertions.assertNotNull(storedCounter);
 
                 Assertions.assertEquals(authCounter.getVersion(), storedCounter.getVersion());
@@ -382,6 +473,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getWeeklyCounters()).orElse(Collections.emptyMap()), storedCounter.getWeeklyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getMonthlyCounters()).orElse(Collections.emptyMap()), storedCounter.getMonthlyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getYearlyCounters()).orElse(Collections.emptyMap()), storedCounter.getYearlyCounters());
+
+                Assertions.assertNull(storedCounter.getUpdatingTrxId());
             }
         } else {
             Assertions.assertNull(stored);
@@ -478,6 +571,10 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
                 .totalAmount(previousCounter.getTotalAmount().add(amount))
                 .totalReward(previousCounter.getTotalReward().add(reward))
                 .build();
+    }
+
+    private void configureUserCounterSpy2ThrowException(SynchronousTransactionRequestDTO trxRequest, int minAttempts) {
+        userId2ConfiguredFailingAttemptsCountdown.put(trxRequest.getUserId(), new AtomicInteger(minAttempts));
     }
 
 }

@@ -20,6 +20,7 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
+import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
@@ -55,6 +56,8 @@ class CreateTrxSynchronousServiceImplTest {
     @Mock
     private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
     @Mock
+    private HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxServiceMock;
+    @Mock
     private SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock;
     @Mock
     private RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapperMock;
@@ -65,7 +68,7 @@ class CreateTrxSynchronousServiceImplTest {
 
     @BeforeEach
     void init(){
-        service = new CreateTrxSynchronousServiceImpl(rewardContextHolderServiceMock, onboardedInitiativesServiceMock,initiativesEvaluatorFacadeServiceMock, transactionProcessedRepositoryMock, userInitiativeCountersRepositoryMock, synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock, rewardTransaction2SynchronousTransactionResponseDTOMapperMock, transactionProcessed2SyncTrxResponseDTOMapperMock);
+        service = new CreateTrxSynchronousServiceImpl(rewardContextHolderServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock, transactionProcessedRepositoryMock, userInitiativeCountersRepositoryMock, handleSyncCounterUpdatingTrxServiceMock, synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock, rewardTransaction2SynchronousTransactionResponseDTOMapperMock, transactionProcessed2SyncTrxResponseDTOMapperMock);
     }
 
     //region preview
@@ -282,7 +285,7 @@ class CreateTrxSynchronousServiceImplTest {
         userInitiativeCounters.setId(UserInitiativeCounters.buildId(transactionDTOMock.getUserId(), initiativeId));
         userInitiativeCounters.setUserId(transactionDTOMock.getUserId());
         userInitiativeCounters.setInitiativeId(initiativeId);
-        Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled(Mockito.anyString())).thenReturn(existUserInitiativeCounter ? Mono.just(userInitiativeCounters) : Mono.empty());
+        Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled(Mockito.anyString(), Mockito.anyString())).thenReturn(existUserInitiativeCounter ? Mono.just(userInitiativeCounters) : Mono.empty());
 
         RewardTransactionDTO rewardTransaction = RewardTransactionDTOFaker.mockInstance(1);
         rewardTransaction.setId(authorizeRequest.getTransactionId());
@@ -292,6 +295,11 @@ class CreateTrxSynchronousServiceImplTest {
                 .transactionId(authorizeRequest.getTransactionId())
                 .build();
         Mockito.when(rewardTransaction2SynchronousTransactionResponseDTOMapperMock.apply(authorizeRequest.getTransactionId(), initiativeId, rewardTransaction)).thenReturn(responseDTO);
+
+        if(existUserInitiativeCounter) {
+            Mockito.when(handleSyncCounterUpdatingTrxServiceMock.checkUpdatingTrx(transactionDTOMock, userInitiativeCounters))
+                    .thenReturn(Mono.just(userInitiativeCounters));
+        }
 
         // When
         SynchronousTransactionResponseDTO result = service.authorizeTransaction(authorizeRequest, initiativeId).block();

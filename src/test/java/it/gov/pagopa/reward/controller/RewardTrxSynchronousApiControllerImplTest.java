@@ -23,7 +23,7 @@ class RewardTrxSynchronousApiControllerImplTest {
     private final String rewardAuthorizePath = "/reward/initiative/{initiativeId}";
 
     @MockBean
-    RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;
+    private RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;
 
     @Autowired
     protected WebTestClient webClient;

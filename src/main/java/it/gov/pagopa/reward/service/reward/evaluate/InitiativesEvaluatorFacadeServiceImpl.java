@@ -169,7 +169,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
                             .thenMany(
                                     userInitiativeCountersRepository.saveAll(counters)
                                             .retryWhen(Retry.fixedDelay(countersUpdateMaxRetries, countersUpdatedRetryDelay))
-                                            .onErrorResume(e -> Mono.error(new UncommittableError("An error occurred while storing counters updated evaluating trx %s".formatted(counters2rewardedTrx.getSecond().getId()))))
+                                            .onErrorResume(e -> Mono.error(new UncommittableError("An error occurred while storing counters updated evaluating trx %s".formatted(counters2rewardedTrx.getSecond().getId()), e)))
                             )
                             .doOnNext(r -> log.trace("[REWARD] Counters updated: {}", rewardedTrx.getId()))
                             .then(Mono.just(rewardedTrx));

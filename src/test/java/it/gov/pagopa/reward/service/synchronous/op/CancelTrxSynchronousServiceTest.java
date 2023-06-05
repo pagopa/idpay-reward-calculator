@@ -15,6 +15,7 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
+import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import org.junit.jupiter.api.AfterEach;
@@ -39,6 +40,8 @@ public class CancelTrxSynchronousServiceTest {
     private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
     @Mock
     private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
+    @Mock
+    private HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxServiceMock;
 
     private final RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper = new RewardTransaction2SynchronousTransactionResponseDTOMapper();
     private final TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper = new TransactionProcessed2SyncTrxResponseDTOMapper();
@@ -51,6 +54,7 @@ public class CancelTrxSynchronousServiceTest {
                 "01",
                 transactionProcessedRepositoryMock,
                 userInitiativeCountersRepositoryMock,
+                handleSyncCounterUpdatingTrxServiceMock,
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
                 transactionProcessed2SyncTrxResponseDTOMapper);
@@ -118,10 +122,13 @@ public class CancelTrxSynchronousServiceTest {
         Mono<UserInitiativeCounters> expectedCounterMono;
         if(expectCounter){
             expectedCounterMono = Mono.just(expectedCounter);
+            Mockito.when(handleSyncCounterUpdatingTrxServiceMock.checkUpdatingTrx(Mockito.argThat(t->t.getId().equals(trxRefundId)), Mockito.eq(expectedCounter)))
+                    .thenReturn(expectedCounterMono);
         } else {
             expectedCounterMono = Mono.empty();
         }
-        Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled("USERID0_INITIATIVEID0")).thenReturn(expectedCounterMono);
+
+        Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled("USERID0_INITIATIVEID0", trxRefundId)).thenReturn(expectedCounterMono);
 
         RewardTransactionDTO expectedReward = RewardTransactionDTOFaker.mockInstance(0);
         Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(
