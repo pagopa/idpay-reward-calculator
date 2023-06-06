@@ -39,7 +39,7 @@ public class UserInitiativeCounters extends Counters {
      * */
     private LocalDateTime updateDate;
     /** Used in Sync trx flow in order to handle transactional updates of {@link it.gov.pagopa.reward.model.TransactionProcessed} and this entity.<br/>
-     * See <a href="TODO">Confluence page</a>.
+     * See <a href="https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/727778640/Gestione+transazionalit+salvataggio+transazione+e+contatori+aggiornati">Confluence page</a>.
      * */
     private List<String> updatingTrxId;
 
