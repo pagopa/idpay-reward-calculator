@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.lookup.HpanUpdateNotifierService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
@@ -32,10 +34,8 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -51,8 +51,11 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
+
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
+    @Autowired
+    private UserInitiativeCountersRepository userInitiativeCountersRepository;
 
     @SpyBean
     private HpanUpdateNotifierService hpanUpdateNotifierServiceSpy;
@@ -60,6 +63,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     @AfterEach
     void cleanData(){
         hpanInitiativesRepository.deleteAll().block();
+        userInitiativeCountersRepository.deleteAll().block();
     }
     @Test
     void hpanInitiativeConsumer() {
@@ -82,13 +86,15 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, List.of(new RecordHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "OTHERAPPNAME".getBytes(StandardCharsets.UTF_8))), null, "OTHERAPPMESSAGE");
         long timeAfterSendHpanUpdateMessages = System.currentTimeMillis();
 
-        waitForDB(dbElementsNumbers+1+((updatedHpanNumbers-dbElementsNumbers)/2)+dbElementsNumbers);
+        int newHPans = (updatedHpanNumbers - dbElementsNumbers) / 2;
+        waitForDB(dbElementsNumbers+1+ newHPans +dbElementsNumbers);
         long endTestWithoutAsserts = System.currentTimeMillis();
 
         checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
         checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
         checkConcurrencyMessages();
         checkHpanUpdatePublished(dbElementsNumbers,maxWaitingMs);
+        checkUserInitiativeCounters(newHPans);
 
         System.out.printf("""
             ************************
@@ -297,6 +303,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
 
     //region not valid useCases
+
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
     {
         String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
@@ -379,12 +386,11 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 }
         ));
     }
-
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
         checkErrorMessageHeaders(topicHpanInitiativeLookupConsumer, groupIdHpanInitiativeLookupConsumer, errorMessage, errorDescription, expectedPayload, expectedKey);
     }
-    //endregion
 
+    //endregion
     private void checkConcurrencyMessages(){
         HpanInitiatives hpanConcurrecy = hpanInitiativesRepository.findById("HPAN_CONCURRENCY").block();
         Assertions.assertNotNull(hpanConcurrecy);
@@ -438,5 +444,25 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private String readUserId(String payload) {
         final Matcher matcher = userIdPatternMatch.matcher(payload);
         return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private void checkUserInitiativeCounters(int newHPans) {
+        int[] i = new int[]{200};
+        Assertions.assertEquals(newHPans, userInitiativeCountersRepository.count().block());
+        Objects.requireNonNull(userInitiativeCountersRepository.findAll().sort(Comparator.comparing(UserInitiativeCounters::getUserId))
+                .collectList()
+                .block()
+                )
+                .forEach(c->{
+                    int bias = Integer.parseInt(c.getUserId().substring(7));
+                    Assertions.assertEquals(i[0], bias);
+                    i[0]+=2;
+
+                    UserInitiativeCounters expectedCounter = new UserInitiativeCounters("USERID_" + bias, "INITIATIVE_" + bias);
+                    Assertions.assertTrue(c.getUpdateDate().isBefore(expectedCounter.getUpdateDate()));
+                    Assertions.assertTrue(c.getUpdateDate().isAfter(expectedCounter.getUpdateDate().truncatedTo(ChronoUnit.HOURS)));
+                    expectedCounter.setUpdateDate(c.getUpdateDate());
+                    Assertions.assertEquals(expectedCounter, c);
+                });
     }
 }

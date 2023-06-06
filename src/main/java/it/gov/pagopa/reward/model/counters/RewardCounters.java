@@ -1,9 +1,6 @@
 package it.gov.pagopa.reward.model.counters;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
@@ -13,7 +10,8 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
+@ToString(callSuper = true)
 public class RewardCounters extends Counters {
     private boolean exhaustedBudget;
     private BigDecimal initiativeBudget;

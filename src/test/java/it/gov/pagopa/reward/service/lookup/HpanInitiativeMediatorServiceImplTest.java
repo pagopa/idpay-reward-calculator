@@ -3,6 +3,9 @@ package it.gov.pagopa.reward.service.lookup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
@@ -12,11 +15,9 @@ import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,8 @@ class HpanInitiativeMediatorServiceImplTest {
     @Mock
     private HpanInitiativesRepository hpanInitiativesRepositoryMock;
     @Mock
+    private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
+    @Mock
     private HpanInitiativesService hpanInitiativesServiceMock;
     @Mock
     private RewardErrorNotifierService rewardErrorNotifierServiceMock;
@@ -58,7 +61,7 @@ class HpanInitiativeMediatorServiceImplTest {
     private HpanInitiativeMediatorService hpanInitiativeMediatorService;
     @BeforeEach
     void setUp(){
-        hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl("appName",0L, hpanInitiativesRepositoryMock, hpanInitiativesServiceMock, hpanUpdateNotifierServiceMock, TestUtils.objectMapper, rewardErrorNotifierServiceMock, hpanUpdateEvaluateDTO2HpanInitiativeMapperMock, hpanUpdateBulk2SingleMapperMock, hpanList2HpanUpdateOutcomeDTOMapperMock);
+        hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl("appName",0L, hpanInitiativesRepositoryMock, userInitiativeCountersRepositoryMock, hpanInitiativesServiceMock, hpanUpdateNotifierServiceMock, TestUtils.objectMapper, rewardErrorNotifierServiceMock, hpanUpdateEvaluateDTO2HpanInitiativeMapperMock, hpanUpdateBulk2SingleMapperMock, hpanList2HpanUpdateOutcomeDTOMapperMock);
     }
     @Test
     void execute(){

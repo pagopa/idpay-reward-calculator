@@ -5,7 +5,7 @@ public class UncommittableError extends RuntimeException {
         super(message);
     }
 
-    public UncommittableError(String message, Exception e){
+    public UncommittableError(String message, Throwable e){
         super(message, e);
     }
 }

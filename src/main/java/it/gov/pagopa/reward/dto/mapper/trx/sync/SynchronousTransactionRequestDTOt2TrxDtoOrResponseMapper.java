@@ -15,14 +15,11 @@ import java.util.List;
 @Service
 public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
     private final String chargeOperation;
-    private final String refundOperation;
 
     private static final String PREFIX_PAYMENT_INSTRUMENT="IDPAY_%s";
 
-    public SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(@Value("${app.operationType.charge}") String chargeOperation,
-                                                                    @Value("${app.operationType.refund}") String refundOperation) {
+    public SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(@Value("${app.operationType.charge}") String chargeOperation) {
         this.chargeOperation = chargeOperation;
-        this.refundOperation = refundOperation;
     }
 
     public TransactionDTO apply(SynchronousTransactionRequestDTO trx) {
@@ -34,9 +31,9 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
         out.setHpan(getPaymentInstrument(trx.getUserId()));
-        out.setOperationType(getOperationType(trx.getOperationType()));
+        out.setOperationType(chargeOperation);
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
-        out.setCorrelationId(trx.getCorrelationId());
+        out.setCorrelationId(trx.getTransactionId());
         out.setAmount(amount);
         out.setAmountCurrency(trx.getAmountCurrency());
         out.setMcc(trx.getMcc());
@@ -44,7 +41,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setMerchantId(trx.getMerchantId());
         out.setFiscalCode(trx.getMerchantFiscalCode());
         out.setVat(trx.getVat());
-        out.setOperationTypeTranscoded(trx.getOperationType());
+        out.setOperationTypeTranscoded(OperationType.CHARGE);
         out.setAmountCents(trx.getAmountCents());
         out.setEffectiveAmount(amount);
         out.setTrxChargeDate(trx.getTrxChargeDate());
@@ -54,20 +51,13 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         return out;
     }
 
-    private String getOperationType(OperationType operationTypeTranscoded) {
-        return switch (operationTypeTranscoded){
-            case CHARGE -> chargeOperation;
-            case REFUND -> refundOperation;
-        };
-    }
-
     public SynchronousTransactionResponseDTO apply(SynchronousTransactionRequestDTO request, String initiativeId, List<String> discardCause){
         SynchronousTransactionResponseDTO out = new SynchronousTransactionResponseDTO();
         out.setTransactionId(request.getTransactionId());
         out.setChannel(request.getChannel());
         out.setInitiativeId(initiativeId);
         out.setUserId(request.getUserId());
-        out.setOperationType(request.getOperationType());
+        out.setOperationType(OperationType.CHARGE);
         out.setAmountCents(request.getAmountCents());
         out.setAmount(CommonUtilities.centsToEuro(request.getAmountCents()));
         out.setEffectiveAmount(CommonUtilities.centsToEuro(request.getAmountCents()));

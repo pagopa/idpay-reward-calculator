@@ -38,4 +38,14 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
                         .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
                 trxAuthorizeRequest.toString());
     }
+
+    @Override
+    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(String trxId) {
+        log.info("[SYNC_CANCEL_TRANSACTION] Requesting to cancel transaction {}", trxId);
+
+        return PerformanceLogger.logTimingFinally("SYNC_CANCEL_TRANSACTION",
+                rewardTrxSynchronousService.cancelTransaction(trxId)
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find transaction having id " + trxId))),
+                trxId);
+    }
 }
