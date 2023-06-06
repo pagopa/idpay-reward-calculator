@@ -1,8 +1,10 @@
 package it.gov.pagopa.reward.connector.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -67,5 +69,27 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         UserInitiativeCounters.class
                 );
     }
+
+    @Override
+    public Mono<UpdateResult> createIfNotExists(String userId, String initiativeId) {
+        String counterId = UserInitiativeCounters.buildId(userId, initiativeId);
+        return mongoTemplate
+                    .upsert(
+                            Query.query(Criteria
+                                    .where(UserInitiativeCounters.Fields.id).is(counterId)),
+                            new Update()
+                                    .setOnInsert(UserInitiativeCounters.Fields.userId, userId)
+                                    .setOnInsert(UserInitiativeCounters.Fields.initiativeId, initiativeId)
+                                    .setOnInsert(UserInitiativeCounters.Fields.version, 0L)
+                                    .setOnInsert(UserInitiativeCounters.Fields.exhaustedBudget, false)
+                                    .setOnInsert(UserInitiativeCounters.Fields.updateDate, LocalDateTime.now()),
+                            UserInitiativeCounters.class).onErrorResume(e -> {
+                        if (e instanceof DuplicateKeyException) {
+                            return Mono.just(UpdateResult.acknowledged(1, 0L, null));
+                        } else {
+                            return Mono.error(e);
+                        }
+                    });
+        }
 
 }

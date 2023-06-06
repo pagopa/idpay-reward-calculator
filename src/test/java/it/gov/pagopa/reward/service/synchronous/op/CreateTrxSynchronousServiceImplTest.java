@@ -5,8 +5,8 @@ import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
-import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest;
+import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResponseDTOMapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -23,7 +24,6 @@ import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeSe
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
-import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -57,18 +58,16 @@ class CreateTrxSynchronousServiceImplTest {
     private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
     @Mock
     private HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxServiceMock;
-    @Mock
-    private SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock;
-    @Mock
-    private RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapperMock;
-    @Mock
-    private TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapperMock;
+
+    private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper("00");
+    private final RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper = new RewardTransaction2SynchronousTransactionResponseDTOMapper();
+    private final TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper = new TransactionProcessed2SyncTrxResponseDTOMapper();
 
     private CreateTrxSynchronousService service;
 
     @BeforeEach
     void init(){
-        service = new CreateTrxSynchronousServiceImpl(rewardContextHolderServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock, transactionProcessedRepositoryMock, userInitiativeCountersRepositoryMock, handleSyncCounterUpdatingTrxServiceMock, synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock, rewardTransaction2SynchronousTransactionResponseDTOMapperMock, transactionProcessed2SyncTrxResponseDTOMapperMock);
+        service = new CreateTrxSynchronousServiceImpl(rewardContextHolderServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock, transactionProcessedRepositoryMock, userInitiativeCountersRepositoryMock, handleSyncCounterUpdatingTrxServiceMock, synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper, rewardTransaction2SynchronousTransactionResponseDTOMapper, transactionProcessed2SyncTrxResponseDTOMapper);
     }
 
     //region preview
@@ -78,26 +77,11 @@ class CreateTrxSynchronousServiceImplTest {
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
 
-        TransactionDTO transactionDTOMock = TransactionDTOFaker.mockInstance(1);
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(Mockito.same(previewRequest))).thenReturn(transactionDTOMock);
-
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.same(transactionDTOMock.getHpan()), Mockito.same(transactionDTOMock.getTrxDate()), Mockito.same(initiativeId))).thenReturn(Mono.just(Boolean.FALSE));
-
-        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTOFaker.mockInstanceBuilder(1)
-                        .initiativeId(initiativeId)
-                        .channel(previewRequest.getChannel())
-                        .operationType(OperationType.CHARGE)
-                        .amountCents(previewRequest.getAmountCents())
-                        .amount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
-                        .effectiveAmount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
-                        .status(RewardConstants.REWARD_STATE_REJECTED)
-                        .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                        .build();
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))).thenReturn(response);
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(previewRequest.getUserId())), Mockito.same(previewRequest.getTrxDate()), Mockito.same(initiativeId))).thenReturn(Mono.just(Boolean.FALSE));
 
         // When
         try {
@@ -120,22 +104,7 @@ class CreateTrxSynchronousServiceImplTest {
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
 
-        TransactionDTO transactionDTOMock = TransactionDTOFaker.mockInstance(1);
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(Mockito.same(previewRequest))).thenReturn(transactionDTOMock);
-
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.empty());
-
-        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTOFaker.mockInstanceBuilder(1)
-                .initiativeId(initiativeId)
-                .channel("CHANNEL")
-                .operationType(OperationType.CHARGE)
-                .amountCents(previewRequest.getAmountCents())
-                .amount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
-                .effectiveAmount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
-                .status(RewardConstants.REWARD_STATE_REJECTED)
-                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                .build();
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND))).thenReturn(response);
 
         // When
         try {
@@ -146,7 +115,7 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.assertTrue(e instanceof TransactionSynchronousException);
             SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
-            SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), resultResponse);
+            SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND), resultResponse);
 
         }
     }
@@ -158,20 +127,16 @@ class CreateTrxSynchronousServiceImplTest {
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
 
-        TransactionDTO transactionDTOMock = TransactionDTOFaker.mockInstance(1);
-        transactionDTOMock.setUserId(previewRequest.getUserId());
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
 
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.same(transactionDTOMock.getHpan()), Mockito.same(transactionDTOMock.getTrxDate()), Mockito.same(initiativeId))).thenReturn(Mono.just(Boolean.TRUE));
-
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(Mockito.same(previewRequest))).thenReturn(transactionDTOMock);
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(previewRequest.getUserId())), Mockito.same(previewRequest.getTrxDate()), Mockito.same(initiativeId))).thenReturn(Mono.just(Boolean.TRUE));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
-        userInitiativeCounters.setId(UserInitiativeCounters.buildId(transactionDTOMock.getUserId(), initiativeId));
-        userInitiativeCounters.setUserId(transactionDTOMock.getUserId());
+        userInitiativeCounters.setId(UserInitiativeCounters.buildId(previewRequest.getUserId(), initiativeId));
+        userInitiativeCounters.setUserId(previewRequest.getUserId());
         userInitiativeCounters.setInitiativeId(initiativeId);
         Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.anyString())).thenReturn(existUserInitiativeCounter ? Mono.just(userInitiativeCounters) : Mono.empty());
 
@@ -181,18 +146,19 @@ class CreateTrxSynchronousServiceImplTest {
                 .initiatives(Map.of(initiativeId,userInitiativeCounters))
                 .build();
         Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> pair = Pair.of(userInitiativeCountersWrapper, rewardTransactionDTO);
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(transactionDTOMock), Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(Mono.just(pair));
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateInitiativesBudgetAndRules(Mockito.argThat(t->t.getId().equals(previewRequest.getTransactionId())), Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(Mono.just(pair));
 
         SynchronousTransactionResponseDTO expectedResult = SynchronousTransactionResponseDTO.builder()
+                .transactionId(previewRequest.getTransactionId())
+                .userId(previewRequest.getUserId())
                 .initiativeId(initiativeId)
-                .channel("channel")
+                .channel(RewardConstants.TRX_CHANNEL_RTD)
                 .operationType(OperationType.CHARGE)
-                .amountCents(previewRequest.getAmountCents())
-                .amount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
-                .effectiveAmount(CommonUtilities.centsToEuro(previewRequest.getAmountCents()))
+                .amountCents(rewardTransactionDTO.getAmountCents())
+                .amount(CommonUtilities.centsToEuro(rewardTransactionDTO.getAmountCents()))
+                .effectiveAmount(CommonUtilities.centsToEuro(rewardTransactionDTO.getAmountCents()))
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
-        Mockito.when(rewardTransaction2SynchronousTransactionResponseDTOMapperMock.apply(Mockito.same(transactionDTOMock.getId()), Mockito.same(initiativeId), Mockito.same(rewardTransactionDTO))).thenReturn(expectedResult);
 
         // When
         SynchronousTransactionResponseDTO result = service.previewTransaction(previewRequest, initiativeId).block();
@@ -200,11 +166,9 @@ class CreateTrxSynchronousServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedResult, result);
-        Mockito.verify(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock, Mockito.only()).apply(Mockito.any());
         Mockito.verify(onboardedInitiativesServiceMock, Mockito.only()).isOnboarded(Mockito.anyString(), Mockito.any(), Mockito.anyString());
         Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.only()).findById(Mockito.anyString());
         Mockito.verify(initiativesEvaluatorFacadeServiceMock, Mockito.only()).evaluateInitiativesBudgetAndRules(Mockito.any(),Mockito.any(),Mockito.any());
-        Mockito.verify(rewardTransaction2SynchronousTransactionResponseDTOMapperMock, Mockito.only()).apply(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
     //region authorize
@@ -214,25 +178,27 @@ class CreateTrxSynchronousServiceImplTest {
         SynchronousTransactionRequestDTO authorizeRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
 
-        TransactionDTO transactionDTOMock = TransactionDTOFaker.mockInstance(1);
-        transactionDTOMock.setUserId(authorizeRequest.getUserId());
-        transactionDTOMock.setId(authorizeRequest.getTransactionId());
+        TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
+        trx.setUserId(authorizeRequest.getUserId());
+        trx.setId(authorizeRequest.getTransactionId());
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
 
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(Mockito.same(authorizeRequest))).thenReturn(transactionDTOMock);
-
         TransactionProcessed transactionProcessed = TransactionProcessed.builder()
-                .id(transactionDTOMock.getId()).build();
-        Mockito.when(transactionProcessedRepositoryMock.findById(transactionDTOMock.getId())).thenReturn(Mono.just(transactionProcessed));
-
-        SynchronousTransactionResponseDTO responseExpected = SynchronousTransactionResponseDTO.builder()
-                .transactionId(authorizeRequest.getTransactionId())
-                .userId(transactionDTOMock.getUserId())
+                .id(trx.getId())
+                .userId(trx.getUserId())
                 .build();
-        Mockito.when(transactionProcessed2SyncTrxResponseDTOMapperMock.apply(transactionProcessed,initiativeId)).thenReturn(responseExpected);
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(transactionProcessed));
+
+        SynchronousTransactionResponseDTO responseExpected =
+                transactionProcessed2SyncTrxResponseDTOMapper.apply(transactionProcessed, initiativeId);
+
+        Mono<UserInitiativeCounters> counterMono = Mono.just(new UserInitiativeCounters(trx.getUserId(), initiativeId));
+
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), initiativeId)))
+                .thenReturn(counterMono);
 
         // When
         try {
@@ -247,7 +213,6 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.assertEquals(HttpStatus.CONFLICT,((TransactionSynchronousException) e).getHttpStatus());
         }
 
-
         // When
         try {
             service.authorizeTransaction(authorizeRequest, initiativeId).block();
@@ -263,41 +228,64 @@ class CreateTrxSynchronousServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void authorizeTransactionNotAlreadyProcessed(boolean existUserInitiativeCounter) {
+    @CsvSource({
+            "false,false",
+            "false,true",
+            "true,false",
+            "true,true"
+    })
+    void authorizeTransactionNotAlreadyProcessed(boolean existUserInitiativeCounter, boolean previousStuck) {
         //Given
         SynchronousTransactionRequestDTO authorizeRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         String initiativeId = "INITIATIVEID";
 
-        TransactionDTO transactionDTOMock = TransactionDTOFaker.mockInstance(1);
-        transactionDTOMock.setId(authorizeRequest.getTransactionId());
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .build();
-        Mockito.when(synchronousTransactionRequestDTOt2TrxDtoOrResponseMapperMock.apply(authorizeRequest)).thenReturn(transactionDTOMock);
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
 
-        Mockito.when(transactionProcessedRepositoryMock.findById(transactionDTOMock.getId())).thenReturn(Mono.empty());
+        Mono<BaseTransactionProcessed> previousTrxProcessMono;
+        if(previousStuck){
+            TransactionProcessed trxProcessed = TransactionProcessed.builder()
+                    .id(authorizeRequest.getTransactionId())
+                    .userId(authorizeRequest.getUserId())
+                    .build();
+            previousTrxProcessMono = Mono.just(trxProcessed);
+        } else {
+            previousTrxProcessMono = Mono.empty();
+        }
+        Mockito.when(transactionProcessedRepositoryMock.findById(authorizeRequest.getTransactionId())).thenReturn(previousTrxProcessMono);
 
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.same(transactionDTOMock.getHpan()), Mockito.same(transactionDTOMock.getTrxDate()), Mockito.same(initiativeId))).thenReturn(Mono.just(Boolean.TRUE));
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(authorizeRequest.getUserId())), Mockito.same(authorizeRequest.getTrxDate()), Mockito.same(initiativeId))).thenReturn(Mono.just(Boolean.TRUE));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
-        userInitiativeCounters.setId(UserInitiativeCounters.buildId(transactionDTOMock.getUserId(), initiativeId));
-        userInitiativeCounters.setUserId(transactionDTOMock.getUserId());
+        userInitiativeCounters.setId(UserInitiativeCounters.buildId(authorizeRequest.getUserId(), initiativeId));
+        userInitiativeCounters.setUserId(authorizeRequest.getUserId());
         userInitiativeCounters.setInitiativeId(initiativeId);
-        Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled(Mockito.anyString(), Mockito.anyString())).thenReturn(existUserInitiativeCounter ? Mono.just(userInitiativeCounters) : Mono.empty());
+        if(previousStuck){
+            userInitiativeCounters.setUpdatingTrxId(List.of(authorizeRequest.getTransactionId()));
+            Mockito.when(userInitiativeCountersRepositoryMock.findById(userInitiativeCounters.getId())).thenReturn(Mono.just(userInitiativeCounters));
+        }
+        Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled(userInitiativeCounters.getId(), authorizeRequest.getTransactionId())).thenReturn(existUserInitiativeCounter || previousStuck ? Mono.just(userInitiativeCounters) : Mono.empty());
 
         RewardTransactionDTO rewardTransaction = RewardTransactionDTOFaker.mockInstance(1);
         rewardTransaction.setId(authorizeRequest.getTransactionId());
-        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.eq(transactionDTOMock),Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(Mono.just(rewardTransaction));
+        Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.argThat(t->t.getId().equals(authorizeRequest.getTransactionId())),Mockito.eq(List.of(initiativeId)), Mockito.any())).thenReturn(Mono.just(rewardTransaction));
 
         SynchronousTransactionResponseDTO responseDTO = SynchronousTransactionResponseDTO.builder()
                 .transactionId(authorizeRequest.getTransactionId())
+                .userId(authorizeRequest.getUserId())
+                .initiativeId(initiativeId)
+                .channel(RewardConstants.TRX_CHANNEL_RTD)
+                .operationType(OperationType.CHARGE)
+                .amountCents(rewardTransaction.getAmountCents())
+                .amount(CommonUtilities.centsToEuro(rewardTransaction.getAmountCents()))
+                .effectiveAmount(CommonUtilities.centsToEuro(rewardTransaction.getAmountCents()))
+                .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
-        Mockito.when(rewardTransaction2SynchronousTransactionResponseDTOMapperMock.apply(authorizeRequest.getTransactionId(), initiativeId, rewardTransaction)).thenReturn(responseDTO);
 
-        if(existUserInitiativeCounter) {
-            Mockito.when(handleSyncCounterUpdatingTrxServiceMock.checkUpdatingTrx(transactionDTOMock, userInitiativeCounters))
+        if(existUserInitiativeCounter || previousStuck) {
+            Mockito.when(handleSyncCounterUpdatingTrxServiceMock.checkUpdatingTrx(Mockito.argThat(t->t.getId().equals(authorizeRequest.getTransactionId())), Mockito.eq(userInitiativeCounters)))
                     .thenReturn(Mono.just(userInitiativeCounters));
         }
 
@@ -308,6 +296,5 @@ class CreateTrxSynchronousServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(responseDTO, result);
     }
-
-    //end region
+//end region
 }

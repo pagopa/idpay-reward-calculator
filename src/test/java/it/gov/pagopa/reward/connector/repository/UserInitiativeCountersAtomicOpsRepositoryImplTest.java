@@ -1,9 +1,11 @@
 package it.gov.pagopa.reward.connector.repository;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -96,4 +98,24 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
         checkSyncThrottledOp(updatedTrxId, updatedTrxId, userInitiativeCountersRepository::setUpdatingTrx);
     }
 
+    @Test
+    void testCreateIfNotExists(){
+        UserInitiativeCounters expectedCounter = new UserInitiativeCounters(userId, initiativeId);
+
+        Assertions.assertEquals(Boolean.FALSE, userInitiativeCountersRepository.existsById(expectedCounter.getId()).block());
+
+        UpdateResult createResult = userInitiativeCountersRepository.createIfNotExists(userId, initiativeId).block();
+        Assertions.assertEquals(UpdateResult.acknowledged(0, 0L, new BsonString(expectedCounter.getId())), createResult);
+
+        UserInitiativeCounters stored = userInitiativeCountersRepository.findById(expectedCounter.getId()).block();
+        Assertions.assertNotNull(stored);
+        Assertions.assertFalse(stored.getUpdateDate().isBefore(expectedCounter.getUpdateDate()));
+        Assertions.assertFalse(stored.getUpdateDate().isAfter(LocalDateTime.now()));
+        expectedCounter.setUpdateDate(stored.getUpdateDate());
+
+        Assertions.assertEquals(expectedCounter, stored);
+
+        UpdateResult updateResult = userInitiativeCountersRepository.createIfNotExists(userId, initiativeId).block();
+        Assertions.assertEquals(UpdateResult.acknowledged(1, 0L, null), updateResult);
+    }
 }

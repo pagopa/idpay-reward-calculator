@@ -220,6 +220,9 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
 
         TestUtils.waitFor(() -> hpanInitiativesRepository.findById(infoHpan.getHpan()).block() != null, () -> "IDPAY PaymentMethod not stored for userId %s".formatted(userId), 60, 1000);
+
+        // throttling
+        TestUtils.wait(500, TimeUnit.MILLISECONDS);
     }
 
     private SynchronousTransactionRequestDTO buildTrxRequest(Integer bias) {

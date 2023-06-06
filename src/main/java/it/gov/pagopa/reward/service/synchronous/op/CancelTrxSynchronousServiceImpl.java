@@ -11,7 +11,6 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
@@ -19,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -27,7 +25,6 @@ import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -37,8 +34,6 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     private final TransactionProcessedRepository transactionProcessedRepository;
 
-    private final TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper;
-
     public CancelTrxSynchronousServiceImpl(
             @Value("${app.operationType.refund") String refundOperationType,
 
@@ -47,13 +42,12 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxService,
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
-            TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper) {
-        super(userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
+            TransactionProcessed2SyncTrxResponseDTOMapper syncTrxResponseDTOMapper) {
+        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
 
         this.refundOperationType = refundOperationType;
 
         this.transactionProcessedRepository = transactionProcessedRepository;
-        this.transactionProcessed2SyncTrxResponseDTOMapper = transactionProcessed2SyncTrxResponseDTOMapper;
     }
 
     @Override
@@ -61,18 +55,16 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return transactionProcessedRepository.findById(trxId)
                 .flatMap(trx -> {
                     log.debug("[SYNC_CANCEL_TRANSACTION] Transaction to be refunded has been found: {}", trxId);
-                    String initiativeId = Optional.ofNullable(trx.getRewards()).filter(map -> !CollectionUtils.isEmpty(map)).map(m -> m.keySet().iterator().next()).orElse(null);
-
-                    if(initiativeId==null){
+                    if(trx.getRewards()==null || trx.getRewards().size()==0){
                         return Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "REJECTED authorization"));
                     }
+                    else if(trx.getRewards().size()>1){
+                        return Mono.error(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot cancel transaction: it was rewarded more than once!%s: %s".formatted(trxId, trx.getRewards().keySet())));
+                    }
 
-                    return transactionProcessedRepository.findById(buildRefundId(trxId))
-                            .map(refund -> {
-                                log.info("[SYNC_CANCEL_TRANSACTION] Transaction has already been refunded: {}", trxId);
-                                return transactionProcessed2SyncTrxResponseDTOMapper.apply(refund, initiativeId);
-                            })
-                            .doOnNext(t -> {throw new TransactionSynchronousException(HttpStatus.CONFLICT,t);})
+                    String initiativeId = trx.getRewards().keySet().iterator().next();
+
+                    return checkSyncTrxAlreadyProcessed(buildRefundId(trxId), initiativeId)
 
                             .switchIfEmpty(Mono.defer(() -> refundTransaction((TransactionProcessed) trx, initiativeId)));
                 });

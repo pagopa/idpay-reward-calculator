@@ -1,12 +1,14 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResponseDTOMapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -83,13 +86,33 @@ public class CancelTrxSynchronousServiceTest {
     }
 
     @Test
-    void testAlreadyRefunded() {
+    void testAuthorize_moreThanOnceReward() {
+        // Given
+        TransactionProcessed trx = TransactionProcessedFaker.mockInstance(0);
+        trx.setRewards(Map.of("I1", new Reward(), "I2", new Reward()));
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trx));
+
+        // When
+        Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
+        ClientExceptionNoBody resultException = Assertions.assertThrows(ClientExceptionNoBody.class, mono::block);
+
+        // Then
+        Assertions.assertNotNull(resultException);
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, resultException.getHttpStatus());
+    }
+
+    @Test
+    void testAlreadyRefunded_previousCounterWithOtherStuck() {
         // Given
         TransactionProcessed trx = TransactionProcessedFaker.mockInstance(0);
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trx));
 
         TransactionProcessed trxRefund = TransactionProcessedFaker.mockInstance(1);
+        trxRefund.setUserId(trx.getUserId());
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId() + "_REFUND")).thenReturn(Mono.just(trxRefund));
+
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), "INITIATIVEID0")))
+                .thenReturn(Mono.just(new UserInitiativeCounters(trx.getUserId(), "INITIATIVEID0")));
 
         // When
         Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
@@ -103,13 +126,17 @@ public class CancelTrxSynchronousServiceTest {
 
     @Test
     void testNoCounters() {
-        test(false);
+        test(false, false);
     }
     @Test
-    void testWithCounters() {
-        test(true);
+    void testWithCounters_NoStuck() {
+        test(true, false);
     }
-    void test(boolean expectCounter) {
+    @Test
+    void testWithCounters_Stuck() {
+        test(true, true);
+    }
+    void test(boolean expectCounter, boolean withStuckTrx) {
         // Given
         TransactionProcessed trx = TransactionProcessedFaker.mockInstance(0);
         String trxRefundId = trx.getId() + "_REFUND";
@@ -120,6 +147,9 @@ public class CancelTrxSynchronousServiceTest {
 
         UserInitiativeCounters expectedCounter = new UserInitiativeCounters("USERID0", "INITIATIVEID0");
         Mono<UserInitiativeCounters> expectedCounterMono;
+        if(withStuckTrx){
+            expectedCounter.setUpdatingTrxId(List.of(trxRefundId));
+        }
         if(expectCounter){
             expectedCounterMono = Mono.just(expectedCounter);
             Mockito.when(handleSyncCounterUpdatingTrxServiceMock.checkUpdatingTrx(Mockito.argThat(t->t.getId().equals(trxRefundId)), Mockito.eq(expectedCounter)))
