@@ -59,12 +59,16 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
 
     @Override
     public Mono<UserInitiativeCounters> setUpdatingTrx(String id, String updatingTrxId) {
+        List<String> nextUpdatingTrx=null;
+        if(updatingTrxId!=null){
+            nextUpdatingTrx=List.of(updatingTrxId);
+        }
         return mongoTemplate
                 .findAndModify(
                         Query.query(criteriaById(id)),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
-                                .set(UserInitiativeCounters.Fields.updatingTrxId, List.of(updatingTrxId)),
+                                .set(UserInitiativeCounters.Fields.updatingTrxId, nextUpdatingTrx),
                         FindAndModifyOptions.options().returnNew(true),
                         UserInitiativeCounters.class
                 );

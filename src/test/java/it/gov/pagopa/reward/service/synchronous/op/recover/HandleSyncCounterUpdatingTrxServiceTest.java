@@ -1,10 +1,13 @@
 package it.gov.pagopa.reward.service.synchronous.op.recover;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -92,5 +96,30 @@ class HandleSyncCounterUpdatingTrxServiceTest {
 
         // Then
         checkResult(result);
+    }
+
+    @Test
+    void testWithStuckAuthCancellingIt(){
+        // Given
+        String authTrxId = "TRXID";
+        List<String> stuckTrxIds = List.of(authTrxId);
+        counters.setUpdatingTrxId(stuckTrxIds);
+
+        trx.setId(authTrxId+ RewardConstants.SYNC_TRX_REFUND_ID_SUFFIX);
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
+
+        Mockito.when(transactionProcessedRepositoryMock.deleteAllById(stuckTrxIds)).thenReturn(Mono.empty());
+        Mockito.when(userInitiativeCountersRepositoryMock.setUpdatingTrx(counters.getId(), null))
+                .thenReturn(Mono.just(counters));
+
+        Mockito.when(userInitiativeCountersRepositoryMock.setUpdatingTrx(counters.getId(), trx.getId()))
+                .thenReturn(Mono.error(new IllegalStateException("THIS EXCEPTION SHOULD NOT OCCUR")));
+        // When
+        Mono<UserInitiativeCounters> mono = service.checkUpdatingTrx(trx, counters);
+        ClientExceptionNoBody exception = Assertions.assertThrows(ClientExceptionNoBody.class, mono::block);
+
+        // Then
+        Assertions.assertNotNull(exception);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
     }
 }
