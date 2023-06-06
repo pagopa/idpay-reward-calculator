@@ -51,12 +51,12 @@ abstract class BaseTrxSynchronousOp {
                 .flatMap(trxProcessed -> {
                             SynchronousTransactionResponseDTO response = syncTrxResponseDTOMapper.apply(trxProcessed, initiativeId);
                             return userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(trxProcessed.getUserId(), initiativeId))
-                                    .map(ctr -> {
+                                    .mapNotNull(ctr -> {
                                         if (CollectionUtils.isEmpty(ctr.getUpdatingTrxId()) || !ctr.getUpdatingTrxId().contains(trxId)) {
                                             throw new TransactionSynchronousException(HttpStatus.CONFLICT, response);
                                         } else {
                                             log.info("[SYNC_TRANSACTION] Actual trx was stuck! recovering it: trxId:{} counterId:{}", trxId, ctr.getId());
-                                            return response;
+                                            return null;
                                         }
                                     });
                         }

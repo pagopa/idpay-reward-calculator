@@ -392,16 +392,36 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             assertPreview(trxRequest, HttpStatus.OK, expectedResponse);
             extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.INTERNAL_SERVER_ERROR, null);
 
-            BaseTransactionProcessed stored = transactionProcessedRepository.findById(trxRequest.getTransactionId()).block();
-            Assertions.assertNotNull(stored);
-            Assertions.assertEquals(expectedResponse.getReward(), stored.getRewards().get(INITIATIVEID));
+            checkStored(trxRequest.getTransactionId(), expectedResponse.getReward());
 
             waitThrottling();
 
             assertAuthorize(trxRequest, HttpStatus.OK, expectedResponse);
         });
 
-        //useCase 9: handling stuck authorization, rollback at successive trx
+        //useCase 9: handling stuck cancel at first store, second attempt ok
+        useCases.add(i -> {
+            //Settings
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+
+            onboardUser(trxRequest);
+            assertAuthorize(trxRequest, HttpStatus.OK, expectedResponse);
+
+            configureUserCounterSpy2ThrowException(trxRequest, maxRetries+1);
+            waitThrottling();
+
+            extractResponse(cancelTrx(trxRequest.getTransactionId()), HttpStatus.INTERNAL_SERVER_ERROR, null);
+
+            checkStored(trxRequest.getTransactionId(), expectedResponse.getReward());
+            checkStored(trxRequest.getTransactionId() + "_REFUND", getExpectedCancelReward(expectedResponse));
+
+            waitThrottling();
+
+            assertCancel(expectedResponse, HttpStatus.OK);
+        });
+
+        //useCase 10: handling stuck authorization, rollback at successive trx
         useCases.add(i -> {
             //Settings
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
@@ -414,9 +434,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             assertPreview(trxRequest, HttpStatus.OK, expectedResponse);
             extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.INTERNAL_SERVER_ERROR, null);
 
-            BaseTransactionProcessed stored = transactionProcessedRepository.findById(trxRequest.getTransactionId()).block();
-            Assertions.assertNotNull(stored);
-            Assertions.assertEquals(expectedResponse.getReward(), stored.getRewards().get(INITIATIVEID));
+            checkStored(trxRequest.getTransactionId(), expectedResponse.getReward());
 
             waitThrottling();
 
@@ -427,6 +445,38 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             assertAuthorize(trxRequest2, HttpStatus.OK, expectedResponse2);
 
             Assertions.assertNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
+        });
+
+        //useCase 10: handling stuck cancel, rollback at successive trx
+        useCases.add(i -> {
+            //Settings
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+            String refundTrxId = trxRequest.getTransactionId() + "_REFUND";
+
+            onboardUser(trxRequest);
+            assertAuthorize(trxRequest, HttpStatus.OK, expectedResponse);
+
+            configureUserCounterSpy2ThrowException(trxRequest, maxRetries+1);
+            waitThrottling();
+
+            extractResponse(cancelTrx(trxRequest.getTransactionId()), HttpStatus.INTERNAL_SERVER_ERROR, null);
+
+            checkStored(trxRequest.getTransactionId(), expectedResponse.getReward());
+            checkStored(refundTrxId, getExpectedCancelReward(expectedResponse));
+
+            waitThrottling();
+
+            SynchronousTransactionRequestDTO trxRequest2 = buildTrxRequest(i);
+            trxRequest2.setTransactionId(trxRequest.getTransactionId()+"_SUCCESSIVE");
+            RewardCounters expectedRewardCounter2 = getUpdatedRewardCounters(1, AMOUNT, REWARD, expectedResponse.getReward().getCounters());
+            Reward expectedReward2 = getRewardExpected(expectedRewardCounter2);
+            SynchronousTransactionResponseDTO expectedResponse2 = getExpectedChargeResponse(INITIATIVEID, trxRequest2, RewardConstants.REWARD_STATE_REWARDED, null, expectedReward2);
+
+            assertAuthorize(trxRequest2, HttpStatus.OK, expectedResponse2);
+
+            Assertions.assertNotNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
+            Assertions.assertNull(transactionProcessedRepository.findById(refundTrxId).block());
         });
     }
 
@@ -547,13 +597,18 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         Assertions.assertEquals(authResponse.getStatus(), refundResponse.getStatus());
         Assertions.assertEquals(authResponse.getRejectionReasons(), refundResponse.getRejectionReasons());
 
+        Assertions.assertEquals(getExpectedCancelReward(authResponse),
+                refundResponse.getReward());
+
+        TestUtils.checkNotNullFields(refundResponse, "rejectionReasons");
+    }
+
+    private Reward getExpectedCancelReward(SynchronousTransactionResponseDTO authResponse) {
         Reward authReward = authResponse.getReward();
         RewardCounters authCounters = authReward.getCounters();
-
         RewardCounters counters = getUpdatedRewardCounters(-1, authResponse.getEffectiveAmount().negate(), authReward.getAccruedReward().negate(), authCounters);
 
-        Assertions.assertEquals(
-                Reward.builder()
+        return Reward.builder()
                         .initiativeId(authReward.getInitiativeId())
                         .organizationId(authReward.getOrganizationId())
                         .accruedReward(authReward.getAccruedReward().negate())
@@ -561,10 +616,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
                         .refund(true)
                         .completeRefund(true)
                         .counters(counters)
-                        .build(),
-                refundResponse.getReward());
-
-        TestUtils.checkNotNullFields(refundResponse, "rejectionReasons");
+                        .build();
     }
 
     private static RewardCounters getUpdatedRewardCounters(int trxNumberDelta, BigDecimal amount, BigDecimal reward, RewardCounters previousCounter) {
@@ -580,4 +632,9 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         userId2ConfiguredFailingAttemptsCountdown.put(trxRequest.getUserId(), new AtomicInteger(minAttempts));
     }
 
+    private void checkStored(String trxRequest, Reward expectedResponse) {
+        BaseTransactionProcessed cancelStored = transactionProcessedRepository.findById(trxRequest).block();
+        Assertions.assertNotNull(cancelStored);
+        Assertions.assertEquals(expectedResponse, cancelStored.getRewards().get(INITIATIVEID));
+    }
 }
