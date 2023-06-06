@@ -67,4 +67,8 @@ public final class RewardConstants {
     public static final DateTimeFormatter monthDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     public static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
     //endregion
+
+    //region sync trx contants
+    public static final String SYNC_TRX_REFUND_ID_SUFFIX = "_REFUND";
+    //endregion
 }

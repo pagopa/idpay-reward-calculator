@@ -43,6 +43,7 @@ import reactor.core.publisher.Flux;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -421,7 +422,37 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             assertCancel(expectedResponse, HttpStatus.OK);
         });
 
-        //useCase 10: handling stuck authorization, rollback at successive trx
+        // useCase 10: cancelling stuck authorize
+        useCases.add(i -> {
+            //Settings
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+
+            configureUserCounterSpy2ThrowException(trxRequest, maxRetries+1);
+
+            onboardUser(trxRequest);
+
+            extractResponse(authorizeTrx(trxRequest, INITIATIVEID), HttpStatus.INTERNAL_SERVER_ERROR, null);
+            checkStored(trxRequest.getTransactionId(), expectedResponse.getReward());
+
+            waitThrottling();
+
+            extractResponse(cancelTrx(trxRequest.getTransactionId()), HttpStatus.NOT_FOUND, null);
+
+            UserInitiativeCounters expectedCounter = new UserInitiativeCounters(trxRequest.getUserId(), INITIATIVEID);
+            expectedCounter.setUpdateDate(expectedCounter.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
+
+            UserInitiativeCounters counter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(trxRequest.getUserId(), INITIATIVEID)).block();
+            Assertions.assertNotNull(counter);
+            counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
+
+            Assertions.assertEquals(
+                    expectedCounter,
+                    counter
+            );
+        });
+
+        //useCase 11: handling stuck authorization, rollback at successive trx
         useCases.add(i -> {
             //Settings
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
@@ -447,7 +478,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
             Assertions.assertNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
         });
 
-        //useCase 10: handling stuck cancel, rollback at successive trx
+        //useCase 12: handling stuck cancel, rollback at successive trx
         useCases.add(i -> {
             //Settings
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);

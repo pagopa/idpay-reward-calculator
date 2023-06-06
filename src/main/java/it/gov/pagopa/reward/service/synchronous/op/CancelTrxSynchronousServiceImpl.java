@@ -14,6 +14,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -71,7 +72,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
     }
 
     private String buildRefundId(String trxId) {
-        return trxId + "_REFUND";
+        return trxId + RewardConstants.SYNC_TRX_REFUND_ID_SUFFIX;
     }
 
     private Mono<SynchronousTransactionResponseDTO> refundTransaction(TransactionProcessed trx, String initiativeId) {

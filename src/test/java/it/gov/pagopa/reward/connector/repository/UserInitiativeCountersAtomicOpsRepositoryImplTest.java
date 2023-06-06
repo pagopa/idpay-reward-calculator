@@ -84,7 +84,7 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
         LocalDateTime after = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
 
         Assertions.assertNotNull(stored);
-        Assertions.assertEquals(List.of(expectedTrxId), stored.getUpdatingTrxId());
+        Assertions.assertEquals(expectedTrxId!=null? List.of(expectedTrxId) : null, stored.getUpdatingTrxId());
         Assertions.assertFalse(stored.getUpdateDate().isBefore(before));
         Assertions.assertFalse(stored.getUpdateDate().isAfter(after));
         return stored;
@@ -96,6 +96,7 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
         UserInitiativeCounters userInitiativeCounters = storeTestCounter();
         Assertions.assertTrue(CollectionUtils.isEmpty(userInitiativeCounters.getUpdatingTrxId()));
         checkSyncThrottledOp(updatedTrxId, updatedTrxId, userInitiativeCountersRepository::setUpdatingTrx);
+        checkSyncThrottledOp(null, null, userInitiativeCountersRepository::setUpdatingTrx);
     }
 
     @Test
