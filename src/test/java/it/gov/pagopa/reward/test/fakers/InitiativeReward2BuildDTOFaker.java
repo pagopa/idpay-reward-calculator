@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.*;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.test.fakers.rule.*;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;

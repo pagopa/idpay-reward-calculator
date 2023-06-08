@@ -33,4 +33,7 @@ public interface BaseTransactionProcessed {
 
     LocalDateTime getElaborationDateTime();
     void setElaborationDateTime(LocalDateTime elaborationDateTime);
+
+    Integer getRuleEngineTopicPartition();
+    Long getRuleEngineTopicOffset();
 }

@@ -2,16 +2,17 @@ package it.gov.pagopa.reward.service.lookup;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
-import it.gov.pagopa.reward.dto.mapper.HpanList2HpanUpdateOutcomeDTOMapper;
-import it.gov.pagopa.reward.dto.mapper.HpanUpdateBulk2SingleMapper;
-import it.gov.pagopa.reward.dto.mapper.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
+import it.gov.pagopa.reward.dto.mapper.lookup.HpanList2HpanUpdateOutcomeDTOMapper;
+import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
+import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.service.BaseKafkaConsumer;
-import it.gov.pagopa.reward.service.ErrorNotifierService;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,8 +34,9 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     private final Duration commitDelay;
 
     private final HpanInitiativesRepository hpanInitiativesRepository;
+    private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final HpanInitiativesService hpanInitiativesService;
-    private final ErrorNotifierService errorNotifierService;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
     private final HpanUpdateNotifierService hpanUpdateNotifierService;
     private final ObjectReader objectReader;
 
@@ -47,10 +49,11 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.hpanInitiativeConsumer-in-0.consumer.ackTime}") Long commitMillis,
             HpanInitiativesRepository hpanInitiativesRepository,
+            UserInitiativeCountersRepository userInitiativeCountersRepository,
             HpanInitiativesService hpanInitiativesService,
             HpanUpdateNotifierService hpanUpdateNotifierService,
             ObjectMapper objectMapper,
-            ErrorNotifierService errorNotifierService,
+            RewardErrorNotifierService rewardErrorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
             HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper,
             HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper) {
@@ -58,10 +61,11 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         this.commitDelay = Duration.ofMillis(commitMillis);
 
         this.hpanInitiativesRepository = hpanInitiativesRepository;
+        this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.hpanInitiativesService = hpanInitiativesService;
         this.hpanUpdateNotifierService = hpanUpdateNotifierService;
         this.objectReader = objectMapper.readerFor(HpanInitiativeBulkDTO.class);
-        this.errorNotifierService = errorNotifierService;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
         this.hpanUpdateEvaluateDTO2HpanInitiativeMapper = hpanUpdateEvaluateDTO2HpanInitiativeMapper;
         this.hpanUpdateBulk2SingleMapper = hpanUpdateBulk2SingleMapper;
         this.hpanList2HpanUpdateOutcomeDTOMapper = hpanList2HpanUpdateOutcomeDTOMapper;
@@ -79,7 +83,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        errorNotifierService.notifyHpanUpdateEvaluation(message, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", false, e);
+        rewardErrorNotifierService.notifyHpanUpdateEvaluation(message, "[HPAN_INITIATIVE_OP] An error occurred evaluating hpan update", false, e);
     }
 
     @Override
@@ -89,7 +93,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     @Override
     protected Consumer<Throwable> onDeserializationError(Message<String> message) {
-        return e -> errorNotifierService.notifyHpanUpdateEvaluation(message, "[HPAN_INITIATIVE_OP] Unexpected JSON", true, e);
+        return e -> rewardErrorNotifierService.notifyHpanUpdateEvaluation(message, "[HPAN_INITIATIVE_OP] Unexpected JSON", true, e);
     }
 
     @Override
@@ -108,7 +112,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
                             }
                         } catch (Exception e) {
                             log.error("[UNEXPECTED_HPAN_INITIATIVE_OUTCOME] Unexpected error occurred publishing rewarded transaction: {}", outcome);
-                            errorNotifierService.notifyHpanUpdateOutcome(HpanUpdateNotifierServiceImpl.buildMessage(outcome), "[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome", true, e);
+                            rewardErrorNotifierService.notifyHpanUpdateOutcome(HpanUpdateNotifierServiceImpl.buildMessage(outcome), "[HPAN_UPDATE_OUTCOME] An error occurred while publishing the hpan update outcome", true, e);
                         }
                     }
                 })
@@ -118,7 +122,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     @Override
-    protected String getFlowName() {
+    public String getFlowName() {
         return "HPAN_INITIATIVE_OP";
     }
 
@@ -144,6 +148,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             HpanInitiatives createHpanInitiatives = hpanUpdateEvaluateDTO2HpanInitiativeMapper.apply(hpanUpdateEvaluateDTO);
             return hpanInitiativesRepository
                     .createIfNotExist(createHpanInitiatives)
+                    .then(userInitiativeCountersRepository.createIfNotExists(hpanUpdateEvaluateDTO.getUserId(), hpanUpdateEvaluateDTO.getInitiativeId()))
                     .then(Mono.just(createHpanInitiatives));
         } else {
             log.error("Unexpected use case, the hpan is not present into DB. Source message: {}", hpanUpdateEvaluateDTO);

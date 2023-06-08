@@ -1,7 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
+import it.gov.pagopa.common.utils.MethodRetryUtils;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,9 +22,17 @@ import java.util.function.Supplier;
 public class RewardNotifierServiceImpl implements RewardNotifierService {
 
     private final StreamBridge streamBridge;
+    private final RewardErrorNotifierService rewardErrorNotifierService;
 
-    public RewardNotifierServiceImpl(StreamBridge streamBridge) {
+    private final int rewardNotifyMaxRetries;
+
+    public RewardNotifierServiceImpl(
+            @Value("${app.trx-retries.reward-notify.retries}") int rewardNotifyMaxRetries,
+
+            StreamBridge streamBridge, RewardErrorNotifierService rewardErrorNotifierService) {
+        this.rewardNotifyMaxRetries = rewardNotifyMaxRetries;
         this.streamBridge = streamBridge;
+        this.rewardErrorNotifierService = rewardErrorNotifierService;
     }
 
     /** Declared just to let know Spring to connect the producer at startup */
@@ -40,6 +52,28 @@ public class RewardNotifierServiceImpl implements RewardNotifierService {
 
     public static Message<RewardTransactionDTO> buildMessage(RewardTransactionDTO reward){
         return MessageBuilder.withPayload(reward)
-                .setHeader(KafkaHeaders.MESSAGE_KEY,reward.getUserId()).build();
+                .setHeader(KafkaHeaders.KEY,reward.getUserId()).build();
+    }
+
+    @Override
+    public void notifyFallbackToErrorTopic(RewardTransactionDTO r) {
+        MethodRetryUtils.exec("RewardNotifier-FallbackToErrorTopic", () -> notifyFallbackToErrorTopicInner(r), rewardNotifyMaxRetries);
+    }
+
+    public void notifyFallbackToErrorTopicInner(RewardTransactionDTO r) {
+        try {
+            if (!notify(r)) {
+                throw new IllegalStateException("[REWARD] Something gone wrong while reward notify");
+            }
+        } catch (Exception e) {
+            log.error("[UNEXPECTED_TRX_PROCESSOR_ERROR] Unexpected error occurred publishing rewarded transaction: {}", r, e);
+            try{
+                if(!rewardErrorNotifierService.notifyRewardedTransaction(RewardNotifierServiceImpl.buildMessage(r), "[REWARD] An error occurred while publishing the transaction evaluation result", true, e)){
+                    throw new IllegalStateException("[REWARD] Something gone wrong while reward notify into error topic");
+                }
+            } catch (Exception exWhenError){
+                throw new UncommittableError("[UNEXPECTED_TRX_PROCESSOR_ERROR] Cannot publish result neither in error topic!", exWhenError);
+            }
+        }
     }
 }
