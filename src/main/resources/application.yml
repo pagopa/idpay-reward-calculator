@@ -1,6 +1,8 @@
 server:
   port: ${REWARD_CALCULATOR_PORT:8080}
 
+springdoc.swagger-ui.path: "/swagger-ui/index.html"
+
 spring:
   application:
     name: "@project.artifactId@"
