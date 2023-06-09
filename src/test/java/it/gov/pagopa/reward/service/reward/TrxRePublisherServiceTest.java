@@ -43,7 +43,7 @@ class TrxRePublisherServiceTest {
         // Then
         assertClearedBody(trx);
         Mockito.verify(streamBridgeMock).send(Mockito.eq("trxResubmitter-out-0"), Mockito.<Message<TransactionDTO>>argThat(m ->
-                trx.getUserId().equals(m.getHeaders().get(KafkaHeaders.MESSAGE_KEY)) &&
+                trx.getUserId().equals(m.getHeaders().get(KafkaHeaders.KEY)) &&
                 m.getPayload().equals(trx)
                 ));
     }

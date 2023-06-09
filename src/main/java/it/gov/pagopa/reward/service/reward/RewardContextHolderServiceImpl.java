@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.KieBase;
@@ -100,7 +100,7 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
                         if(!Arrays.equals(c, kieBaseSerialized)){
                             this.kieBaseSerialized = c;
                             try{
-                                KieBase newKieBase = (KieBase) SerializationUtils.deserialize(c);
+                                KieBase newKieBase = org.apache.commons.lang3.SerializationUtils.deserialize(c);
                                 preLoadKieBase(newKieBase);
 
                                 this.kieBase=newKieBase;

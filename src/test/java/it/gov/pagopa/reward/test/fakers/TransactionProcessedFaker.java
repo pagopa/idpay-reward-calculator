@@ -49,7 +49,7 @@ public class TransactionProcessedFaker {
         LocalTime trxTime = LocalTime.of(getRandomPositiveNumber(bias, 23), getRandomPositiveNumber(bias, 59), getRandomPositiveNumber(bias, 59));
         LocalDateTime trxDateTime = LocalDateTime.of(trxDate, trxTime);
 
-        String initiativeId = "REWARDS%s".formatted(bias);
+        String initiativeId = "INITIATIVEID%s".formatted(bias);
         Map<String, Reward> rewards = Map.of(
                 initiativeId,
                 new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)))
@@ -62,11 +62,13 @@ public class TransactionProcessedFaker {
                 .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))
                 .acquirerCode("ACQUIRERCODE%s".formatted(bias))
                 .trxDate(trxDateTime)
+                .trxChargeDate(trxDateTime)
                 .operationType("00")
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .correlationId("CORRELATIONID%s".formatted(bias))
                 .amount(amountEuro)
                 .amountCents(amountEuro.longValue()*100)
+                .effectiveAmount(amountEuro)
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .rewards(rewards)

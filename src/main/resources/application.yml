@@ -1,6 +1,8 @@
 server:
   port: ${REWARD_CALCULATOR_PORT:8080}
 
+springdoc.swagger-ui.path: "/swagger-ui/index.html"
+
 spring:
   application:
     name: "@project.artifactId@"
@@ -10,9 +12,9 @@ spring:
     activate:
       on-profile: default
   cloud:
+    function:
+      definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter
     stream:
-      function:
-        definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter
       bindings:
         trxProcessor-in-0:
           destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
@@ -209,6 +211,8 @@ spring:
                   max.ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
   data:
+    redis:
+      url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017}
       database: ${MONGODB_DBNAME:idpay}
@@ -223,7 +227,6 @@ spring:
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
   redis:
     enabled: ${REDIS_CACHE_ENABLED:false}
-    url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}
 
 management.endpoints:
   web:
@@ -275,8 +278,16 @@ app:
   trx-lock:
     # the size of the locks bucket
     bucket-size: ${TRX_LOCK_BUCKET_SIZE:1000}
+    # the max size of threads that could be created
+    max-threads: ${TRX_LOCK_MAX_THREADS:256}
     # the maximum seconds to wait before to continue even if the lock is acquired
     timeout: ${TRX_LOCK_SECONDS_TIMEOUT:180}
+  trx-retries:
+    counters-update:
+      retries: ${TRX_RETRY_COUNTERS_UPDATE_ATTEMPTS:3}
+      delayMillis: ${TRX_RETRY_COUNTERS_UPDATE_ATTEMPTS_DELAY_MILLIS:100}
+    reward-notify:
+      retries: ${TRX_RETRY_REWARD_NOTIFY_ATTEMPTS:3}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
   synchronousTransactions:

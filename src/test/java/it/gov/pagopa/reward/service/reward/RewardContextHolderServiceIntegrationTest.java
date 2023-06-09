@@ -1,10 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.BaseIntegrationTest;
-import it.gov.pagopa.reward.config.EmbeddedRedisTestConfiguration;
+import it.gov.pagopa.common.redis.config.EmbeddedRedisTestConfiguration;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -97,7 +98,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
         // Set a null kieBase
         rewardContextHolderService.setRewardRulesKieBase(null);
-        waitFor(
+        TestUtils.waitFor(
                 ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) == null,
                 ()->"KieBase not saved in cache",
                 10,
@@ -105,7 +106,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         );
 
         rewardContextHolderService.refreshKieContainer();
-        waitFor(
+        TestUtils.waitFor(
                 ()-> (reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
                 ()-> "KieBase is null",
                 10,
@@ -121,7 +122,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
 
     private void refreshAndAssertKieContainerRuleSize(int expected) {
         rewardContextHolderService.refreshKieContainer();
-        waitFor(
+        TestUtils.waitFor(
                 ()->rewardContextHolderService.getRewardRulesKieBase() != null,
                 ()->"KieBase is null",
                 10,
@@ -134,7 +135,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
     private void buildAndCacheRules(Collection<DroolsRule> drs) {
         KieBase kieBase = kieContainerBuilderService.build(Flux.fromIterable(drs)).block();
         rewardContextHolderService.setRewardRulesKieBase(kieBase);
-        waitFor(
+        TestUtils.waitFor(
                 ()->(reactiveRedisTemplate.opsForValue().get(RewardContextHolderServiceImpl.REWARD_CONTEXT_HOLDER_CACHE_NAME).block()) != null,
                 ()->"KieBase not saved in cache",
                 10,

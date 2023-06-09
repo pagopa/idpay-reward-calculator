@@ -1,11 +1,11 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +48,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
     }
 
     private void testRewardLimit(String rewardLimitsCondition, TransactionDroolsDTO transaction) {
-        transaction.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, RewardConstants.ZONEID.getRules().getOffset(TRX_DATE)));
+        transaction.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, CommonConstants.ZONEID.getRules().getOffset(TRX_DATE)));
         transaction.setRewards(new HashMap<>(Map.of(
                 initiativeId, new Reward(initiativeId, "ORGANIZATION_"+initiativeId, BigDecimal.valueOf(10).setScale(2, RoundingMode.UNNECESSARY))
         )));

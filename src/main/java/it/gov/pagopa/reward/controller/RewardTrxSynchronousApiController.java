@@ -2,21 +2,19 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RequestMapping("/reward")
 public interface RewardTrxSynchronousApiController {
 
-    @PostMapping("/preview/{initiativeId}")
+    @PostMapping("/initiative/preview/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
                                                                @PathVariable("initiativeId") String initiativeId);
 
-
-    @PostMapping("/{initiativeId}")
+    @PostMapping("/initiative/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestBody SynchronousTransactionRequestDTO trxAuthorizeRequest,
                                                                @PathVariable("initiativeId") String initiativeId);
+    @DeleteMapping("/{transactionId}")
+    Mono<SynchronousTransactionResponseDTO> cancelTransaction(@PathVariable("transactionId") String trxId);
 }

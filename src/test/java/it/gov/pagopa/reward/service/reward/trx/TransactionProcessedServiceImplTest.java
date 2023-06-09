@@ -1,13 +1,13 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
-import it.gov.pagopa.reward.dto.mapper.Transaction2RewardTransactionMapper;
-import it.gov.pagopa.reward.dto.mapper.Transaction2TransactionProcessedMapper;
+import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
+import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
-import it.gov.pagopa.reward.repository.TransactionProcessedRepository;
+import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.service.reward.TrxRePublisherService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -35,6 +35,8 @@ class TransactionProcessedServiceImplTest {
     private TransactionProcessedRepository transactionProcessedRepositoryMock;
     @Mock
     private TrxRePublisherService trxRePublisherServiceMock;
+    @Mock
+    private RecoveryProcessedTransactionService recoveryProcessedTransactionServiceMock;
 
     private TransactionProcessedService service;
 
@@ -43,14 +45,14 @@ class TransactionProcessedServiceImplTest {
 
     @BeforeEach
     void init() {
-        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock);
+        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock, recoveryProcessedTransactionServiceMock);
 
         Mockito.lenient().when(operationTypeHandlerServiceMock.isChargeOperation(Mockito.any())).thenAnswer(i -> i.getArgument(0, TransactionDTO.class).getOperationType().equals("00"));
     }
 
     @AfterEach
     void checkMock() {
-        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, transactionProcessedRepositoryMock, trxRePublisherServiceMock);
+        Mockito.verifyNoMoreInteractions(operationTypeHandlerServiceMock, transactionProcessedRepositoryMock, trxRePublisherServiceMock, recoveryProcessedTransactionServiceMock);
     }
 
     // region checkDuplicateTransactions based on findById search
@@ -104,6 +106,7 @@ class TransactionProcessedServiceImplTest {
     private void checkDuplicateTransaction_findByIdBased_Ko(TransactionDTO trx) {
         TransactionProcessed trxDuplicate = TransactionProcessedFaker.mockInstance(1);
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trxDuplicate));
+        Mockito.when(recoveryProcessedTransactionServiceMock.checkIf2Recover(trx, trxDuplicate)).thenReturn(Mono.empty());
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();
@@ -227,6 +230,7 @@ class TransactionProcessedServiceImplTest {
         trxDuplicate.setAcquirerId(trx.getAcquirerId());
         trxDuplicate.setCorrelationId(trx.getCorrelationId());
         Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.just(trxDuplicate));
+        Mockito.when(recoveryProcessedTransactionServiceMock.checkIf2Recover(trx, trxDuplicate)).thenReturn(Mono.empty());
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();

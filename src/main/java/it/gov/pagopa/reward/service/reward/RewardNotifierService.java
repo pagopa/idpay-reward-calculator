@@ -4,4 +4,5 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 
 public interface RewardNotifierService {
     boolean notify(RewardTransactionDTO reward);
+    void notifyFallbackToErrorTopic(RewardTransactionDTO reward);
 }

@@ -5,7 +5,7 @@ import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.reward.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
