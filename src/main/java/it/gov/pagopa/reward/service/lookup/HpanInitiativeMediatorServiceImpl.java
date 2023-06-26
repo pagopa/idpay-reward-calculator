@@ -126,7 +126,8 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         return "HPAN_INITIATIVE_OP";
     }
 
-    private Flux<String> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO, LocalDateTime evaluationDate) {
+    @Override
+    public Flux<String> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO, LocalDateTime evaluationDate) {
         return initializingHpanInitiativeDTO(hpanInitiativeBulkDTO, evaluationDate)
                 .flatMap(this::findAndModify);
     }
