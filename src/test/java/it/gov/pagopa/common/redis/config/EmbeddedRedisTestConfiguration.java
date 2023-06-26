@@ -1,4 +1,4 @@
-package it.gov.pagopa.common.redis.configuration;
+package it.gov.pagopa.common.redis.config;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import jakarta.annotation.PostConstruct;
