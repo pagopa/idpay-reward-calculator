@@ -30,12 +30,13 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     }
 
     @Override
-    public Flux<String> getInitiatives(TransactionDTO trx) {
+    public Flux<InitiativeConfig> getInitiatives(TransactionDTO trx) {
         if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
             return getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null);
         } else {
             if(trx.getRefundInfo() != null){
-                return Flux.fromIterable(trx.getRefundInfo().getPreviousRewards().keySet());
+                return Flux.fromIterable(trx.getRefundInfo().getPreviousRewards().keySet())
+                        .flatMap(rewardContextHolderService::getInitiativeConfig);
             } else {
                 log.trace("[REWARD] [REWARD_KO] Recognized REFUND operation without previous rewards");
                 return Flux.empty();
@@ -53,7 +54,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         return BigDecimal.ZERO.compareTo(value) < 0;
     }
 
-    private Flux<String> getInitiatives(String hpan, OffsetDateTime trxDate, Set<String> initiatives) {
+    private Flux<InitiativeConfig> getInitiatives(String hpan, OffsetDateTime trxDate, Set<String> initiatives) {
         log.trace("[REWARD] Retrieving hpan initiatives onboarded in trxDate: {} - {}", hpan, trxDate);
         return hpanInitiativesRepository.findById(hpan)
                 .flatMapMany(initiativesForHpan -> {
@@ -64,8 +65,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                                 .flatMap(i -> rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())
                                         .filter(initiativeConfig -> (initiatives == null || initiatives.contains(initiativeConfig.getInitiativeId()))
                                                 && checkInitiativeValidity(initiativeConfig, trxDate)
-                                                && checkDate(trxDateTime, i.getActiveTimeIntervals()))
-                                        .map(InitiativeConfig::getInitiativeId));
+                                                && checkDate(trxDateTime, i.getActiveTimeIntervals())));
                     }
                     return Flux.empty();
                 });

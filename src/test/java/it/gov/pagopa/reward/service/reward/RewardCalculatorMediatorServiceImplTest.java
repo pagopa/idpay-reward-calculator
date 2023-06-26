@@ -3,10 +3,12 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -204,7 +206,14 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.any(), Mockito.any())).thenAnswer(i -> Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
 
         Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any()))
-                .thenReturn(Flux.fromIterable(initiatives));
+                .thenReturn(Flux.fromIterable(initiatives)
+                        .map(i -> {
+                            InitiativeConfig o = new InitiativeConfig();
+                            o.setInitiativeId(i);
+                            o.setInitiativeRewardType(InitiativeRewardType.REFUND);
+                            return o;
+                        })
+                        .concatWith(Mono.just(InitiativeConfig.builder().initiativeId("SYNCINITIATIVE").initiativeRewardType(InitiativeRewardType.DISCOUNT).build())));
 
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxInvalidOpType)).thenAnswer(i -> {
             final TransactionDTO t = i.getArgument(0);
