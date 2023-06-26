@@ -121,7 +121,7 @@ class RewardContextHolderServiceImplTest {
                 .yearlyThreshold(false)
                 .trxRule(new InitiativeTrxConditions())
                 .rewardRule(new RewardValueDTO())
-                .initiativeRewardType(InitiativeRewardType.REFUND.name())
+                .initiativeRewardType(InitiativeRewardType.REFUND)
                 .build();
 
 

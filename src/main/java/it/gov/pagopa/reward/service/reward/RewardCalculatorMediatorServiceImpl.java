@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
@@ -155,6 +157,8 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
     private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {
         if (CollectionUtils.isEmpty(trx.getRejectionReasons())) {
             return onboardedInitiativesService.getInitiatives(trx)
+                    .filter(i-> InitiativeRewardType.REFUND.equals(i.getInitiativeRewardType()))
+                    .map(InitiativeConfig::getInitiativeId)
                     .collectList()
                     .flatMap(initiatives -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trx, initiatives));
         } else {
