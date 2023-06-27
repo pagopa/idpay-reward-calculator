@@ -14,6 +14,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -149,5 +151,10 @@ public class TestUtils {
         } catch (IOException e) {
             throw new IllegalStateException("Error while trying to check open port", e);
         }
+    }
+
+    /** It will truncate timestamp value to MINUTES multiple of 10 */
+    public static LocalDateTime truncateTimestamp(LocalDateTime timestamp) {
+        return timestamp.truncatedTo(ChronoUnit.MINUTES).withMinute(timestamp.getMinute() / 10 * 10);
     }
 }
