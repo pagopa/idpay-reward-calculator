@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto;
 
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,6 @@ public class InitiativeConfig {
     private boolean yearlyThreshold;
     private InitiativeRewardRule rewardRule;
     private InitiativeTrxConditions trxRule;
-    private String initiativeRewardType;
+    private InitiativeRewardType initiativeRewardType;
 
 }

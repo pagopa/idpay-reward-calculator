@@ -1,12 +1,12 @@
 package it.gov.pagopa.reward.dto.mapper.build;
 
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
-import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +38,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertEquals(initiative.getGeneral().getBeneficiaryBudget(), result.getBeneficiaryBudget());
         Assertions.assertSame(initiative.getTrxRule(), result.getTrxRule());
         Assertions.assertSame(initiative.getRewardRule(), result.getRewardRule());
+        Assertions.assertSame(initiative.getInitiativeRewardType(), result.getInitiativeRewardType());
 
         TestUtils.checkNotNullFields(result);
 

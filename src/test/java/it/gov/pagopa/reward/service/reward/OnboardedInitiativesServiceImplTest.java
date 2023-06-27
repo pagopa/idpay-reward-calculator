@@ -1,11 +1,11 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;
@@ -106,14 +106,15 @@ class OnboardedInitiativesServiceImplTest {
 
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
+        List<String> resultIds = result.stream().map(InitiativeConfig::getInitiativeId).toList();
 
         // Then
         if(expectSuccess) {
             Mockito.verify(hpanInitiativesRepositoryMock).findById(Mockito.same(hpan));
-            Assertions.assertEquals(1, result.size());
-            Assertions.assertTrue(result.contains(String.format("INITIATIVE_%d", bias)));
+            Assertions.assertEquals(1, resultIds.size());
+            Assertions.assertTrue(resultIds.contains(String.format("INITIATIVE_%d", bias)));
         } else {
             checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
         }
@@ -136,14 +137,14 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.empty());
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
         checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
     }
 
-    private void checkInitiativeNotFound(HpanInitiativesRepository hpanInitiativesRepository, String hpanMock, List<String> result) {
+    private void checkInitiativeNotFound(HpanInitiativesRepository hpanInitiativesRepository, String hpanMock, List<InitiativeConfig> result) {
         Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
         Assertions.assertTrue(result.isEmpty());
     }
@@ -159,7 +160,7 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
@@ -180,7 +181,7 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build()));
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
@@ -195,7 +196,7 @@ class OnboardedInitiativesServiceImplTest {
         trx.setEffectiveAmount(BigDecimal.ZERO);
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
@@ -211,12 +212,14 @@ class OnboardedInitiativesServiceImplTest {
         trx.setRefundInfo(new RefundInfo());
         trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
 
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE2REVERSE")).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId("INITIATIVE2REVERSE").build()));
+
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
-        Assertions.assertEquals(List.of("INITIATIVE2REVERSE"), result);
+        Assertions.assertEquals(List.of("INITIATIVE2REVERSE"), result.stream().map(InitiativeConfig::getInitiativeId).toList());
     }
 
     @Test
