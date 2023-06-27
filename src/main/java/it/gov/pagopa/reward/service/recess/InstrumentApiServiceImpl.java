@@ -21,7 +21,7 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
     }
 
     @Override
-    public Mono<List<String>> cancelInstrument(HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
+    public Mono<List<String>> cancelInstruments(HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
         if(!HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT.equals(hpanInitiativeBulkDTO.getOperationType())){
             return Mono.error(new IllegalArgumentException("[SYNC_CANCEL_INSTRUMENTS] Operation type not valid"));
         }

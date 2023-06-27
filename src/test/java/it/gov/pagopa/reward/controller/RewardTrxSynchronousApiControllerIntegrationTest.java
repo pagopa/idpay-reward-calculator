@@ -58,7 +58,7 @@ import java.util.stream.StreamSupport;
                 "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
         })
-class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTest {
+class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
     private final BigDecimal beneficiaryBudget = BigDecimal.valueOf(10_000, 2);
@@ -66,8 +66,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
     public static final BigDecimal AMOUNT = CommonUtilities.centsToEuro(AMOUNT_CENTS);
     public static final BigDecimal REWARD = TestUtils.bigDecimalValue(20);
 
-    private static final int parallelism = 8;
-    private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
+//    private static final int parallelism = 8;
+//    private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
 
     @SpyBean
     private UserInitiativeCountersRepository userInitiativeCountersRepositorySpy;
@@ -82,8 +82,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
     @SpyBean
     protected RewardContextHolderService rewardContextHolderService;
 
-    @SpyBean
-    protected ErrorManager errorManagerSpy;
 
     @Value("${app.synchronousTransactions.throttlingSeconds}")
     private int throttlingSeconds;
@@ -101,33 +99,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
 
         configureSpies();
 
-        List<? extends Future<?>> tasks = IntStream.range(0, N)
-                .mapToObj(i -> executor.submit(() -> {
-                    try {
-                        useCases.get(i % useCases.size()).accept(i);
-                    } catch (Exception e) {
-                        throw new IllegalStateException("Unexpected exception thrown during test", e);
-                    }
-                }))
-                .toList();
+        baseParallelismTest(N, useCases);
 
-        for (int i = 0; i < tasks.size(); i++) {
-            try {
-                tasks.get(i).get();
-            } catch (Exception e) {
-                System.err.printf("UseCase %d (bias %d) failed %n", i % useCases.size(), i);
-                Mockito.mockingDetails(errorManagerSpy).getInvocations()
-                        .stream()
-                        .filter(ex->!ex.getArgument(0).getClass().equals(RuntimeException.class))
-                        .forEach(ex -> System.err.println("ErrorManager invocation: " + ex));
-                if (e instanceof RuntimeException runtimeException) {
-                    throw runtimeException;
-                } else if (e.getCause() instanceof AssertionFailedError assertionFailedError) {
-                    throw assertionFailedError;
-                }
-                Assertions.fail(e);
-            }
-        }
     }
 
     private void configureSpies() {
@@ -231,14 +204,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         trxRequest.setTrxDate(OffsetDateTime.now().plusMinutes(1));
         trxRequest.setAmountCents(AMOUNT_CENTS);
         return trxRequest;
-    }
-
-    private <T> T extractResponse(WebTestClient.ResponseSpec response, HttpStatus expectedHttpStatus, Class<T> expectedBodyClass) {
-        response = response.expectStatus().value(httpStatus -> Assertions.assertEquals(expectedHttpStatus.value(), httpStatus));
-        if (expectedBodyClass != null) {
-            return response.expectBody(expectedBodyClass).returnResult().getResponseBody();
-        }
-        return null;
     }
 
     private void waitThrottling() {

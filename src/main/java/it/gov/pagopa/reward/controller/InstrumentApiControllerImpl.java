@@ -6,11 +6,11 @@ import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.service.recess.InstrumentApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
-@Service
+@RestController
 @Slf4j
 public class InstrumentApiControllerImpl implements  InstrumentApiController{
 
@@ -20,13 +20,14 @@ public class InstrumentApiControllerImpl implements  InstrumentApiController{
         this.instrumentApiService = instrumentApiService;
     }
     @Override
-    public Mono<Void> cancelInstrument(@RequestBody HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
+    public Mono<Void> cancelInstruments(@RequestBody HpanInitiativeBulkDTO hpanInitiativeBulkDTO) {
         log.info("[SYNC_CANCEL_INSTRUMENTS] Requesting to cancel instruments {}", hpanInitiativeBulkDTO);
 
         return PerformanceLogger.logTimingFinally("SYNC_CANCEL_INSTRUMENTS",
-                instrumentApiService.cancelInstrument(hpanInitiativeBulkDTO).then()
-                        .doOnError(e ->
-                               Mono.error(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something gone wrong while cancelling instruments", e))),
+                instrumentApiService.cancelInstruments(hpanInitiativeBulkDTO).then()
+                        .onErrorResume(e -> e instanceof IllegalArgumentException ?
+                                Mono.error(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, e.getMessage(), e))
+                                : Mono.error(e)),
                         hpanInitiativeBulkDTO.toString());
     }
 }

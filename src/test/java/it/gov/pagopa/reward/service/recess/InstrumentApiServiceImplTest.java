@@ -36,7 +36,7 @@ class InstrumentApiServiceImplTest {
         Mockito.doReturn(Flux.fromIterable(hpanList))
                 .when(hpanInitiativeMediatorServiceMock).evaluate(Mockito.eq(hpanInitiativeBulkDTOBuilder), Mockito.any());
 
-        List<String> result = instrumentApiService.cancelInstrument(hpanInitiativeBulkDTOBuilder).block();
+        List<String> result = instrumentApiService.cancelInstruments(hpanInitiativeBulkDTOBuilder).block();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(hpanList, result);
@@ -46,7 +46,7 @@ class InstrumentApiServiceImplTest {
     void cancelInstrumentNotValidOperation() {
         HpanInitiativeBulkDTO hpanInitiativeBulkDTOBuilder = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(1).operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT).build();
 
-        Mono<List<String>> result = instrumentApiService.cancelInstrument(hpanInitiativeBulkDTOBuilder);
+        Mono<List<String>> result = instrumentApiService.cancelInstruments(hpanInitiativeBulkDTOBuilder);
 
         IllegalArgumentException illegalArgumentException = Assertions.assertThrows(IllegalArgumentException.class, result::block);
         Assertions.assertEquals("[SYNC_CANCEL_INSTRUMENTS] Operation type not valid", illegalArgumentException.getMessage());

@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface InstrumentApiService {
-    Mono<List<String>> cancelInstrument(HpanInitiativeBulkDTO hpanInitiativeBulkDTO);
+    Mono<List<String>> cancelInstruments(HpanInitiativeBulkDTO hpanInitiativeBulkDTO);
 }
