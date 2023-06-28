@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.controller;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
-import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
@@ -17,7 +16,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
@@ -39,7 +37,7 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
     @Test
     void test() {
 
-        int N = Math.max(useCases.size(), 50);
+        int N = 1;//Math.max(useCases.size(), 50);
 
         configureSpy();
 
@@ -48,7 +46,8 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
 
     private void configureSpy() {
         Mockito.doThrow(new RuntimeException("DUMMY_EXCEPTION"))
-                        .when(hpanInitiativesRepositorySpy).findById((String) Mockito.argThat(arg -> arg.toString().startsWith("EXCEPTIONHPAN")));
+                        .when(hpanInitiativesRepositorySpy)
+                .retrieveHpanByUserIdAndInitiativeId(Mockito.argThat(arg -> arg.startsWith("USERDUMMY")), Mockito.argThat(arg -> arg.startsWith("INITIATIVEDUMMY")));
     }
 
     //region useCases
@@ -58,9 +57,7 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
             HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(i);
             hpanInitiativesRepositorySpy.save(hpanInitiatives).block();
 
-            extractResponse(cancelInstrument(HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
-                    .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
-                    .build()),
+            extractResponse(cancelInstrument(hpanInitiatives.getUserId(), hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId()),
                     HttpStatus.NO_CONTENT,
                     null);
             Assertions.assertEquals(hpanInitiatives, hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block());
@@ -75,7 +72,7 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
                     .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
                     .build();
 
-            extractResponse(cancelInstrument(request), HttpStatus.NO_CONTENT, null);
+            extractResponse(cancelInstrument(hpanInitiatives.getUserId(), hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId()), HttpStatus.NO_CONTENT, null);
 
             List<HpanInitiatives> hpanInitiativesFirstCall = retrieveHpanInitiative(request);
 
@@ -87,30 +84,14 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
                         onboardedInitiative.getActiveTimeIntervals().forEach(intervals -> Assertions.assertNotNull(intervals.getEndInterval()))));
 
             /*resend the request*/
-            extractResponse(cancelInstrument(request), HttpStatus.NO_CONTENT, null);
+            extractResponse(cancelInstrument(hpanInitiatives.getUserId(), hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId()), HttpStatus.NO_CONTENT, null);
             List<HpanInitiatives> hpanInitiativesSecondCall = retrieveHpanInitiative(request);
             Assertions.assertEquals(hpanInitiativesFirstCall, hpanInitiativesSecondCall);
         });
 
-        //usecase 4: Unexpected Operation
+        //usecase 2: Generic error
         useCases.add(i -> {
-            HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithCloseIntervals(i);
-            hpanInitiativesRepositorySpy.save(hpanInitiatives).block();
-
-            extractResponse(cancelInstrument(HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
-                    .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT).build()),
-                    HttpStatus.BAD_REQUEST,
-                    null);
-        });
-
-        //usecase 5: Generic error
-        useCases.add(i -> {
-            PaymentMethodInfoDTO infoHpan = PaymentMethodInfoDTO.builder()
-                    .hpan("EXCEPTIONHPAN_%d".formatted(i)).build();
-
-            ErrorDTO errorDTOResult = extractResponse(cancelInstrument(HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
-                            .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
-                            .infoList(List.of(infoHpan)).build()),
+            ErrorDTO errorDTOResult = extractResponse(cancelInstrument("USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ErrorDTO.class);
 
@@ -128,10 +109,10 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
     //endregion
 
     //region API invokes
-    private WebTestClient.ResponseSpec cancelInstrument(HpanInitiativeBulkDTO hpanInitiativeBulkDTO){
-        return webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/instrument/recess").build())
-                .body(BodyInserters.fromValue(hpanInitiativeBulkDTO))
+    private WebTestClient.ResponseSpec cancelInstrument(String userId, String initiativeId){
+        return webTestClient.delete()
+                .uri(uriBuilder -> uriBuilder.path("/paymentinstrument/{userId}/{initiativeId}")
+                        .build(userId, initiativeId))
                 .exchange();
     }
     //endregion

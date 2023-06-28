@@ -1,10 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
-import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
-
-import java.time.LocalDateTime;
 
 /**
  * This component take a HpanInitiativeDTO and save into DB
@@ -16,6 +13,5 @@ import java.time.LocalDateTime;
 
 public interface HpanInitiativeMediatorService {
     void execute(Flux<Message<String>> hpanInitiativeDTOFlux);
-    Flux<String> evaluate(HpanInitiativeBulkDTO hpanInitiativeBulkDTO, LocalDateTime evaluationDate);
 }
 

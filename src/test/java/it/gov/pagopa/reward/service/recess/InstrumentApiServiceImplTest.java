@@ -1,10 +1,10 @@
 package it.gov.pagopa.reward.service.recess;
 
-import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
-import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
-import it.gov.pagopa.reward.service.lookup.HpanInitiativeMediatorService;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
-import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
+import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.service.lookup.HpanInitiativesService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,35 +20,37 @@ import java.util.List;
 @ExtendWith(MockitoExtension.class)
 class InstrumentApiServiceImplTest {
 
-    @Mock HpanInitiativeMediatorService hpanInitiativeMediatorServiceMock;
+    private static final String USERID = "USERID";
+    private static final String INITIATIVEID = "INITIATIVEID";
+    private static final String HPAN = "HPAN";
+    @Mock private HpanInitiativesRepository hpanInitiativesRepositoryMock;
+    @Mock private HpanInitiativesService hpanInitiativesServiceMock;
 
-    InstrumentApiServiceImpl instrumentApiService;
+
+    private InstrumentApiServiceImpl instrumentApiService;
 
     @BeforeEach
     void setUp() {
-        instrumentApiService= new InstrumentApiServiceImpl(hpanInitiativeMediatorServiceMock);
+        instrumentApiService= new InstrumentApiServiceImpl(hpanInitiativesRepositoryMock, hpanInitiativesServiceMock);
     }
 
     @Test
     void cancelInstrument() {
-        HpanInitiativeBulkDTO hpanInitiativeBulkDTOBuilder = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(1).operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT).build();
-        List<String> hpanList = hpanInitiativeBulkDTOBuilder.getInfoList().stream().map(PaymentMethodInfoDTO::getHpan).toList();
-        Mockito.doReturn(Flux.fromIterable(hpanList))
-                .when(hpanInitiativeMediatorServiceMock).evaluate(Mockito.eq(hpanInitiativeBulkDTOBuilder), Mockito.any());
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder().userId(USERID)
+                .hpan(HPAN).build();
 
-        List<String> result = instrumentApiService.cancelInstruments(hpanInitiativeBulkDTOBuilder).block();
+        Mockito.doReturn(Flux.fromIterable(List.of(hpanInitiatives))).when(hpanInitiativesRepositoryMock)
+                        .retrieveHpanByUserIdAndInitiativeId(USERID, INITIATIVEID);
 
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(hpanList, result);
-    }
+        OnboardedInitiative oi = OnboardedInitiative.builder().initiativeId(INITIATIVEID).build();
+        Mockito.doReturn(oi)
+                .when(hpanInitiativesServiceMock).evaluate(Mockito.any(), Mockito.any());
 
-    @Test
-    void cancelInstrumentNotValidOperation() {
-        HpanInitiativeBulkDTO hpanInitiativeBulkDTOBuilder = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(1).operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT).build();
+        UpdateResult ur = Mockito.mock(UpdateResult.class);
+        Mockito.doReturn(Mono.just(ur)).when(hpanInitiativesRepositoryMock).setInitiative(HPAN,oi);
 
-        Mono<List<String>> result = instrumentApiService.cancelInstruments(hpanInitiativeBulkDTOBuilder);
+        Void result = instrumentApiService.cancelInstruments(USERID, INITIATIVEID).block();
 
-        IllegalArgumentException illegalArgumentException = Assertions.assertThrows(IllegalArgumentException.class, result::block);
-        Assertions.assertEquals("[SYNC_CANCEL_INSTRUMENTS] Operation type not valid", illegalArgumentException.getMessage());
+        Assertions.assertNull(result);
     }
 }
