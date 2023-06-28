@@ -44,7 +44,7 @@ class InstrumentApiServiceImplTest {
 
         OnboardedInitiative oi = OnboardedInitiative.builder().initiativeId(INITIATIVEID).build();
         Mockito.doReturn(oi)
-                .when(hpanInitiativesServiceMock).evaluate(Mockito.any(), Mockito.any());
+                .when(hpanInitiativesServiceMock).evaluate(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
 
         UpdateResult ur = Mockito.mock(UpdateResult.class);
         Mockito.doReturn(Mono.just(ur)).when(hpanInitiativesRepositoryMock).setInitiative(HPAN,oi);

@@ -45,8 +45,8 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO2.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
-        OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
-        OnboardedInitiative result2 = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO2);
+        OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1,false);
+        OnboardedInitiative result2 = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO2, false);
 
         //Then
         Assertions.assertNull(result1);
@@ -72,7 +72,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1, false);
 
         //Then
         Assertions.assertNotNull(result);
@@ -112,7 +112,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO1.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1, false);
 
         //Then
         Assertions.assertNull(result);
@@ -136,7 +136,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         //When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         //Then
         Assertions.assertNull(result);
@@ -161,7 +161,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO,false);
 
         // Then
         Assertions.assertNull(result);
@@ -199,7 +199,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         // Then
         Assertions.assertNotNull(result);
@@ -221,7 +221,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         // Then
         Assertions.assertNull(result);
@@ -244,7 +244,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         // Then
         Assertions.assertNull(result);
@@ -270,7 +270,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         // Then
         Assertions.assertNull(result);
@@ -296,7 +296,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         // Then
         Assertions.assertNull(result);
@@ -324,7 +324,7 @@ class DeleteHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("DELETE_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, false);
 
         // Then
         Assertions.assertNull(result);
@@ -356,7 +356,7 @@ class DeleteHpanServiceImplTest {
         request.setOperationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT);
 
         // When
-        OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, request, false);
 
         // Then
         Assertions.assertNotNull(result1);
@@ -377,7 +377,7 @@ class DeleteHpanServiceImplTest {
         Assertions.assertNull(result2.getLastEndInterval());
 
         // When deleting again
-        OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request, false);
 
         // Then
         Assertions.assertEquals(2, result3.getActiveTimeIntervals().size());
@@ -418,7 +418,7 @@ class DeleteHpanServiceImplTest {
         hpanInitiatives.setOnboardedInitiatives(new ArrayList<>(List.of(firstAddResult)));
 
         // When deleting it
-        OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative result1 = deleteHpanService.execute(hpanInitiatives, request, false);
 
         // Then
         Assertions.assertNotNull(result1);
@@ -435,7 +435,7 @@ class DeleteHpanServiceImplTest {
         Assertions.assertNull(lastInterval2.getEndInterval());
 
         // When deleting again
-        OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request, false);
 
         // Then
         Assertions.assertEquals(0, result3.getActiveTimeIntervals().size());

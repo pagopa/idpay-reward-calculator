@@ -174,11 +174,11 @@ class HpanInitiativeMediatorServiceImplTest {
         OnboardedInitiative onboardedInitiativeOut2 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_NOT_DATE").build();
         OnboardedInitiative onboardedInitiativeOut3 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_ERROR_PUBLISHED").build();
 
-        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateValidHpan,hpanInitiatives1))
+        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateValidHpan,hpanInitiatives1,false))
                 .thenReturn(onboardedInitiativeOut1);
-        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateNotDate,hpanInitiatives2))
+        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateNotDate,hpanInitiatives2,false))
                 .thenReturn(onboardedInitiativeOut2);
-        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateErrorPublished,hpanInitiatives3))
+        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateErrorPublished,hpanInitiatives3, false))
                 .thenReturn(onboardedInitiativeOut3);
 
         UpdateResult updateResult = Mockito.mock(UpdateResult.class);
@@ -219,7 +219,7 @@ class HpanInitiativeMediatorServiceImplTest {
                 )));
         // Then
         Mockito.verify(hpanInitiativesRepositoryMock,Mockito.times(3)).findById(Mockito.anyString());
-        Mockito.verify(hpanInitiativesServiceMock,Mockito.times(3)).evaluate(Mockito.any(HpanUpdateEvaluateDTO.class),Mockito.any(HpanInitiatives.class));
+        Mockito.verify(hpanInitiativesServiceMock,Mockito.times(3)).evaluate(Mockito.any(HpanUpdateEvaluateDTO.class),Mockito.any(HpanInitiatives.class),Mockito.anyBoolean());
         Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(3)).setInitiative(Mockito.anyString(), Mockito.any());
         Mockito.verify(rewardErrorNotifierServiceMock,Mockito.times(2)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(Throwable.class));
         Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(1)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(NullPointerException.class));

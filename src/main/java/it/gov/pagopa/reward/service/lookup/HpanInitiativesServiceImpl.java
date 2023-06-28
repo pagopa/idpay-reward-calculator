@@ -21,10 +21,10 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
     }
 
     @Override
-    public OnboardedInitiative evaluate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanRetrieved) {
+    public OnboardedInitiative evaluate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanRetrieved, boolean recessFlow) {
         return switch (hpanUpdateEvaluateDTO.getOperationType()) {
             case HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT -> addHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO);
-            case HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT -> deleteHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO);
+            case HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT -> deleteHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO, recessFlow);
             default -> invalidOperationType(hpanUpdateEvaluateDTO);
         };
     }

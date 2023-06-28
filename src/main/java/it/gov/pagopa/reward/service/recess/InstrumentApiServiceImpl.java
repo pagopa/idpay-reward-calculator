@@ -42,7 +42,7 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
     @NotNull
     private Mono<String> evaluateAndSave(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanInitiatives) {
         return Mono.just(hpanInitiatives)
-                .mapNotNull(hi -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hi))
+                .mapNotNull(hi -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hi, true))
                 .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
                 .map(ur -> hpanUpdateEvaluateDTO.getHpan());
     }

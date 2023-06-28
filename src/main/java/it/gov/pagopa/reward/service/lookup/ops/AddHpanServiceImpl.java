@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -47,11 +48,13 @@ public class AddHpanServiceImpl implements AddHpanService {
                     if(lastActiveInterval.getEndInterval()==null){
                         lastActiveInterval.setEndInterval(startInterval);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
+                        onboardedInitiative.setStatus(HpanInitiativeConstants.STATUS_UPDATE);
 
                         return onboardedInitiative;
                     } else if (!lastActiveInterval.getEndInterval().isAfter(startInterval)) {
                         onboardedInitiative.setLastEndInterval(null);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
+                        onboardedInitiative.setStatus(HpanInitiativeConstants.STATUS_UPDATE);
 
                         return onboardedInitiative;
                     }
@@ -65,6 +68,7 @@ public class AddHpanServiceImpl implements AddHpanService {
             log.trace("[ADD_HPAN] [HPAN_WITHOUT_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
             onboardedInitiative = getNewOnboardedInitiative(hpanUpdateEvaluateDTO);
             hpanInitiatives.getOnboardedInitiatives().add(onboardedInitiative);
+            onboardedInitiative.setStatus(HpanInitiativeConstants.STATUS_ACTIVE);
 
             return onboardedInitiative;
         }
@@ -80,7 +84,7 @@ public class AddHpanServiceImpl implements AddHpanService {
         LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
         return OnboardedInitiative.builder()
                 .initiativeId(hpanUpdateEvaluateDTO.getInitiativeId())
-                .status("ACCEPTED")
+                .status(HpanInitiativeConstants.STATUS_ACTIVE)
                 .acceptanceDate(startInterval)
                 .activeTimeIntervals(new ArrayList<>(List.of(initializeInterval(startInterval))))
                 .build();
