@@ -28,14 +28,23 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
     public Mono<Void> cancelInstruments(String userId, String initiativeId) {
         LocalDateTime evaluationDate = LocalDateTime.now();
 
-        return hpanInitiativesRepository.retrieveHpanByUserIdAndInitiativeId(userId, initiativeId)
-                .flatMap(hpanInitiatives -> cancelEvaluate(userId, initiativeId, hpanInitiatives, evaluationDate))
+        return hpanInitiativesRepository.retrieveAHpanByUserIdAndInitiativeIdAndStatus(userId, initiativeId, HpanInitiativeConstants.STATUS_ACTIVE, HpanInitiativeConstants.STATUS_UPDATE)
+                .flatMap(hpanInitiatives -> evaluateInstruments(userId, initiativeId, hpanInitiatives, evaluationDate, HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT))
                 .collectList()
                 .then();
     }
 
-    private Mono<String> cancelEvaluate(String userId, String initiativeId, HpanInitiatives hpanInitiatives, LocalDateTime evaluationDate) {
-        return Mono.just(getHpanUpdateEvaluateRequest(userId, initiativeId, hpanInitiatives, evaluationDate, HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT))
+    @Override
+    public Mono<Void> rollbackInstruments(String userId, String initiativeId) {
+        LocalDateTime evaluationDate = LocalDateTime.now();
+        return hpanInitiativesRepository.retrieveAHpanByUserIdAndInitiativeIdAndStatus(userId, initiativeId, HpanInitiativeConstants.STATUS_INACTIVE)
+                .flatMap(hpanInitiatives -> evaluateInstruments(userId, initiativeId, hpanInitiatives, evaluationDate, HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT))
+                .collectList()
+                .then();
+    }
+
+    private Mono<String> evaluateInstruments(String userId, String initiativeId, HpanInitiatives hpanInitiatives, LocalDateTime evaluationDate, String operationType) {
+        return Mono.just(getHpanUpdateEvaluateRequest(userId, initiativeId, hpanInitiatives, evaluationDate, operationType))
                 .flatMap(hpanUpdateEvaluateDTO -> evaluateAndSave(hpanUpdateEvaluateDTO, hpanInitiatives));
     }
 

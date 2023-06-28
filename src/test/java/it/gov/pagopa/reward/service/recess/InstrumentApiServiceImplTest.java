@@ -40,7 +40,7 @@ class InstrumentApiServiceImplTest {
                 .hpan(HPAN).build();
 
         Mockito.doReturn(Flux.fromIterable(List.of(hpanInitiatives))).when(hpanInitiativesRepositoryMock)
-                        .retrieveHpanByUserIdAndInitiativeId(USERID, INITIATIVEID);
+                        .retrieveAHpanByUserIdAndInitiativeIdAndStatus(Mockito.eq(USERID), Mockito.eq(INITIATIVEID), Mockito.any(), Mockito.any());
 
         OnboardedInitiative oi = OnboardedInitiative.builder().initiativeId(INITIATIVEID).build();
         Mockito.doReturn(oi)
