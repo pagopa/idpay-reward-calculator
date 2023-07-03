@@ -8,5 +8,5 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
  * This component evaluate a {@link HpanUpdateEvaluateDTO} with operation type ADD_INSTRUMENT
  * */
 public interface AddHpanService {
-    OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO);
+    OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, boolean recessFlow);
 }

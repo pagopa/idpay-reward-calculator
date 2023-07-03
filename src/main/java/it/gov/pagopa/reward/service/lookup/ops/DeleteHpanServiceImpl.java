@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -45,9 +44,9 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                     if (lastActiveInterval.getEndInterval() == null) {
                             lastActiveInterval.setEndInterval(endInterval);
                             onboardedInitiative.setLastEndInterval(endInterval);
-                            onboardedInitiative.setStatus(recessFlow ? HpanInitiativeConstants.STATUS_INACTIVE : HpanInitiativeConstants.STATUS_UPDATE);
+                            setOnboardedInitiativeStatus(onboardedInitiative, recessFlow);
 
-                            return onboardedInitiative;
+                        return onboardedInitiative;
                         }
                         log.error("Unexpected use case, the initiative for this hpan not have an active interval open. Source message: {}", hpanUpdateEvaluateDTO);
                         return null;
@@ -59,7 +58,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                         newLastEndInterval = activeTimeIntervalsList.get(activeTimeIntervalsList.size()-1).getEndInterval();
                     }
                     onboardedInitiative.setLastEndInterval(newLastEndInterval);
-                    onboardedInitiative.setStatus(recessFlow ? HpanInitiativeConstants.STATUS_INACTIVE : HpanInitiativeConstants.STATUS_UPDATE);
+                    setOnboardedInitiativeStatus(onboardedInitiative, recessFlow);
                     return onboardedInitiative;
                 }
                 log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanUpdateEvaluateDTO);
@@ -70,5 +69,9 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
         }
         log.error("Unexpected use case, the initiative for this hpan not have an active interval. Source message: {} ", hpanUpdateEvaluateDTO);
         return null;
+    }
+
+    private void setOnboardedInitiativeStatus(OnboardedInitiative onboardedInitiative, boolean recessFlow) {
+        onboardedInitiative.setStatus(recessFlow ? HpanInitiativeConstants.STATUS_INACTIVE : HpanInitiativeConstants.STATUS_UPDATE);
     }
 }

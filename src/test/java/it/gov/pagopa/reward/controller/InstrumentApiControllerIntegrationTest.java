@@ -4,7 +4,6 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
@@ -39,15 +38,20 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
 
         int N = Math.max(useCases.size(), 50);
 
-        configureSpy();
+        configureSpies();
 
         baseParallelismTest(N, useCases);
     }
 
-    private void configureSpy() {
+    private void configureSpies() {
         Mockito.doThrow(new RuntimeException("DUMMY_EXCEPTION"))
                         .when(hpanInitiativesRepositorySpy)
                 .retrieveAHpanByUserIdAndInitiativeIdAndStatus(Mockito.argThat(arg -> arg.startsWith("USERDUMMY")), Mockito.argThat(arg -> arg.startsWith("INITIATIVEDUMMY")), Mockito.any());
+
+
+        Mockito.doThrow(new RuntimeException("ROLLBACK_EXCEPTION"))
+                .when(hpanInitiativesRepositorySpy)
+                .setInitiative(Mockito.argThat(arg -> arg.startsWith("HPAN_ROLLBACK_KO")),Mockito.any());
     }
 
     //region useCases
@@ -71,41 +75,37 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
 
             String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
 
-            HpanInitiativeBulkDTO request = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(i)
-                    .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
-                    .build();
-
             extractResponse(cancelInstruments(hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
 
-            List<HpanInitiatives> hpanInitiativesFirstCall = retrieveHpanInitiative(request);
+            HpanInitiatives hpanInitiativesFirstCall = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
 
             Assertions.assertNotNull(hpanInitiativesFirstCall);
-            hpanInitiativesFirstCall.forEach(h -> h.getOnboardedInitiatives()
+            hpanInitiativesFirstCall.getOnboardedInitiatives()
                     .stream()
                     .filter(onboardedInitiative -> onboardedInitiative.getInitiativeId().equals("INITIATIVE_%d".formatted(i)))
                     .forEach(onboardedInitiative -> {
                         Assertions.assertNotNull(onboardedInitiative.getLastEndInterval());
                         Assertions.assertEquals(HpanInitiativeConstants.STATUS_INACTIVE, onboardedInitiative.getStatus());
                         onboardedInitiative.getActiveTimeIntervals().forEach(intervals -> Assertions.assertNotNull(intervals.getEndInterval()));
-                    }));
+                    });
 
             //resend the request
             extractResponse(cancelInstruments(hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
-            List<HpanInitiatives> hpanInitiativesSecondCall = retrieveHpanInitiative(request);
+            HpanInitiatives hpanInitiativesSecondCall = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
             Assertions.assertEquals(hpanInitiativesFirstCall, hpanInitiativesSecondCall);
 
             //rollback
             extractResponse(rollbackInstruments(hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
-            List<HpanInitiatives> hpanInitiativesRollback = retrieveHpanInitiative(request);
+            HpanInitiatives hpanInitiativesRollback = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
             Assertions.assertNotNull(hpanInitiativesRollback);
             Assertions.assertNotEquals(hpanInitiativesFirstCall, hpanInitiativesRollback);
-            hpanInitiativesRollback.forEach(h -> h.getOnboardedInitiatives()
+            hpanInitiativesRollback.getOnboardedInitiatives()
                     .stream()
                     .filter(onboardedInitiative -> onboardedInitiative.getInitiativeId().equals("INITIATIVE_%d".formatted(i)))
                     .forEach(onboardedInitiative -> {
                         Assertions.assertNull(onboardedInitiative.getLastEndInterval());
                         Assertions.assertEquals(HpanInitiativeConstants.STATUS_UPDATE, onboardedInitiative.getStatus());
-                    }));
+                    });
         });
 
         //usecase 2: Generic error
