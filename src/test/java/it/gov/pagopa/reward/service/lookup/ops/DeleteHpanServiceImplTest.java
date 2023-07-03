@@ -367,7 +367,7 @@ class DeleteHpanServiceImplTest {
 
         // When adding again
         AddHpanService addHpanService = new AddHpanServiceImpl();
-        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request, false);
+        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
 
         // Then
         Assertions.assertEquals(3, result2.getActiveTimeIntervals().size());
@@ -408,7 +408,7 @@ class DeleteHpanServiceImplTest {
 
         // When adding first interval
         AddHpanService addHpanService = new AddHpanServiceImpl();
-        OnboardedInitiative firstAddResult = addHpanService.execute(hpanInitiatives, request, false);
+        OnboardedInitiative firstAddResult = addHpanService.execute(hpanInitiatives, request);
 
         // Then
         Assertions.assertEquals(1, firstAddResult.getActiveTimeIntervals().size());
@@ -426,7 +426,7 @@ class DeleteHpanServiceImplTest {
         hpanInitiatives.getOnboardedInitiatives().remove(firstAddResult);
 
         // When adding again
-        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request, false);
+        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
 
         // Then
         Assertions.assertEquals(1, result2.getActiveTimeIntervals().size());

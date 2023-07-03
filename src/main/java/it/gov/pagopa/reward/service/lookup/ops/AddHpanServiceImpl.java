@@ -17,11 +17,11 @@ import java.util.List;
 @Slf4j
 public class AddHpanServiceImpl implements AddHpanService {
     @Override
-    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, boolean recessFlow) {
+    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
         List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();
         log.trace("[ADD_HPAN] Added evaluation for hpan: {}", hpanUpdateEvaluateDTO.getHpan());
         if (onboardedInitiatives != null){
-            return executeHpanUpdate(hpanInitiatives, hpanUpdateEvaluateDTO, onboardedInitiatives, recessFlow);
+            return executeHpanUpdate(hpanInitiatives, hpanUpdateEvaluateDTO, onboardedInitiatives);
         } else {
             return executeHpanCreate(hpanUpdateEvaluateDTO);
         }
@@ -32,15 +32,11 @@ public class AddHpanServiceImpl implements AddHpanService {
         return getNewOnboardedInitiative(hpanUpdateEvaluateDTO);
     }
 
-    private OnboardedInitiative executeHpanUpdate(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, List<OnboardedInitiative> onboardedInitiatives, boolean recessFlow) {
+    private OnboardedInitiative executeHpanUpdate(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, List<OnboardedInitiative> onboardedInitiatives) {
         log.trace("[ADD_HPAN] [HPAN_PRESENT_IN_DB] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
         OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream()//.map(OnboardedInitiative::getInitiativeId)
                 .filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
-            if(!recessFlow && HpanInitiativeConstants.STATUS_INACTIVE.equals(onboardedInitiative.getStatus())){
-                log.error("Unexpected use case, the user unsubscribe from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
-                return null;
-            }
             List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
             LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
 
