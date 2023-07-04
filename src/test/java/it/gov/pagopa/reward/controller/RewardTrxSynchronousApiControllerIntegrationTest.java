@@ -17,6 +17,7 @@ import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
@@ -144,6 +145,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .rewardRule(RewardValueDTO.builder()
                         .rewardValue(BigDecimal.TEN)
                         .build())
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
                 .build();
         rule.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
         kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);

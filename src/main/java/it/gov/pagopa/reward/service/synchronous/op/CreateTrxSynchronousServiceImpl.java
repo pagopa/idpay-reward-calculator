@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResp
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.exception.TransactionSynchronousException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
@@ -81,7 +82,9 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
     }
 
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId) {
-        return rewardContextHolderService.getInitiativeConfig(initiativeId).hasElement()
+        return rewardContextHolderService.getInitiativeConfig(initiativeId)
+                .map(i -> InitiativeRewardType.DISCOUNT.equals(i.getInitiativeRewardType()))
+                .switchIfEmpty(Mono.just(false))
                 .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
     }
 

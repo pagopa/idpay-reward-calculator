@@ -9,8 +9,13 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -135,5 +140,21 @@ public class TestUtils {
             return afterField.substring(afterOpeningQuote, afterField.indexOf('"', afterOpeningQuote));
         }
         return null;
+    }
+
+    /** It will check if the local port is available */
+    public static boolean availableLocalPort(int port) {
+        try (Socket ignored = new Socket("localhost", port)) {
+            return false;
+        } catch (ConnectException e) {
+            return true;
+        } catch (IOException e) {
+            throw new IllegalStateException("Error while trying to check open port", e);
+        }
+    }
+
+    /** It will truncate timestamp value to MINUTES multiple of 10 */
+    public static LocalDateTime truncateTimestamp(LocalDateTime timestamp) {
+        return timestamp.truncatedTo(ChronoUnit.MINUTES).withMinute(timestamp.getMinute() / 10 * 10);
     }
 }
