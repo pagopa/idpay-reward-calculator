@@ -2,8 +2,6 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ErrorManager;
-import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -31,7 +29,6 @@ import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -46,9 +43,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 @TestPropertySource(
@@ -66,9 +63,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
     public static final long AMOUNT_CENTS = 200_00L;
     public static final BigDecimal AMOUNT = CommonUtilities.centsToEuro(AMOUNT_CENTS);
     public static final BigDecimal REWARD = TestUtils.bigDecimalValue(20);
-
-//    private static final int parallelism = 8;
-//    private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
 
     @SpyBean
     private UserInitiativeCountersRepository userInitiativeCountersRepositorySpy;
@@ -475,6 +469,16 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
             Assertions.assertNotNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
             Assertions.assertNull(transactionProcessedRepository.findById(refundTrxId).block());
+        });
+
+        //useCase 13: user unsubcribed to the initiative
+        useCases.add(i -> {
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            InstrumentApiControllerIntegrationTest.cancelInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REJECTED, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), null);
+
+            assertPreview(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
+            assertAuthorize(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
         });
     }
 

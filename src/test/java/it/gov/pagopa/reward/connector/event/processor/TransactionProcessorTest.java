@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.controller.InstrumentApiControllerIntegrationTest;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -23,7 +25,6 @@ import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdate
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -35,6 +36,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +56,12 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@TestPropertySource(
+        properties = {
+                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
+                "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
+                "logging.level.it.gov.pagopa.reward.controller.InstrumentApiControllerImpl=WARN"
+        })
 class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     public static final long TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT = 9L;
@@ -191,6 +199,8 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private static final String INITIATIVE_ID_EXHAUSTING = "ID_6_EXHAUSTING";
     private static final String INITIATIVE_ID_EXPIRED = "ID_7_EXPIRED";
     private static final String INITIATIVE_ID_NOT_STARTED = "ID_8_NOTSTARTED";
+    private static final String INITIATIVE_ID_INSTRUMENT_INACTIVE = "ID_9_INSTRUMENTINACTIVE";
+
 
     private void publishRewardRules() {
         int[] expectedRules = {0};
@@ -321,6 +331,20 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                 .general(InitiativeGeneralDTO.builder()
                                         .startDate(trxDate.plusYears(1L).toLocalDate())
                                         .build())
+                                .build(),
+                        InitiativeReward2BuildDTOFaker.mockInstanceBuilder(6, Collections.emptySet(), RewardValueDTO.class)
+                                .initiativeId(INITIATIVE_ID_INSTRUMENT_INACTIVE)
+                                .initiativeName("NAME_"+INITIATIVE_ID_INSTRUMENT_INACTIVE)
+                                .organizationId("ORGANIZATIONID_"+INITIATIVE_ID_INSTRUMENT_INACTIVE)
+                                .trxRule(InitiativeTrxConditions.builder()
+                                        .threshold(ThresholdDTO.builder()
+                                                .from(BigDecimal.valueOf(5))
+                                                .fromIncluded(true)
+                                                .build())
+                                        .build())
+                                .rewardRule(RewardValueDTO.builder()
+                                        .rewardValue(BigDecimal.TEN)
+                                        .build())
                                 .build()
                 )
                 .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
@@ -333,7 +357,10 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
     private TransactionDTO mockInstance(int bias) {
         int useCase = bias % useCases.size();
         final TransactionDTO trx = useCases.get(useCase).getFirst().apply(bias);
-        onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED);
+        onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED, INITIATIVE_ID_INSTRUMENT_INACTIVE);
+
+        InstrumentApiControllerIntegrationTest.cancelInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
+
         return trx;
     }
 

@@ -22,10 +22,9 @@ import java.util.List;
         properties = {
                 "logging.level.it.gov.pagopa.reward=WARN",
                 "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
-                "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
-                "it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=WARN"
+                "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN"
         })
-class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
+public class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
     @SpyBean
     private HpanInitiativesRepository hpanInitiativesRepositorySpy;
 
@@ -57,7 +56,7 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
 
             String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
 
-            extractResponse(cancelInstruments(hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
+            extractResponse(cancelInstruments(webTestClient, hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
 
             HpanInitiatives hpanInitiativesFirstCall = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
 
@@ -66,12 +65,12 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
             assertionsOnboardedInitiative(oiInitial, oiFirstCancel, HpanInitiativeStatus.INACTIVE);
 
             //resend the request
-            extractResponse(cancelInstruments(hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
+            extractResponse(cancelInstruments(webTestClient, hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
             HpanInitiatives hpanInitiativesSecondCall = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
             Assertions.assertEquals(hpanInitiativesFirstCall, hpanInitiativesSecondCall);
 
             //reactivate
-            extractResponse(reactivateInstruments(hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
+            extractResponse(reactivateInstruments(webTestClient, hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
             HpanInitiatives hpanInitiativesReactivate = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
             Assertions.assertNotNull(hpanInitiativesReactivate);
             Assertions.assertNotEquals(hpanInitiativesFirstCall, hpanInitiativesReactivate);
@@ -82,14 +81,14 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
 
         //usecase 1: Generic error
         useCases.add(i -> {
-            ErrorDTO errorDTOResult = extractResponse(cancelInstruments("USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
+            ErrorDTO errorDTOResult = extractResponse(cancelInstruments(webTestClient, "USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ErrorDTO.class);
 
             ErrorDTO errorDTOExpected = new ErrorDTO("Error", "Something gone wrong");
             Assertions.assertEquals(errorDTOExpected, errorDTOResult);
 
-            ErrorDTO errorDTORollbackResult = extractResponse(reactivateInstruments("USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
+            ErrorDTO errorDTORollbackResult = extractResponse(reactivateInstruments(webTestClient, "USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ErrorDTO.class);
 
@@ -114,14 +113,14 @@ class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegratio
     }
 
     //region API invokes
-    private WebTestClient.ResponseSpec cancelInstruments(String userId, String initiativeId){
+    public static WebTestClient.ResponseSpec cancelInstruments(WebTestClient webTestClient, String userId, String initiativeId){
         return webTestClient.delete()
                 .uri(uriBuilder -> uriBuilder.path("/paymentinstrument/{userId}/{initiativeId}")
                         .build(userId, initiativeId))
                 .exchange();
     }
 
-    private WebTestClient.ResponseSpec reactivateInstruments(String userId, String initiativeId){
+    public static WebTestClient.ResponseSpec reactivateInstruments(WebTestClient webTestClient, String userId, String initiativeId){
         return webTestClient.put()
                 .uri(uriBuilder -> uriBuilder.path("/paymentinstrument/{userId}/{initiativeId}/reactivate")
                         .build(userId, initiativeId))

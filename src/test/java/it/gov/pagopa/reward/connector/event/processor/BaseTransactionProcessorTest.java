@@ -114,11 +114,12 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId()).block()));
     }
 
-    protected void onboardHpan(String hpan, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
+    protected void onboardHpan(String hpan,String userId, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
         hpanInitiativesRepository.findById(hpan)
                 .defaultIfEmpty(
                         HpanInitiatives.builder()
                                 .hpan(hpan)
+                                .userId(userId)
                                 .onboardedInitiatives(new ArrayList<>())
                                 .build())
                 .map(hpan2initiative -> {
@@ -144,7 +145,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     }
 
     protected void onboardTrxHPanNoCreateUserCounter(TransactionDTO trx, String... initiativeIds) {
-        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
+        onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
     }
 
     protected UserInitiativeCountersWrapper createUserCounter(TransactionDTO trx) {
