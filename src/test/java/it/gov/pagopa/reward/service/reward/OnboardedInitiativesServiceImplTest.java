@@ -282,7 +282,7 @@ class OnboardedInitiativesServiceImplTest {
     }
 
     @Test
-    void onboardedInactive(){
+    void onboardedInitiativeInactive(){
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
 
@@ -297,7 +297,7 @@ class OnboardedInitiativesServiceImplTest {
         Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
 
         // When
-        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
