@@ -26,9 +26,9 @@ public class InstrumentApiControllerImpl implements  InstrumentApiController{
 
     @Override
     public Mono<Void> reactivateInstruments(String userId, String initiativeId) {
-        log.info("[SYNC_ROLLBACK_INSTRUMENTS] Requesting to reactivate instruments for user {} to the initiative {}", userId, initiativeId);
+        log.info("[SYNC_REACTIVATE_INSTRUMENTS] Requesting to reactivate instruments for user {} to the initiative {}", userId, initiativeId);
 
-        return PerformanceLogger.logTimingFinally("SYNC_ROLLBACK_INSTRUMENTS",
+        return PerformanceLogger.logTimingFinally("SYNC_REACTIVATE_INSTRUMENTS",
                 instrumentApiService.reactivateInstruments(userId, initiativeId),
                 userId+"_"+initiativeId);
     }
