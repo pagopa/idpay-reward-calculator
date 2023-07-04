@@ -2,11 +2,11 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,7 +25,7 @@ public final class HpanInitiativesFaker {
 
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status(HpanInitiativeConstants.STATUS_UPDATE)
+                .status(HpanInitiativeStatus.ACTIVE)
                 .activeTimeIntervals(new ArrayList<>()).build();
 
         LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN);
@@ -69,7 +69,7 @@ public final class HpanInitiativesFaker {
 
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status(HpanInitiativeConstants.STATUS_UPDATE)
+                .status(HpanInitiativeStatus.ACTIVE)
                 .activeTimeIntervals(new ArrayList<>()).build();
 
         LocalDateTime onboardedTime = LocalDateTime.now();
@@ -96,7 +96,7 @@ public final class HpanInitiativesFaker {
 
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status(HpanInitiativeConstants.STATUS_UPDATE)
+                .status(HpanInitiativeStatus.ACTIVE)
                 .activeTimeIntervals(new ArrayList<>())
                 .lastEndInterval(lastEndInterval).build();
 

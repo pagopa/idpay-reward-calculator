@@ -1,68 +1,31 @@
 package it.gov.pagopa.reward.service.recess;
 
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
-import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.service.lookup.HpanInitiativesService;
-import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 @Service
 @Slf4j
 public class InstrumentApiServiceImpl implements InstrumentApiService {
 
     private final HpanInitiativesRepository hpanInitiativesRepository;
-    private final HpanInitiativesService hpanInitiativesService;
 
-    public InstrumentApiServiceImpl(HpanInitiativesRepository hpanInitiativesRepository, HpanInitiativesService hpanInitiativesService) {
+    public InstrumentApiServiceImpl(HpanInitiativesRepository hpanInitiativesRepository) {
         this.hpanInitiativesRepository = hpanInitiativesRepository;
-        this.hpanInitiativesService = hpanInitiativesService;
     }
 
     @Override
     public Mono<Void> cancelInstruments(String userId, String initiativeId) {
-        LocalDateTime evaluationDate = LocalDateTime.now();
 
-        return hpanInitiativesRepository.retrieveAHpanByUserIdAndInitiativeIdAndStatus(userId, initiativeId, HpanInitiativeConstants.STATUS_ACTIVE, HpanInitiativeConstants.STATUS_UPDATE)
-                .flatMap(hpanInitiatives -> evaluateInstruments(userId, initiativeId, hpanInitiatives, evaluationDate, HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT))
-                .collectList()
+        return hpanInitiativesRepository.setStatus(userId, initiativeId, HpanInitiativeStatus.INACTIVE)
                 .then();
     }
 
     @Override
-    public Mono<Void> rollbackInstruments(String userId, String initiativeId) {
-        LocalDateTime evaluationDate = LocalDateTime.now();
-        return hpanInitiativesRepository.retrieveAHpanByUserIdAndInitiativeIdAndStatus(userId, initiativeId, HpanInitiativeConstants.STATUS_INACTIVE)
-                .flatMap(hpanInitiatives -> evaluateInstruments(userId, initiativeId, hpanInitiatives, evaluationDate, HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT))
-                .collectList()
+    public Mono<Void> reactivateInstruments(String userId, String initiativeId) {
+        return hpanInitiativesRepository.setStatus(userId, initiativeId, HpanInitiativeStatus.ACTIVE)
                 .then();
-    }
-
-    private Mono<String> evaluateInstruments(String userId, String initiativeId, HpanInitiatives hpanInitiatives, LocalDateTime evaluationDate, String operationType) {
-        return Mono.just(getHpanUpdateEvaluateRequest(userId, initiativeId, hpanInitiatives, evaluationDate, operationType))
-                .flatMap(hpanUpdateEvaluateDTO -> evaluateAndSave(hpanUpdateEvaluateDTO, hpanInitiatives));
-    }
-
-    @NotNull
-    private Mono<String> evaluateAndSave(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanInitiatives) {
-        return Mono.just(hpanInitiatives)
-                .mapNotNull(hi -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hi, true))
-                .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
-                .map(ur -> hpanUpdateEvaluateDTO.getHpan());
-    }
-
-    private HpanUpdateEvaluateDTO getHpanUpdateEvaluateRequest(String userId, String initiativeId, HpanInitiatives hpanInitiatives, LocalDateTime evaluationDate, String operationType) {
-        return HpanUpdateEvaluateDTO.builder()
-                .userId(userId)
-                .initiativeId(initiativeId)
-                .hpan(hpanInitiatives.getHpan())
-                .operationType(operationType)
-                .evaluationDate(evaluationDate)
-                .build();
     }
 }

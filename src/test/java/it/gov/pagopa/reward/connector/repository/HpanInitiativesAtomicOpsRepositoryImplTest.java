@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -30,7 +31,8 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
     @AfterEach
     void clearData() {
-        hpanInitiativesRepository.deleteById("hpan_prova").block();
+        hpanInitiativesRepository.deleteAllById(
+                List.of("hpan_prova", "hpan_prova_1")).block();
     }
 
     @Test
@@ -83,7 +85,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                 .mapToObj(i -> OnboardedInitiative.builder()
                         .initiativeId("INITIATIVE_%d".formatted(i))
                         .acceptanceDate(now.minusDays(10L))
-                        .status("ACCEPTED")
+                        .status(HpanInitiativeStatus.ACTIVE)
                         .activeTimeIntervals(activeIntervalList).build()
                 )
                 .map(oi -> executorService.submit(() -> hpanInitiativesAtomicOpsRepositoryImpl.setInitiative(hpan, oi).block())).toList();
@@ -190,13 +192,13 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                 .initiativeId("INITIATIVE_1")
                 .acceptanceDate(now.minusDays(10L))
                 .lastEndInterval(end)
-                .status("ACCEPTED")
+                .status(HpanInitiativeStatus.ACTIVE)
                 .activeTimeIntervals(activeIntervalList).build();
         OnboardedInitiative onboardedInitiativeBase2 = OnboardedInitiative.builder()
                 .initiativeId("INITIATIVE_2")
                 .acceptanceDate(now.minusDays(10L))
                 .lastEndInterval(end)
-                .status("ACCEPTED")
+                .status(HpanInitiativeStatus.ACTIVE)
                 .activeTimeIntervals(activeIntervalList).build();
 
         onboardedInitiativeList.add(onboardedInitiativeBase1);
@@ -212,6 +214,34 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                 .onboardedInitiatives(onboardedInitiativeList).build();
 
         hpanInitiativesRepository.save(hpanInitiatives).block();
+    }
+
+    @Test
+    void setStatus(){
+        String hpan = "hpan_prova";
+        String hpan1 = "hpan_prova_1";
+
+        LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime end = now.minusDays(2L).with(LocalTime.MAX);
+
+        List<ActiveTimeInterval> activeIntervalList = getActiveTimeIntervalList(now, end);
+
+        storeHpanInitiatives(hpan, now, end, activeIntervalList);
+        storeHpanInitiatives(hpan1, now, end, activeIntervalList);
+
+        UpdateResult result = hpanInitiativesRepository.setStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.INACTIVE).block();
+        Assertions.assertNotNull(result);
+
+        HpanInitiatives hpanAfterCall = hpanInitiativesRepository.findById(hpan).block();
+        Assertions.assertNotNull(hpanAfterCall);
+        OnboardedInitiative initiative = hpanAfterCall.getOnboardedInitiatives().get(1);
+        Assertions.assertEquals(HpanInitiativeStatus.INACTIVE, initiative.getStatus());
+
+        HpanInitiatives hpanAfterCall1 = hpanInitiativesRepository.findById(hpan1).block();
+        Assertions.assertNotNull(hpanAfterCall1);
+        OnboardedInitiative initiative1 = hpanAfterCall1.getOnboardedInitiatives().get(1);
+        Assertions.assertEquals(HpanInitiativeStatus.INACTIVE, initiative1.getStatus());
+
     }
 }
 

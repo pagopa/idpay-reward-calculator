@@ -8,5 +8,5 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
  * This component evaluate a {@link HpanUpdateEvaluateDTO} with operation type DELETE_INSTRUMENT
  * */
 public interface DeleteHpanService {
-    OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, boolean recessFlow);
+    OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO);
 }

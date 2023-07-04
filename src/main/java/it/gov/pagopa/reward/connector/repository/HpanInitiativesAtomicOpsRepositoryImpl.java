@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import org.springframework.dao.DuplicateKeyException;
@@ -71,5 +72,17 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                         }
                     });
         }
+    }
+
+    @Override
+    public Mono<UpdateResult> setStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+        return mongoTemplate
+                .updateMulti(
+                        Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
+                                .and(FIELD_INITIATIVE_ID).is(initiativeId)),
+                        new Update()
+                                .set("%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status), status),
+                        HpanInitiatives.class
+                );
     }
 }

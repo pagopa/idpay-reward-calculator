@@ -1,15 +1,14 @@
 package it.gov.pagopa.reward.service.lookup.ops;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -17,13 +16,17 @@ import java.util.List;
 @Slf4j
 public class DeleteHpanServiceImpl implements DeleteHpanService {
     @Override
-    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, boolean recessFlow) {
+    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
             List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();
             log.trace("[DELETED_HPAN] Is presente in db the follow hpan: {}", hpanUpdateEvaluateDTO.getHpan());
             if (onboardedInitiatives != null){
                OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
                 if (onboardedInitiative!=null) {
-                    return evaluateHpanWithInitiativePresent(hpanUpdateEvaluateDTO, onboardedInitiative, recessFlow);
+                    if(HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus())){
+                        log.error("Unexpected use case, the user unsubscribe from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
+                        return null;
+                    }
+                    return evaluateHpanWithInitiativePresent(hpanUpdateEvaluateDTO, onboardedInitiative);
                 } else{
                     log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanUpdateEvaluateDTO);
                     return null;
@@ -34,7 +37,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
             }
     }
 
-    private OnboardedInitiative evaluateHpanWithInitiativePresent(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative onboardedInitiative, boolean recessFlow) {
+    private OnboardedInitiative evaluateHpanWithInitiativePresent(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative onboardedInitiative) {
         log.trace("[DELETED_HPAN] [HPAN_WITH_INITIATIVE] [INITIATIVE_IS_PRESENT] The hpan: {}, contain the initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
         List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
         if(activeTimeIntervalsList != null) {
@@ -45,7 +48,6 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                     if (lastActiveInterval.getEndInterval() == null) {
                             lastActiveInterval.setEndInterval(endInterval);
                             onboardedInitiative.setLastEndInterval(endInterval);
-                            onboardedInitiative.setStatus(recessFlow ? HpanInitiativeConstants.STATUS_INACTIVE : HpanInitiativeConstants.STATUS_UPDATE);
 
                             return onboardedInitiative;
                         }
@@ -59,7 +61,6 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                         newLastEndInterval = activeTimeIntervalsList.get(activeTimeIntervalsList.size()-1).getEndInterval();
                     }
                     onboardedInitiative.setLastEndInterval(newLastEndInterval);
-                    onboardedInitiative.setStatus(recessFlow ? HpanInitiativeConstants.STATUS_INACTIVE : HpanInitiativeConstants.STATUS_UPDATE);
                     return onboardedInitiative;
                 }
                 log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanUpdateEvaluateDTO);

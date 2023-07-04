@@ -13,7 +13,7 @@ public interface InstrumentApiController {
                                  @PathVariable("initiativeId") String initiativeId);
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PostMapping("/{userId}/{initiativeId}")
-    Mono<Void> rollbackInstruments(@PathVariable("userId") String userId,
-                                 @PathVariable("initiativeId") String initiativeId);
+    @PutMapping("{userId}/{initiativeId}/reactivate")
+    Mono<Void> reactivateInstruments(@PathVariable("userId") String userId,
+                                     @PathVariable("initiativeId") String initiativeId);
 }
