@@ -3,9 +3,12 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +23,9 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -273,5 +278,28 @@ class OnboardedInitiativesServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(Boolean.TRUE, result);
 
+    }
+
+    @Test
+    void onboardedInactive(){
+        // Given
+        TransactionDTO trx = buildTrx(trxDate, hpan);
+
+        Integer bias = 1;
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
+        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .status(HpanInitiativeStatus.INACTIVE)
+                .activeTimeIntervals(new ArrayList<>()).build();
+        hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
+
+        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
+
+        // When
+        List<String> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
+        Assertions.assertNotNull(result);
+
+        // Then
+        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
     }
 }

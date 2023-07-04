@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -123,6 +124,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
                 .map(hpan2initiative -> {
                     hpan2initiative.getOnboardedInitiatives().addAll(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
                                     .initiativeId(initiativeId)
+                                    .status(HpanInitiativeStatus.ACTIVE)
                                     .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
                                             .startInterval(startInterval)
                                             .endInterval(endInterval)
