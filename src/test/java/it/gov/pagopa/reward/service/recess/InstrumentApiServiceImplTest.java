@@ -32,7 +32,7 @@ class InstrumentApiServiceImplTest {
 
         UpdateResult ur = Mockito.mock(UpdateResult.class);
         Mockito.doReturn(Mono.just(ur))
-                .when(hpanInitiativesRepositoryMock).setIfNotEqualsStatus(USERID,INITIATIVEID, HpanInitiativeStatus.INACTIVE);
+                .when(hpanInitiativesRepositoryMock).setStatus(USERID,INITIATIVEID, HpanInitiativeStatus.INACTIVE);
 
         Void result = instrumentApiService.cancelInstruments(USERID, INITIATIVEID).block();
 
@@ -43,7 +43,7 @@ class InstrumentApiServiceImplTest {
 
         UpdateResult ur = Mockito.mock(UpdateResult.class);
         Mockito.doReturn(Mono.just(ur))
-                .when(hpanInitiativesRepositoryMock).setIfNotEqualsStatus(USERID,INITIATIVEID, HpanInitiativeStatus.ACTIVE);
+                .when(hpanInitiativesRepositoryMock).setStatus(USERID,INITIATIVEID, HpanInitiativeStatus.ACTIVE);
 
         Void result = instrumentApiService.reactivateInstruments(USERID, INITIATIVEID).block();
 

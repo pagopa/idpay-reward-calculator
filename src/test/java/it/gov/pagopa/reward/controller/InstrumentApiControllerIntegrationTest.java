@@ -43,7 +43,7 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
     private void configureSpy() {
         Mockito.doThrow(new RuntimeException("DUMMY_EXCEPTION"))
                         .when(hpanInitiativesRepositorySpy)
-                .setIfNotEqualsStatus(Mockito.argThat(arg -> arg.startsWith("USERDUMMY")), Mockito.argThat(arg -> arg.startsWith("INITIATIVEDUMMY")), Mockito.any());
+                .setStatus(Mockito.argThat(arg -> arg.startsWith("USERDUMMY")), Mockito.argThat(arg -> arg.startsWith("INITIATIVEDUMMY")), Mockito.any());
     }
 
     //region useCases
@@ -62,12 +62,16 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
 
             Assertions.assertNotNull(hpanInitiativesFirstCall);
             OnboardedInitiative oiFirstCancel = retrieveOnboardedInitiative(i, hpanInitiativesFirstCall);
+            Assertions.assertNotEquals(oiInitial.getStatus(), oiFirstCancel.getStatus());
             assertionsOnboardedInitiative(oiInitial, oiFirstCancel, HpanInitiativeStatus.INACTIVE);
 
             //resend the request
             extractResponse(cancelInstruments(webTestClient, hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
             HpanInitiatives hpanInitiativesSecondCall = hpanInitiativesRepositorySpy.findById(hpanInitiatives.getHpan()).block();
-            Assertions.assertEquals(hpanInitiativesFirstCall, hpanInitiativesSecondCall);
+            Assertions.assertNotNull(hpanInitiativesSecondCall);
+            OnboardedInitiative oiSecondCancel = retrieveOnboardedInitiative(i, hpanInitiativesSecondCall);
+            Assertions.assertEquals(oiFirstCancel.getStatus(), oiSecondCancel.getStatus());
+            assertionsOnboardedInitiative(oiFirstCancel, oiSecondCancel, HpanInitiativeStatus.INACTIVE);
 
             //reactivate
             extractResponse(reactivateInstruments(webTestClient, hpanInitiatives.getUserId(), initiativeId), HttpStatus.NO_CONTENT, null);
@@ -76,7 +80,8 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
             Assertions.assertNotEquals(hpanInitiativesFirstCall, hpanInitiativesReactivate);
 
             OnboardedInitiative oiReactivate = retrieveOnboardedInitiative(i, hpanInitiativesReactivate);
-            assertionsOnboardedInitiative(oiFirstCancel, oiReactivate, HpanInitiativeStatus.ACTIVE);
+            Assertions.assertNotEquals(oiSecondCancel.getStatus(), oiReactivate.getStatus());
+            assertionsOnboardedInitiative(oiSecondCancel, oiReactivate, HpanInitiativeStatus.ACTIVE);
         });
 
         //usecase 1: Generic error
@@ -99,7 +104,6 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
     private void assertionsOnboardedInitiative(OnboardedInitiative oiBeforeCall, OnboardedInitiative oiAfterCall, HpanInitiativeStatus expectedStatus) {
         Assertions.assertEquals(oiBeforeCall.getInitiativeId(), oiAfterCall.getInitiativeId());
         Assertions.assertEquals(oiBeforeCall.getAcceptanceDate(), oiAfterCall.getAcceptanceDate());
-        Assertions.assertNotEquals(oiBeforeCall.getStatus(), oiAfterCall.getStatus());
         Assertions.assertEquals(expectedStatus, oiAfterCall.getStatus());
         Assertions.assertEquals(oiBeforeCall.getLastEndInterval(), oiAfterCall.getLastEndInterval());
         Assertions.assertEquals(oiBeforeCall.getActiveTimeIntervals(), oiAfterCall.getActiveTimeIntervals());

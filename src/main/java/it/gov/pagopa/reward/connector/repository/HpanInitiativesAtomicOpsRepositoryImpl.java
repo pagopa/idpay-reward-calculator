@@ -78,12 +78,11 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> setIfNotEqualsStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+    public Mono<UpdateResult> setStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
         return mongoTemplate
                 .updateMulti(
                         Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
-                                .and(FIELD_INITIATIVE_ID).is(initiativeId)
-                                .and(FIELD_STATUS).ne(status)),
+                                .and(FIELD_INITIATIVE_ID).is(initiativeId)),
                         new Update()
                                 .set(FIELD_INTERNAL_STATUS, status)
                                 .currentDate(FIELD_INTERNAL_UPDATE_DATE),

@@ -232,21 +232,33 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         storeHpanInitiatives(hpan, now, end, activeIntervalList);
         storeHpanInitiatives(hpan1, now, end, activeIntervalList);
 
-        UpdateResult result = hpanInitiativesRepository.setIfNotEqualsStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.INACTIVE).block();
+        UpdateResult result = hpanInitiativesRepository.setStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.INACTIVE).block();
         Assertions.assertNotNull(result);
 
-        HpanInitiatives hpanAfterCall = hpanInitiativesRepository.findById(hpan).block();
-        Assertions.assertNotNull(hpanAfterCall);
-        OnboardedInitiative initiative = hpanAfterCall.getOnboardedInitiatives().get(1);
+        HpanInitiatives hpanAfterInactiveCall = hpanInitiativesRepository.findById(hpan).block();
+        Assertions.assertNotNull(hpanAfterInactiveCall);
+        OnboardedInitiative initiative = hpanAfterInactiveCall.getOnboardedInitiatives().get(1);
         Assertions.assertEquals(HpanInitiativeStatus.INACTIVE, initiative.getStatus());
         Assertions.assertFalse(initiative.getUpdateDate().isBefore(end));
 
-        HpanInitiatives hpanAfterCall1 = hpanInitiativesRepository.findById(hpan1).block();
-        Assertions.assertNotNull(hpanAfterCall1);
-        OnboardedInitiative initiative1 = hpanAfterCall1.getOnboardedInitiatives().get(1);
+        HpanInitiatives hpanAfterInactiveCall1 = hpanInitiativesRepository.findById(hpan1).block();
+        Assertions.assertNotNull(hpanAfterInactiveCall1);
+        OnboardedInitiative initiative1 = hpanAfterInactiveCall1.getOnboardedInitiatives().get(1);
         Assertions.assertEquals(HpanInitiativeStatus.INACTIVE, initiative1.getStatus());
         Assertions.assertFalse(initiative.getUpdateDate().isBefore(end));
 
+        // reactivate
+        UpdateResult resultReactivate = hpanInitiativesRepository.setStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.ACTIVE).block();
+        Assertions.assertNotNull(resultReactivate);
+        HpanInitiatives hpanAfterActiveCall = hpanInitiativesRepository.findById(hpan).block();
+        Assertions.assertNotNull(hpanAfterActiveCall);
+        OnboardedInitiative initiativeActive = hpanAfterActiveCall.getOnboardedInitiatives().get(1);
+        Assertions.assertEquals(HpanInitiativeStatus.ACTIVE, initiativeActive.getStatus());
+
+        HpanInitiatives hpanAfterActiveCall1 = hpanInitiativesRepository.findById(hpan).block();
+        Assertions.assertNotNull(hpanAfterActiveCall1);
+        OnboardedInitiative initiativeActivate1 = hpanAfterActiveCall1.getOnboardedInitiatives().get(1);
+        Assertions.assertEquals(HpanInitiativeStatus.ACTIVE, initiativeActivate1.getStatus());
     }
 }
 
