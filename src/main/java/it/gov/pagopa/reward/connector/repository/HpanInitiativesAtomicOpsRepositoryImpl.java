@@ -14,6 +14,8 @@ import reactor.core.publisher.Mono;
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
     public static final String FIELD_INITIATIVE_ID = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.initiativeId);
     public static final String FIELD_STATUS = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status);
+    public static final String FIELD_INTERNAL_STATUS = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status);
+    public static final String FIELD_INTERNAL_UPDATE_DATE = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.updateDate);
     private final ReactiveMongoTemplate mongoTemplate;
 
     public HpanInitiativesAtomicOpsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
@@ -83,8 +85,8 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                                 .and(FIELD_INITIATIVE_ID).is(initiativeId)
                                 .and(FIELD_STATUS).ne(status)),
                         new Update()
-                                .set("%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status), status)
-                                .currentDate("%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.updateDate)),
+                                .set(FIELD_INTERNAL_STATUS, status)
+                                .currentDate(FIELD_INTERNAL_UPDATE_DATE),
                         HpanInitiatives.class
                 );
     }
