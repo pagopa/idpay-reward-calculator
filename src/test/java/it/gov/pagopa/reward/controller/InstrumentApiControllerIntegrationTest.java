@@ -43,7 +43,7 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
     private void configureSpy() {
         Mockito.doThrow(new RuntimeException("DUMMY_EXCEPTION"))
                         .when(hpanInitiativesRepositorySpy)
-                .setStatus(Mockito.argThat(arg -> arg.startsWith("USERDUMMY")), Mockito.argThat(arg -> arg.startsWith("INITIATIVEDUMMY")), Mockito.any());
+                .setIfNotEqualsStatus(Mockito.argThat(arg -> arg.startsWith("USERDUMMY")), Mockito.argThat(arg -> arg.startsWith("INITIATIVEDUMMY")), Mockito.any());
     }
 
     //region useCases
@@ -103,6 +103,7 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
         Assertions.assertEquals(expectedStatus, oiAfterCall.getStatus());
         Assertions.assertEquals(oiBeforeCall.getLastEndInterval(), oiAfterCall.getLastEndInterval());
         Assertions.assertEquals(oiBeforeCall.getActiveTimeIntervals(), oiAfterCall.getActiveTimeIntervals());
+        Assertions.assertFalse(oiAfterCall.getUpdateDate().isBefore(oiBeforeCall.getUpdateDate()));
     }
 
     private OnboardedInitiative retrieveOnboardedInitiative(Integer i, HpanInitiatives hpanInitiatives) {

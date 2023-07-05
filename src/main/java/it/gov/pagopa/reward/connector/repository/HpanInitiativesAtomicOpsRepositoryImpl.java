@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
     public static final String FIELD_INITIATIVE_ID = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.initiativeId);
+    public static final String FIELD_STATUS = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status);
     private final ReactiveMongoTemplate mongoTemplate;
 
     public HpanInitiativesAtomicOpsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
@@ -75,13 +76,15 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> setStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+    public Mono<UpdateResult> setIfNotEqualsStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
         return mongoTemplate
                 .updateMulti(
                         Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
-                                .and(FIELD_INITIATIVE_ID).is(initiativeId)),
+                                .and(FIELD_INITIATIVE_ID).is(initiativeId)
+                                .and(FIELD_STATUS).ne(status)),
                         new Update()
-                                .set("%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status), status),
+                                .set("%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status), status)
+                                .currentDate("%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.updateDate)),
                         HpanInitiatives.class
                 );
     }

@@ -19,6 +19,7 @@ public class OnboardedInitiative {
     private String initiativeId;
     private LocalDateTime acceptanceDate;
     private HpanInitiativeStatus status;
+    private LocalDateTime updateDate;
     private LocalDateTime lastEndInterval;
     private List<ActiveTimeInterval> activeTimeIntervals;
 }

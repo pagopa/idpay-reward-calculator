@@ -52,11 +52,13 @@ public class AddHpanServiceImpl implements AddHpanService {
                     if(lastActiveInterval.getEndInterval()==null){
                         lastActiveInterval.setEndInterval(startInterval);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
+                        onboardedInitiative.setUpdateDate(startInterval);
 
                         return onboardedInitiative;
                     } else if (!lastActiveInterval.getEndInterval().isAfter(startInterval)) {
                         onboardedInitiative.setLastEndInterval(null);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
+                        onboardedInitiative.setUpdateDate(startInterval);
 
                         return onboardedInitiative;
                     }
@@ -87,6 +89,7 @@ public class AddHpanServiceImpl implements AddHpanService {
                 .initiativeId(hpanUpdateEvaluateDTO.getInitiativeId())
                 .status(HpanInitiativeStatus.ACTIVE)
                 .acceptanceDate(startInterval)
+                .updateDate(startInterval)
                 .activeTimeIntervals(new ArrayList<>(List.of(initializeInterval(startInterval))))
                 .build();
     }

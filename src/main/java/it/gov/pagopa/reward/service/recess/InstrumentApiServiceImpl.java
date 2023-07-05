@@ -19,13 +19,13 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
     @Override
     public Mono<Void> cancelInstruments(String userId, String initiativeId) {
 
-        return hpanInitiativesRepository.setStatus(userId, initiativeId, HpanInitiativeStatus.INACTIVE)
+        return hpanInitiativesRepository.setIfNotEqualsStatus(userId, initiativeId, HpanInitiativeStatus.INACTIVE)
                 .then();
     }
 
     @Override
     public Mono<Void> reactivateInstruments(String userId, String initiativeId) {
-        return hpanInitiativesRepository.setStatus(userId, initiativeId, HpanInitiativeStatus.ACTIVE)
+        return hpanInitiativesRepository.setIfNotEqualsStatus(userId, initiativeId, HpanInitiativeStatus.ACTIVE)
                 .then();
     }
 }

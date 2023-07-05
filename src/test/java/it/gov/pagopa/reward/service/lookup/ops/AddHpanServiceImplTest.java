@@ -44,6 +44,7 @@ class AddHpanServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
 
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
         List<ActiveTimeInterval> activeTimeIntervals = result.getActiveTimeIntervals();
         Assertions.assertEquals(3,activeTimeIntervals.size());
         Assertions.assertTrue(activeTimeIntervals.contains(ActiveTimeInterval.builder().startInterval(time).build()));
@@ -75,7 +76,7 @@ class AddHpanServiceImplTest {
         OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
         //Then
         Assertions.assertNotNull(result);
-
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
 
         List<ActiveTimeInterval> activeTimeIntervalsResult = result.getActiveTimeIntervals();
         Assertions.assertEquals(3, activeTimeIntervalsResult.size());
@@ -179,6 +180,7 @@ class AddHpanServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertNull(result.getLastEndInterval());
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
     }
 
     @Test
@@ -207,6 +209,7 @@ class AddHpanServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertNull(result.getLastEndInterval());
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
     }
 
     @Test
@@ -275,6 +278,7 @@ class AddHpanServiceImplTest {
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertNull(result.getLastEndInterval());
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
 
         List<ActiveTimeInterval> activeIntervalsListResult = result.getActiveTimeIntervals();
         Assertions.assertEquals(2, activeIntervalsListResult.size());

@@ -78,6 +78,8 @@ class DeleteHpanServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
 
+        Assertions.assertEquals(hpanUpdateEvaluateDTO1.getEvaluationDate(), result.getUpdateDate());
+
         List<ActiveTimeInterval> activeTimeIntervalsResult = result.getActiveTimeIntervals();
         Assertions.assertEquals(2, activeTimeIntervalsResult.size());
 
@@ -204,6 +206,7 @@ class DeleteHpanServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
         Assertions.assertEquals(1, result.getActiveTimeIntervals().size());
         ActiveTimeInterval activeTimeInterval = result.getActiveTimeIntervals().get(0);
         Assertions.assertEquals(timeStartInterval,activeTimeInterval.getStartInterval());
@@ -361,6 +364,7 @@ class DeleteHpanServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result1);
+        Assertions.assertEquals(request.getEvaluationDate(), result1.getUpdateDate());
         Assertions.assertEquals(2, result1.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval= result1.getActiveTimeIntervals().get(result1.getActiveTimeIntervals().size() - 1);
         Assertions.assertNotNull(lastInterval.getEndInterval());
@@ -371,6 +375,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
         Assertions.assertEquals(3, result2.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
         Assertions.assertEquals(elabDateTime, lastInterval2.getStartInterval());
@@ -381,6 +386,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
         Assertions.assertEquals(2, result3.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval3= result3.getActiveTimeIntervals().get(result3.getActiveTimeIntervals().size() - 1);
         Assertions.assertNotNull(lastInterval3.getEndInterval());
@@ -423,6 +429,7 @@ class DeleteHpanServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result1);
+        Assertions.assertEquals(request.getEvaluationDate(), result1.getUpdateDate());
         Assertions.assertEquals(0, result1.getActiveTimeIntervals().size());
         hpanInitiatives.getOnboardedInitiatives().remove(firstAddResult);
 
@@ -430,6 +437,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
         Assertions.assertEquals(1, result2.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
         Assertions.assertEquals(elabDateTime, lastInterval2.getStartInterval());
@@ -439,6 +447,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result3.getUpdateDate());
         Assertions.assertEquals(0, result3.getActiveTimeIntervals().size());
     }
 
