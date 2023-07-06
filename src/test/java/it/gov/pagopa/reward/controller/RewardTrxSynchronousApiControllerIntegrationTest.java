@@ -471,7 +471,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
             Assertions.assertNull(transactionProcessedRepository.findById(refundTrxId).block());
         });
 
-        //useCase 13: user unsubcribed to the initiative
+        //useCase 13: user unsubscribed to the initiative
         useCases.add(i -> {
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
             InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
