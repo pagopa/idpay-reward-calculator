@@ -146,7 +146,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         List<TransactionDTO> trxs = new ArrayList<>(IntStream.range(0, totalRefundedTrxs).mapToObj(this::buildTotalRefundRequests).flatMap(List::stream).toList());
         trxs.addAll(IntStream.range(totalRefundedTrxs, totalRefundedTrxs + partialRefundedTrxs).mapToObj(this::buildPartialRefundRequests).flatMap(List::stream).toList());
 
-        trxs.forEach(t -> onboardHpan(t.getHpan(), trxDateLocalDateTime, trxDateLocalDateTime.plusDays(10), initiativeId));
+        trxs.forEach(t -> onboardHpan(t.getHpan(), t.getUserId(), trxDateLocalDateTime, trxDateLocalDateTime.plusDays(10), initiativeId));
 
         long timePublishOnboardingStart = System.currentTimeMillis();
         trxs.forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardProcessorRequest, null, i.getUserId(), i));
@@ -418,7 +418,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
 
-                    onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+                    onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
                     saveUserInitiativeCounter(trx, useCaseTrxCountMinNeverReached_initialStateOfCounters);
 
                     return List.of(trx, totalRefund);
@@ -439,7 +439,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO totalRefund = buildRefundTrx(i, trx);
                     totalRefund.setAmount(trx.getAmount());
 
-                    onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+                    onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
                     saveUserInitiativeCounter(trx, useCaseTrxCountMinReached_initialStateOfCounters);
 
                     return List.of(trx, totalRefund);
@@ -490,7 +490,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO trx7TF = buildRefundTrx(i, trx7);
                     trx7TF.setAmount(trx7.getAmount());
 
-                    onboardHpan(trx1.getHpan(), trx1.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+                    onboardHpan(trx1.getHpan(), trx1.getUserId(), trx1.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
 
                     return List.of(trx1, trx2, trx3, trx4, trx5, trx6, trx7, trx1TF, trx7TF);
                 },
@@ -711,7 +711,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
                     partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
-                    onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiative2totalRefund.getInitiativeId());
+                    onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), null, initiative2totalRefund.getInitiativeId());
 
                     return List.of(trx, partialRefund);
                 },
@@ -798,7 +798,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
                     partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
-                    onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+                    onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
                     saveUserInitiativeCounter(trx, buildSimpleInitiativeCounter(trx.getUserId(), initiativeTrxMinId, 3L, 10, 8));
 
                     return List.of(trx, partialRefund);
@@ -818,7 +818,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO partialRefund = buildRefundTrx(i, trx);
                     partialRefund.setAmount(BigDecimal.valueOf(1_00));
 
-                    onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+                    onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
                     saveUserInitiativeCounter(trx, buildSimpleInitiativeCounter(trx.getUserId(), initiativeTrxMinId, 4L, 10, 8));
 
                     return List.of(trx, partialRefund);
@@ -874,7 +874,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                     final TransactionDTO trx7PF = buildRefundTrx(i, trx7);
                     trx7PF.setAmount(trx7.getAmount());
 
-                    onboardHpan(trx1.getHpan(), trx1.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
+                    onboardHpan(trx1.getHpan(), trx1.getUserId(), trx1.getTrxDate().toLocalDateTime(), null, initiativeTrxMinId);
 
                     return List.of(trx1, trx2, trx3, trx4, trx5, trx6, trx7, trx1PF1, trx7PF, trx1PF2);
                 },

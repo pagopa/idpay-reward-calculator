@@ -2,8 +2,6 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ErrorManager;
-import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -31,7 +29,6 @@ import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -46,9 +43,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 @TestPropertySource(
@@ -59,16 +56,13 @@ import java.util.stream.StreamSupport;
                 "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
                 "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
         })
-class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTest {
+class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
     private final BigDecimal beneficiaryBudget = BigDecimal.valueOf(10_000, 2);
     public static final long AMOUNT_CENTS = 200_00L;
     public static final BigDecimal AMOUNT = CommonUtilities.centsToEuro(AMOUNT_CENTS);
     public static final BigDecimal REWARD = TestUtils.bigDecimalValue(20);
-
-    private static final int parallelism = 8;
-    private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
 
     @SpyBean
     private UserInitiativeCountersRepository userInitiativeCountersRepositorySpy;
@@ -83,8 +77,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
     @SpyBean
     protected RewardContextHolderService rewardContextHolderService;
 
-    @SpyBean
-    protected ErrorManager errorManagerSpy;
 
     @Value("${app.synchronousTransactions.throttlingSeconds}")
     private int throttlingSeconds;
@@ -102,33 +94,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
 
         configureSpies();
 
-        List<? extends Future<?>> tasks = IntStream.range(0, N)
-                .mapToObj(i -> executor.submit(() -> {
-                    try {
-                        useCases.get(i % useCases.size()).accept(i);
-                    } catch (Exception e) {
-                        throw new IllegalStateException("Unexpected exception thrown during test", e);
-                    }
-                }))
-                .toList();
+        baseParallelismTest(N, useCases);
 
-        for (int i = 0; i < tasks.size(); i++) {
-            try {
-                tasks.get(i).get();
-            } catch (Exception e) {
-                System.err.printf("UseCase %d (bias %d) failed %n", i % useCases.size(), i);
-                Mockito.mockingDetails(errorManagerSpy).getInvocations()
-                        .stream()
-                        .filter(ex->!ex.getArgument(0).getClass().equals(RuntimeException.class))
-                        .forEach(ex -> System.err.println("ErrorManager invocation: " + ex));
-                if (e instanceof RuntimeException runtimeException) {
-                    throw runtimeException;
-                } else if (e.getCause() instanceof AssertionFailedError assertionFailedError) {
-                    throw assertionFailedError;
-                }
-                Assertions.fail(e);
-            }
-        }
     }
 
     private void configureSpies() {
@@ -233,14 +200,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
         trxRequest.setTrxDate(OffsetDateTime.now().plusMinutes(1));
         trxRequest.setAmountCents(AMOUNT_CENTS);
         return trxRequest;
-    }
-
-    private <T> T extractResponse(WebTestClient.ResponseSpec response, HttpStatus expectedHttpStatus, Class<T> expectedBodyClass) {
-        response = response.expectStatus().value(httpStatus -> Assertions.assertEquals(expectedHttpStatus.value(), httpStatus));
-        if (expectedBodyClass != null) {
-            return response.expectBody(expectedBodyClass).returnResult().getResponseBody();
-        }
-        return null;
     }
 
     private void waitThrottling() {
@@ -510,6 +469,16 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseIntegrationTe
 
             Assertions.assertNotNull(transactionProcessedRepository.findById(trxRequest.getTransactionId()).block());
             Assertions.assertNull(transactionProcessedRepository.findById(refundTrxId).block());
+        });
+
+        //useCase 13: user unsubscribed to the initiative
+        useCases.add(i -> {
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REJECTED, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), null);
+
+            assertPreview(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
+            assertAuthorize(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
         });
     }
 

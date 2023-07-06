@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.model;
 
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,8 @@ import java.util.List;
 public class OnboardedInitiative {
     private String initiativeId;
     private LocalDateTime acceptanceDate;
-    private String status;
+    private HpanInitiativeStatus status;
+    private LocalDateTime updateDate;
     private LocalDateTime lastEndInterval;
     private List<ActiveTimeInterval> activeTimeIntervals;
 }

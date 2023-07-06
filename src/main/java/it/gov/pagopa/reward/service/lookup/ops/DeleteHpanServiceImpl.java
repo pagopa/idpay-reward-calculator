@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.lookup.ops;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -8,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -22,6 +22,10 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
             if (onboardedInitiatives != null){
                OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
                 if (onboardedInitiative!=null) {
+                    if(HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus())){
+                        log.error("Unexpected use case, the user unsubscribe from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
+                        return null;
+                    }
                     return evaluateHpanWithInitiativePresent(hpanUpdateEvaluateDTO, onboardedInitiative);
                 } else{
                     log.error("Unexpected use case, the hpan has no reference to the initiative. Source message: {}", hpanUpdateEvaluateDTO);
@@ -44,6 +48,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                     if (lastActiveInterval.getEndInterval() == null) {
                             lastActiveInterval.setEndInterval(endInterval);
                             onboardedInitiative.setLastEndInterval(endInterval);
+                            onboardedInitiative.setUpdateDate(endInterval);
 
                             return onboardedInitiative;
                         }
@@ -57,6 +62,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                         newLastEndInterval = activeTimeIntervalsList.get(activeTimeIntervalsList.size()-1).getEndInterval();
                     }
                     onboardedInitiative.setLastEndInterval(newLastEndInterval);
+                    onboardedInitiative.setUpdateDate(endInterval);
                     return onboardedInitiative;
                 }
                 log.error("Unexpected use case, the hpan is before the last active interval, Source message: {}", hpanUpdateEvaluateDTO);

@@ -2,10 +2,11 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.common.utils.TestUtils;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,12 +23,13 @@ public final class HpanInitiativesFaker {
     public static HpanInitiatives mockInstance(Integer bias){
         HpanInitiatives out = mockInstanceWithoutInitiative(bias);
 
+        LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN);
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status("ACCEPTED")
+                .status(HpanInitiativeStatus.ACTIVE)
+                .updateDate(onboardedTime)
                 .activeTimeIntervals(new ArrayList<>()).build();
 
-        LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN);
         ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(3L))
                 .endInterval(onboardedTime.minusYears(2L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval1);
@@ -66,12 +68,13 @@ public final class HpanInitiativesFaker {
         out.setBrand(fakeValuesService.bothify("?????"));
         out.setUserId(fakeValuesService.bothify("?????"));
 
+        LocalDateTime onboardedTime = LocalDateTime.now();
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status("ACCEPTED")
+                .status(HpanInitiativeStatus.ACTIVE)
+                .updateDate(onboardedTime)
                 .activeTimeIntervals(new ArrayList<>()).build();
 
-        LocalDateTime onboardedTime = LocalDateTime.now();
         ActiveTimeInterval interval1 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusYears(3L))
                 .endInterval(onboardedTime.minusYears(2L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval1);
@@ -95,7 +98,8 @@ public final class HpanInitiativesFaker {
 
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status("ACCEPTED")
+                .status(HpanInitiativeStatus.ACTIVE)
+                .updateDate(onboardedTime)
                 .activeTimeIntervals(new ArrayList<>())
                 .lastEndInterval(lastEndInterval).build();
 
