@@ -359,7 +359,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         final TransactionDTO trx = useCases.get(useCase).getFirst().apply(bias);
         onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED, INITIATIVE_ID_INSTRUMENT_INACTIVE);
 
-        InstrumentApiControllerIntegrationTest.cancelInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
+        InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
 
         return trx;
     }

@@ -9,11 +9,11 @@ public interface InstrumentApiController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{userId}/{initiativeId}")
-    Mono<Void> cancelInstruments(@PathVariable("userId") String userId,
-                                 @PathVariable("initiativeId") String initiativeId);
+    Mono<Void> disableUserInitiativeInstruments(@PathVariable("userId") String userId,
+                                                @PathVariable("initiativeId") String initiativeId);
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("{userId}/{initiativeId}/reactivate")
-    Mono<Void> reactivateInstruments(@PathVariable("userId") String userId,
-                                     @PathVariable("initiativeId") String initiativeId);
+    Mono<Void> enableUserInitiativeInstruments(@PathVariable("userId") String userId,
+                                               @PathVariable("initiativeId") String initiativeId);
 }

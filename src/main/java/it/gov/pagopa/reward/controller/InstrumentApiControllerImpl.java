@@ -16,7 +16,7 @@ public class InstrumentApiControllerImpl implements  InstrumentApiController{
         this.instrumentApiService = instrumentApiService;
     }
     @Override
-    public Mono<Void> cancelInstruments(String userId, String initiativeId) {
+    public Mono<Void> disableUserInitiativeInstruments(String userId, String initiativeId) {
         log.info("[SYNC_CANCEL_INSTRUMENTS] Requesting to cancel instruments for user {} to the initiative {}", userId, initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_CANCEL_INSTRUMENTS",
@@ -25,7 +25,7 @@ public class InstrumentApiControllerImpl implements  InstrumentApiController{
     }
 
     @Override
-    public Mono<Void> reactivateInstruments(String userId, String initiativeId) {
+    public Mono<Void> enableUserInitiativeInstruments(String userId, String initiativeId) {
         log.info("[SYNC_REACTIVATE_INSTRUMENTS] Requesting to reactivate instruments for user {} to the initiative {}", userId, initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_REACTIVATE_INSTRUMENTS",
