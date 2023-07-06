@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
     public static final String FIELD_INITIATIVE_ID = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.initiativeId);
-    public static final String FIELD_STATUS = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status);
     public static final String FIELD_INTERNAL_STATUS = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status);
     public static final String FIELD_INTERNAL_UPDATE_DATE = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.updateDate);
     private final ReactiveMongoTemplate mongoTemplate;
