@@ -17,15 +17,15 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
     }
 
     @Override
-    public Mono<Void> cancelInstruments(String userId, String initiativeId) {
+    public Mono<Void> disableUserInitiativeInstruments(String userId, String initiativeId) {
 
-        return hpanInitiativesRepository.setStatus(userId, initiativeId, HpanInitiativeStatus.INACTIVE)
+        return hpanInitiativesRepository.setUserInitiativeStatus(userId, initiativeId, HpanInitiativeStatus.INACTIVE)
                 .then();
     }
 
     @Override
-    public Mono<Void> reactivateInstruments(String userId, String initiativeId) {
-        return hpanInitiativesRepository.setStatus(userId, initiativeId, HpanInitiativeStatus.ACTIVE)
+    public Mono<Void> enableUserInitiativeInstruments(String userId, String initiativeId) {
+        return hpanInitiativesRepository.setUserInitiativeStatus(userId, initiativeId, HpanInitiativeStatus.ACTIVE)
                 .then();
     }
 }

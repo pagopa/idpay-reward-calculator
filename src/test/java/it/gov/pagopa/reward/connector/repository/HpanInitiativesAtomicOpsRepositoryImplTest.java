@@ -232,7 +232,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         storeHpanInitiatives(hpan, now, end, activeIntervalList);
         storeHpanInitiatives(hpan1, now, end, activeIntervalList);
 
-        UpdateResult result = hpanInitiativesRepository.setStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.INACTIVE).block();
+        UpdateResult result = hpanInitiativesRepository.setUserInitiativeStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.INACTIVE).block();
         Assertions.assertNotNull(result);
 
         HpanInitiatives hpanAfterInactiveCall = hpanInitiativesRepository.findById(hpan).block();
@@ -248,7 +248,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         Assertions.assertFalse(initiative.getUpdateDate().isBefore(end));
 
         // reactivate
-        UpdateResult resultReactivate = hpanInitiativesRepository.setStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.ACTIVE).block();
+        UpdateResult resultReactivate = hpanInitiativesRepository.setUserInitiativeStatus("USERID", "INITIATIVE_2", HpanInitiativeStatus.ACTIVE).block();
         Assertions.assertNotNull(resultReactivate);
         HpanInitiatives hpanAfterActiveCall = hpanInitiativesRepository.findById(hpan).block();
         Assertions.assertNotNull(hpanAfterActiveCall);

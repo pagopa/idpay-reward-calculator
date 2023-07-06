@@ -20,7 +20,7 @@ public class InstrumentApiControllerImpl implements  InstrumentApiController{
         log.info("[SYNC_CANCEL_INSTRUMENTS] Requesting to cancel instruments for user {} to the initiative {}", userId, initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_CANCEL_INSTRUMENTS",
-                instrumentApiService.cancelInstruments(userId, initiativeId),
+                instrumentApiService.disableUserInitiativeInstruments(userId, initiativeId),
                         userId+"_"+initiativeId);
     }
 
@@ -29,7 +29,7 @@ public class InstrumentApiControllerImpl implements  InstrumentApiController{
         log.info("[SYNC_REACTIVATE_INSTRUMENTS] Requesting to reactivate instruments for user {} to the initiative {}", userId, initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_REACTIVATE_INSTRUMENTS",
-                instrumentApiService.reactivateInstruments(userId, initiativeId),
+                instrumentApiService.enableUserInitiativeInstruments(userId, initiativeId),
                 userId+"_"+initiativeId);
     }
 }

@@ -77,7 +77,7 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> setStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+    public Mono<UpdateResult> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
         return mongoTemplate
                 .updateMulti(
                         Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)

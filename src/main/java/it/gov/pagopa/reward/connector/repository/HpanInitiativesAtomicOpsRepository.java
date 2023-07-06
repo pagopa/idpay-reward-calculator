@@ -9,5 +9,5 @@ import reactor.core.publisher.Mono;
 public interface HpanInitiativesAtomicOpsRepository {
     Mono<UpdateResult> createIfNotExist(HpanInitiatives hpanInitiatives);
     Mono<UpdateResult> setInitiative(String hpan, OnboardedInitiative onboardedInitiative);
-    Mono<UpdateResult> setStatus(String userId, String initiativeId, HpanInitiativeStatus status);
+    Mono<UpdateResult> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status);
 }
