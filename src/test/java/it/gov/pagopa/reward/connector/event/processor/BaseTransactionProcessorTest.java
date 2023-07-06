@@ -13,6 +13,7 @@ import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -113,16 +114,18 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
         initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId()).block()));
     }
 
-    protected void onboardHpan(String hpan, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
+    protected void onboardHpan(String hpan,String userId, LocalDateTime startInterval, LocalDateTime endInterval, String... initiativeIds){
         hpanInitiativesRepository.findById(hpan)
                 .defaultIfEmpty(
                         HpanInitiatives.builder()
                                 .hpan(hpan)
+                                .userId(userId)
                                 .onboardedInitiatives(new ArrayList<>())
                                 .build())
                 .map(hpan2initiative -> {
                     hpan2initiative.getOnboardedInitiatives().addAll(Arrays.stream(initiativeIds).map(initiativeId -> OnboardedInitiative.builder()
                                     .initiativeId(initiativeId)
+                                    .status(HpanInitiativeStatus.ACTIVE)
                                     .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
                                             .startInterval(startInterval)
                                             .endInterval(endInterval)
@@ -142,7 +145,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     }
 
     protected void onboardTrxHPanNoCreateUserCounter(TransactionDTO trx, String... initiativeIds) {
-        onboardHpan(trx.getHpan(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
+        onboardHpan(trx.getHpan(), trx.getUserId(), trx.getTrxDate().toLocalDateTime(), trx.getTrxDate().toLocalDateTime().plusSeconds(1), initiativeIds);
     }
 
     protected UserInitiativeCountersWrapper createUserCounter(TransactionDTO trx) {

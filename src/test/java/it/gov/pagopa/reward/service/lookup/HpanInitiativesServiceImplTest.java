@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.lookup.ops.AddHpanService;
@@ -32,7 +33,7 @@ class HpanInitiativesServiceImplTest {
 
         OnboardedInitiative onboardedInitiativeOut = OnboardedInitiative.builder()
                 .initiativeId("INITIATIVEID_OUT")
-                .status("ACEPTED").build();
+                .status(HpanInitiativeStatus.ACTIVE).build();
 
         Mockito.when(addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO)).thenReturn(onboardedInitiativeOut);
 
@@ -60,7 +61,7 @@ class HpanInitiativesServiceImplTest {
 
         OnboardedInitiative onboardedInitiativeOut = OnboardedInitiative.builder()
                 .initiativeId("INITIATIVEID_OUT")
-                .status("ACEPTED").build();
+                .status(HpanInitiativeStatus.ACTIVE).build();
 
         Mockito.when(deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO)).thenReturn(onboardedInitiativeOut);
 

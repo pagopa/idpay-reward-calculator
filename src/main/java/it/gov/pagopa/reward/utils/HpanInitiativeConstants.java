@@ -10,4 +10,5 @@ public final class HpanInitiativeConstants {
 
     public static final String CHANEL_PAYMENT_MANAGER = "PAYMENT_MANAGER";
     public static final String CHANNEL_IDPAY_PAYMENT = "IDPAY_PAYMENT";
+
 }

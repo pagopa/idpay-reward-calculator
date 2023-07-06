@@ -1,11 +1,12 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -62,6 +63,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
                     if (initiativesForHpan != null && initiativesForHpan.getOnboardedInitiatives() != null) {
                         return Flux.fromIterable(initiativesForHpan.getOnboardedInitiatives())
+                                .filter(oi -> HpanInitiativeStatus.ACTIVE.equals(oi.getStatus()))
                                 .flatMap(i -> rewardContextHolderService.getInitiativeConfig(i.getInitiativeId())
                                         .filter(initiativeConfig -> (initiatives == null || initiatives.contains(initiativeConfig.getInitiativeId()))
                                                 && checkInitiativeValidity(initiativeConfig, trxDate)
