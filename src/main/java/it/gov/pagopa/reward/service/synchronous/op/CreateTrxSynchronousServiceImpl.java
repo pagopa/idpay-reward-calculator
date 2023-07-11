@@ -89,7 +89,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
     }
 
     private Mono<Boolean> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
-        return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxDate(), initiativeId)
+        return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxChargeDate(), initiativeId)
                 .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
     }
 
