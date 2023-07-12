@@ -197,7 +197,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
     private SynchronousTransactionRequestDTO buildTrxRequest(Integer bias) {
         SynchronousTransactionRequestDTO trxRequest = SynchronousTransactionRequestDTOFaker.mockInstance(bias);
-        trxRequest.setTrxDate(OffsetDateTime.now().plusMinutes(1));
+        trxRequest.setTrxChargeDate(OffsetDateTime.now().plusMinutes(1));
         trxRequest.setAmountCents(AMOUNT_CENTS);
         return trxRequest;
     }
