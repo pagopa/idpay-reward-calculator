@@ -44,6 +44,9 @@ microservice-chart:
 
   securityContext:
     allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    runAsUser: 10000
+    runAsGroup: 10000
 
   envConfig:
     MONGODB_DBNAME: "idpay"
