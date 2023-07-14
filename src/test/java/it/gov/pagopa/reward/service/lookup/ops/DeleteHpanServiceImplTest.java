@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.lookup.ops;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -76,6 +77,8 @@ class DeleteHpanServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
+
+        Assertions.assertEquals(hpanUpdateEvaluateDTO1.getEvaluationDate(), result.getUpdateDate());
 
         List<ActiveTimeInterval> activeTimeIntervalsResult = result.getActiveTimeIntervals();
         Assertions.assertEquals(2, activeTimeIntervalsResult.size());
@@ -203,6 +206,7 @@ class DeleteHpanServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
         Assertions.assertEquals(1, result.getActiveTimeIntervals().size());
         ActiveTimeInterval activeTimeInterval = result.getActiveTimeIntervals().get(0);
         Assertions.assertEquals(timeStartInterval,activeTimeInterval.getStartInterval());
@@ -253,7 +257,7 @@ class DeleteHpanServiceImplTest {
     @Test
     void unexpectedInitiativeWithoutIntervals(){
         // Given
-        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID").status("ACTIVE").build();
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID").status(HpanInitiativeStatus.ACTIVE).build();
         HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
                 .userId("USERID")
                 .hpan("HPAN")
@@ -279,7 +283,7 @@ class DeleteHpanServiceImplTest {
     @Test
     void unexpectedEmptyActiveInterval(){
         // Given
-        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID").status("ACTIVE").activeTimeIntervals(new ArrayList<>()).build();
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID").status(HpanInitiativeStatus.ACTIVE).activeTimeIntervals(new ArrayList<>()).build();
         HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
                 .userId("USERID")
                 .hpan("HPAN")
@@ -305,7 +309,7 @@ class DeleteHpanServiceImplTest {
     void unexpectedNotMaxActiveInterval(){
         // Given
         OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
-                .status("ACTIVE")
+                .status(HpanInitiativeStatus.ACTIVE)
                 .activeTimeIntervals(new ArrayList<>()).build();
 
         HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
@@ -360,6 +364,7 @@ class DeleteHpanServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result1);
+        Assertions.assertEquals(request.getEvaluationDate(), result1.getUpdateDate());
         Assertions.assertEquals(2, result1.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval= result1.getActiveTimeIntervals().get(result1.getActiveTimeIntervals().size() - 1);
         Assertions.assertNotNull(lastInterval.getEndInterval());
@@ -370,6 +375,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
         Assertions.assertEquals(3, result2.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
         Assertions.assertEquals(elabDateTime, lastInterval2.getStartInterval());
@@ -380,6 +386,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
         Assertions.assertEquals(2, result3.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval3= result3.getActiveTimeIntervals().get(result3.getActiveTimeIntervals().size() - 1);
         Assertions.assertNotNull(lastInterval3.getEndInterval());
@@ -422,6 +429,7 @@ class DeleteHpanServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result1);
+        Assertions.assertEquals(request.getEvaluationDate(), result1.getUpdateDate());
         Assertions.assertEquals(0, result1.getActiveTimeIntervals().size());
         hpanInitiatives.getOnboardedInitiatives().remove(firstAddResult);
 
@@ -429,6 +437,7 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
         Assertions.assertEquals(1, result2.getActiveTimeIntervals().size());
         ActiveTimeInterval lastInterval2 = result2.getActiveTimeIntervals().get(result2.getActiveTimeIntervals().size() - 1);
         Assertions.assertEquals(elabDateTime, lastInterval2.getStartInterval());
@@ -438,6 +447,45 @@ class DeleteHpanServiceImplTest {
         OnboardedInitiative result3 = deleteHpanService.execute(hpanInitiatives, request);
 
         // Then
+        Assertions.assertEquals(request.getEvaluationDate(), result3.getUpdateDate());
         Assertions.assertEquals(0, result3.getActiveTimeIntervals().size());
+    }
+
+    @Test
+    void unexpectedStatus(){
+        // Given
+        DeleteHpanService deleteHpanService = new DeleteHpanServiceImpl();
+
+        LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
+
+        ActiveTimeInterval initialActiveInterval = ActiveTimeInterval.builder().startInterval(now.minusMonths(5L)).endInterval(now.minusDays(1L)).build();
+        List<ActiveTimeInterval> activeList = new ArrayList<>();
+        activeList.add(initialActiveInterval);
+
+        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
+                .status(HpanInitiativeStatus.INACTIVE)
+                .activeTimeIntervals(activeList).build();
+
+        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+                .userId("USERID")
+                .hpan("HPAN")
+                .onboardedInitiatives(List.of(onboarded)).build();
+
+        HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanUpdateEvaluateDTO.builder()
+                .hpan(hpanInitiatives.getHpan())
+                .maskedPan(hpanInitiatives.getMaskedPan())
+                .brandLogo(hpanInitiatives.getBrandLogo())
+                .brand(hpanInitiatives.getBrand())
+                .initiativeId("INITIATIVEID")
+                .userId(hpanInitiatives.getUserId())
+                .evaluationDate(now)
+                .operationType(HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
+                .build();
+
+        // When
+        OnboardedInitiative result = deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+
+        // Then
+        Assertions.assertNull(result);
     }
 }

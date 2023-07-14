@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import org.springframework.dao.DuplicateKeyException;
@@ -12,6 +13,8 @@ import reactor.core.publisher.Mono;
 
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
     public static final String FIELD_INITIATIVE_ID = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.initiativeId);
+    public static final String FIELD_INTERNAL_STATUS = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.status);
+    public static final String FIELD_INTERNAL_UPDATE_DATE = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.updateDate);
     private final ReactiveMongoTemplate mongoTemplate;
 
     public HpanInitiativesAtomicOpsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
@@ -71,5 +74,18 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                         }
                     });
         }
+    }
+
+    @Override
+    public Mono<UpdateResult> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+        return mongoTemplate
+                .updateMulti(
+                        Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
+                                .and(FIELD_INITIATIVE_ID).is(initiativeId)),
+                        new Update()
+                                .set(FIELD_INTERNAL_STATUS, status)
+                                .currentDate(FIELD_INTERNAL_UPDATE_DATE),
+                        HpanInitiatives.class
+                );
     }
 }

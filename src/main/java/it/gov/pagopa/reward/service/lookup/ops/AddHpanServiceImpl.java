@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.lookup.ops;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
@@ -36,6 +37,10 @@ public class AddHpanServiceImpl implements AddHpanService {
         OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream()//.map(OnboardedInitiative::getInitiativeId)
                 .filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
+            if(HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus())){
+                log.error("Unexpected use case, the user unsubscribe from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
+                return null;
+            }
             List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
             LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
 
@@ -47,11 +52,13 @@ public class AddHpanServiceImpl implements AddHpanService {
                     if(lastActiveInterval.getEndInterval()==null){
                         lastActiveInterval.setEndInterval(startInterval);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
+                        onboardedInitiative.setUpdateDate(startInterval);
 
                         return onboardedInitiative;
                     } else if (!lastActiveInterval.getEndInterval().isAfter(startInterval)) {
                         onboardedInitiative.setLastEndInterval(null);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
+                        onboardedInitiative.setUpdateDate(startInterval);
 
                         return onboardedInitiative;
                     }
@@ -80,8 +87,9 @@ public class AddHpanServiceImpl implements AddHpanService {
         LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
         return OnboardedInitiative.builder()
                 .initiativeId(hpanUpdateEvaluateDTO.getInitiativeId())
-                .status("ACCEPTED")
+                .status(HpanInitiativeStatus.ACTIVE)
                 .acceptanceDate(startInterval)
+                .updateDate(startInterval)
                 .activeTimeIntervals(new ArrayList<>(List.of(initializeInterval(startInterval))))
                 .build();
     }
