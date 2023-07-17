@@ -17,6 +17,7 @@ import java.util.List;
 @FieldNameConstants
 public class OnboardedInitiative {
     private String initiativeId;
+    private String familyId;
     private LocalDateTime acceptanceDate;
     private HpanInitiativeStatus status;
     private LocalDateTime updateDate;
