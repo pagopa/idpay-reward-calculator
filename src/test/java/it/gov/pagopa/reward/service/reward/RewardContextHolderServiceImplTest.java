@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
@@ -122,6 +123,7 @@ class RewardContextHolderServiceImplTest {
                 .trxRule(new InitiativeTrxConditions())
                 .rewardRule(new RewardValueDTO())
                 .initiativeRewardType(InitiativeRewardType.REFUND)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
 
 

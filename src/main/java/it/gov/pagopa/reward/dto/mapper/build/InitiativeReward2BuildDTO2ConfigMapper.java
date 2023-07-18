@@ -22,6 +22,7 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
         out.setTrxRule(initiativeReward2BuildDTO.getTrxRule());
         out.setRewardRule(initiativeReward2BuildDTO.getRewardRule());
         out.setInitiativeRewardType(initiativeReward2BuildDTO.getInitiativeRewardType());
+        out.setBeneficiaryType(initiativeReward2BuildDTO.getGeneral().getBeneficiaryType());
         setPeriodicalInfo(initiativeReward2BuildDTO, out);
         return out;
     }
