@@ -30,7 +30,7 @@ public class UserInitiativeCounters extends Counters {
     private long version;
 
     @NonNull
-    private String userId;
+    private String userId; // TODO
     @NonNull
     private String initiativeId;
 
@@ -65,7 +65,6 @@ public class UserInitiativeCounters extends Counters {
         this.monthlyCounters = new HashMap<>();
         this.yearlyCounters = new HashMap<>();
     }
-
     public static String buildId(String userId, String initiativeId) {
         return "%s_%s".formatted(userId, initiativeId);
     }
