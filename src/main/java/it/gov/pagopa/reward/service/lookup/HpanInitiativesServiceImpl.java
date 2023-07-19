@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.lookup.ops.AddHpanService;
@@ -21,9 +22,9 @@ public class HpanInitiativesServiceImpl implements HpanInitiativesService{
     }
 
     @Override
-    public OnboardedInitiative evaluate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanRetrieved) {
+    public OnboardedInitiative evaluate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, HpanInitiatives hpanRetrieved, BaseOnboardingInfo baseOnboardingInfo) {
         return switch (hpanUpdateEvaluateDTO.getOperationType()) {
-            case HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT -> addHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO);
+            case HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT -> addHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO, baseOnboardingInfo);
             case HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT -> deleteHpanService.execute(hpanRetrieved, hpanUpdateEvaluateDTO);
             default -> invalidOperationType(hpanUpdateEvaluateDTO);
         };

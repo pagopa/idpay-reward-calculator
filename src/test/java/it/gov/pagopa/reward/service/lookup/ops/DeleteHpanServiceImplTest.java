@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.lookup.ops;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
@@ -372,7 +373,7 @@ class DeleteHpanServiceImplTest {
 
         // When adding again
         AddHpanService addHpanService = new AddHpanServiceImpl();
-        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
 
         // Then
         Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());
@@ -415,7 +416,7 @@ class DeleteHpanServiceImplTest {
 
         // When adding first interval
         AddHpanService addHpanService = new AddHpanServiceImpl();
-        OnboardedInitiative firstAddResult = addHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative firstAddResult = addHpanService.execute(hpanInitiatives, request, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
 
         // Then
         Assertions.assertEquals(1, firstAddResult.getActiveTimeIntervals().size());
@@ -434,7 +435,7 @@ class DeleteHpanServiceImplTest {
         hpanInitiatives.getOnboardedInitiatives().remove(firstAddResult);
 
         // When adding again
-        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request);
+        OnboardedInitiative result2 = addHpanService.execute(hpanInitiatives, request, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
 
         // Then
         Assertions.assertEquals(request.getEvaluationDate(), result2.getUpdateDate());

@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.lookup.ops;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import lombok.extern.slf4j.Slf4j;
@@ -17,22 +18,22 @@ import java.util.List;
 @Slf4j
 public class AddHpanServiceImpl implements AddHpanService {
     @Override
-    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
+    public OnboardedInitiative execute(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, BaseOnboardingInfo baseOnboardingInfo) {
         List<OnboardedInitiative> onboardedInitiatives = hpanInitiatives.getOnboardedInitiatives();
         log.trace("[ADD_HPAN] Added evaluation for hpan: {}", hpanUpdateEvaluateDTO.getHpan());
         if (onboardedInitiatives != null){
-            return executeHpanUpdate(hpanInitiatives, hpanUpdateEvaluateDTO, onboardedInitiatives);
+            return executeHpanUpdate(hpanInitiatives, hpanUpdateEvaluateDTO, onboardedInitiatives, baseOnboardingInfo);
         } else {
-            return executeHpanCreate(hpanUpdateEvaluateDTO);
+            return executeHpanCreate(hpanUpdateEvaluateDTO, baseOnboardingInfo);
         }
     }
 
-    private OnboardedInitiative executeHpanCreate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
+    private OnboardedInitiative executeHpanCreate(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, BaseOnboardingInfo baseOnboardingInfo) {
         log.trace("[ADD_HPAN] [NEW_HPAN] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
-        return getNewOnboardedInitiative(hpanUpdateEvaluateDTO);
+        return getNewOnboardedInitiative(hpanUpdateEvaluateDTO, baseOnboardingInfo);
     }
 
-    private OnboardedInitiative executeHpanUpdate(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, List<OnboardedInitiative> onboardedInitiatives) {
+    private OnboardedInitiative executeHpanUpdate(HpanInitiatives hpanInitiatives, HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, List<OnboardedInitiative> onboardedInitiatives,  BaseOnboardingInfo baseOnboardingInfo) {
         log.trace("[ADD_HPAN] [HPAN_PRESENT_IN_DB] [HPAN_WITHOUT_ANY_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
         OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream()//.map(OnboardedInitiative::getInitiativeId)
                 .filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
@@ -70,7 +71,7 @@ public class AddHpanServiceImpl implements AddHpanService {
             return null;
         }else{
             log.trace("[ADD_HPAN] [HPAN_WITHOUT_INITIATIVE] Added evaluation for hpan: {} and add initiative: {}", hpanUpdateEvaluateDTO.getHpan(), hpanUpdateEvaluateDTO.getInitiativeId());
-            onboardedInitiative = getNewOnboardedInitiative(hpanUpdateEvaluateDTO);
+            onboardedInitiative = getNewOnboardedInitiative(hpanUpdateEvaluateDTO, baseOnboardingInfo);
             hpanInitiatives.getOnboardedInitiatives().add(onboardedInitiative);
 
             return onboardedInitiative;
@@ -83,14 +84,21 @@ public class AddHpanServiceImpl implements AddHpanService {
                 .build();
     }
 
-    private OnboardedInitiative getNewOnboardedInitiative(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
+    private OnboardedInitiative getNewOnboardedInitiative(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, BaseOnboardingInfo baseOnboardingInfo) {
         LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();
-        return OnboardedInitiative.builder()
+
+        OnboardedInitiative out = OnboardedInitiative.builder()
                 .initiativeId(hpanUpdateEvaluateDTO.getInitiativeId())
                 .status(HpanInitiativeStatus.ACTIVE)
                 .acceptanceDate(startInterval)
                 .updateDate(startInterval)
                 .activeTimeIntervals(new ArrayList<>(List.of(initializeInterval(startInterval))))
                 .build();
+
+        if(baseOnboardingInfo.getFamilyId() != null){
+            out.setFamilyId(baseOnboardingInfo.getFamilyId());
+        }
+
+        return out;
     }
 }

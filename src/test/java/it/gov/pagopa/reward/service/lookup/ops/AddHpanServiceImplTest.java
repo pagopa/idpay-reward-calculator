@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.lookup.ops;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
@@ -39,7 +40,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT);
 
         // When
-         OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+         OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
 
         // Then
         Assertions.assertNotNull(result);
@@ -73,7 +74,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT);
 
         //When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
         //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(hpanUpdateEvaluateDTO.getEvaluationDate(), result.getUpdateDate());
@@ -112,7 +113,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT);
 
         // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
         // Then
         Assertions.assertNull(result);
     }
@@ -147,8 +148,8 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO2.setOperationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT);
 
         // When
-        OnboardedInitiative resultBeforeAllActiveIntervals = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1);
-        OnboardedInitiative resultBeforeLastActiveIntervalsAndAfterAnyInterval = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO2);
+        OnboardedInitiative resultBeforeAllActiveIntervals = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO1, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
+        OnboardedInitiative resultBeforeLastActiveIntervalsAndAfterAnyInterval = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO2, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
 
         // Then
         Assertions.assertNull(resultBeforeAllActiveIntervals);
@@ -176,7 +177,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT);
 
         // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVE_%d".formatted(bias)).build());
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertNull(result.getLastEndInterval());
@@ -205,7 +206,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT);
 
         // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("First_INITIATIVE_%d".formatted(bias)).build());
         // Then
         Assertions.assertNotNull(result);
         Assertions.assertNull(result.getLastEndInterval());
@@ -236,7 +237,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("ADD_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVEID").build());
 
         // Then
         Assertions.assertNull(result);
@@ -273,7 +274,7 @@ class AddHpanServiceImplTest {
         hpanUpdateEvaluateDTO.setOperationType("ADD_INSTRUMENT");
 
         // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVEID").build());
 
         // Then
         Assertions.assertNotNull(result);
@@ -319,7 +320,7 @@ class AddHpanServiceImplTest {
                 .build();
 
         // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, BaseOnboardingInfo.builder().initiativeId("INITIATIVEID").build());
 
         // Then
         Assertions.assertNull(result);
