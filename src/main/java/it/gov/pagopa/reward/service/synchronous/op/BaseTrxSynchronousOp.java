@@ -90,13 +90,9 @@ abstract class BaseTrxSynchronousOp {
     }
 
     protected String retrieveCounterEntityId(InitiativeConfig initiativeConfig, OnboardingInfo onboardingInfo, TransactionDTO trxDTO) {
-        if (initiativeConfig != null) {
+
             return InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(initiativeConfig.getBeneficiaryType())
                     ? onboardingInfo.getFamilyId() : trxDTO.getUserId();
-        } else {
-            return onboardingInfo.getFamilyId() != null
-                    ? onboardingInfo.getFamilyId() : trxDTO.getUserId();
-        }
     }
 
 }
