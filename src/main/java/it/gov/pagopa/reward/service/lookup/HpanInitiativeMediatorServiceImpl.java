@@ -152,7 +152,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         BaseOnboardingInfo baseOnboardingInfo = new BaseOnboardingInfo(hpanUpdateEvaluateDTO.getInitiativeId(), null);
 
         return hpanInitiativesRepository.findById(hpanUpdateEvaluateDTO.getHpan())
-                .switchIfEmpty(getNewHpanInitiativeAndInitializeCounter(hpanUpdateEvaluateDTO, baseOnboardingInfo))
+                .switchIfEmpty(Mono.defer(() -> getNewHpanInitiativeAndInitializeCounter(hpanUpdateEvaluateDTO, baseOnboardingInfo)))
                 .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives, baseOnboardingInfo))
                 .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
                 .map(ur -> hpanUpdateEvaluateDTO.getHpan());
