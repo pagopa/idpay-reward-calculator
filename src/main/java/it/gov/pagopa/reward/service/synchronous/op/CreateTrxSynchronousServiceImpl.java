@@ -46,7 +46,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
             TransactionProcessed2SyncTrxResponseDTOMapper syncTrxResponseDTOMapper) {
-        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
+        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper, rewardContextHolderService);
 
         this.rewardContextHolderService = rewardContextHolderService;
         this.onboardedInitiativesService = onboardedInitiativesService;

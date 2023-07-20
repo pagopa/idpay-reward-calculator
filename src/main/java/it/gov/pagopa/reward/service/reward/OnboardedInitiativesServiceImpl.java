@@ -36,7 +36,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     public Flux<InitiativeConfig> getInitiatives(TransactionDTO trx) {
         if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
             return getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null)
-                    .map(Pair::getFirst); // TODO The refund's initiatives does not support family unit
+                    .map(Pair::getFirst); // Async trx support just physical person initiatives (not families)
         } else {
             if(trx.getRefundInfo() != null){
                 return Flux.fromIterable(trx.getRefundInfo().getPreviousRewards().keySet())

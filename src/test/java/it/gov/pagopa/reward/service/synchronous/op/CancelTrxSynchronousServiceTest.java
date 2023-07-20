@@ -35,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -116,10 +117,17 @@ public class CancelTrxSynchronousServiceTest {
 
         TransactionProcessed trxRefund = TransactionProcessedFaker.mockInstance(1);
         trxRefund.setUserId(trx.getUserId());
+        trxRefund.setRewards(Map.of(
+                "INITIATIVEID0",
+                new Reward("INITIATIVEID0","ORGANIZATION_"+"INITIATIVEID0", BigDecimal.valueOf(10))));
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId() + "_REFUND")).thenReturn(Mono.just(trxRefund));
 
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), "INITIATIVEID0")))
                 .thenReturn(Mono.just(new UserInitiativeCounters(trx.getUserId(), "INITIATIVEID0")));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder().initiativeId("INITIATIVEID0").beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PG).build();
+
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVEID0")).thenReturn(Mono.just(initiativeConfig));
 
         // When
         Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());

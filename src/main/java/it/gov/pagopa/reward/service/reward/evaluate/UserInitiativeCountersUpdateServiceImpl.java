@@ -84,8 +84,10 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
                                         /* set RewardCounters in RewardTransactionDTO object */
                                         reward.setCounters(rewardCountersMapper.apply(initiativeCounter, ruleEngineResult, initiativeConfig));
-                                        reward.setFamilyId(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(initiativeConfig.getBeneficiaryType())
-                                        ? initiativeCounter.getUserId() : null);
+
+                                        if (InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(initiativeConfig.getBeneficiaryType())) {
+                                            reward.setFamilyId(initiativeCounter.getUserId());
+                                        }
                                     });
                         })
                 .then(Mono.just(ruleEngineResult));

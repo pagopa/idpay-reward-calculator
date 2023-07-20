@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTO
 import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResponseDTOMapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
@@ -42,6 +43,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -198,6 +200,9 @@ class CreateTrxSynchronousServiceImplTest {
 
         TransactionProcessed transactionProcessed = TransactionProcessed.builder()
                 .id(trx.getId())
+                .rewards(Map.of(
+                                initiativeId,
+                                new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
                 .userId(trx.getUserId())
                 .build();
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(transactionProcessed));
@@ -259,6 +264,9 @@ class CreateTrxSynchronousServiceImplTest {
         if(previousStuck){
             TransactionProcessed trxProcessed = TransactionProcessed.builder()
                     .id(authorizeRequest.getTransactionId())
+                    .rewards(Map.of(
+                                    initiativeId,
+                                    new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
                     .userId(authorizeRequest.getUserId())
                     .build();
             previousTrxProcessMono = Mono.just(trxProcessed);
