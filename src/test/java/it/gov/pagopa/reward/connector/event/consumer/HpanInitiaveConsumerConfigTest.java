@@ -62,9 +62,9 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_PF = "INITIATIVE_ID_PF";
     private static final String INITIATIVE_ID_NF = "INITIATIVE_ID_NF";
 
-    int dbElementsNumbers = 200;
-    int updatedHpanNumbers = 1000;
-    int minBiasForNFInitiative = dbElementsNumbers + ((updatedHpanNumbers - dbElementsNumbers)/2);
+    private final int dbElementsNumbers = 200;
+    private final int updatedHpanNumbers = 1000;
+    private final int minBiasForNFInitiative = dbElementsNumbers + ((updatedHpanNumbers - dbElementsNumbers)/2);
 
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
@@ -237,12 +237,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                         .memberIds(Set.of("USERID_%d".formatted(i))).build())
                 . toList();
 
-        ofList.forEach(of -> onboardingFamiliesRepository.save(of).subscribe(hSaved -> log.debug("saved family: {}", of.getFamilyId())));
-
-        long[] countSaved={0};
-        //noinspection ConstantConditions
-        TestUtils.waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= ofList.size(), ()->"Expected %d saved initiatives, read %d".formatted(ofList.size(), countSaved[0]), 60, 1000);
-
+        onboardingFamiliesRepository.saveAll(ofList).collectList().block();
     }
 
     private void initializeConcurrencyCase(){

@@ -153,18 +153,18 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         return hpanInitiativesRepository.findById(hpanUpdateEvaluateDTO.getHpan())
                 .switchIfEmpty(Mono.defer(() -> getNewHpanInitiatives(hpanUpdateEvaluateDTO)))
                 .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives))
-                .flatMap(oi -> initializeCounterAndIfRetrieveFamily(hpanUpdateEvaluateDTO, oi))
+                .flatMap(oi -> initializeCounterAndRetrieveFamily(hpanUpdateEvaluateDTO, oi))
                 .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
                 .map(ur -> hpanUpdateEvaluateDTO.getHpan());
     }
 
     @NotNull
-    private Mono<OnboardedInitiative> initializeCounterAndIfRetrieveFamily(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative oi) {
+    private Mono<OnboardedInitiative> initializeCounterAndRetrieveFamily(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative oi) {
         if(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT.equals(hpanUpdateEvaluateDTO.getOperationType()) && oi.getActiveTimeIntervals().size() == 1){
             return retrieveAndEvaluateInitiative(hpanUpdateEvaluateDTO)
                     .doOnNext(oi::setFamilyId)
                     .switchIfEmpty(Mono.just(hpanUpdateEvaluateDTO.getUserId()))
-                    .flatMap(userFamilyId -> userInitiativeCountersRepository.createIfNotExists(userFamilyId, hpanUpdateEvaluateDTO.getInitiativeId()))
+                    .flatMap(counterSubjectId  -> userInitiativeCountersRepository.createIfNotExists(counterSubjectId , hpanUpdateEvaluateDTO.getInitiativeId()))
                     .then(Mono.just(oi));
         }
         return Mono.just(oi);
