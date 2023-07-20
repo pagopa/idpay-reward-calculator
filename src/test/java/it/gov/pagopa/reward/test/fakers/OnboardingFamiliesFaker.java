@@ -41,7 +41,7 @@ public class OnboardingFamiliesFaker {
     }
 
     public static OnboardingFamilies.OnboardingFamiliesBuilder mockInstanceBuilder(Integer bias) {
-        String familyId = "FAMILYID_%d".formatted(bias);
+        String familyId = "FAM.ID_%d".formatted(bias);
         String initiativeId = "INITIATIVEID_%d".formatted(bias);
         return OnboardingFamilies.builder()
                 .id(OnboardingFamilies.buildId(familyId, initiativeId))

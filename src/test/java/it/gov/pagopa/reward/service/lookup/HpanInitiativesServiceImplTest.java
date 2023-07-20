@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
-import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.lookup.ops.AddHpanService;
@@ -36,16 +35,14 @@ class HpanInitiativesServiceImplTest {
                 .initiativeId("INITIATIVEID_OUT")
                 .status(HpanInitiativeStatus.ACTIVE).build();
 
-        BaseOnboardingInfo baseOnboardingInfo = BaseOnboardingInfo.builder().initiativeId("INITIATIVEID_OUT").build();
-
-        Mockito.when(addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO, baseOnboardingInfo)).thenReturn(onboardedInitiativeOut);
+        Mockito.when(addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO)).thenReturn(onboardedInitiativeOut);
 
         // When
-        OnboardedInitiative result = hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives, baseOnboardingInfo);
+        OnboardedInitiative result = hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(onboardedInitiativeOut, result);
-        Mockito.verify(addHpanService, Mockito.only()).execute(Mockito.same(hpanInitiatives), Mockito.same(hpanUpdateEvaluateDTO), Mockito.same(baseOnboardingInfo));
+        Mockito.verify(addHpanService, Mockito.only()).execute(Mockito.same(hpanInitiatives), Mockito.same(hpanUpdateEvaluateDTO));
         Mockito.verify(deleteHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanUpdateEvaluateDTO.class));
     }
 
@@ -68,15 +65,13 @@ class HpanInitiativesServiceImplTest {
 
         Mockito.when(deleteHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO)).thenReturn(onboardedInitiativeOut);
 
-        BaseOnboardingInfo baseOnboardingInfo = BaseOnboardingInfo.builder().initiativeId("INITIATIVEID_OUT").build();
-
         // When
-        OnboardedInitiative result = hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives, baseOnboardingInfo);
+        OnboardedInitiative result = hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(onboardedInitiativeOut, result);
         Mockito.verify(deleteHpanService, Mockito.only()).execute(Mockito.same(hpanInitiatives), Mockito.same(hpanUpdateEvaluateDTO));
-        Mockito.verify(addHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanUpdateEvaluateDTO.class), Mockito.any(BaseOnboardingInfo.class));
+        Mockito.verify(addHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanUpdateEvaluateDTO.class));
     }
 
     @Test
@@ -97,14 +92,12 @@ class HpanInitiativesServiceImplTest {
         hpanUpdateEvaluateDTO.setEvaluationDate(LocalDateTime.now());
         hpanUpdateEvaluateDTO.setOperationType("COMMAND_INSTRUMENT");
 
-        BaseOnboardingInfo baseOnboardingInfo = BaseOnboardingInfo.builder().initiativeId("ANOTHER_INITIATIVE_%d").build();
-
         //When
-        OnboardedInitiative result = hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives, baseOnboardingInfo);
+        OnboardedInitiative result = hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives);
 
         // Then
         Assertions.assertNull(result);
-        Mockito.verify(addHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanUpdateEvaluateDTO.class), Mockito.any(BaseOnboardingInfo.class));
+        Mockito.verify(addHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanUpdateEvaluateDTO.class));
         Mockito.verify(deleteHpanService, Mockito.never()).execute(Mockito.any(HpanInitiatives.class), Mockito.any(HpanUpdateEvaluateDTO.class));
     }
 }

@@ -22,22 +22,13 @@ public class OnboardingFamilies {
     private String familyId;
     private String initiativeId;
     private Set<String> memberIds;
-    private OnboardingFamilyEvaluationStatus status;
+    private String status;
     private List<OnboardingRejectionReason> onboardingRejectionReasons;
     private LocalDateTime createDate;
 
 
     public static String buildId(String familyId, String initiativeId) {
         return "%s_%s".formatted(familyId, initiativeId);
-    }
-
-    public enum OnboardingFamilyEvaluationStatus {
-        /** if family members are allowed to join */
-        ONBOARDING_KO,
-        /** if family members are NOT allowed to join */
-        ONBOARDING_OK,
-        /** if family evaluation is in progress */
-        IN_PROGRESS,
     }
 
 }

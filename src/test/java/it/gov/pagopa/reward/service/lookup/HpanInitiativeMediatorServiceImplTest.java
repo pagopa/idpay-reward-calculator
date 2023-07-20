@@ -8,11 +8,10 @@ import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.*;
-import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanList2HpanUpdateOutcomeDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
-import it.gov.pagopa.reward.model.BaseOnboardingInfo;
+import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
@@ -186,16 +185,30 @@ class HpanInitiativeMediatorServiceImplTest {
 
 
         //endregion
-        OnboardedInitiative onboardedInitiativeOut1 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_VALID").build();
+        ActiveTimeInterval activeTimeInterval1 = ActiveTimeInterval.builder()
+                .startInterval(LocalDateTime.now().minusMonths(10L))
+                .endInterval(LocalDateTime.now().minusMonths(8L)).build();
 
-        OnboardedInitiative onboardedInitiativeOut2 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_NOT_DATE").build();
-        OnboardedInitiative onboardedInitiativeOut3 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_ERROR_PUBLISHED").build();
+        ActiveTimeInterval activeTimeInterval2 = ActiveTimeInterval.builder()
+                .startInterval(LocalDateTime.now().minusMonths(5L))
+                .endInterval(LocalDateTime.now().minusMonths(3L)).build();
 
-        Mockito.when(hpanInitiativesServiceMock.evaluate(Mockito.eq(hpanUpdateValidHpan),Mockito.eq(hpanInitiatives1), Mockito.any()))
+        OnboardedInitiative onboardedInitiativeOut1 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_VALID")
+                .activeTimeIntervals(List.of(activeTimeInterval1, activeTimeInterval2))
+                .build();
+
+        OnboardedInitiative onboardedInitiativeOut2 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_NOT_DATE")
+                .activeTimeIntervals(List.of(activeTimeInterval1, activeTimeInterval2))
+                .build();
+        OnboardedInitiative onboardedInitiativeOut3 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_ERROR_PUBLISHED")
+                .activeTimeIntervals(List.of(activeTimeInterval1, activeTimeInterval2))
+                .build();
+
+        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateValidHpan,hpanInitiatives1))
                 .thenReturn(onboardedInitiativeOut1);
-        Mockito.when(hpanInitiativesServiceMock.evaluate(Mockito.eq(hpanUpdateNotDate), Mockito.eq(hpanInitiatives2), Mockito.any()))
+        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateNotDate,hpanInitiatives2))
                 .thenReturn(onboardedInitiativeOut2);
-        Mockito.when(hpanInitiativesServiceMock.evaluate(Mockito.eq(hpanUpdateErrorPublished),Mockito.eq(hpanInitiatives3), Mockito.any()))
+        Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateErrorPublished,hpanInitiatives3))
                 .thenReturn(onboardedInitiativeOut3);
 
         UpdateResult updateResult = Mockito.mock(UpdateResult.class);
@@ -236,7 +249,7 @@ class HpanInitiativeMediatorServiceImplTest {
                 )));
         // Then
         Mockito.verify(hpanInitiativesRepositoryMock,Mockito.times(3)).findById(Mockito.anyString());
-        Mockito.verify(hpanInitiativesServiceMock,Mockito.times(3)).evaluate(Mockito.any(HpanUpdateEvaluateDTO.class),Mockito.any(HpanInitiatives.class), Mockito.any(BaseOnboardingInfo.class));
+        Mockito.verify(hpanInitiativesServiceMock,Mockito.times(3)).evaluate(Mockito.any(HpanUpdateEvaluateDTO.class),Mockito.any(HpanInitiatives.class));
         Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(3)).setInitiative(Mockito.anyString(), Mockito.any());
         Mockito.verify(rewardErrorNotifierServiceMock,Mockito.times(2)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(Throwable.class));
         Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(1)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(NullPointerException.class));

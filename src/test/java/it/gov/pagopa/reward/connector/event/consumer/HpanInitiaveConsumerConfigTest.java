@@ -4,18 +4,25 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.lookup.HpanUpdateNotifierService;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
+import it.gov.pagopa.reward.test.fakers.OnboardingFamiliesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -41,6 +48,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Slf4j
 @TestPropertySource(properties = {
@@ -51,14 +59,26 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
+    private static final String INITIATIVE_ID_PF = "INITIATIVE_ID_PF";
+    private static final String INITIATIVE_ID_NF = "INITIATIVE_ID_NF";
+
+    int dbElementsNumbers = 200;
+    int updatedHpanNumbers = 1000;
+    int minBiasForNFInitiative = dbElementsNumbers + ((updatedHpanNumbers - dbElementsNumbers)/2);
 
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
 
+    @Autowired
+    private OnboardingFamiliesRepository onboardingFamiliesRepository;
+
     @SpyBean
     private HpanUpdateNotifierService hpanUpdateNotifierServiceSpy;
+
+    @SpyBean
+    private RewardContextHolderService rewardContextHolderService;
 
     @AfterEach
     void cleanData(){
@@ -67,13 +87,12 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
     @Test
     void hpanInitiativeConsumer() {
-        int dbElementsNumbers = 200;
-        int updatedHpanNumbers = 1000;
         int notValidMessages = errorUseCases.size();
         int concurrencyMessages = 2;
         long maxWaitingMs = 30000;
 
         initializeDB(dbElementsNumbers);
+        initializeRules();
 
         List<String> hpanUpdatedEvents = new ArrayList<>(buildValidPayloads(0,dbElementsNumbers));
         hpanUpdatedEvents.addAll(IntStream.range(0, notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
@@ -165,7 +184,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
             }
         });
 
-        //region Check for whit Payment Manager Channel
+        //region Check for with Payment Manager Channel
         List<Mono<HpanInitiatives>> closeIntervalsChannelPaymentManager = IntStream.range(0, dbElementsNumbers /2).mapToObj(i -> hpanInitiativesRepository.findById("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%s".formatted(i))).toList();
         closeIntervalsChannelPaymentManager.forEach(hpanInitiativesMono -> {
             HpanInitiatives hpanInitiativeResult= hpanInitiativesMono.block();
@@ -198,14 +217,31 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     void initializeDB(int requestElements){
         int initiativesWithCloseIntervals = requestElements/2;
         IntStream.range(0, initiativesWithCloseIntervals).
-                mapToObj(HpanInitiativesFaker::mockInstanceWithCloseIntervals)
+                mapToObj(i -> HpanInitiativesFaker.mockInstanceWithCloseIntervals(i, INITIATIVE_ID_PF))
                 .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
         IntStream.range(initiativesWithCloseIntervals, requestElements)
-                .mapToObj(HpanInitiativesFaker::mockInstance)
+                .mapToObj(i ->HpanInitiativesFaker.mockInstance(i, INITIATIVE_ID_PF))
                 .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
         initializeConcurrencyCase();
         initializeChannelManagementChannel(requestElements);
         waitForDB(requestElements+1+requestElements);
+
+        initializeFamily();
+
+    }
+
+    private void initializeFamily() {
+        List<OnboardingFamilies> ofList = IntStream.range(minBiasForNFInitiative+1, updatedHpanNumbers)
+                .mapToObj(i -> OnboardingFamiliesFaker.mockInstanceBuilder(i)
+                        .initiativeId(INITIATIVE_ID_NF)
+                        .memberIds(Set.of("USERID_%d".formatted(i))).build())
+                . toList();
+
+        ofList.forEach(of -> onboardingFamiliesRepository.save(of).subscribe(hSaved -> log.debug("saved family: {}", of.getFamilyId())));
+
+        long[] countSaved={0};
+        //noinspection ConstantConditions
+        TestUtils.waitFor(()->(countSaved[0]=hpanInitiativesRepository.count().block()) >= ofList.size(), ()->"Expected %d saved initiatives, read %d".formatted(ofList.size(), countSaved[0]), 60, 1000);
 
     }
 
@@ -247,6 +283,21 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 .forEach(h -> hpanInitiativesRepository.save(h).subscribe(hSaved -> log.debug("saved hpan: {}", hSaved.getHpan())));
     }
 
+    private void initializeRules(){
+        InitiativeReward2BuildDTO initiativePF = InitiativeReward2BuildDTOFaker.mockInstance(1);
+        initiativePF.setInitiativeId(INITIATIVE_ID_PF);
+        initiativePF.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF);
+
+        InitiativeReward2BuildDTO initiativeNF = InitiativeReward2BuildDTOFaker.mockInstance(1);
+        initiativeNF.setInitiativeId(INITIATIVE_ID_NF);
+        initiativeNF.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
+
+        Stream.of(initiativePF, initiativeNF)
+                        .map(TestUtils::jsonSerializer)
+                                .forEach(m -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, m) );
+
+        RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
+    }
     private void waitForDB(int N) {
         long[] countSaved={0};
         //noinspection ConstantConditions
@@ -259,6 +310,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                         .operationDate(LocalDateTime.now().plusDays(10L))
                         .operationType(i%2 == 0 ? HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT : HpanInitiativeConstants.OPERATION_DELETE_INSTRUMENT)
                         .channel(i%2 == 0 ? HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER : HpanInitiativeConstants.CHANNEL_IDPAY_PAYMENT)
+                        .initiativeId(i > minBiasForNFInitiative ? INITIATIVE_ID_NF : INITIATIVE_ID_PF)
                         .build())
                 .map(TestUtils::jsonSerializer)
                 .toList();
@@ -449,7 +501,9 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private void checkUserInitiativeCounters(int newHPans) {
         int[] i = new int[]{200};
         Assertions.assertEquals(newHPans, userInitiativeCountersRepository.count().block());
-        Objects.requireNonNull(userInitiativeCountersRepository.findAll().sort(Comparator.comparing(UserInitiativeCounters::getUserId))
+        Objects.requireNonNull(userInitiativeCountersRepository.findAll()
+                                .sort(Comparator.comparing(UserInitiativeCounters::getUserId,
+                                        Comparator.comparing(u -> u.substring(7))))
                 .collectList()
                 .block()
                 )
@@ -458,7 +512,12 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                     Assertions.assertEquals(i[0], bias);
                     i[0]+=2;
 
-                    UserInitiativeCounters expectedCounter = new UserInitiativeCounters("USERID_" + bias, "INITIATIVE_" + bias);
+                    UserInitiativeCounters expectedCounter;
+                    if(bias > minBiasForNFInitiative){
+                        expectedCounter = new UserInitiativeCounters("FAM.ID_" + bias, INITIATIVE_ID_NF);
+                    } else {
+                        expectedCounter = new UserInitiativeCounters("USERID_" + bias, INITIATIVE_ID_PF);
+                    }
                     Assertions.assertTrue(c.getUpdateDate().isBefore(expectedCounter.getUpdateDate()));
                     Assertions.assertTrue(c.getUpdateDate().isAfter(expectedCounter.getUpdateDate().truncatedTo(ChronoUnit.HOURS)));
                     expectedCounter.setUpdateDate(c.getUpdateDate());

@@ -13,8 +13,8 @@ import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanList2HpanUpdateOutcomeDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
-import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -149,24 +149,25 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     private Mono<String> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
-        BaseOnboardingInfo baseOnboardingInfo = new BaseOnboardingInfo(hpanUpdateEvaluateDTO.getInitiativeId(), null);
 
         return hpanInitiativesRepository.findById(hpanUpdateEvaluateDTO.getHpan())
-                .switchIfEmpty(Mono.defer(() -> getNewHpanInitiativeAndInitializeCounter(hpanUpdateEvaluateDTO, baseOnboardingInfo)))
-                .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives, baseOnboardingInfo))
+                .switchIfEmpty(Mono.defer(() -> getNewHpanInitiatives(hpanUpdateEvaluateDTO)))
+                .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives))
+                .flatMap(oi -> initializeCounterAndIfRetrieveFamily(hpanUpdateEvaluateDTO, oi))
                 .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
                 .map(ur -> hpanUpdateEvaluateDTO.getHpan());
     }
 
     @NotNull
-    private Mono<HpanInitiatives> getNewHpanInitiativeAndInitializeCounter(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, BaseOnboardingInfo baseOnboardingInfo) {
-        return getNewHpanInitiatives(hpanUpdateEvaluateDTO)
-                .flatMap(
-                        hpanInitiative -> retrieveAndSetFamilyId(hpanUpdateEvaluateDTO, baseOnboardingInfo)
-                                .switchIfEmpty(Mono.just(hpanUpdateEvaluateDTO.getUserId()))
-                                .flatMap(userFamilyId -> userInitiativeCountersRepository.createIfNotExists(userFamilyId, hpanUpdateEvaluateDTO.getInitiativeId()))
-                                .then(Mono.just(hpanInitiative))
-                );
+    private Mono<OnboardedInitiative> initializeCounterAndIfRetrieveFamily(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative oi) {
+        if(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT.equals(hpanUpdateEvaluateDTO.getOperationType()) && oi.getActiveTimeIntervals().size() == 1){
+            return retrieveAndEvaluateInitiative(hpanUpdateEvaluateDTO)
+                    .doOnNext(oi::setFamilyId)
+                    .switchIfEmpty(Mono.just(hpanUpdateEvaluateDTO.getUserId()))
+                    .flatMap(userFamilyId -> userInitiativeCountersRepository.createIfNotExists(userFamilyId, hpanUpdateEvaluateDTO.getInitiativeId()))
+                    .then(Mono.just(oi));
+        }
+        return Mono.just(oi);
     }
 
     private Mono<HpanInitiatives> getNewHpanInitiatives(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
@@ -181,12 +182,12 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         }
     }
 
-    private Mono<String> retrieveAndSetFamilyId(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, BaseOnboardingInfo baseOnboardingInfo) {
+    private Mono<String> retrieveAndEvaluateInitiative(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
         return rewardContextHolderService.getInitiativeConfig(hpanUpdateEvaluateDTO.getInitiativeId())
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Cannot find initiative having id %s".formatted(hpanUpdateEvaluateDTO.getInitiativeId()))))
                 .flatMap(i -> InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(i.getBeneficiaryType())
                         ? retrieveFamilyId(hpanUpdateEvaluateDTO)
-                        : Mono.empty())
-                .doOnNext(baseOnboardingInfo::setFamilyId);
+                        : Mono.empty());
     }
 
     private Mono<String> retrieveFamilyId(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO){
