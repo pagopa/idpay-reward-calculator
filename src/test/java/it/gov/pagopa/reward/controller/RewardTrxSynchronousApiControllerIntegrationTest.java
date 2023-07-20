@@ -216,10 +216,6 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .channel(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)
                 .build();
 
-        if (INITIATIVEID_NF.equals(initiativeId)) {
-            onboardFamily(userId);
-        }
-
         kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicHpanInitiativeLookupConsumer, null, userId, TestUtils.jsonSerializer(hpanInitiativeBulkDTO));
 
         TestUtils.waitFor(() -> hpanInitiativesRepository.findById(infoHpan.getHpan()).block() != null, () -> "IDPAY PaymentMethod not stored for userId %s".formatted(userId), 60, 1000);
@@ -228,11 +224,13 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         TestUtils.wait(500, TimeUnit.MILLISECONDS);
     }
 
-    private void onboardFamily(String userId) {
-        OnboardingFamilies onboardingFamilies = OnboardingFamiliesFaker.mockInstance(1);
+    private String onboardFamily(String userId, int bias) {
+        OnboardingFamilies onboardingFamilies = OnboardingFamiliesFaker.mockInstance(bias);
         onboardingFamilies.setInitiativeId(INITIATIVEID_NF);
         onboardingFamilies.setId(OnboardingFamilies.buildId(onboardingFamilies.getFamilyId(), INITIATIVEID_NF));
+        onboardingFamilies.setMemberIds(Set.of(userId));
         onboardingFamiliesRepository.save(onboardingFamilies).block();
+        return onboardingFamilies.getFamilyId();
     }
 
     private SynchronousTransactionRequestDTO buildTrxRequest(Integer bias) {
@@ -248,7 +246,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 //endregion
 
     {
-        // useCase 0: initiative not existent
+       // useCase 0: initiative not existent
         useCases.add(i -> {
             String initiativeId = "DUMMYINITIATIVEID";
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
@@ -524,23 +522,21 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         //useCase 14: family unit initiative
         useCases.add(i -> {
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            String familyId = onboardFamily(trxRequest.getUserId(), i);
             onboardUser(trxRequest, INITIATIVEID_NF);
-            onboardFamily(trxRequest.getUserId());
-            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID_NF, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, getRewardExpected());
+            Reward rewardExpected = getRewardExpected();
+            rewardExpected.setInitiativeId(INITIATIVEID_NF);
+            rewardExpected.setOrganizationId("ORGANIZATIONID_" + INITIATIVEID_NF);
+            rewardExpected.setFamilyId(familyId);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID_NF, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, rewardExpected);
 
             assertPreview(trxRequest, INITIATIVEID_NF, HttpStatus.OK, expectedResponse);
-            assertAuthorize(trxRequest, HttpStatus.OK, expectedResponse);
 
-            String familyId = onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId(trxRequest.getUserId(), INITIATIVEID_NF).blockFirst().getFamilyId();
+            SynchronousTransactionResponseDTO authorizeResponse = assertAuthorize(trxRequest, INITIATIVEID_NF, HttpStatus.OK, expectedResponse);
 
-            UserInitiativeCounters counters = userInitiativeCountersRepositorySpy.findByUserIdAndInitiativeIdIn(familyId, List.of(INITIATIVEID_NF)).blockFirst();
+            waitThrottling();
 
-            //Assertions.assertEquals();
-
-            assertCancel(expectedResponse, HttpStatus.OK);
-            UserInitiativeCounters countersAfterCancel = userInitiativeCountersRepositorySpy.findByUserIdAndInitiativeIdIn(familyId, List.of(INITIATIVEID_NF)).blockFirst();
-
-            //TODO
+            assertCancel(authorizeResponse, INITIATIVEID_NF, HttpStatus.OK);
         });
     }
 
@@ -574,8 +570,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
             if(RewardConstants.REWARD_STATE_REWARDED.equals(expectedResponse.getStatus())) {
                 RewardCounters authCounter = expectedResponse.getReward().getCounters();
-
-                UserInitiativeCounters storedCounter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(expectedResponse.getUserId(), initiativeId)).block();
+                String counterSubjectId = INITIATIVEID_NF.equals(initiativeId) ? stored.getRewards().get(initiativeId).getFamilyId() : expectedResponse.getUserId();
+                UserInitiativeCounters storedCounter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(counterSubjectId, initiativeId)).block();
                 Assertions.assertNotNull(storedCounter);
 
                 Assertions.assertEquals(authCounter.getVersion(), storedCounter.getVersion());
@@ -590,7 +586,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getWeeklyCounters()).orElse(Collections.emptyMap()), storedCounter.getWeeklyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getMonthlyCounters()).orElse(Collections.emptyMap()), storedCounter.getMonthlyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getYearlyCounters()).orElse(Collections.emptyMap()), storedCounter.getYearlyCounters());
-
+                Assertions.assertEquals(counterSubjectId,storedCounter.getUserId());
                 Assertions.assertNull(storedCounter.getUpdatingTrxId());
             }
         } else {
@@ -599,11 +595,15 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
     }
 
     private SynchronousTransactionResponseDTO assertCancel(SynchronousTransactionResponseDTO authorizeResponse, HttpStatus expectedHttpStatus){
+        return assertCancel(authorizeResponse, INITIATIVEID, expectedHttpStatus);
+    }
+
+    private SynchronousTransactionResponseDTO assertCancel(SynchronousTransactionResponseDTO authorizeResponse, String initiativeId, HttpStatus expectedHttpStatus){
         SynchronousTransactionResponseDTO cancelResponse = extractResponse(cancelTrx(authorizeResponse.getTransactionId()), expectedHttpStatus, SynchronousTransactionResponseDTO.class);
         Assertions.assertNotNull(cancelResponse);
         assertionsRefundResponse(authorizeResponse, cancelResponse);
 
-        assertStoredTransactionProcessed(INITIATIVEID, expectedHttpStatus, cancelResponse);
+        assertStoredTransactionProcessed(initiativeId, expectedHttpStatus, cancelResponse);
 
         return cancelResponse;
     }
@@ -672,7 +672,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         RewardCounters authCounters = authReward.getCounters();
         RewardCounters counters = getUpdatedRewardCounters(-1, authResponse.getEffectiveAmount().negate(), authReward.getAccruedReward().negate(), authCounters);
 
-        return Reward.builder()
+        Reward reward = Reward.builder()
                 .initiativeId(authReward.getInitiativeId())
                 .organizationId(authReward.getOrganizationId())
                 .accruedReward(authReward.getAccruedReward().negate())
@@ -681,6 +681,11 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .completeRefund(true)
                 .counters(counters)
                 .build();
+        if (INITIATIVEID_NF.equals(authReward.getInitiativeId())) {
+            String bias = authResponse.getUserId().substring(6);
+            reward.setFamilyId("FAM.ID_" + bias);
+        }
+        return reward;
     }
 
     private static RewardCounters getUpdatedRewardCounters(int trxNumberDelta, BigDecimal amount, BigDecimal reward, RewardCounters previousCounter) {
