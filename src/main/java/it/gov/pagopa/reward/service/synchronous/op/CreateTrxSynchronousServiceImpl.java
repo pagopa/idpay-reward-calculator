@@ -19,6 +19,7 @@ import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeSe
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -92,15 +93,19 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     private Mono<Pair<InitiativeConfig, OnboardingInfo>> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
         return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxChargeDate(), initiativeId)
-                .switchIfEmpty(Mono.error(new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper
-                        .apply(request, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)))));
+                .switchIfEmpty(Mono.error(getTransactionSynchronousException(request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)));
     }
 
     private Boolean checkingResult(Boolean b, SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReasonNoInitiative) {
         if (b.equals(Boolean.TRUE)) {
             return Boolean.TRUE;
         } else {
-            throw new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+            throw getTransactionSynchronousException(request,initiativeId, trxRejectionReasonNoInitiative);
         }
+    }
+    @NotNull
+    private TransactionSynchronousException getTransactionSynchronousException(SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReason) {
+        return new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper
+                .apply(request, initiativeId, List.of(trxRejectionReason)));
     }
 }

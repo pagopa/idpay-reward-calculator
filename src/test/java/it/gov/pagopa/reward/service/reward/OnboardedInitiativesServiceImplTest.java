@@ -2,11 +2,11 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.OnboardingInfo;
@@ -259,16 +259,18 @@ class OnboardedInitiativesServiceImplTest {
     }
 
     @Test
-    void isOnboardedOK() {
+    void isOnboardedOK_withFamilyId() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
         LocalDate now = LocalDate.now();
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
+        hpanInitiatives.getOnboardedInitiatives().get(0).setFamilyId("FAMILY_ID");
         String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
         Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
                 .startDate(now.minusYears(5L))
                 .endDate(now.plusYears(5L))
                 .build();
@@ -276,8 +278,9 @@ class OnboardedInitiativesServiceImplTest {
         // When
         Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
         // Then
-        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, new BaseOnboardingInfo(initiativeId, null));
+        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, hpanInitiatives.getOnboardedInitiatives().get(0));
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedPair, result);
     }
 
     @Test
