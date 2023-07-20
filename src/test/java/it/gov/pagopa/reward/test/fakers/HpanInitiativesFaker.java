@@ -21,11 +21,15 @@ public final class HpanInitiativesFaker {
     private static final FakeValuesService fakeValuesServiceGlobal = new FakeValuesService(new Locale("it"), new RandomService());
 
     public static HpanInitiatives mockInstance(Integer bias){
+        return mockInstance(bias, String.format("INITIATIVE_%d",bias) );
+    }
+
+    public static HpanInitiatives mockInstance(Integer bias, String initiativeId){
         HpanInitiatives out = mockInstanceWithoutInitiative(bias);
 
         LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN);
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
-                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .initiativeId(initiativeId)
                 .status(HpanInitiativeStatus.ACTIVE)
                 .updateDate(onboardedTime)
                 .activeTimeIntervals(new ArrayList<>()).build();
@@ -91,13 +95,17 @@ public final class HpanInitiativesFaker {
     }
 
     public static HpanInitiatives mockInstanceWithCloseIntervals(Integer bias){
+        return mockInstanceWithCloseIntervals(bias, String.format("INITIATIVE_%d",bias));
+    }
+
+    public static HpanInitiatives mockInstanceWithCloseIntervals(Integer bias, String initiative){
         HpanInitiatives out = mockInstanceWithoutInitiative(bias);
 
         LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN);
         LocalDateTime lastEndInterval = onboardedTime.minusMonths(5L);
 
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
-                .initiativeId(String.format("INITIATIVE_%d",bias))
+                .initiativeId(initiative)
                 .status(HpanInitiativeStatus.ACTIVE)
                 .updateDate(onboardedTime)
                 .activeTimeIntervals(new ArrayList<>())

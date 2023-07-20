@@ -4,17 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
 import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanList2HpanUpdateOutcomeDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -23,6 +29,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -30,6 +37,8 @@ import java.util.function.Consumer;
 @Service
 @Slf4j
 public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanInitiativeBulkDTO, HpanInitiativeBulkDTO> implements HpanInitiativeMediatorService {
+
+    public static final Comparator<OnboardingFamilies> COMPARATOR_FAMILIES_CREATE_DATE_DESC = Comparator.comparing(OnboardingFamilies::getCreateDate).reversed();
 
     private final Duration commitDelay;
 
@@ -43,6 +52,8 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     private final HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper;
     private final HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper;
     private final HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper;
+    private final RewardContextHolderService rewardContextHolderService;
+    private final OnboardingFamiliesRepository onboardingFamiliesRepository;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public HpanInitiativeMediatorServiceImpl(
@@ -56,7 +67,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             RewardErrorNotifierService rewardErrorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
             HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper,
-            HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper) {
+            HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper, RewardContextHolderService rewardContextHolderService, OnboardingFamiliesRepository onboardingFamiliesRepository) {
         super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
 
@@ -69,6 +80,8 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
         this.hpanUpdateEvaluateDTO2HpanInitiativeMapper = hpanUpdateEvaluateDTO2HpanInitiativeMapper;
         this.hpanUpdateBulk2SingleMapper = hpanUpdateBulk2SingleMapper;
         this.hpanList2HpanUpdateOutcomeDTOMapper = hpanList2HpanUpdateOutcomeDTOMapper;
+        this.rewardContextHolderService = rewardContextHolderService;
+        this.onboardingFamiliesRepository = onboardingFamiliesRepository;
     }
 
     @Override
@@ -136,11 +149,25 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     private Mono<String> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
+
         return hpanInitiativesRepository.findById(hpanUpdateEvaluateDTO.getHpan())
                 .switchIfEmpty(Mono.defer(() -> getNewHpanInitiatives(hpanUpdateEvaluateDTO)))
                 .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives))
+                .flatMap(oi -> initializeCounterAndRetrieveFamily(hpanUpdateEvaluateDTO, oi))
                 .flatMap(oi -> hpanInitiativesRepository.setInitiative(hpanUpdateEvaluateDTO.getHpan(), oi))
                 .map(ur -> hpanUpdateEvaluateDTO.getHpan());
+    }
+
+    @NotNull
+    private Mono<OnboardedInitiative> initializeCounterAndRetrieveFamily(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative oi) {
+        if(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT.equals(hpanUpdateEvaluateDTO.getOperationType()) && oi.getActiveTimeIntervals().size() == 1){
+            return retrieveAndEvaluateInitiative(hpanUpdateEvaluateDTO)
+                    .doOnNext(oi::setFamilyId)
+                    .switchIfEmpty(Mono.just(hpanUpdateEvaluateDTO.getUserId()))
+                    .flatMap(counterSubjectId  -> userInitiativeCountersRepository.createIfNotExists(counterSubjectId , hpanUpdateEvaluateDTO.getInitiativeId()))
+                    .then(Mono.just(oi));
+        }
+        return Mono.just(oi);
     }
 
     private Mono<HpanInitiatives> getNewHpanInitiatives(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
@@ -148,11 +175,24 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             HpanInitiatives createHpanInitiatives = hpanUpdateEvaluateDTO2HpanInitiativeMapper.apply(hpanUpdateEvaluateDTO);
             return hpanInitiativesRepository
                     .createIfNotExist(createHpanInitiatives)
-                    .then(userInitiativeCountersRepository.createIfNotExists(hpanUpdateEvaluateDTO.getUserId(), hpanUpdateEvaluateDTO.getInitiativeId()))
                     .then(Mono.just(createHpanInitiatives));
         } else {
             log.error("Unexpected use case, the hpan is not present into DB. Source message: {}", hpanUpdateEvaluateDTO);
             return Mono.empty();
         }
+    }
+
+    private Mono<String> retrieveAndEvaluateInitiative(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
+        return rewardContextHolderService.getInitiativeConfig(hpanUpdateEvaluateDTO.getInitiativeId())
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Cannot find initiative having id %s".formatted(hpanUpdateEvaluateDTO.getInitiativeId()))))
+                .flatMap(i -> InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(i.getBeneficiaryType())
+                        ? retrieveFamilyId(hpanUpdateEvaluateDTO)
+                        : Mono.empty());
+    }
+
+    private Mono<String> retrieveFamilyId(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO){
+        return onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId(hpanUpdateEvaluateDTO.getUserId(), hpanUpdateEvaluateDTO.getInitiativeId())
+                .collectSortedList(COMPARATOR_FAMILIES_CREATE_DATE_DESC)
+                .map(f -> f.get(0).getFamilyId());
     }
 }
