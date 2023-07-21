@@ -4,10 +4,12 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
@@ -18,10 +20,12 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
+import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
+import it.gov.pagopa.reward.test.fakers.OnboardingFamiliesFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -59,6 +63,7 @@ import java.util.stream.StreamSupport;
 class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
+    public static final String INITIATIVEID_NF = "INITIATIVEID_NF";
     private final BigDecimal beneficiaryBudget = BigDecimal.valueOf(10_000, 2);
     public static final long AMOUNT_CENTS = 200_00L;
     public static final BigDecimal AMOUNT = CommonUtilities.centsToEuro(AMOUNT_CENTS);
@@ -73,6 +78,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
     private HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
     private TransactionProcessedRepository transactionProcessedRepository;
+    @Autowired
+    private OnboardingFamiliesRepository onboardingFamiliesRepository;
 
     @SpyBean
     protected RewardContextHolderService rewardContextHolderService;
@@ -142,11 +149,30 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
                 .build();
         rule.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
-        kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, rule);
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(1, rewardContextHolderService);
+
+        InitiativeReward2BuildDTO ruleNF = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(0, Collections.emptySet(), RewardValueDTO.class)
+                .initiativeId(INITIATIVEID_NF)
+                .initiativeName("NAME_" + INITIATIVEID_NF)
+                .organizationId("ORGANIZATIONID_" + INITIATIVEID_NF)
+                .trxRule(InitiativeTrxConditions.builder()
+                        .threshold(ThresholdDTO.builder()
+                                .from(BigDecimal.valueOf(5))
+                                .fromIncluded(true)
+                                .build())
+                        .build())
+                .rewardRule(RewardValueDTO.builder()
+                        .rewardValue(BigDecimal.TEN)
+                        .build())
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .build();
+        ruleNF.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
+        ruleNF.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
+
+        List.of(rule, ruleNF).forEach(r -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, r));
+        RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
     }
 
-//region API invokes
+    //region API invokes
     private WebTestClient.ResponseSpec previewTrx(SynchronousTransactionRequestDTO trxRequest, String initiativeId) {
         return webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
@@ -171,8 +197,12 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
     }
 //endregion
 
-//region utility methods
+    //region utility methods
     private void onboardUser(SynchronousTransactionRequestDTO trxRequest) {
+        onboardUser(trxRequest, INITIATIVEID);
+    }
+
+    private void onboardUser(SynchronousTransactionRequestDTO trxRequest, String initiativeId) {
         String userId = trxRequest.getUserId();
 
         PaymentMethodInfoDTO infoHpan = new PaymentMethodInfoDTO();
@@ -181,7 +211,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         HpanInitiativeBulkDTO hpanInitiativeBulkDTO = HpanInitiativeBulkDTO.builder()
                 .infoList(List.of(infoHpan))
                 .userId(userId)
-                .initiativeId(INITIATIVEID)
+                .initiativeId(initiativeId)
                 .operationDate(LocalDateTime.now())
                 .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
                 .channel(HpanInitiativeConstants.CHANEL_PAYMENT_MANAGER)
@@ -193,6 +223,15 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
         // throttling
         TestUtils.wait(500, TimeUnit.MILLISECONDS);
+    }
+
+    private String onboardFamily(String userId, int bias) {
+        OnboardingFamilies onboardingFamilies = OnboardingFamiliesFaker.mockInstance(bias);
+        onboardingFamilies.setInitiativeId(INITIATIVEID_NF);
+        onboardingFamilies.setId(OnboardingFamilies.buildId(onboardingFamilies.getFamilyId(), INITIATIVEID_NF));
+        onboardingFamilies.setMemberIds(Set.of(userId));
+        onboardingFamiliesRepository.save(onboardingFamilies).block();
+        return onboardingFamilies.getFamilyId();
     }
 
     private SynchronousTransactionRequestDTO buildTrxRequest(Integer bias) {
@@ -208,7 +247,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 //endregion
 
     {
-        // useCase 0: initiative not existent
+       // useCase 0: initiative not existent
         useCases.add(i -> {
             String initiativeId = "DUMMYINITIATIVEID";
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
@@ -480,6 +519,26 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
             assertPreview(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
             assertAuthorize(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
         });
+
+        //useCase 14: family unit initiative
+        useCases.add(i -> {
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            String familyId = onboardFamily(trxRequest.getUserId(), i);
+            onboardUser(trxRequest, INITIATIVEID_NF);
+            Reward rewardExpected = getRewardExpected();
+            rewardExpected.setInitiativeId(INITIATIVEID_NF);
+            rewardExpected.setOrganizationId("ORGANIZATIONID_" + INITIATIVEID_NF);
+            rewardExpected.setFamilyId(familyId);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID_NF, trxRequest, RewardConstants.REWARD_STATE_REWARDED, null, rewardExpected);
+
+            assertPreview(trxRequest, INITIATIVEID_NF, HttpStatus.OK, expectedResponse);
+
+            SynchronousTransactionResponseDTO authorizeResponse = assertAuthorize(trxRequest, INITIATIVEID_NF, HttpStatus.OK, expectedResponse);
+
+            waitThrottling();
+
+            assertCancel(authorizeResponse, INITIATIVEID_NF, HttpStatus.OK);
+        });
     }
 
     private SynchronousTransactionResponseDTO assertPreview(SynchronousTransactionRequestDTO trxRequest, HttpStatus expectedStatus, SynchronousTransactionResponseDTO expectedResponse) {
@@ -512,8 +571,8 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
             if(RewardConstants.REWARD_STATE_REWARDED.equals(expectedResponse.getStatus())) {
                 RewardCounters authCounter = expectedResponse.getReward().getCounters();
-
-                UserInitiativeCounters storedCounter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(expectedResponse.getUserId(), initiativeId)).block();
+                String counterSubjectId = INITIATIVEID_NF.equals(initiativeId) ? stored.getRewards().get(initiativeId).getFamilyId() : expectedResponse.getUserId();
+                UserInitiativeCounters storedCounter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(counterSubjectId, initiativeId)).block();
                 Assertions.assertNotNull(storedCounter);
 
                 Assertions.assertEquals(authCounter.getVersion(), storedCounter.getVersion());
@@ -528,7 +587,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getWeeklyCounters()).orElse(Collections.emptyMap()), storedCounter.getWeeklyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getMonthlyCounters()).orElse(Collections.emptyMap()), storedCounter.getMonthlyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getYearlyCounters()).orElse(Collections.emptyMap()), storedCounter.getYearlyCounters());
-
+                Assertions.assertEquals(counterSubjectId,storedCounter.getUserId());
                 Assertions.assertNull(storedCounter.getUpdatingTrxId());
             }
         } else {
@@ -537,11 +596,15 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
     }
 
     private SynchronousTransactionResponseDTO assertCancel(SynchronousTransactionResponseDTO authorizeResponse, HttpStatus expectedHttpStatus){
+        return assertCancel(authorizeResponse, INITIATIVEID, expectedHttpStatus);
+    }
+
+    private SynchronousTransactionResponseDTO assertCancel(SynchronousTransactionResponseDTO authorizeResponse, String initiativeId, HttpStatus expectedHttpStatus){
         SynchronousTransactionResponseDTO cancelResponse = extractResponse(cancelTrx(authorizeResponse.getTransactionId()), expectedHttpStatus, SynchronousTransactionResponseDTO.class);
         Assertions.assertNotNull(cancelResponse);
         assertionsRefundResponse(authorizeResponse, cancelResponse);
 
-        assertStoredTransactionProcessed(INITIATIVEID, expectedHttpStatus, cancelResponse);
+        assertStoredTransactionProcessed(initiativeId, expectedHttpStatus, cancelResponse);
 
         return cancelResponse;
     }
@@ -610,15 +673,20 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         RewardCounters authCounters = authReward.getCounters();
         RewardCounters counters = getUpdatedRewardCounters(-1, authResponse.getEffectiveAmount().negate(), authReward.getAccruedReward().negate(), authCounters);
 
-        return Reward.builder()
-                        .initiativeId(authReward.getInitiativeId())
-                        .organizationId(authReward.getOrganizationId())
-                        .accruedReward(authReward.getAccruedReward().negate())
-                        .providedReward(authReward.getAccruedReward().negate())
-                        .refund(true)
-                        .completeRefund(true)
-                        .counters(counters)
-                        .build();
+        Reward reward = Reward.builder()
+                .initiativeId(authReward.getInitiativeId())
+                .organizationId(authReward.getOrganizationId())
+                .accruedReward(authReward.getAccruedReward().negate())
+                .providedReward(authReward.getAccruedReward().negate())
+                .refund(true)
+                .completeRefund(true)
+                .counters(counters)
+                .build();
+        if (INITIATIVEID_NF.equals(authReward.getInitiativeId())) {
+            String bias = authResponse.getUserId().substring(6);
+            reward.setFamilyId("FAM.ID_" + bias);
+        }
+        return reward;
     }
 
     private static RewardCounters getUpdatedRewardCounters(int trxNumberDelta, BigDecimal amount, BigDecimal reward, RewardCounters previousCounter) {

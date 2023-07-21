@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResponseDTOMapper;
@@ -10,6 +11,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -17,6 +19,7 @@ import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeSe
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -44,7 +47,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
             TransactionProcessed2SyncTrxResponseDTOMapper syncTrxResponseDTOMapper) {
-        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
+        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper, rewardContextHolderService);
 
         this.rewardContextHolderService = rewardContextHolderService;
         this.onboardedInitiativesService = onboardedInitiativesService;
@@ -58,11 +61,11 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         log.trace("[SYNC_PREVIEW_TRANSACTION] Starting reward preview calculation for transaction {}", trxPreviewRequest.getTransactionId());
         TransactionDTO trxDTO = syncTrxRequest2TransactionDtoMapper.apply(trxPreviewRequest);
 
-        Mono<Boolean> trxChecks = checkInitiative(trxPreviewRequest, initiativeId)
+        Mono<Pair<InitiativeConfig,OnboardingInfo>> trxChecks = checkInitiative(trxPreviewRequest, initiativeId)
                 .flatMap(b -> checkOnboarded(trxPreviewRequest, trxDTO, initiativeId));
 
         return evaluate(trxChecks, trxDTO, initiativeId,
-                x -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(trxDTO.getUserId(), initiativeId)),
+                i2o -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(),i2o.getSecond(),trxDTO), initiativeId)),
                 counters -> initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), counters)
                         .map(Pair::getSecond));
     }
@@ -73,7 +76,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         log.trace("[SYNC_AUTHORIZE_TRANSACTION] Starting reward calculation for transaction {}", trxAuthorizeRequest.getTransactionId());
         TransactionDTO trxDTO = syncTrxRequest2TransactionDtoMapper.apply(trxAuthorizeRequest);
 
-        Mono<Boolean> trxChecks = checkInitiative(trxAuthorizeRequest, initiativeId)
+        Mono<Pair<InitiativeConfig,OnboardingInfo>> trxChecks = checkInitiative(trxAuthorizeRequest, initiativeId)
                 .flatMap(initiativeFound -> checkSyncTrxAlreadyProcessed(trxAuthorizeRequest.getTransactionId(), initiativeId))
                 .defaultIfEmpty(EMPTY_RESPONSE)
                 .flatMap(x -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId));
@@ -88,16 +91,21 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                 .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
     }
 
-    private Mono<Boolean> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
+    private Mono<Pair<InitiativeConfig, OnboardingInfo>> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
         return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxChargeDate(), initiativeId)
-                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
+                .switchIfEmpty(Mono.error(buildTransactionSynchronousException(request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)));
     }
 
     private Boolean checkingResult(Boolean b, SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReasonNoInitiative) {
         if (b.equals(Boolean.TRUE)) {
             return Boolean.TRUE;
         } else {
-            throw new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper.apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+            throw buildTransactionSynchronousException(request,initiativeId, trxRejectionReasonNoInitiative);
         }
+    }
+    @NotNull
+    private TransactionSynchronousException buildTransactionSynchronousException(SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReason) {
+        return new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper
+                .apply(request, initiativeId, List.of(trxRejectionReason)));
     }
 }

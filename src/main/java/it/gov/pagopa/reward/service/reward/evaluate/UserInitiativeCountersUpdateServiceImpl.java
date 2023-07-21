@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.RewardCountersMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -83,6 +84,10 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
                                         /* set RewardCounters in RewardTransactionDTO object */
                                         reward.setCounters(rewardCountersMapper.apply(initiativeCounter, ruleEngineResult, initiativeConfig));
+
+                                        if (InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(initiativeConfig.getBeneficiaryType())) {
+                                            reward.setFamilyId(initiativeCounter.getUserId());
+                                        }
                                     });
                         })
                 .then(Mono.just(ruleEngineResult));

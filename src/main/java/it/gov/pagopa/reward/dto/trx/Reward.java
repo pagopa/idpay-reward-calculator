@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 public class Reward {
     private String initiativeId;
     private String organizationId;
+    private String familyId;
 
     /** The ruleEngine reward calculated */
     private BigDecimal providedReward;

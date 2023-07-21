@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -32,7 +33,6 @@ import java.util.Map;
 public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implements CancelTrxSynchronousService {
 
     private final String refundOperationType;
-
     private final TransactionProcessedRepository transactionProcessedRepository;
 
     public CancelTrxSynchronousServiceImpl(
@@ -43,8 +43,8 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxService,
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
-            TransactionProcessed2SyncTrxResponseDTOMapper syncTrxResponseDTOMapper) {
-        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper);
+            TransactionProcessed2SyncTrxResponseDTOMapper syncTrxResponseDTOMapper, RewardContextHolderService rewardContextHolderService) {
+        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper, rewardContextHolderService);
 
         this.refundOperationType = refundOperationType;
 
@@ -63,11 +63,11 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                         return Mono.error(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot cancel transaction: it was rewarded more than once!%s: %s".formatted(trxId, trx.getRewards().keySet())));
                     }
 
-                    String initiativeId = trx.getRewards().keySet().iterator().next();
+                    Reward reward = trx.getRewards().values().iterator().next();
 
-                    return checkSyncTrxAlreadyProcessed(buildRefundId(trxId), initiativeId)
+                    return checkSyncTrxAlreadyProcessed(buildRefundId(trxId), reward.getInitiativeId())
 
-                            .switchIfEmpty(Mono.defer(() -> refundTransaction((TransactionProcessed) trx, initiativeId)));
+                            .switchIfEmpty(Mono.defer(() -> refundTransaction((TransactionProcessed) trx, reward)));
                 });
     }
 
@@ -75,11 +75,12 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return trxId + RewardConstants.SYNC_TRX_REFUND_ID_SUFFIX;
     }
 
-    private Mono<SynchronousTransactionResponseDTO> refundTransaction(TransactionProcessed trx, String initiativeId) {
+    private Mono<SynchronousTransactionResponseDTO> refundTransaction(TransactionProcessed trx, Reward reward) {
         log.debug("[SYNC_CANCEL_TRANSACTION] Refunding transaction {}", trx.getId());
 
-        TransactionDTO refundTrx = buildRefundTrx(trx, initiativeId);
-        return lockCounterAndEvaluate(Mono.just(refundTrx), refundTrx, initiativeId);
+        TransactionDTO refundTrx = buildRefundTrx(trx, reward.getInitiativeId());
+
+        return lockCounterAndEvaluate(retrieveInitiative2OnboardingInfo(reward), refundTrx, reward.getInitiativeId());
     }
 
     public TransactionDTO buildRefundTrx(TransactionProcessed trx, String initiativeId) {

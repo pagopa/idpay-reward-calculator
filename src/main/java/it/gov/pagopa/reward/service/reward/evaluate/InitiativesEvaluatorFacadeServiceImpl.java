@@ -63,7 +63,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
     public Mono<RewardTransactionDTO> evaluateAndUpdateBudget(TransactionDTO trx, List<String> initiatives) {
         log.trace("[REWARD] Initiative fetched, retrieving counter: {}", trx.getId());
 
-        final String userId = trx.getUserId();
+        final String userId = trx.getUserId(); // Async trx support just physical person initiatives (not families)
 
         return userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
                         .collectList()
