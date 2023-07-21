@@ -167,6 +167,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .build();
         ruleNF.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
         ruleNF.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
+
         List.of(rule, ruleNF).forEach(r -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, r));
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
     }

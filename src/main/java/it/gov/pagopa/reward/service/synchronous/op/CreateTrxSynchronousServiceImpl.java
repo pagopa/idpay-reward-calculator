@@ -93,18 +93,18 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     private Mono<Pair<InitiativeConfig, OnboardingInfo>> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
         return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxChargeDate(), initiativeId)
-                .switchIfEmpty(Mono.error(getTransactionSynchronousException(request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)));
+                .switchIfEmpty(Mono.error(buildTransactionSynchronousException(request, initiativeId, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)));
     }
 
     private Boolean checkingResult(Boolean b, SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReasonNoInitiative) {
         if (b.equals(Boolean.TRUE)) {
             return Boolean.TRUE;
         } else {
-            throw getTransactionSynchronousException(request,initiativeId, trxRejectionReasonNoInitiative);
+            throw buildTransactionSynchronousException(request,initiativeId, trxRejectionReasonNoInitiative);
         }
     }
     @NotNull
-    private TransactionSynchronousException getTransactionSynchronousException(SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReason) {
+    private TransactionSynchronousException buildTransactionSynchronousException(SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReason) {
         return new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper
                 .apply(request, initiativeId, List.of(trxRejectionReason)));
     }
