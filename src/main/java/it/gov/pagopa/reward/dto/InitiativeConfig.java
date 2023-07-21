@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto;
 
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
@@ -30,5 +31,6 @@ public class InitiativeConfig {
     private InitiativeRewardRule rewardRule;
     private InitiativeTrxConditions trxRule;
     private InitiativeRewardType initiativeRewardType;
+    private InitiativeGeneralDTO.BeneficiaryTypeEnum beneficiaryType;
 
 }

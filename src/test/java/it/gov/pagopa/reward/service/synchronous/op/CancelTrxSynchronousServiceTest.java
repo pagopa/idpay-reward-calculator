@@ -4,6 +4,8 @@ import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResponseDTOMapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
@@ -17,6 +19,7 @@ import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
@@ -32,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +50,8 @@ public class CancelTrxSynchronousServiceTest {
     private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
     @Mock
     private HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxServiceMock;
+    @Mock
+    private RewardContextHolderService rewardContextHolderServiceMock;
 
     private final RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper = new RewardTransaction2SynchronousTransactionResponseDTOMapper();
     private final TransactionProcessed2SyncTrxResponseDTOMapper transactionProcessed2SyncTrxResponseDTOMapper = new TransactionProcessed2SyncTrxResponseDTOMapper();
@@ -61,7 +67,8 @@ public class CancelTrxSynchronousServiceTest {
                 handleSyncCounterUpdatingTrxServiceMock,
                 initiativesEvaluatorFacadeServiceMock,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
-                transactionProcessed2SyncTrxResponseDTOMapper);
+                transactionProcessed2SyncTrxResponseDTOMapper,
+                rewardContextHolderServiceMock);
     }
 
     @AfterEach
@@ -110,10 +117,17 @@ public class CancelTrxSynchronousServiceTest {
 
         TransactionProcessed trxRefund = TransactionProcessedFaker.mockInstance(1);
         trxRefund.setUserId(trx.getUserId());
+        trxRefund.setRewards(Map.of(
+                "INITIATIVEID0",
+                new Reward("INITIATIVEID0","ORGANIZATION_"+"INITIATIVEID0", BigDecimal.valueOf(10))));
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId() + "_REFUND")).thenReturn(Mono.just(trxRefund));
 
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), "INITIATIVEID0")))
                 .thenReturn(Mono.just(new UserInitiativeCounters(trx.getUserId(), "INITIATIVEID0")));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder().initiativeId("INITIATIVEID0").beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PG).build();
+
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVEID0")).thenReturn(Mono.just(initiativeConfig));
 
         // When
         Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
@@ -173,6 +187,13 @@ public class CancelTrxSynchronousServiceTest {
 
         Mockito.when(transactionProcessedRepositoryMock.findById(trxRefundId)).thenReturn(trxRefundedProcessedMono);
         Mockito.when(userInitiativeCountersRepositoryMock.findByIdThrottled("USERID0_INITIATIVEID0", trxRefundId)).thenReturn(expectedCounterMono);
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId("INITIATIVEID0")
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PG)
+                .build();
+
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVEID0")).thenReturn(Mono.just(initiativeConfig));
 
         RewardTransactionDTO expectedReward = RewardTransactionDTOFaker.mockInstance(0);
         Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(

@@ -15,8 +15,9 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @FieldNameConstants
-public class OnboardedInitiative {
+public class OnboardedInitiative implements OnboardingInfo{
     private String initiativeId;
+    private String familyId;
     private LocalDateTime acceptanceDate;
     private HpanInitiativeStatus status;
     private LocalDateTime updateDate;
