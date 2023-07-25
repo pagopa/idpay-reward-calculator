@@ -5,17 +5,17 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
-import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
-import it.gov.pagopa.reward.dto.HpanUpdateEvaluateDTO;
-import it.gov.pagopa.reward.dto.HpanUpdateOutcomeDTO;
-import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
+import it.gov.pagopa.reward.dto.*;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanList2HpanUpdateOutcomeDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateBulk2SingleMapper;
 import it.gov.pagopa.reward.dto.mapper.lookup.HpanUpdateEvaluateDTO2HpanInitiativeMapper;
+import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
@@ -58,10 +58,26 @@ class HpanInitiativeMediatorServiceImplTest {
     @Mock
     private HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapperMock;
 
+    @Mock private RewardContextHolderService rewardContextHolderServiceMock;
+    @Mock private OnboardingFamiliesRepository onboardingFamiliesRepositoryMock;
+
     private HpanInitiativeMediatorService hpanInitiativeMediatorService;
     @BeforeEach
     void setUp(){
-        hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl("appName",0L, hpanInitiativesRepositoryMock, userInitiativeCountersRepositoryMock, hpanInitiativesServiceMock, hpanUpdateNotifierServiceMock, TestUtils.objectMapper, rewardErrorNotifierServiceMock, hpanUpdateEvaluateDTO2HpanInitiativeMapperMock, hpanUpdateBulk2SingleMapperMock, hpanList2HpanUpdateOutcomeDTOMapperMock);
+        hpanInitiativeMediatorService = new HpanInitiativeMediatorServiceImpl(
+                "appName",
+                0L,
+                hpanInitiativesRepositoryMock,
+                userInitiativeCountersRepositoryMock,
+                hpanInitiativesServiceMock,
+                hpanUpdateNotifierServiceMock,
+                TestUtils.objectMapper,
+                rewardErrorNotifierServiceMock,
+                hpanUpdateEvaluateDTO2HpanInitiativeMapperMock,
+                hpanUpdateBulk2SingleMapperMock,
+                hpanList2HpanUpdateOutcomeDTOMapperMock,
+                rewardContextHolderServiceMock,
+                onboardingFamiliesRepositoryMock);
     }
     @Test
     void execute(){
@@ -169,10 +185,24 @@ class HpanInitiativeMediatorServiceImplTest {
 
 
         //endregion
-        OnboardedInitiative onboardedInitiativeOut1 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_VALID").build();
+        ActiveTimeInterval activeTimeInterval1 = ActiveTimeInterval.builder()
+                .startInterval(LocalDateTime.now().minusMonths(10L))
+                .endInterval(LocalDateTime.now().minusMonths(8L)).build();
 
-        OnboardedInitiative onboardedInitiativeOut2 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_NOT_DATE").build();
-        OnboardedInitiative onboardedInitiativeOut3 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_ERROR_PUBLISHED").build();
+        ActiveTimeInterval activeTimeInterval2 = ActiveTimeInterval.builder()
+                .startInterval(LocalDateTime.now().minusMonths(5L))
+                .endInterval(LocalDateTime.now().minusMonths(3L)).build();
+
+        OnboardedInitiative onboardedInitiativeOut1 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_VALID")
+                .activeTimeIntervals(List.of(activeTimeInterval1, activeTimeInterval2))
+                .build();
+
+        OnboardedInitiative onboardedInitiativeOut2 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_NOT_DATE")
+                .activeTimeIntervals(List.of(activeTimeInterval1, activeTimeInterval2))
+                .build();
+        OnboardedInitiative onboardedInitiativeOut3 = OnboardedInitiative.builder().initiativeId("INITIATIVEID_HPAN_ERROR_PUBLISHED")
+                .activeTimeIntervals(List.of(activeTimeInterval1, activeTimeInterval2))
+                .build();
 
         Mockito.when(hpanInitiativesServiceMock.evaluate(hpanUpdateValidHpan,hpanInitiatives1))
                 .thenReturn(onboardedInitiativeOut1);

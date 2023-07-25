@@ -39,7 +39,8 @@ public class InitiativeGeneralDTO {
   public enum BeneficiaryTypeEnum {
     PF("PF"),
     
-    PG("PG");
+    PG("PG"),
+    NF("NF");
 
     private String value;
 

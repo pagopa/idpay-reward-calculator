@@ -2,12 +2,14 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -235,7 +238,7 @@ class OnboardedInitiativesServiceImplTest {
     }
 
     @Test
-    void isOnboardedKO() {
+    void isOnboardedEmpty() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
         String initiativeId = "INITIATIVEID";
@@ -250,35 +253,34 @@ class OnboardedInitiativesServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE_1")).thenReturn(Mono.just(initiativeConfig));
         // When
-        Boolean result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
-
+        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
         // Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(Boolean.FALSE, result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    void isOnboardedOK() {
+    void isOnboardedOK_withFamilyId() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
         LocalDate now = LocalDate.now();
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
+        hpanInitiatives.getOnboardedInitiatives().get(0).setFamilyId("FAMILY_ID");
         String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
         Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
                 .startDate(now.minusYears(5L))
                 .endDate(now.plusYears(5L))
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
         // When
-        Boolean result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
-
+        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
         // Then
+        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, hpanInitiatives.getOnboardedInitiatives().get(0));
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(Boolean.TRUE, result);
-
+        Assertions.assertEquals(expectedPair, result);
     }
 
     @Test
