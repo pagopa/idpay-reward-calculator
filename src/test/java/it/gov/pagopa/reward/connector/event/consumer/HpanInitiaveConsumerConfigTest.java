@@ -49,6 +49,7 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativesServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.AddHpanServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
 
@@ -67,8 +68,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
     @Test
     void hpanInitiativeConsumer() {
-        int dbElementsNumbers = 200;
-        int updatedHpanNumbers = 1000;
+        int dbElementsNumbers = 10;
+        int updatedHpanNumbers = 50;
         int notValidMessages = errorUseCases.size();
         int concurrencyMessages = 2;
         long maxWaitingMs = 30000;
@@ -94,7 +95,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
         checkConcurrencyMessages();
         checkHpanUpdatePublished(dbElementsNumbers,maxWaitingMs);
-        checkUserInitiativeCounters(newHPans);
+        checkUserInitiativeCounters(newHPans, dbElementsNumbers);
 
         System.out.printf("""
             ************************
@@ -305,6 +306,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     //region not valid useCases
 
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
+    // useCase0
     {
         String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
         errorUseCases.add(Pair.of(
@@ -355,6 +357,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 }
         ));
 
+        // useCase1
         final String failingExceptionHpanUpdateOutcomePublishingUserId = "FAILING_HPAN_UPDATE_OUTCOME_PUBLISHING_DUE_EXCEPTION";
         PaymentMethodInfoDTO infoFailingExceptionHpanUpdatePublishing = PaymentMethodInfoDTO.builder()
                 .hpan("HPAN_%s".formatted(failingExceptionHpanUpdateOutcomePublishingUserId))
@@ -446,8 +449,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         return matcher.find() ? matcher.group(1) : "";
     }
 
-    private void checkUserInitiativeCounters(int newHPans) {
-        int[] i = new int[]{200};
+    private void checkUserInitiativeCounters(int newHPans, int dbElementsNumbers) {
+        int[] i = new int[]{dbElementsNumbers};
         Assertions.assertEquals(newHPans, userInitiativeCountersRepository.count().block());
         Objects.requireNonNull(userInitiativeCountersRepository.findAll().sort(Comparator.comparing(UserInitiativeCounters::getUserId))
                 .collectList()

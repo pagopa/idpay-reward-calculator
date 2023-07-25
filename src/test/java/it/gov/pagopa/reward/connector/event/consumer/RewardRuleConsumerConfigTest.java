@@ -36,6 +36,7 @@ import java.util.stream.IntStream;
         "app.reward-rule.build-delay-duration=PT1S",
         "logging.level.it.gov.pagopa.reward.service.build.RewardRule2DroolsRuleServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
