@@ -65,7 +65,7 @@ class OperationTypeRefundHandlerServiceTest {
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
 
-        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId()))
                         .thenReturn(Flux.empty());
 
         // When
@@ -87,7 +87,7 @@ class OperationTypeRefundHandlerServiceTest {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
 
 
-        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.just(TransactionProcessed.builder().operationTypeTranscoded(OperationType.REFUND).amount(BigDecimal.ONE).rewards(Collections.emptyMap()).build()));
 
         // When
@@ -142,7 +142,7 @@ class OperationTypeRefundHandlerServiceTest {
                         .build()
         );
 
-        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.fromIterable(expectedPreviousTrxs));
 
         // When

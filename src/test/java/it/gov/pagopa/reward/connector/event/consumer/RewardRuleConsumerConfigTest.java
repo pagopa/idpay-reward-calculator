@@ -184,7 +184,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
                 .build());
         errorUseCases.add(Pair.of(
                 () -> {
-                    Mockito.doReturn(Mono.error(new RuntimeException("DUMMYEXCEPTION"))).when(droolsRuleRepositorySpy).save(Mockito.argThat(i->errorWhenSavingUseCaseId.equals(i.getId())));
+                    Mockito.doReturn(Mono.error(new RuntimeException("DUMMYEXCEPTION"))).when(droolsRuleRepositorySpy).saveRetryable(Mockito.argThat(i->errorWhenSavingUseCaseId.equals(i.getId())));
                     return droolRuleSaveInError;
                 },
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_RULE_BUILD] An error occurred handling initiative", droolRuleSaveInError)
@@ -194,5 +194,5 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
     private void checkErrorMessageHeaders(ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload) {
         checkErrorMessageHeaders(topicRewardRuleConsumer, groupIdRewardRuleConsumer, errorMessage, errorDescription, expectedPayload, null);
     }
-    //endregion
+//endregion
 }

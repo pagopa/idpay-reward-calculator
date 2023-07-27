@@ -1,7 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
-import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeRetryer;
-import it.gov.pagopa.common.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
+import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeRetryer;
+import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;

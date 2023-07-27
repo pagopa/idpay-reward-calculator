@@ -1,4 +1,4 @@
-package it.gov.pagopa.common.mongo.retry.exception;
+package it.gov.pagopa.common.reactive.mongo.retry.exception;
 
 import lombok.Getter;
 

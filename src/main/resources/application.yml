@@ -1,3 +1,8 @@
+mongo:
+  request-rate-too-large:
+    max-retry: ${MAX_RETRY:5}
+    max-millis-elapsed: ${MAX_MILLIS_ELAPSED:0}
+
 server:
   port: ${REWARD_CALCULATOR_PORT:8080}
 

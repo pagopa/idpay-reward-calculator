@@ -4,7 +4,7 @@ import static org.mockito.Mockito.doThrow;
 
 import com.mongodb.MongoQueryException;
 import com.mongodb.ServerAddress;
-import it.gov.pagopa.common.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
+import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ErrorManager;
 import it.gov.pagopa.common.web.exception.MongoExceptionHandler;

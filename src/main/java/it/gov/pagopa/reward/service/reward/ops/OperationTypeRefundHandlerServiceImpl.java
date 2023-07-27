@@ -45,7 +45,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
     }
 
     private Mono<TransactionDTO> handleRefund(TransactionDTO trx) {
-        return transactionProcessedRepository.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())
+        return transactionProcessedRepository.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId())
                 .collectList()
                 .map(pastTrxs -> evaluatePastTransactions(trx, pastTrxs));
     }

@@ -150,7 +150,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
 
     private Mono<String> findAndModify(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO) {
 
-        return hpanInitiativesRepository.findById(hpanUpdateEvaluateDTO.getHpan())
+        return hpanInitiativesRepository.findByIdRetryable(hpanUpdateEvaluateDTO.getHpan())
                 .switchIfEmpty(Mono.defer(() -> getNewHpanInitiatives(hpanUpdateEvaluateDTO)))
                 .mapNotNull(hpanInitiatives -> hpanInitiativesService.evaluate(hpanUpdateEvaluateDTO, hpanInitiatives))
                 .flatMap(oi -> initializeCounterAndRetrieveFamily(hpanUpdateEvaluateDTO, oi))

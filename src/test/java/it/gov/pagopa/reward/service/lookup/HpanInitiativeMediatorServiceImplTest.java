@@ -111,7 +111,7 @@ class HpanInitiativeMediatorServiceImplTest {
 
         HpanInitiatives hpanInitiatives1 = HpanInitiativesFaker.mockInstance(1);
         hpanInitiatives1.setHpan(hpanValid);
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanValid)).thenReturn(Mono.just(hpanInitiatives1));
+        Mockito.when(hpanInitiativesRepositoryMock.findByIdRetryable(hpanValid)).thenReturn(Mono.just(hpanInitiatives1));
 
 
         // Message without hpan
@@ -150,7 +150,7 @@ class HpanInitiativeMediatorServiceImplTest {
 
         HpanInitiatives hpanInitiatives2 = HpanInitiativesFaker.mockInstance(2);
         hpanInitiatives2.setHpan(hpanNotDate);
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanNotDate)).thenReturn(Mono.just(hpanInitiatives2));
+        Mockito.when(hpanInitiativesRepositoryMock.findByIdRetryable(hpanNotDate)).thenReturn(Mono.just(hpanInitiatives2));
 
         //error published update
         String hpanErrorPublishedUpdate = "HPAN_ERROR_PUBLISHED_UPDATE";
@@ -181,7 +181,7 @@ class HpanInitiativeMediatorServiceImplTest {
 
         HpanInitiatives hpanInitiatives3 = HpanInitiativesFaker.mockInstance(3);
         hpanInitiatives3.setHpan(hpanErrorPublishedUpdate);
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanErrorPublishedUpdate)).thenReturn(Mono.just(hpanInitiatives3));
+        Mockito.when(hpanInitiativesRepositoryMock.findByIdRetryable(hpanErrorPublishedUpdate)).thenReturn(Mono.just(hpanInitiatives3));
 
 
         //endregion
@@ -248,7 +248,7 @@ class HpanInitiativeMediatorServiceImplTest {
                        buildMessage(TestUtils.jsonSerializer(hpanInitiativeBulkDTErrorPublishedUpdate), hpanErrorPublishedUpdateJsonAck)
                 )));
         // Then
-        Mockito.verify(hpanInitiativesRepositoryMock,Mockito.times(3)).findById(Mockito.anyString());
+        Mockito.verify(hpanInitiativesRepositoryMock,Mockito.times(3)).findByIdRetryable(Mockito.anyString());
         Mockito.verify(hpanInitiativesServiceMock,Mockito.times(3)).evaluate(Mockito.any(HpanUpdateEvaluateDTO.class),Mockito.any(HpanInitiatives.class));
         Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(3)).setInitiative(Mockito.anyString(), Mockito.any());
         Mockito.verify(rewardErrorNotifierServiceMock,Mockito.times(2)).notifyHpanUpdateEvaluation(Mockito.any(Message.class),Mockito.anyString(),Mockito.anyBoolean(), Mockito.any(Throwable.class));

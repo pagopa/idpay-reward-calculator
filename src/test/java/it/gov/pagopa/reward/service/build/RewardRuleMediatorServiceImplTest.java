@@ -69,7 +69,7 @@ class RewardRuleMediatorServiceImplTest {
                             .build(),
                     LocalDateTime.now());
         });
-        Mockito.when(droolsRuleRepositoryMock.save(Mockito.any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        Mockito.when(droolsRuleRepositoryMock.saveRetryable(Mockito.any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));
     }
 
@@ -108,7 +108,7 @@ class RewardRuleMediatorServiceImplTest {
         Mockito.verify(rewardRule2DroolsRuleServiceMock, Mockito.times(N)).apply(Mockito.any());
         initiatives.forEach(i -> {
             Mockito.verify(rewardRule2DroolsRuleServiceMock).apply(i);
-            Mockito.verify(droolsRuleRepositoryMock).save(Mockito.argThat(dr -> dr.getId().equals(i.getInitiativeId())));
+            Mockito.verify(droolsRuleRepositoryMock).saveRetryable(Mockito.argThat(dr -> dr.getId().equals(i.getInitiativeId())));
         });
 
         Mockito.verify(kieContainerBuilderServiceMock, Mockito.atLeast(1)).buildAll();

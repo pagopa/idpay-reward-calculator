@@ -41,11 +41,11 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
         boolean isChargeOperation = operationTypeHandlerService.isChargeOperation(trx);
         if(isChargeOperation && !StringUtils.isEmpty(trx.getCorrelationId())){
             log.debug("[REWARD] Recognized charge op with a correlationId, checking for duplicate and refund ops");
-            return transactionProcessedRepository.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())
+            return transactionProcessedRepository.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId())
                     .collectList()
                     .flatMap(trxs -> checkCorrelatedTransactions(trx, trxs));
         } else {
-            return transactionProcessedRepository.findById(trx.getId())
+            return transactionProcessedRepository.findByIdRetryable(trx.getId())
                     .flatMap(result -> {
                         if(!isChargeOperation && isRefundNotMatchRejection(result)){
                             log.info("[REWARD][REFUND_RECOVER] Retrieved recovered refund {}", result.getId());
@@ -112,7 +112,7 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
             trxProcessed = transaction2TransactionProcessedMapper.apply(trx);
         }
         trxProcessed.setElaborationDateTime(LocalDateTime.now());
-        return transactionProcessedRepository.save(trxProcessed);
+        return transactionProcessedRepository.saveRetryable(trxProcessed);
     }
 
     private static boolean isNotElaboratedTransaction(RewardTransactionDTO trx) {

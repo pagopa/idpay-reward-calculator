@@ -1,8 +1,10 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeRetryer;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.utils.MongoRequestRateTooLargeUtilities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -76,6 +78,9 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
 
     @Override
     public Mono<UpdateResult> createIfNotExists(String userId, String initiativeId) {
+      return MongoRequestRateTooLargeRetryer.withRetry(createIfNotExistsInner(userId, initiativeId), MongoRequestRateTooLargeUtilities.maxRetry, MongoRequestRateTooLargeUtilities.maxMillisElapsed);
+    }
+    public Mono<UpdateResult> createIfNotExistsInner(String userId, String initiativeId) {
         String counterId = UserInitiativeCounters.buildId(userId, initiativeId);
         return mongoTemplate
                     .upsert(
@@ -94,6 +99,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                             return Mono.error(e);
                         }
                     });
-        }
+    }
+
 
 }

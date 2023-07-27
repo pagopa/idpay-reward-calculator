@@ -94,7 +94,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     protected Mono<DroolsRule> execute(InitiativeReward2BuildDTO payload, Message<String> message, Map<String, Object> ctx) {
         return Mono.just(payload)
                 .map(rewardRule2DroolsRuleService)
-                .flatMap(droolsRuleRepository::save)
+                .flatMap(droolsRuleRepository::saveRetryable)
                 .doOnNext(i -> rewardContextHolderService.setInitiativeConfig(i.getInitiativeConfig()));
     }
 
