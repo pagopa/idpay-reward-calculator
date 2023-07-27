@@ -4,7 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeRetryer;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.utils.MongoRequestRateTooLargeUtilities;
+import it.gov.pagopa.common.utils.MongoRequestRateTooLargeConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -78,7 +78,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
 
     @Override
     public Mono<UpdateResult> createIfNotExists(String userId, String initiativeId) {
-      return MongoRequestRateTooLargeRetryer.withRetry(createIfNotExistsInner(userId, initiativeId), MongoRequestRateTooLargeUtilities.maxRetry, MongoRequestRateTooLargeUtilities.maxMillisElapsed);
+      return MongoRequestRateTooLargeRetryer.withRetry(createIfNotExistsInner(userId, initiativeId), MongoRequestRateTooLargeConfig.maxRetry, MongoRequestRateTooLargeConfig.maxMillisElapsed);
     }
     public Mono<UpdateResult> createIfNotExistsInner(String userId, String initiativeId) {
         String counterId = UserInitiativeCounters.buildId(userId, initiativeId);

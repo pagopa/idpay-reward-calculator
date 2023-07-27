@@ -9,7 +9,7 @@ import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.OnboardingInfo;
-import it.gov.pagopa.reward.utils.MongoRequestRateTooLargeUtilities;
+import it.gov.pagopa.common.utils.MongoRequestRateTooLargeConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     @Override
     public Flux<InitiativeConfig> getInitiatives(TransactionDTO trx) {
         if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
-            return MongoRequestRateTooLargeRetryer.withRetry(getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null), MongoRequestRateTooLargeUtilities.maxRetry, MongoRequestRateTooLargeUtilities.maxMillisElapsed)
+            return MongoRequestRateTooLargeRetryer.withRetry(getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null), MongoRequestRateTooLargeConfig.maxRetry, MongoRequestRateTooLargeConfig.maxMillisElapsed)
                     .map(Pair::getFirst); // Async trx support just physical person initiatives (not families)
         } else {
             if(trx.getRefundInfo() != null){
