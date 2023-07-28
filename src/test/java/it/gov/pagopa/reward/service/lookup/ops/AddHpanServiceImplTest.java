@@ -82,7 +82,7 @@ class AddHpanServiceImplTest {
         Assertions.assertEquals(3, activeTimeIntervalsResult.size());
 
         ActiveTimeInterval intervalChangeExpected = ActiveTimeInterval.builder()
-                .startInterval(time.minusMonths(5L))
+                .startInterval(time.minusMonths(5L).plusDays(1))
                 .endInterval(time).build();
         Assertions.assertTrue(activeTimeIntervalsResult.contains(intervalChangeExpected));
 

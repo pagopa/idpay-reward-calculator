@@ -84,7 +84,7 @@ class DeleteHpanServiceImplTest {
         Assertions.assertEquals(2, activeTimeIntervalsResult.size());
 
         ActiveTimeInterval activeIntervalExpected = ActiveTimeInterval.builder()
-                .startInterval(time.minusMonths(5L))
+                .startInterval(time.minusMonths(5L).plusDays(1))
                 .endInterval(time).build();
 
         ActiveTimeInterval activeIntervalAfter = activeTimeIntervalsResult.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
