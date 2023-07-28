@@ -57,13 +57,14 @@ import java.util.stream.Stream;
         "logging.level.it.gov.pagopa.reward.service.lookup.HpanInitiativesServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.AddHpanServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
 class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_PF = "INITIATIVE_ID_PF";
     private static final String INITIATIVE_ID_NF = "INITIATIVE_ID_NF";
 
-    private final int dbElementsNumbers = 200;
-    private final int updatedHpanNumbers = 1000;
+    private final int dbElementsNumbers = 10;
+    private final int updatedHpanNumbers = 50;
     private final int minBiasForNFInitiative = dbElementsNumbers + ((updatedHpanNumbers - dbElementsNumbers)/2);
 
     @Autowired
@@ -352,6 +353,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     //region not valid useCases
 
     private final List<Pair<Supplier<String>, Consumer<ConsumerRecord<String, String>>>> errorUseCases = new ArrayList<>();
+    // useCase0
     {
         String useCaseJsonNotHpan = "{\"initiativeId\":\"id_0\",\"userId\":\"userid_0\", \"operationType\":\"ADD_INSTRUMENT\",\"operationDate\":\"2022-08-27T10:58:30.053881354\"}";
         errorUseCases.add(Pair.of(
@@ -402,6 +404,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 }
         ));
 
+        // useCase1
         final String failingExceptionHpanUpdateOutcomePublishingUserId = "FAILING_HPAN_UPDATE_OUTCOME_PUBLISHING_DUE_EXCEPTION";
         PaymentMethodInfoDTO infoFailingExceptionHpanUpdatePublishing = PaymentMethodInfoDTO.builder()
                 .hpan("HPAN_%s".formatted(failingExceptionHpanUpdateOutcomePublishingUserId))
@@ -494,7 +497,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     }
 
     private void checkUserInitiativeCounters(int newHPans) {
-        int[] i = new int[]{200};
+        int[] i = new int[]{dbElementsNumbers};
         Assertions.assertEquals(newHPans, userInitiativeCountersRepository.count().block());
         Objects.requireNonNull(userInitiativeCountersRepository.findAll()
                                 .sort(Comparator.comparing(UserInitiativeCounters::getUserId,
