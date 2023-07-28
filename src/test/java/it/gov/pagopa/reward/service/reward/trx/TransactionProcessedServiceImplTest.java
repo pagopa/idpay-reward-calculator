@@ -75,7 +75,7 @@ class TransactionProcessedServiceImplTest {
     }
 
     private void checkDuplicateTransaction_findByIdBased_Ok(TransactionDTO trx) {
-        Mockito.when(transactionProcessedRepositoryMock.findByIdRetryable(trx.getId())).thenReturn(Mono.empty());
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.empty());
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();
@@ -105,7 +105,7 @@ class TransactionProcessedServiceImplTest {
 
     private void checkDuplicateTransaction_findByIdBased_Ko(TransactionDTO trx) {
         TransactionProcessed trxDuplicate = TransactionProcessedFaker.mockInstance(1);
-        Mockito.when(transactionProcessedRepositoryMock.findByIdRetryable(trx.getId())).thenReturn(Mono.just(trxDuplicate));
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trxDuplicate));
         Mockito.when(recoveryProcessedTransactionServiceMock.checkIf2Recover(trx, trxDuplicate)).thenReturn(Mono.empty());
 
         // When
@@ -126,7 +126,7 @@ class TransactionProcessedServiceImplTest {
         previousRejected.setId(refund.getId());
 
         Mockito.when(transactionProcessedRepositoryMock
-                        .findByIdRetryable(refund.getId()))
+                        .findById(refund.getId()))
                 .thenReturn(Mono.just(previousRejected));
 
         // When
@@ -144,7 +144,7 @@ class TransactionProcessedServiceImplTest {
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
 
-        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.empty());
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.empty());
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();
@@ -163,7 +163,7 @@ class TransactionProcessedServiceImplTest {
         RewardTransactionDTO correlatedRefund2 = buildDiscardedCorrelatedRefund(trx, 3);
 
         Mockito.when(transactionProcessedRepositoryMock
-                        .findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId()))
+                        .findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.just(correlatedRefund1, correlatedRefund2));
 
         Mockito.when(trxRePublisherServiceMock.notify(Mockito.any())).thenReturn(true);
@@ -188,7 +188,7 @@ class TransactionProcessedServiceImplTest {
         RewardTransactionDTO correlatedRefund2 = buildDiscardedCorrelatedRefund(trx, 3);
 
         Mockito.when(transactionProcessedRepositoryMock
-                        .findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId()))
+                        .findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId()))
                 .thenReturn(Flux.just(correlatedRefund1, correlatedRefund2));
 
         Mockito.when(trxRePublisherServiceMock.notify(Mockito.same(correlatedRefund1))).thenReturn(false);
@@ -229,7 +229,7 @@ class TransactionProcessedServiceImplTest {
         trxDuplicate.setId(trx.getId());
         trxDuplicate.setAcquirerId(trx.getAcquirerId());
         trxDuplicate.setCorrelationId(trx.getCorrelationId());
-        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.just(trxDuplicate));
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.just(trxDuplicate));
         Mockito.when(recoveryProcessedTransactionServiceMock.checkIf2Recover(trx, trxDuplicate)).thenReturn(Mono.empty());
 
         // When
@@ -250,7 +250,7 @@ class TransactionProcessedServiceImplTest {
         trxDuplicate.setOperationType("00");
         trxDuplicate.setAcquirerId(trx.getAcquirerId());
         trxDuplicate.setCorrelationId(trx.getCorrelationId());
-        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationIdRetryable(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.just(trxDuplicate));
+        Mockito.when(transactionProcessedRepositoryMock.findByAcquirerIdAndCorrelationId(trx.getAcquirerId(), trx.getCorrelationId())).thenReturn(Flux.just(trxDuplicate));
 
         // When
         TransactionDTO result = service.checkDuplicateTransactions(trx).block();
@@ -280,7 +280,7 @@ class TransactionProcessedServiceImplTest {
 
     private void saveNoRefundDiscarded(RewardTransactionDTO trx) {
         TransactionProcessed expectedStored = transaction2TransactionProcessedMapper.apply(trx);
-        Mockito.when(transactionProcessedRepositoryMock.saveRetryable(Mockito.argThat(storingTrx -> {
+        Mockito.when(transactionProcessedRepositoryMock.save(Mockito.argThat(storingTrx -> {
                     Assertions.assertNotNull(storingTrx.getElaborationDateTime());
                     storingTrx.setElaborationDateTime(null);
 
@@ -317,7 +317,7 @@ class TransactionProcessedServiceImplTest {
     }
 
     private void saveNotElaboratedTransaction(RewardTransactionDTO trx) {
-        Mockito.when(transactionProcessedRepositoryMock.saveRetryable(Mockito.same(trx))).thenReturn(Mono.just(trx));
+        Mockito.when(transactionProcessedRepositoryMock.save(Mockito.same(trx))).thenReturn(Mono.just(trx));
 
         // When
         BaseTransactionProcessed result = service.save(trx).block();

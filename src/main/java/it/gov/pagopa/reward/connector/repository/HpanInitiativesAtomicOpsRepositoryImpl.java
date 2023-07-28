@@ -1,11 +1,9 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeRetryer;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.common.utils.MongoRequestRateTooLargeConfig;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -22,12 +20,9 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     public HpanInitiativesAtomicOpsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
+
     @Override
     public Mono<UpdateResult> createIfNotExist(HpanInitiatives hpanInitiatives) {
-      return MongoRequestRateTooLargeRetryer.withRetry(createIfNotExistInner(hpanInitiatives), MongoRequestRateTooLargeConfig.maxRetry, MongoRequestRateTooLargeConfig.maxMillisElapsed);
-    }
-
-    private Mono<UpdateResult> createIfNotExistInner(HpanInitiatives hpanInitiatives) {
         return mongoTemplate
                 .upsert(
                         Query.query(Criteria
@@ -49,10 +44,6 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
 
     @Override
     public Mono<UpdateResult> setInitiative(String hpan, OnboardedInitiative onboardedInitiative) {
-      return MongoRequestRateTooLargeRetryer.withRetry(setInitiativeInner(hpan, onboardedInitiative), MongoRequestRateTooLargeConfig.maxRetry, MongoRequestRateTooLargeConfig.maxMillisElapsed);
-    }
-
-    private Mono<UpdateResult> setInitiativeInner(String hpan, OnboardedInitiative onboardedInitiative) {
         if (onboardedInitiative.getActiveTimeIntervals().isEmpty()) {
             return mongoTemplate
                     .updateFirst(

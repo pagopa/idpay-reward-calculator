@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.reward;
 
-import it.gov.pagopa.common.reactive.mongo.retry.MongoRequestRateTooLargeRetryer;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -9,7 +8,6 @@ import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.OnboardingInfo;
-import it.gov.pagopa.common.utils.MongoRequestRateTooLargeConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -37,7 +35,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     @Override
     public Flux<InitiativeConfig> getInitiatives(TransactionDTO trx) {
         if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
-            return MongoRequestRateTooLargeRetryer.withRetry(getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null), MongoRequestRateTooLargeConfig.maxRetry, MongoRequestRateTooLargeConfig.maxMillisElapsed)
+            return getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null)
                     .map(Pair::getFirst); // Async trx support just physical person initiatives (not families)
         } else {
             if(trx.getRefundInfo() != null){
