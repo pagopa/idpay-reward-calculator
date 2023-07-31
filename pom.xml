@@ -99,6 +99,12 @@
             <!-- Forced to 2.0 due to https://nvd.nist.gov/vuln/detail/CVE-2022-1471 -->
             <version>2.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-http</artifactId>
+            <!-- This dependency is the same as provided by Spring, we are enforcing it here because Grype is not able to understand the right version adopted (https://github.com/anchore/grype/issues/1009) -->
+            <version>1.1.9</version>
+        </dependency>
 
         <!--TEST-->
         <dependency>
