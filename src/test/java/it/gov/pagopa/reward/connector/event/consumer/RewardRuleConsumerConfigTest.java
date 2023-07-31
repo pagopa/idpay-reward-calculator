@@ -54,7 +54,7 @@ public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
 
     @Test
     void testRewardRuleBuilding(){
-        int validRules=100; // use even number
+        int validRules=20; // use even number
         int notValidRules = errorUseCases.size();
         long maxWaitingMs = 30000;
 

@@ -105,6 +105,12 @@
             <!-- This dependency is the same as provided by Spring, we are enforcing it here because Grype is not able to understand the right version adopted (https://github.com/anchore/grype/issues/1009) -->
             <version>1.1.9</version>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-core</artifactId>
+            <!-- This dependency is the same as provided by Spring, we are enforcing it here because Grype is not able to understand the right version adopted (https://github.com/anchore/grype/issues/1009) -->
+            <version>1.1.9</version>
+        </dependency>
 
         <!--TEST-->
         <dependency>
