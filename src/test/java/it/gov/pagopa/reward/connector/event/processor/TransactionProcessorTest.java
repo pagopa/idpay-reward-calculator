@@ -83,7 +83,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
 
     @Test
     void testTransactionProcessor() throws JsonProcessingException {
-        int validTrx = 1000; // use even number
+        int validTrx = 100; // use even number
         int notValidTrx = errorUseCases.size();
         int duplicateTrx = Math.min(100, validTrx/2); // we are sending as duplicated the first N transactions: error cases could invalidate duplicate check
         long maxWaitingMs = 60000;

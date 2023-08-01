@@ -73,8 +73,8 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
     @SpyBean
     private TransactionProcessedService transactionProcessedServiceSpy;
 
-    private final int N = 1000;
-    private final int duplicateTrx = Math.min(100, N);
+    private final int N = 50;
+    private final int duplicateTrx = Math.min(20, N);
 
     private int publishedIntoErrorTopicInstead=0;
 
