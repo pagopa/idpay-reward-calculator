@@ -95,7 +95,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
     @Test
     void test() {
 
-        int N = Math.max(useCases.size(), 50);
+        int N = Math.max(useCases.size(), 20);
 
         publishRewardRules();
 

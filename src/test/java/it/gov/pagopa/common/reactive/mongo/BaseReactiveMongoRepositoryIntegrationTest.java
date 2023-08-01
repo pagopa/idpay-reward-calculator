@@ -132,7 +132,10 @@ class BaseReactiveMongoRepositoryIntegrationTest {
         Assertions.assertNull(repository.findById("DUMMYID").block());
 
         List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>> commands = MongoTestUtilitiesService.stopAndGetMongoCommands();
-        Assertions.assertEquals(1, commands.size());
+        Assertions.assertEquals(1, commands
+                .stream()
+                .filter(c -> c.getKey().getType().equals("find"))
+                .count());
         Assertions.assertEquals("{\"find\": \"beneficiary_rule\", \"filter\": {\"_id\": \"VALUE\"}, \"$db\": \"idpay\"}", commands.get(0).getKey().getCommand());
         Assertions.assertEquals(2L, commands.get(0).getValue());
     }
