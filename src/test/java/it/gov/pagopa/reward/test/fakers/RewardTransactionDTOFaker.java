@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 
 public class RewardTransactionDTOFaker {
@@ -22,6 +23,7 @@ public class RewardTransactionDTOFaker {
         trx.setRewards(Map.of(
                 initiativeId, new Reward(initiativeId, "ORGID", trx.getEffectiveAmount().divide(BigDecimal.TEN, RoundingMode.CEILING))
         ));
+        trx.setInitiatives(List.of(initiativeId));
         return mapper.apply(trx);
     }
 }
