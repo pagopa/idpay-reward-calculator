@@ -9,4 +9,5 @@ import java.util.Collection;
 public interface UserInitiativeCountersRepository extends ReactiveMongoRepository<UserInitiativeCounters,String>, UserInitiativeCountersAtomicOpsRepository {
     Flux<UserInitiativeCounters> findByUserId(String userId);
     Flux<UserInitiativeCounters> findByUserIdAndInitiativeIdIn(String userId, Collection<String> initiativeIds);
+    Flux<UserInitiativeCounters> deleteByInitiativeId(String initiativeId);
 }

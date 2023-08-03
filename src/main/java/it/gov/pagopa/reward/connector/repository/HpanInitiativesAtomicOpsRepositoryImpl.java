@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -87,5 +88,18 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                                 .currentDate(FIELD_INTERNAL_UPDATE_DATE),
                         HpanInitiatives.class
                 );
+    }
+
+    @Override
+    public Mono<UpdateResult> findAndRemoveInitiativeOnHpan(String initiativeId) {
+        return mongoTemplate
+                .updateMulti(
+                        Query.query(Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)
+                                .elemMatch(Criteria.where(OnboardedInitiative.Fields.initiativeId).is(initiativeId))),
+                        new Update().pull(HpanInitiatives.Fields.onboardedInitiatives,
+                                new BasicDBObject(OnboardedInitiative.Fields.initiativeId,initiativeId)),
+                        HpanInitiatives.class
+                );
+
     }
 }

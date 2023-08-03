@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,6 +25,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
+@FieldNameConstants
 @Document(collection = "transactions_processed")
 public class TransactionProcessed implements BaseTransactionProcessed {
     @Id

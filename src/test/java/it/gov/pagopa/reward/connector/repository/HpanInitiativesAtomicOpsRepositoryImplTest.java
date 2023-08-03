@@ -7,11 +7,13 @@ import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -260,5 +262,41 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         OnboardedInitiative initiativeActivate1 = hpanAfterActiveCall1.getOnboardedInitiatives().get(1);
         Assertions.assertEquals(HpanInitiativeStatus.ACTIVE, initiativeActivate1.getStatus());
     }
+
+    @Test
+    void findAndRemoveInitiativeOnHpan(){
+        LocalDateTime now = LocalDateTime.now();
+        OnboardedInitiative onboardings1 = OnboardedInitiative.builder()
+                .initiativeId("INITIATIVEID_1")
+                .familyId("FAM")
+                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                        .startInterval(now.minusMonths(2L))
+                        .endInterval(now.minusDays(2L))
+                        .build()))
+                .build();
+        OnboardedInitiative onboardings2 = OnboardedInitiative.builder()
+                .initiativeId("INITIATIVEID_2")
+                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                        .startInterval(now.minusMonths(1L))
+                        .build()))
+                .build();
+        HpanInitiatives hpanInitiatives1 = HpanInitiativesFaker.mockInstance(1);
+        hpanInitiatives1.setHpan("hpan_prova");
+        hpanInitiatives1.setOnboardedInitiatives(List.of(onboardings1, onboardings2));
+
+        HpanInitiatives hpanInitiatives2 = HpanInitiativesFaker.mockInstance(2);
+        hpanInitiatives2.setHpan("hpan_prova_1");
+        hpanInitiatives2.setOnboardedInitiatives(List.of(onboardings1));
+
+        hpanInitiativesRepository.saveAll(List.of(hpanInitiatives1, hpanInitiatives2)).blockLast();
+
+        hpanInitiativesRepository.findAndRemoveInitiativeOnHpan("INITIATIVEID_1").block();
+
+        Long countElements = hpanInitiativesRepository.findAll()
+                .filter(hpanInitiatives -> hpanInitiatives.getOnboardedInitiatives().stream().anyMatch(o -> "INITIATIVE_1".equals(o.getInitiativeId()))).count().block();
+        Assertions.assertEquals(0, countElements);
+
+    }
+
 }
 

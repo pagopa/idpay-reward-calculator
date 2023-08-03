@@ -15,8 +15,15 @@ import java.util.stream.Collectors;
 public class AuditUtilities {
 
     private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s", AuditLogger.SRCIP);
-    private static final String CEF_PATTERN = CEF + " msg={} suser={} cs1Label=TRXIssuer cs1={} cs2Label=TRXAcquirer cs2={} cs3Label=rewards cs3={} cs4Label=rejectionReasons cs4={} cs5Label=initiativeRejectionReasons cs5={}";
+    private static final String CEF_BASE_PATTERN = CEF + " msg={}";
+    private static final String CEF_PATTERN = CEF_BASE_PATTERN + " suser={} cs1Label=TRXIssuer cs1={} cs2Label=TRXAcquirer cs2={} cs3Label=rewards cs3={} cs4Label=rejectionReasons cs4={} cs5Label=initiativeRejectionReasons cs5={}";
     private static final String CEF_CORRELATED_PATTERN = CEF_PATTERN + " cs6Label=correlationId cs6={}";
+    private static final String CEF_PATTERN_DELETE = CEF_BASE_PATTERN + " cs1Label=initiativeId cs1={}";
+    private static final String CEF_USER_PATTERN_DELETE = CEF_PATTERN_DELETE + " suser={}";
+    private static final String CEF_BENEFICIARY_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=beneficiaryId cs2={}";
+    private static final String CEF_INSTRUMENTS_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=numberInstruments cs2={}";
+    private static final String CEF_TRANSACTIONS_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=numberTransactions cs2={}";
+
 
     public void logCharge(String userId, String trxIssuer, String trxAcquirer, String rewards, String rejectionReasons, String initiativeRejectionReasons) {
         AuditLogger.logAuditString(
@@ -52,4 +59,35 @@ public class AuditUtilities {
             this.logRefund(trx.getUserId(), trx.getIdTrxIssuer(), trx.getIdTrxAcquirer(), rewards, rejectionReasons, initiativeRejectionReasons, trx.getCorrelationId());
         }
     }
+
+    //region delete
+    public void logDeletedRewardDroolRule(String initiativeId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_DELETE,
+                "Reward rule deleted.", initiativeId
+        );
+    }
+
+    public void logDeletedEntityCounters(String initiativeId, String entityId) {
+        AuditLogger.logAuditString(
+                CEF_BENEFICIARY_DELETE_PATTERN,
+                "Entity counter deleted.", initiativeId, entityId
+        );
+    }
+
+    public void logDeletedHpanInitiative(String initiativeId, Long deletedHpanInitiative) {
+        AuditLogger.logAuditString(
+                CEF_INSTRUMENTS_DELETE_PATTERN,
+                "Payment instruments deleted.", initiativeId, deletedHpanInitiative.toString()
+        );
+    }
+
+    public void logDeletedTransaction(String initiativeId, Long deletedTransactions) {
+        AuditLogger.logAuditString(
+                CEF_TRANSACTIONS_DELETE_PATTERN,
+                "Transactions deleted.", initiativeId, deletedTransactions.toString()
+        );
+    }
+
+    //endregion
 }
