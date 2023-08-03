@@ -1,12 +1,15 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -35,7 +38,9 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         Query.query(criteriaById(id)
                                 .orOperator(
                                         Criteria.where(UserInitiativeCounters.Fields.updateDate).is(null),
-                                        Criteria.where(UserInitiativeCounters.Fields.updateDate).lt(LocalDateTime.now().minusSeconds(throttlingSeconds)))),
+                                        Criteria.expr(
+                                                ComparisonOperators.Lt.valueOf(UserInitiativeCounters.Fields.updateDate)
+                                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000*throttlingSeconds))))),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
                                 .push(UserInitiativeCounters.Fields.updatingTrxId).slice(1).each(updatingTrxId),
