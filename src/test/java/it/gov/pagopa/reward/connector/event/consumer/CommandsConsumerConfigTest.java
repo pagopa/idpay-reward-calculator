@@ -25,6 +25,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.util.Pair;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,6 +35,10 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
+@TestPropertySource(properties = {
+        "logging.level.it.gov.pagopa.reward.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.commands.CommandsMediatorServiceImpl=WARN",
+})
 class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
     private final String INITIATIVENAME = "INITIATIVENAME%d";
