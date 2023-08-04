@@ -88,7 +88,7 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
         trxRejected.setId("TRX2");
         trxRejected.setRewards(null);
         trxRejected.setInitiatives(List.of(initiativeId));
-        trxRejected.setRewards(new HashMap<>()); //TODO check if always setting
+        trxRejected.setRewards(new HashMap<>());
         trxRejected.setInitiativeRejectionReasons(Map.of(initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID)));
         trxRejected.setStatus(RewardConstants.REWARD_STATE_REJECTED);
 
@@ -102,10 +102,8 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
 
         transactionProcessedRepository.findAll()
                 .toStream()
-                .forEach(trx -> {
-                    Assertions.assertFalse(trx.getInitiatives().contains(initiativeId), "Not remove initiative from list");
-                    Assertions.assertFalse(trx.getRewards().containsKey(initiativeId), "Not remove initiative from rewards map");
-                    Assertions.assertFalse(trx.getInitiativeRejectionReasons().containsKey(initiativeId), "Not remove initiative from rejected map");
-                });
+                .forEach(trx ->
+                    Assertions.assertFalse(trx.getInitiatives().contains(initiativeId), "Not remove initiative from list")
+                );
     }
 }

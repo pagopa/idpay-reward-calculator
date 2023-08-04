@@ -18,7 +18,7 @@ spring:
       on-profile: default
   cloud:
     function:
-      definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter
+      definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter;commandsConsumer
     stream:
       bindings:
         trxProcessor-in-0:
@@ -54,10 +54,10 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-splitter-producer
         commandsConsumer-in-0:
-          binder: kafka-commands
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_COMMANDS:idpay-commands}
           group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-reward-calculator-consumer-group}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-commands
         # TODO remove me
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}

@@ -4,7 +4,6 @@ import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
-import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -42,14 +41,14 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     public Mono<String> execute(String initiativeId) {
         log.info("[DELETE_INITIATIVE] Starting handle delete initiative {}", initiativeId);
         return deleteTransactionProcessed(initiativeId)
-                .then(deleteRewardRuleNotification(initiativeId))
+                .then(deleteRewardDroolsRule(initiativeId))
                 .then(deleteHpanInitiatives(initiativeId))
                 .then(deleteEntityCounters(initiativeId))
                 .then(Mono.just(initiativeId));
 
     }
 
-    private Mono<Void> deleteRewardRuleNotification(String initiativeId){
+    private Mono<Void> deleteRewardDroolsRule(String initiativeId){
         return droolsRuleRepository.deleteById(initiativeId)
                 .doOnNext(v -> auditUtilities.logDeletedRewardDroolRule(
                         initiativeId
@@ -68,10 +67,10 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
 
     private Mono<Void> deleteTransactionProcessed(String initiativeId){
         return rewardContextHolderService.getInitiativeConfig(initiativeId)
-                .map(InitiativeConfig::getInitiativeRewardType)
-                .flatMap(initiativeRewardType -> {
-                    if(InitiativeRewardType.DISCOUNT.equals(initiativeRewardType)){
-                        return transactionProcessedRepository.deleteByInitiativeId(initiativeId).count()
+                .flatMap(initiativeConfig -> {
+                    if(InitiativeRewardType.DISCOUNT.equals(initiativeConfig.getInitiativeRewardType())){
+                        return transactionProcessedRepository.deleteByInitiativeId(initiativeId)
+                                .count()
                                 .doOnNext(count -> auditUtilities.logDeletedTransaction(initiativeId, count))
                                 .then();
                     }

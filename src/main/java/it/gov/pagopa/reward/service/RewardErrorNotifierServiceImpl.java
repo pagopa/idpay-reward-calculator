@@ -65,6 +65,7 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
                                           @Value("${spring.cloud.stream.binders.kafka-hpan-update-outcome.type}") String hpanUpdateOutcomeMessagingServiceType,
                                           @Value("${spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateOutcomeServer,
                                           @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}") String hpanUpdateOutcomeTopic,
+
                                           @Value("${spring.cloud.stream.binders.kafka-commands.type}") String rewardCommandsServiceType,
                                           @Value("${spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardCommandsServer,
                                           @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}") String rewardCommandsTopic,

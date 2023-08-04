@@ -19,7 +19,6 @@ public class AuditUtilities {
     private static final String CEF_PATTERN = CEF_BASE_PATTERN + " suser={} cs1Label=TRXIssuer cs1={} cs2Label=TRXAcquirer cs2={} cs3Label=rewards cs3={} cs4Label=rejectionReasons cs4={} cs5Label=initiativeRejectionReasons cs5={}";
     private static final String CEF_CORRELATED_PATTERN = CEF_PATTERN + " cs6Label=correlationId cs6={}";
     private static final String CEF_PATTERN_DELETE = CEF_BASE_PATTERN + " cs1Label=initiativeId cs1={}";
-    private static final String CEF_USER_PATTERN_DELETE = CEF_PATTERN_DELETE + " suser={}";
     private static final String CEF_BENEFICIARY_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=beneficiaryId cs2={}";
     private static final String CEF_INSTRUMENTS_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=numberInstruments cs2={}";
     private static final String CEF_TRANSACTIONS_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=numberTransactions cs2={}";
