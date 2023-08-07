@@ -35,12 +35,11 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     public Mono<UserInitiativeCounters> findByIdThrottled(String id, String updatingTrxId) {
         return mongoTemplate
                 .findAndModify(
-                        Query.query(criteriaById(id)
-                                .orOperator(
-                                        Criteria.where(UserInitiativeCounters.Fields.updateDate).is(null),
+                        Query.query(criteriaById(id))
+                                .addCriteria(
                                         Criteria.expr(
                                                 ComparisonOperators.Lt.valueOf(UserInitiativeCounters.Fields.updateDate)
-                                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000*throttlingSeconds))))),
+                                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * throttlingSeconds)))),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
                                 .push(UserInitiativeCounters.Fields.updatingTrxId).slice(1).each(updatingTrxId),
