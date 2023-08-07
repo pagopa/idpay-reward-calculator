@@ -37,18 +37,18 @@ class DeleteInitiativeServiceImplTest {
     @Mock private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
     @Mock private RewardContextHolderService rewardContextHolderServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
-    private DeleteInitiativeService deleteInitiativeService;
+    private DeleteInitiativeServiceImpl deleteInitiativeService;
 
     @BeforeEach
     void setUp() {
-        deleteInitiativeService = new DeleteInitiativeServiceImpl(
+        deleteInitiativeService = Mockito.spy(new DeleteInitiativeServiceImpl(
                 droolsRuleRepositoryMock,
                 hpanInitiativesRepositoryMock,
                 transactionProcessedRepositoryMock,
                 userInitiativeCountersRepositoryMock,
                 rewardContextHolderServiceMock,
                 auditUtilitiesMock
-        );
+        ));
     }
 
     @ParameterizedTest
@@ -118,9 +118,8 @@ class DeleteInitiativeServiceImplTest {
             Assertions.assertTrue(t instanceof  MongoException);
         }
     }
-
     @Test
-    void scheduleRemovedAfterInitiativeDeletion(){
+    void testSchedule(){
         HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(1);
         hpanInitiatives.setOnboardedInitiatives(new ArrayList<>());
         Mockito.when(hpanInitiativesRepositoryMock.deleteHpanWithoutInitiative())
@@ -131,10 +130,9 @@ class DeleteInitiativeServiceImplTest {
         Mockito.when(transactionProcessedRepositoryMock.deleteTransactionsWithoutInitiative())
                 .thenReturn(Flux.just());
 
-        deleteInitiativeService.removedAfterInitiativeDeletion().block();
+        deleteInitiativeService.scheduleRemovedAfterInitiativeDeletion();
 
         Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).deleteHpanWithoutInitiative();
         Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).deleteTransactionsWithoutInitiative();
-
     }
 }

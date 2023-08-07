@@ -100,7 +100,6 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .subscribe(x -> log.debug("[DELETE_INITIATIVE][SCHEDULE] Completed schedule to remove payment instruments and transactions after delete of initiatives"));
     }
 
-    @Override
     public Mono<Void> removedAfterInitiativeDeletion(){
         return hpanInitiativesRepository.deleteHpanWithoutInitiative()
                 .doOnNext(hpanInitiative -> auditUtilities.logDeletedHpan(hpanInitiative.getHpan(), hpanInitiative.getUserId()))
