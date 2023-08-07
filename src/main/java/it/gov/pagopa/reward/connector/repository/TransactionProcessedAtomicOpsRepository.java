@@ -8,4 +8,5 @@ import reactor.core.publisher.Mono;
 public interface TransactionProcessedAtomicOpsRepository {
     Flux<TransactionProcessed> deleteByInitiativeId(String initiativeId);
     Mono<UpdateResult> findAndRemoveInitiativeOnTransaction(String initiativeId);
+    Flux<TransactionProcessed> deleteTransactionsWithoutInitiative();
 }

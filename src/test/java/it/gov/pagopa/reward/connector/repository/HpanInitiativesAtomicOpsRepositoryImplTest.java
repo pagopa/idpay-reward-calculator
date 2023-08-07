@@ -34,7 +34,10 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
     @AfterEach
     void clearData() {
         hpanInitiativesRepository.deleteAllById(
-                List.of("hpan_prova", "hpan_prova_1")).block();
+                List.of("hpan_prova",
+                        "hpan_prova_1",
+                        "hpan_prova_2"))
+                .block();
     }
 
     @Test
@@ -296,6 +299,34 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
                 .filter(hpanInitiatives -> hpanInitiatives.getOnboardedInitiatives().stream().anyMatch(o -> "INITIATIVE_1".equals(o.getInitiativeId()))).count().block();
         Assertions.assertEquals(0, countElements);
 
+    }
+
+    @Test
+    void deleteHpanWithoutInitiative(){
+        HpanInitiatives hpanNullOnboardings = HpanInitiativesFaker.mockInstanceWithoutInitiative(1);
+        hpanNullOnboardings.setHpan("hpan_prova");
+
+        HpanInitiatives hpanEmptyOnboardings = HpanInitiativesFaker.mockInstanceWithoutInitiative(2);
+        hpanEmptyOnboardings.setHpan("hpan_prova_1");
+        hpanEmptyOnboardings.setOnboardedInitiatives(new ArrayList<>());
+
+        HpanInitiatives hpanWithOnboarding = HpanInitiativesFaker.mockInstance(3);
+        hpanWithOnboarding.setHpan("hpan_prova_2");
+
+        hpanInitiativesRepository.saveAll(List.of(hpanNullOnboardings, hpanEmptyOnboardings, hpanWithOnboarding)).blockLast();
+
+        List<HpanInitiatives> result = hpanInitiativesAtomicOpsRepositoryImpl.deleteHpanWithoutInitiative().collectList().block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(List.of(hpanEmptyOnboardings), result);
+
+
+        List<HpanInitiatives> dbAfterOperation = hpanInitiativesRepository.findAll().collectList().block();
+
+        Assertions.assertNotNull(dbAfterOperation);
+        Assertions.assertEquals(2, dbAfterOperation.size());
+        Assertions.assertTrue(dbAfterOperation.stream().noneMatch(trx -> "hpan_prova_1".equals(trx.getHpan())));
     }
 
 }

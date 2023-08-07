@@ -5,10 +5,12 @@ import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -88,5 +90,23 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .doOnNext(entityId ->
                         auditUtilities.logDeletedEntityCounters(initiativeId, entityId))
                 .then();
+    }
+
+
+    @Scheduled(cron = "${app.delete.initiative.clean}")
+    void scheduleRemovedAfterInitiativeDeletion(){
+        log.debug("[DELETE_INITIATIVE][SCHEDULE] Starting schedule to remove payment instruments and transactions after delete of initiatives");
+        removedAfterInitiativeDeletion()
+                .subscribe(x -> log.debug("[DELETE_INITIATIVE][SCHEDULE] Completed schedule to remove payment instruments and transactions after delete of initiatives"));
+    }
+
+    @Override
+    public Mono<Void> removedAfterInitiativeDeletion(){
+        return hpanInitiativesRepository.deleteHpanWithoutInitiative()
+                .doOnNext(hpanInitiative -> auditUtilities.logDeletedHpan(hpanInitiative.getHpan(), hpanInitiative.getUserId()))
+                .then(transactionProcessedRepository.deleteTransactionsWithoutInitiative()
+                        .distinct(TransactionProcessed::getUserId)
+                        .doOnNext(trx -> auditUtilities.logDeletedTransactionForUser(trx.getUserId()))
+                        .then());
     }
 }

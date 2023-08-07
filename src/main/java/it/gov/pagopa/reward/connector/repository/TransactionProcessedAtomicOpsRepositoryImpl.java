@@ -35,4 +35,15 @@ public class TransactionProcessedAtomicOpsRepositoryImpl implements TransactionP
                         TransactionProcessed.class
                 );
     }
+
+    @Override
+    public Flux<TransactionProcessed> deleteTransactionsWithoutInitiative() {
+        return mongoTemplate
+                .findAllAndRemove(
+                        Query.query(
+                                Criteria.where(TransactionProcessed.Fields.initiatives)
+                                        .size(0)),
+                        TransactionProcessed.class
+                );
+    }
 }

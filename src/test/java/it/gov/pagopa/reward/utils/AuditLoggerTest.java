@@ -205,4 +205,34 @@ class AuditLoggerTest {
         );
     }
 
+    @Test
+    void logDeletedHpan(){
+        String hpan = "HPAN";
+        auditUtilities.logDeletedHpan(hpan, USER);
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Payment instruments without any initiative associate deleted." +
+                        " suser=%s cs1Label=hpan cs1=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                USER,
+                                hpan
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedTransactionForUser(){
+        auditUtilities.logDeletedTransactionForUser(USER);
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Transactions without any initiative associate deleted." +
+                        " suser=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                USER
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
 }

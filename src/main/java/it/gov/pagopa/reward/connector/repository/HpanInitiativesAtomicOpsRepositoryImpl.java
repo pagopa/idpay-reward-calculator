@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
@@ -101,5 +102,16 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                         HpanInitiatives.class
                 );
 
+    }
+
+    @Override
+    public Flux<HpanInitiatives> deleteHpanWithoutInitiative() {
+        return mongoTemplate
+                .findAllAndRemove(
+                        Query.query(
+                                Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)
+                                        .size(0)),
+                        HpanInitiatives.class
+                );
     }
 }

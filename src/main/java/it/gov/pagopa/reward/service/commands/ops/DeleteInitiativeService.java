@@ -4,4 +4,5 @@ import reactor.core.publisher.Mono;
 
 public interface DeleteInitiativeService {
     Mono<String> execute(String initiativeId);
+    Mono<Void> removedAfterInitiativeDeletion();
 }
