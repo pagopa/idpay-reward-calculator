@@ -6,6 +6,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -57,23 +58,7 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
     public Object decorateMonoRepositoryMethods(ProceedingJoinPoint pjp) throws Throwable {
         Mono<?> out = (Mono<?>) pjp.proceed();
 
-        return Mono.deferContextual(ctx -> {
-            if (isNotControllerContext(ctx)) {
-                if(enabledBatch) {
-                    return MongoRequestRateTooLargeRetryer.withRetry(out, maxRetryBatch,
-                        maxMillisElapsedBatch);
-                }else {
-                    return out;
-                }
-            } else {
-                if(enabledApi){
-                    return MongoRequestRateTooLargeRetryer.withRetry(out, maxRetryApi,
-                        maxMillisElapsedApi);
-                }else {
-                    return out;
-                }
-            }
-        });
+        return Mono.deferContextual(ctx -> decorateMethod(out, ctx));
     }
 
     @Around("inRepositoryClass() && returnFlux()")
@@ -81,23 +66,34 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
         @SuppressWarnings("unchecked") // only with Flux the compiler return error when using wildcard, so here we are using Object
         Flux<Object> out = (Flux<Object>) pjp.proceed();
 
-        return Flux.deferContextual(ctx -> {
-            if (isNotControllerContext(ctx)) {
-                if(enabledBatch) {
-                    return MongoRequestRateTooLargeRetryer.withRetry(out, maxRetryBatch,
-                        maxMillisElapsedBatch);
-                }else {
-                    return out;
-                }
-            } else {
-                if(enabledApi){
-                    return MongoRequestRateTooLargeRetryer.withRetry(out, maxRetryApi,
-                        maxMillisElapsedApi);
-                }else {
-                    return out;
-                }
+        return Flux.deferContextual(ctx -> decorateMethod(out, ctx));
+    }
+
+    private <T extends Publisher<?>> T decorateMethod(T out, ContextView ctx) {
+        if (isNotControllerContext(ctx)) {
+            if(enabledBatch) {
+                return invokeWithRetry(out, maxRetryBatch, maxMillisElapsedBatch);
+            }else {
+                return out;
             }
-        });
+        } else {
+            if(enabledApi){
+                return invokeWithRetry(out,  maxRetryApi, maxMillisElapsedApi);
+            }else {
+                return out;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Publisher<?>> T invokeWithRetry(T out, long maxRetry, long maxMillisElapsed) {
+        if(out instanceof Mono<?> mono) {
+            return (T) MongoRequestRateTooLargeRetryer.withRetry(mono, maxRetry,
+                    maxMillisElapsed);
+        } else {
+            return (T) MongoRequestRateTooLargeRetryer.withRetry((Flux<?>) out, maxRetry,
+                    maxMillisElapsed);
+        }
     }
 
     private static boolean isNotControllerContext(ContextView ctx) {
