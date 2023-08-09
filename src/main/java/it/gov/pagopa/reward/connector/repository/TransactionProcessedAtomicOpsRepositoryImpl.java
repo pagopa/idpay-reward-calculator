@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -17,16 +18,16 @@ public class TransactionProcessedAtomicOpsRepositoryImpl implements TransactionP
     }
 
     @Override
-    public Flux<TransactionProcessed> deleteByInitiativeId(String initiativeId) {
+    public Mono<DeleteResult> removeByInitiativeId(String initiativeId) {
         return mongoTemplate
-                .findAllAndRemove(
+                .remove(
                         Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).is(initiativeId)),
                         TransactionProcessed.class
                 );
     }
 
     @Override
-    public Mono<UpdateResult> findAndRemoveInitiativeOnTransaction(String initiativeId) {
+    public Mono<UpdateResult> removeInitiativeOnTransaction(String initiativeId) {
         return mongoTemplate
                 .updateMulti(
                         Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).is(initiativeId)),

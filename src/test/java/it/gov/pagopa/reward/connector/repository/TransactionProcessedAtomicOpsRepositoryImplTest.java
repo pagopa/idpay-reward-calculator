@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -59,11 +60,11 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
 
         transactionProcessedRepository.saveAll(List.of(trxRewarded,trxRejected)).blockLast();
 
-        List<TransactionProcessed> result = transactionProcessedAtomicOpsRepositoryImpl.deleteByInitiativeId(initiativeId).collectList().block();
+        DeleteResult result = transactionProcessedAtomicOpsRepositoryImpl.removeByInitiativeId(initiativeId).block();
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(0, transactionProcessedRepository.findAll().count().block());
+        Assertions.assertEquals(2, result.getDeletedCount());
+        Assertions.assertEquals(0, transactionProcessedRepository.count().block());
     }
 
     @Test
@@ -102,7 +103,7 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
 
         transactionProcessedRepository.saveAll(List.of(trxRewarded, trxRejected)).count().block();
 
-        UpdateResult result = transactionProcessedAtomicOpsRepositoryImpl.findAndRemoveInitiativeOnTransaction(initiativeId).block();
+        UpdateResult result = transactionProcessedAtomicOpsRepositoryImpl.removeInitiativeOnTransaction(initiativeId).block();
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(2, result.getModifiedCount());

@@ -50,7 +50,6 @@ import java.util.regex.Pattern;
                 //region common feature disabled
                 "app.reward-rule.cache.refresh-ms-rate=60000",
                 "logging.level.it.gov.pagopa.common.kafka.service.ErrorNotifierServiceImpl=WARN",
-                "app.delete.initiative.clean=-",
                 //endregion
 
                 //region kafka brokers

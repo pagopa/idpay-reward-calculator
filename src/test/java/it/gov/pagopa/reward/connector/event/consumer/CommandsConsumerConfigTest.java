@@ -17,7 +17,6 @@ import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import it.gov.pagopa.reward.utils.CommandsConstants;
-import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -42,9 +41,8 @@ import java.util.stream.IntStream;
 })
 class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
-    private final String INITIATIVENAME = "INITIATIVENAME%d";
     private final Set<String> USER_INITIATIVES_DISCOUNT = new HashSet<>();
-    private final Set<String> INITIATIVES_DELETED_DISCOUNT = new HashSet<>();
+    private final Set<String> INITIATIVES_DELETED_DISCOUNT_OR_SINGLE_REFUND = new HashSet<>();
     private final Set<String> INITIATIVES_DELETED_REFUND = new HashSet<>();
 
     @SpyBean
@@ -57,23 +55,24 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
     @Autowired
     private RewardContextHolderService rewardContextHolderService;
-    private static final int VALID_USE_CASES = 3;
+    private static final int VALID_USE_CASES = 4;
+    private static final int VALID_MESSAGES = 100;
 
     @Test
     void test() {
-        int validMessages = 100;
+        
         int notValidMessages = errorUseCases.size();
         long maxWaitingMs = 30000;
 
-        List<String> commandsPayloads = new ArrayList<>(notValidMessages+validMessages);
+        List<String> commandsPayloads = new ArrayList<>(notValidMessages+ VALID_MESSAGES);
         commandsPayloads.addAll(IntStream.range(0,notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
-        commandsPayloads.addAll(buildValidPayloads(notValidMessages, validMessages));
+        commandsPayloads.addAll(buildValidPayloads(notValidMessages, VALID_MESSAGES));
 
         long timeStart=System.currentTimeMillis();
         commandsPayloads.forEach(cp -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicCommands, null, null, cp));
         long timePublishingEnd = System.currentTimeMillis();
 
-        waitForLastStorageChange(validMessages/VALID_USE_CASES);
+        waitForLastStorageChange(VALID_MESSAGES /2);
         long timeEnd=System.currentTimeMillis();
 
         System.out.printf("""
@@ -85,7 +84,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                         ************************
                         """,
                 commandsPayloads.size(),
-                validMessages,
+                VALID_MESSAGES,
                 notValidMessages,
                 timePublishingEnd - timeStart,
                 timeEnd - timePublishingEnd,
@@ -104,7 +103,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                         ************************
                         """,
                 commandsPayloads.size(),
-                validMessages,
+                VALID_MESSAGES,
                 notValidMessages,
                 timePublishingEnd - timeStart,
                 timeEnd - timePublishingEnd,
@@ -115,7 +114,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private long waitForLastStorageChange(int n) {
         long[] countSaved={0};
         //noinspection ConstantConditions
-        TestUtils.waitFor(()->(countSaved[0]=userInitiativeCountersRepository.findAll().count().block()) == n, ()->"Expected %d saved users in db, read %d".formatted(n, countSaved[0]), 60, 1000);
+        TestUtils.waitFor(()->(countSaved[0]=transactionProcessedRepository.count().block()) == n, ()->"Expected %d saved users in db, read %d".formatted(n, countSaved[0]), 60, 1000);
         return countSaved[0];
     }
 
@@ -129,18 +128,24 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                             .build();
                     switch (i%VALID_USE_CASES){
                         case 0 -> {
-                            String userId = initializeDB(i, InitiativeRewardType.DISCOUNT, initiativeId);
+                            String userId = initializeDB(i, InitiativeRewardType.DISCOUNT, initiativeId, true);
                             USER_INITIATIVES_DISCOUNT.add(userId);
-                            INITIATIVES_DELETED_DISCOUNT.add(command.getEntityId());
+                            INITIATIVES_DELETED_DISCOUNT_OR_SINGLE_REFUND.add(command.getEntityId());
                             command.setOperationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE);
                         }
+
                         case 1 -> {
-                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId);
+                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId, false);
                             INITIATIVES_DELETED_REFUND.add(command.getEntityId());
                             command.setOperationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE);
                         }
+                        case 2 -> {
+                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId, true);
+                            INITIATIVES_DELETED_DISCOUNT_OR_SINGLE_REFUND.add(command.getEntityId());
+                            command.setOperationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE);
+                        }
                         default -> {
-                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId);
+                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId, true);
                             command.setOperationType("ANOTHER_TYPE");
                         }
                     }
@@ -150,7 +155,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                 .toList();
     }
 
-    private String initializeDB(int bias, InitiativeRewardType initiativeType, String initiativeId) {
+    private String initializeDB(int bias, InitiativeRewardType initiativeType, String initiativeId, boolean singleInitiative) {
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
                 .providedReward(BigDecimal.TEN)
@@ -163,25 +168,47 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                 .accruedReward(BigDecimal.TEN)
                 .build();
 
+        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
+                .initiativeId(initiativeId)
+                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                        .startInterval(LocalDateTime.now().minusMonths(3L)).build()))
+                .build();
+
+        OnboardedInitiative onboardedInitiative2 = OnboardedInitiative.builder()
+                .initiativeId("ANOTHER_INITIATIVE")
+                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                        .startInterval(LocalDateTime.now().minusMonths(3L)).build()))
+                .build();
 
         TransactionProcessed transactionProcessed = TransactionProcessedFaker.mockInstance(bias);
-        if(InitiativeRewardType.DISCOUNT.equals(initiativeType)){
+        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
+
+        if(singleInitiative){
             transactionProcessed.setRewards(Map.of(initiativeId, reward));
             transactionProcessed.setInitiatives(List.of(initiativeId));
+
+            hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
+
         } else {
             transactionProcessed.setRewards(
                     Map.of(initiativeId, reward,
                             "ANOTHER_INITIATIVE", reward2));
             transactionProcessed.setInitiatives(List.of(initiativeId, "ANOTHER_INITIATIVE"));
+
+            hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative, onboardedInitiative2));
+
         }
+
         transactionProcessedRepository.save(transactionProcessed).block();
 
+        hpanInitiativesRepository.save(hpanInitiatives).block();
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .initiativeRewardType(initiativeType)
                 .build();
 
+        String INITIATIVENAME = "INITIATIVENAME%d";
         DroolsRule droolsRule = DroolsRule.builder()
                 .id(initiativeId)
                 .name(INITIATIVENAME.formatted(bias))
@@ -190,19 +217,6 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                 .build();
 
         droolsRuleRepositorySpy.save(droolsRule).block();
-
-
-        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
-                .initiativeId(initiativeId)
-                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
-                        .startInterval(LocalDateTime.now().minusMonths(3L)).build()))
-                .build();
-
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
-        hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
-
-        hpanInitiativesRepository.save(hpanInitiatives).block();
-
 
         UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters
                 .builder(hpanInitiatives.getUserId(), initiativeId)
@@ -251,23 +265,27 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
     private void checkRepositories() {
         Set<String> allInitiativesDeleted = new HashSet<>();
-        allInitiativesDeleted.addAll(INITIATIVES_DELETED_DISCOUNT);
+        allInitiativesDeleted.addAll(INITIATIVES_DELETED_DISCOUNT_OR_SINGLE_REFUND);
         allInitiativesDeleted.addAll(INITIATIVES_DELETED_REFUND);
 
         Assertions.assertTrue(droolsRuleRepository.findAll().toStream().noneMatch(rule -> allInitiativesDeleted.contains(rule.getId())));
 
-        hpanInitiativesRepository.findAll()
-                .toStream()
-                .forEach(hi ->
-                    Assertions.assertTrue(hi.getOnboardedInitiatives().stream().noneMatch(e -> allInitiativesDeleted.contains(e.getInitiativeId())))
-                );
+        System.out.println(hpanInitiativesRepository.count().block());
+        List<HpanInitiatives> hpanInitiativeInDB = hpanInitiativesRepository.findAll().collectList().block();
+        Assertions.assertNotNull(hpanInitiativeInDB);
+        Assertions.assertEquals(VALID_MESSAGES/2, hpanInitiativeInDB.size());
+        hpanInitiativeInDB.forEach(hi ->
+                        Assertions.assertTrue(hi.getOnboardedInitiatives().stream().noneMatch(e -> allInitiativesDeleted.contains(e.getInitiativeId())))
+        );
 
-        transactionProcessedRepository.findAll()
-                .toStream()
-                .forEach(trx -> {
-                    Assertions.assertFalse(USER_INITIATIVES_DISCOUNT.contains(trx.getUserId()));
-                    Assertions.assertTrue(trx.getInitiatives().stream().noneMatch(allInitiativesDeleted::contains));
-                });
+
+        List<BaseTransactionProcessed> trxInDB = transactionProcessedRepository.findAll().collectList().block();
+        Assertions.assertNotNull(trxInDB);
+        Assertions.assertEquals(VALID_MESSAGES/2, trxInDB.size());
+        trxInDB.forEach(trx -> {
+            Assertions.assertFalse(USER_INITIATIVES_DISCOUNT.contains(trx.getUserId()));
+            Assertions.assertTrue(trx.getInitiatives().stream().noneMatch(allInitiativesDeleted::contains));
+        });
 
         Assertions.assertTrue(userInitiativeCountersRepository.findAll().toStream().noneMatch(us -> allInitiativesDeleted.contains(us.getInitiativeId())));
     }

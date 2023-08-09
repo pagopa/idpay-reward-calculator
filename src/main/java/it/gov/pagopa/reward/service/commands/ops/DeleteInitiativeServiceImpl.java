@@ -10,7 +10,6 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -46,6 +45,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .then(deleteRewardDroolsRule(initiativeId))
                 .then(deleteHpanInitiatives(initiativeId))
                 .then(deleteEntityCounters(initiativeId))
+                .then(removedAfterInitiativeDeletion())
                 .then(Mono.just(initiativeId));
 
     }
@@ -73,16 +73,15 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         return rewardContextHolderService.getInitiativeConfig(initiativeId)
                 .flatMap(initiativeConfig -> {
                     if(InitiativeRewardType.DISCOUNT.equals(initiativeConfig.getInitiativeRewardType())){
-                        return transactionProcessedRepository.deleteByInitiativeId(initiativeId)
-                                .count()
-                                .doOnNext(count -> {
-                                    log.info("[DELETE_INITIATIVE] Deleted {} transactions on initiative {}", count, initiativeId);
-                                    auditUtilities.logDeletedTransaction(initiativeId, count);
+                        return transactionProcessedRepository.removeByInitiativeId(initiativeId)
+                                .doOnNext(deleteResult -> {
+                                    log.info("[DELETE_INITIATIVE] Deleted {} transactions on initiative {}", deleteResult.getDeletedCount(), initiativeId);
+                                    auditUtilities.logDeletedTransaction(initiativeId, deleteResult.getDeletedCount());
                                 })
                                 .then();
                     }
                     else {
-                        return transactionProcessedRepository.findAndRemoveInitiativeOnTransaction(initiativeId)
+                        return transactionProcessedRepository.removeInitiativeOnTransaction(initiativeId)
                                 .doOnNext(updateResult -> {
                                     log.info("[DELETE_INITIATIVE] Deleted {} transactions on initiative {}", updateResult.getModifiedCount(), initiativeId);
                                     auditUtilities.logDeletedTransaction(initiativeId, updateResult.getModifiedCount());
@@ -95,17 +94,11 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private Mono<Void> deleteEntityCounters(String initiativeId){
         return userInitiativeCountersRepository.deleteByInitiativeId(initiativeId)
                 .map(UserInitiativeCounters::getUserId)
-                .doOnNext(entityId ->
-                        auditUtilities.logDeletedEntityCounters(initiativeId, entityId))
+                .doOnNext(entityId -> {
+                    log.info("[DELETE_INITIATIVE] Deleted counter with entityId{} on initiative {}", entityId, initiativeId);
+                    auditUtilities.logDeletedEntityCounters(initiativeId, entityId);
+                })
                 .then();
-    }
-
-
-    @Scheduled(cron = "${app.delete.initiative.clean}")
-    void scheduleRemovedAfterInitiativeDeletion(){
-        log.debug("[DELETE_INITIATIVE][SCHEDULE] Starting schedule to remove payment instruments and transactions after delete of initiatives");
-        removedAfterInitiativeDeletion()
-                .subscribe(x -> log.debug("[DELETE_INITIATIVE][SCHEDULE] Completed schedule to remove payment instruments and transactions after delete of initiatives"));
     }
 
     public Mono<Void> removedAfterInitiativeDeletion(){

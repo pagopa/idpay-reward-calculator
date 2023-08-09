@@ -324,6 +324,3 @@ app:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
   synchronousTransactions:
       throttlingSeconds: ${SYNCHRONOUS_REWARD_THROTTLING_SECONDS:${REWARD_THROTTLING_SECONDS:1}}
-  delete.initiative:
-    clean: ${CLEAN_DELETE_INITIATIVE:0 0 2 * * ?} # every day at 2AM
-
