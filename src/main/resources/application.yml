@@ -54,7 +54,7 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-splitter-producer
         commandsConsumer-in-0:
-          destination: ${KAFKA_TOPIC_COMMANDS:idpay-commands}
+          destination: ${KAFKA_COMMANDS_TOPIC:idpay-commands}
           group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-reward-calculator-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-commands

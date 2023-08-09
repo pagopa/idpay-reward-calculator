@@ -31,7 +31,9 @@ public class TransactionProcessedAtomicOpsRepositoryImpl implements TransactionP
                 .updateMulti(
                         Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).is(initiativeId)),
                         new Update()
-                                .pull(TransactionProcessed.Fields.initiatives, initiativeId),
+                                .pull(TransactionProcessed.Fields.initiatives, initiativeId)
+                                .unset("%s.%s".formatted(TransactionProcessed.Fields.rewards, initiativeId))
+                                .unset("%s.%s".formatted(TransactionProcessed.Fields.initiativeRejectionReasons, initiativeId)),
                         TransactionProcessed.class
                 );
     }

@@ -38,6 +38,7 @@ import java.util.stream.IntStream;
 @TestPropertySource(properties = {
         "logging.level.it.gov.pagopa.reward.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.commands.CommandsMediatorServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
 })
 class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
@@ -66,7 +67,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
         List<String> commandsPayloads = new ArrayList<>(notValidMessages+validMessages);
         commandsPayloads.addAll(IntStream.range(0,notValidMessages).mapToObj(i -> errorUseCases.get(i).getFirst().get()).toList());
-        commandsPayloads.addAll(buildValidPayloads(notValidMessages, notValidMessages+validMessages));
+        commandsPayloads.addAll(buildValidPayloads(notValidMessages, validMessages));
 
         long timeStart=System.currentTimeMillis();
         commandsPayloads.forEach(cp -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicCommands, null, null, cp));
@@ -118,35 +119,38 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         return countSaved[0];
     }
 
-    private Collection<String> buildValidPayloads(int startInterval, int endInterval) {
-        return IntStream.range(startInterval,endInterval)
+    private Collection<String> buildValidPayloads(int startInterval, int messageNumber) {
+        return IntStream.range(startInterval,startInterval+messageNumber)
                 .mapToObj(i -> {
+                    String initiativeId = INITIATIVEID.formatted(i);
                     CommandOperationDTO command = CommandOperationDTO.builder()
-                            .entityId(INITIATIVEID.formatted(i))
+                            .entityId(initiativeId)
                             .operationTime(LocalDateTime.now())
                             .build();
                     switch (i%VALID_USE_CASES){
                         case 0 -> {
-                            String userId = initializeDB(i, InitiativeRewardType.DISCOUNT);
+                            String userId = initializeDB(i, InitiativeRewardType.DISCOUNT, initiativeId);
                             USER_INITIATIVES_DISCOUNT.add(userId);
                             INITIATIVES_DELETED_DISCOUNT.add(command.getEntityId());
                             command.setOperationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE);
                         }
                         case 1 -> {
+                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId);
                             INITIATIVES_DELETED_REFUND.add(command.getEntityId());
                             command.setOperationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE);
                         }
-                        default -> command.setOperationType("ANOTHER_TYPE");
+                        default -> {
+                            initializeDB(i, InitiativeRewardType.REFUND, initiativeId);
+                            command.setOperationType("ANOTHER_TYPE");
+                        }
                     }
-                    initializeDB(i, InitiativeRewardType.REFUND);
                     return command;
                 })
                 .map(TestUtils::jsonSerializer)
                 .toList();
     }
 
-    private String initializeDB(int bias, InitiativeRewardType initiativeType) {
-        String initiativeId = INITIATIVEID.formatted(bias);
+    private String initializeDB(int bias, InitiativeRewardType initiativeType, String initiativeId) {
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
                 .providedReward(BigDecimal.TEN)
@@ -182,6 +186,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
                 .id(initiativeId)
                 .name(INITIATIVENAME.formatted(bias))
                 .initiativeConfig(initiativeConfig)
+                .rule("")
                 .build();
 
         droolsRuleRepositorySpy.save(droolsRule).block();
