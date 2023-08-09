@@ -1,7 +1,13 @@
 mongo:
   request-rate-too-large:
-    max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_MAX_RETRY:5}
-    max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_MAX_MILLIS_ELAPSED:0}
+    api:
+      enabled: ${MONGO_REQUEST_RATE_TOO_LARGE_API_ENABLED:false}
+      max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_API_MAX_RETRY:0}
+      max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_API_MAX_MILLIS_ELAPSED:200}
+    batch:
+      enabled: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_ENABLED:true}
+      max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_RETRY:5}
+      max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_MILLIS_ELAPSED:0}
 
 server:
   port: ${REWARD_CALCULATOR_PORT:8080}

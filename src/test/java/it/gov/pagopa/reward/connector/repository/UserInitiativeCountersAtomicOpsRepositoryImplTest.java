@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.BaseIntegrationTest;
@@ -13,13 +14,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
@@ -68,6 +74,34 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
     }
 
+    @Test
+    void testFindByIdThrottled_concurrent() {
+        int N = 20;
+        AtomicInteger dropped = new AtomicInteger(0);
+
+        storeTestCounter();
+
+        MongoTestUtilitiesService.startMongoCommandListener("findByIdThrottled_Concurrent");
+        Long successfulLocks = Flux.fromStream(IntStream.range(0, N).boxed())
+                .flatMap(x -> userInitiativeCountersRepository.findByIdThrottled(userCounterId, "TRXID")
+                        .onErrorResume(ClientExceptionNoBody.class, e -> {
+                            Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+                            dropped.incrementAndGet();
+                            return Mono.empty();
+                        }))
+                .count()
+                .block();
+        List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>> commands = MongoTestUtilitiesService.stopAndGetMongoCommands();
+        MongoTestUtilitiesService.printMongoCommands(commands);
+
+        Assertions.assertEquals(1, successfulLocks);
+        Assertions.assertEquals(N - 1, dropped.get());
+
+        Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> groupByCommand = commands.stream().collect(Collectors.groupingBy(c -> c.getKey().getType()));
+        Assertions.assertEquals(N, groupByCommand.get("findAndModify").get(0).getValue());
+        Assertions.assertEquals(N - 1, groupByCommand.get("find").get(0).getValue());
+    }
+
     private UserInitiativeCounters storeTestCounter() {
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, initiativeId);
         userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
@@ -85,8 +119,8 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
         Assertions.assertNotNull(stored);
         Assertions.assertEquals(expectedTrxId!=null? List.of(expectedTrxId) : null, stored.getUpdatingTrxId());
-//        Assertions.assertFalse(stored.getUpdateDate().isBefore(before));
-//        Assertions.assertFalse(stored.getUpdateDate().isAfter(after));
+        Assertions.assertFalse(stored.getUpdateDate().isBefore(before));
+        Assertions.assertFalse(stored.getUpdateDate().isAfter(after));
         return stored;
     }
 

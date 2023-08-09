@@ -35,12 +35,11 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     public Mono<UserInitiativeCounters> findByIdThrottled(String id, String updatingTrxId) {
         return mongoTemplate
                 .findAndModify(
-                        Query.query(criteriaById(id)
-                                .orOperator(
-                                        Criteria.where(UserInitiativeCounters.Fields.updateDate).is(null),
+                        Query.query(criteriaById(id))
+                                .addCriteria(
                                         Criteria.expr(
                                                 ComparisonOperators.Lt.valueOf(UserInitiativeCounters.Fields.updateDate)
-                                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000*throttlingSeconds))))),
+                                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * throttlingSeconds)))),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
                                 .push(UserInitiativeCounters.Fields.updatingTrxId).slice(1).each(updatingTrxId),
@@ -50,7 +49,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                 .switchIfEmpty(mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class)
                         .mapNotNull(counterExist -> {
                             if (Boolean.TRUE.equals(counterExist)) {
-                                throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "MANY_REQUESTS");
+                                throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS");
                             } else {
                                 return null;
                             }
