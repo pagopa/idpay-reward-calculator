@@ -92,7 +92,7 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> findAndRemoveInitiativeOnHpan(String initiativeId) {
+    public Mono<UpdateResult> removeInitiativeOnHpan(String initiativeId) {
         return mongoTemplate
                 .updateMulti(
                         Query.query(Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)

@@ -293,7 +293,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
         hpanInitiativesRepository.saveAll(List.of(hpanInitiatives1, hpanInitiatives2)).blockLast();
 
-        hpanInitiativesRepository.findAndRemoveInitiativeOnHpan("INITIATIVEID_1").block();
+        hpanInitiativesRepository.removeInitiativeOnHpan("INITIATIVEID_1").block();
 
         HpanInitiatives hpanProvaAfter1 = hpanInitiativesRepository.findById("hpan_prova").block();
         Assertions.assertNotNull(hpanProvaAfter1);

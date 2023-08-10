@@ -79,7 +79,7 @@ class DeleteInitiativeServiceImplTest {
                 .thenReturn(Mono.just(Mockito.mock(KieBase.class)));
 
         UpdateResult updateResultMock = Mockito.mock(UpdateResult.class);
-        Mockito.when(hpanInitiativesRepositoryMock.findAndRemoveInitiativeOnHpan(initiativeId))
+        Mockito.when(hpanInitiativesRepositoryMock.removeInitiativeOnHpan(initiativeId))
                 .thenReturn(Mono.just(updateResultMock));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
@@ -100,7 +100,7 @@ class DeleteInitiativeServiceImplTest {
         Assertions.assertNotNull(result);
 
         Mockito.verify(droolsRuleRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyString());
-        Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).findAndRemoveInitiativeOnHpan(Mockito.anyString());
+        Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).removeInitiativeOnHpan(Mockito.anyString());
         Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).deleteByInitiativeId(Mockito.anyString());
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getInitiativeConfig(Mockito.anyString());
 

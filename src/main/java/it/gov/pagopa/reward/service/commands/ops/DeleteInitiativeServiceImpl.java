@@ -61,7 +61,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteHpanInitiatives(String initiativeId){
-        return hpanInitiativesRepository.findAndRemoveInitiativeOnHpan(initiativeId)
+        return hpanInitiativesRepository.removeInitiativeOnHpan(initiativeId)
                 .doOnNext(updateResult -> {
                     log.info("[DELETE_INITIATIVE] Deleted {} instruments on initiative {}", updateResult.getModifiedCount(), initiativeId);
                     auditUtilities.logDeletedHpanInitiative(initiativeId, updateResult.getModifiedCount());
