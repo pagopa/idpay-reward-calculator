@@ -65,7 +65,7 @@ public final class InitiativeReward2BuildDTOFaker {
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
                 BigDecimal.valueOf((bias + 1)* 10000L),
-                InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
+                InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,
                 randomGenerator.nextBoolean(),
                 new BigDecimal(fakeValuesService.numerify("###.##")),
                 null,
@@ -127,7 +127,7 @@ public final class InitiativeReward2BuildDTOFaker {
         InitiativeGeneralDTO initiativeGeneral = new InitiativeGeneralDTO(
                 "NAME_%d_%s".formatted(bias, fakeValuesService.bothify("???")),
                 new BigDecimal(fakeValuesService.numerify("#####.##")),
-                InitiativeGeneralDTO.BeneficiaryTypeEnum.PG,
+                InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,
                 randomGenerator.nextBoolean(),
                 new BigDecimal(fakeValuesService.numerify("###.##")),
                 LocalDate.of(1970, 1, 1),

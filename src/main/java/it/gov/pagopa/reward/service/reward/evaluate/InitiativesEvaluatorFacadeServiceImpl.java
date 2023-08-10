@@ -65,7 +65,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
 
         final String userId = trx.getUserId(); // Async trx support just physical person initiatives (not families)
 
-        return userInitiativeCountersRepository.findByUserIdAndInitiativeIdIn(userId, initiatives)
+        return userInitiativeCountersRepository.findByEntityIdAndInitiativeIdIn(userId, initiatives)
                         .collectList()
                         .map(counters -> new UserInitiativeCountersWrapper(userId, counters.stream().collect(Collectors.toMap(UserInitiativeCounters::getInitiativeId, Function.identity()))))
                         .flatMap(userCounters -> evaluateAndUpdateBudget(trx, initiatives, userCounters));

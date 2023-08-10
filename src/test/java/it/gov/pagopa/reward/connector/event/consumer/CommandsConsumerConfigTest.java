@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.commands.CommandOperationDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
@@ -219,7 +220,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         droolsRuleRepositorySpy.save(droolsRule).block();
 
         UserInitiativeCounters userInitiativeCounters = UserInitiativeCounters
-                .builder(hpanInitiatives.getUserId(), initiativeId)
+                .builder(hpanInitiatives.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, initiativeId)
                 .build();
 
         userInitiativeCountersRepository.save(userInitiativeCounters).block();

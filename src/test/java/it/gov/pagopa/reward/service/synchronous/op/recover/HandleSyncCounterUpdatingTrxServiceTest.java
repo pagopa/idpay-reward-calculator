@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.synchronous.op.recover;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -37,7 +38,7 @@ class HandleSyncCounterUpdatingTrxServiceTest {
         service = new HandleSyncCounterUpdatingTrxServiceImpl(transactionProcessedRepositoryMock, userInitiativeCountersRepositoryMock);
 
         trx = TransactionDTOFaker.mockInstance(0);
-        counters = new UserInitiativeCounters(trx.getUserId(), "INITIATIVEID");
+        counters = new UserInitiativeCounters(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"INITIATIVEID");
     }
 
     private void checkResult(UserInitiativeCounters result) {

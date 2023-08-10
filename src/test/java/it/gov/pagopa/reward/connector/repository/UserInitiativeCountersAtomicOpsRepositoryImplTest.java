@@ -5,6 +5,7 @@ import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
@@ -103,7 +104,7 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
     }
 
     private UserInitiativeCounters storeTestCounter() {
-        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, initiativeId);
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
         userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
         return userInitiativeCountersRepository.save(userInitiativeCounters).block();
     }
@@ -135,11 +136,11 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
     @Test
     void testCreateIfNotExists(){
-        UserInitiativeCounters expectedCounter = new UserInitiativeCounters(userId, initiativeId);
+        UserInitiativeCounters expectedCounter = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
 
         Assertions.assertEquals(Boolean.FALSE, userInitiativeCountersRepository.existsById(expectedCounter.getId()).block());
 
-        UpdateResult createResult = userInitiativeCountersRepository.createIfNotExists(userId, initiativeId).block();
+        UpdateResult createResult = userInitiativeCountersRepository.createIfNotExists(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId).block();
         Assertions.assertEquals(UpdateResult.acknowledged(0, 0L, new BsonString(expectedCounter.getId())), createResult);
 
         UserInitiativeCounters stored = userInitiativeCountersRepository.findById(expectedCounter.getId()).block();
@@ -150,7 +151,7 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
         Assertions.assertEquals(expectedCounter, stored);
 
-        UpdateResult updateResult = userInitiativeCountersRepository.createIfNotExists(userId, initiativeId).block();
+        UpdateResult updateResult = userInitiativeCountersRepository.createIfNotExists(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId).block();
         Assertions.assertEquals(UpdateResult.acknowledged(1, 0L, null), updateResult);
     }
 }

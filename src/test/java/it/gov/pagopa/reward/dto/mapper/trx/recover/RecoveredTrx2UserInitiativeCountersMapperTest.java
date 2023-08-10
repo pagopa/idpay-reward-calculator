@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper.trx.recover;
 
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.Counters;
@@ -87,7 +88,7 @@ class RecoveredTrx2UserInitiativeCountersMapperTest {
         trxStored.setElaborationDateTime(LocalDateTime.now());
 
         // When
-        UserInitiativeCounters result = mapper.apply(reward, trxStored, previous);
+        UserInitiativeCounters result = mapper.apply(reward, trxStored, previous, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF);
 
         // Then
         Assertions.assertNotNull(result);
@@ -95,7 +96,7 @@ class RecoveredTrx2UserInitiativeCountersMapperTest {
         Assertions.assertSame(reward.getCounters().getVersion(), result.getVersion());
 
         Assertions.assertEquals(UserInitiativeCounters.buildId(trxStored.getUserId(), reward.getInitiativeId()), result.getId());
-        Assertions.assertEquals(trxStored.getUserId(), result.getUserId());
+        Assertions.assertEquals(trxStored.getUserId(), result.getEntityId());
         Assertions.assertEquals(reward.getInitiativeId(), result.getInitiativeId());
 
         Assertions.assertSame(trxStored.getElaborationDateTime(), result.getUpdateDate());

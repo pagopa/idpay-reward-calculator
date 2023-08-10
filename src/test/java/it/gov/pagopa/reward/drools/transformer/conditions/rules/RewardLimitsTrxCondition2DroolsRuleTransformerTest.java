@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
@@ -75,7 +76,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return List.of(
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setDailyCounters(new HashMap<>(Map.of(
                             "2022-03-15", new Counters(0L, BigDecimal.ZERO, BigDecimal.ZERO)
                     )));
@@ -84,7 +85,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setWeeklyCounters(new HashMap<>(Map.of(
                             "2022-03-3", new Counters(1L, BigDecimal.valueOf(5), BigDecimal.valueOf(5))
                     )));
@@ -93,7 +94,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setMonthlyCounters(new HashMap<>(Map.of(
                             "2022-03", new Counters(1L, BigDecimal.valueOf(9), BigDecimal.valueOf(5))
                     )));
@@ -102,7 +103,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     useCase="";
                     return buildTrx();
                 },
@@ -120,7 +121,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return List.of(
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setDailyCounters(new HashMap<>(Map.of(
                             "2022-03-15", new Counters(0L, BigDecimal.TEN, BigDecimal.ZERO)
                     )));
@@ -129,7 +130,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setWeeklyCounters(new HashMap<>(Map.of(
                             "2022-03-3", new Counters(1L, BigDecimal.valueOf(10), BigDecimal.ONE)
                     )));
@@ -138,7 +139,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setMonthlyCounters(new HashMap<>(Map.of(
                             "2022-03", new Counters(1L, BigDecimal.valueOf(11), BigDecimal.valueOf(5))
                     )));
@@ -147,7 +148,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                 },
                 () -> {
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                    counters = new UserInitiativeCounters("USERID", "agendaGroup");
+                    counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setYearlyCounters(new HashMap<>(Map.of(
                             "2022", new Counters(1L, BigDecimal.valueOf(12), BigDecimal.ONE)
                     )));

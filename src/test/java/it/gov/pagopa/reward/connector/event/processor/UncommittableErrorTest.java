@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.RewardValueDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
@@ -158,13 +159,13 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                 objectMapper.writeValueAsString(
                         expectedCounters.values().stream()
                                 .flatMap(c -> c.getInitiatives().values().stream())
-                                .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                                .sorted(Comparator.comparing(UserInitiativeCounters::getEntityId).thenComparing(UserInitiativeCounters::getInitiativeId))
                                 .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
                                 .toList()
                 ),
                 objectMapper.writeValueAsString(Objects.requireNonNull(
                                 userInitiativeCountersRepositorySpy.findAll().collectList().block()).stream()
-                        .sorted(Comparator.comparing(UserInitiativeCounters::getUserId).thenComparing(UserInitiativeCounters::getInitiativeId))
+                        .sorted(Comparator.comparing(UserInitiativeCounters::getEntityId).thenComparing(UserInitiativeCounters::getInitiativeId))
                         .peek(counter -> counter.setUpdateDate(counter.getUpdateDate().truncatedTo(ChronoUnit.DAYS)))
                         .toList()
                 ));
@@ -207,6 +208,9 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                         .build())
                 .rewardRule(RewardValueDTO.builder()
                         .rewardValue(BigDecimal.TEN)
+                        .build())
+                .general(InitiativeGeneralDTO.builder()
+                        .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                         .build())
                 .build();
     }
@@ -265,13 +269,13 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                         TransactionProcessed transactionProcessed = storeAsAlreadyProcessed(i);
 
                         RewardCounters rc1 = transactionProcessed.getRewards().get(INITIATIVE_ID1).getCounters();
-                        saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID1)
+                        saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,INITIATIVE_ID1)
                                 .version(rc1.getVersion() - 1)
                                 .trxNumber(1L)
                                 .build());
 
                         RewardCounters rc2 = transactionProcessed.getRewards().get(INITIATIVE_ID2).getCounters();
-                        UserInitiativeCounters c2 = saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), INITIATIVE_ID2)
+                        UserInitiativeCounters c2 = saveUserInitiativeCounter(trx, UserInitiativeCounters.builder(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,INITIATIVE_ID2)
                                 .version(rc2.getVersion())
                                 .trxNumber(2L)
                                 .totalAmount(TestUtils.bigDecimalValue(10))
@@ -402,7 +406,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                 INITIATIVE_ID2, r2));
 
         UserInitiativeCountersWrapper userCounter = createUserCounter(rewarded);
-        userCounter.getInitiatives().put(INITIATIVE_ID1, UserInitiativeCounters.builder(rewarded.getUserId(), INITIATIVE_ID1)
+        userCounter.getInitiatives().put(INITIATIVE_ID1, UserInitiativeCounters.builder(rewarded.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,INITIATIVE_ID1)
                 .version(2)
                 .trxNumber(2L)
                 .totalReward(EXPECTED_REWARD.multiply(BigDecimal.valueOf(2)).setScale(2, RoundingMode.UNNECESSARY))
@@ -430,7 +434,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
         Arrays.stream(initiativeIds).forEach(id -> {
             InitiativeConfig initiativeConfig = Objects.requireNonNull(droolsRuleRepository.findById(id).block()).getInitiativeConfig();
             updateInitiativeCounters(userInitiativeCountersWrapper
-                            .getInitiatives().computeIfAbsent(id, x -> UserInitiativeCounters.builder(trx.getUserId(), id).build()),
+                            .getInitiatives().computeIfAbsent(id, x -> UserInitiativeCounters.builder(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,id).build()),
                     trx, EXPECTED_REWARD, initiativeConfig);
         });
 
@@ -517,7 +521,7 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
     }
 
     private static Iterable<UserInitiativeCounters> configureMockitoArgListCounters(TransactionDTO trx) {
-        return Mockito.argThat(ctrs -> ctrs.iterator().next().getUserId().equals(trx.getUserId()));
+        return Mockito.argThat(ctrs -> ctrs.iterator().next().getEntityId().equals(trx.getUserId()));
     }
 
     private static Message<RewardTransactionDTO> configureMockitoArgMessageTrx(TransactionDTO trx) {

@@ -111,7 +111,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                     @SuppressWarnings("unchecked")
                     Iterable<UserInitiativeCounters> ctrs = i.getArgument(0, Iterable.class);
                     UserInitiativeCounters ctr = ctrs.iterator().next();
-                    AtomicInteger countdown = userId2ConfiguredFailingAttemptsCountdown.get(ctr.getUserId());
+                    AtomicInteger countdown = userId2ConfiguredFailingAttemptsCountdown.get(ctr.getEntityId());
 
                     return Flux.defer(()-> {
                         if (countdown != null && countdown.decrementAndGet() >= 0) {
@@ -128,7 +128,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .when(userInitiativeCountersRepositorySpy)
                 .saveAll(Mockito.argThat((Iterable<UserInitiativeCounters> ctrs) ->
                         StreamSupport.stream(ctrs.spliterator(), false)
-                                .anyMatch(t -> userId2ConfiguredFailingAttemptsCountdown.get(t.getUserId()) != null
+                                .anyMatch(t -> userId2ConfiguredFailingAttemptsCountdown.get(t.getEntityId()) != null
                                 )));
     }
 
@@ -149,6 +149,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
                 .build();
         rule.getGeneral().setBeneficiaryBudget(beneficiaryBudget);
+        rule.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF);
 
         InitiativeReward2BuildDTO ruleNF = InitiativeReward2BuildDTOFaker.mockInstanceBuilder(0, Collections.emptySet(), RewardValueDTO.class)
                 .initiativeId(INITIATIVEID_NF)
@@ -323,7 +324,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
             onboardUser(trxRequest);
 
-            UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(trxRequest.getUserId(), INITIATIVEID);
+            UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(trxRequest.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, INITIATIVEID);
             userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusDays(1));
             userInitiativeCounters.setExhaustedBudget(true);
             userInitiativeCountersRepositorySpy.save(userInitiativeCounters).block();
@@ -439,7 +440,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
             extractResponse(cancelTrx(trxRequest.getTransactionId()), HttpStatus.NOT_FOUND, null);
 
-            UserInitiativeCounters expectedCounter = new UserInitiativeCounters(trxRequest.getUserId(), INITIATIVEID);
+            UserInitiativeCounters expectedCounter = new UserInitiativeCounters(trxRequest.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,INITIATIVEID);
             expectedCounter.setUpdateDate(expectedCounter.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
 
             UserInitiativeCounters counter = userInitiativeCountersRepositorySpy.findById(UserInitiativeCounters.buildId(trxRequest.getUserId(), INITIATIVEID)).block();
@@ -587,7 +588,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getWeeklyCounters()).orElse(Collections.emptyMap()), storedCounter.getWeeklyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getMonthlyCounters()).orElse(Collections.emptyMap()), storedCounter.getMonthlyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getYearlyCounters()).orElse(Collections.emptyMap()), storedCounter.getYearlyCounters());
-                Assertions.assertEquals(counterSubjectId,storedCounter.getUserId());
+                Assertions.assertEquals(counterSubjectId,storedCounter.getEntityId());
                 Assertions.assertNull(storedCounter.getUpdatingTrxId());
             }
         } else {

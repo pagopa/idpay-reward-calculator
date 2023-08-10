@@ -500,21 +500,21 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         int[] i = new int[]{dbElementsNumbers};
         Assertions.assertEquals(newHPans, userInitiativeCountersRepository.count().block());
         Objects.requireNonNull(userInitiativeCountersRepository.findAll()
-                                .sort(Comparator.comparing(UserInitiativeCounters::getUserId,
+                                .sort(Comparator.comparing(UserInitiativeCounters::getEntityId,
                                         Comparator.comparing(u -> u.substring(7))))
                 .collectList()
                 .block()
                 )
                 .forEach(c->{
-                    int bias = Integer.parseInt(c.getUserId().substring(7));
+                    int bias = Integer.parseInt(c.getEntityId().substring(7));
                     Assertions.assertEquals(i[0], bias);
                     i[0]+=2;
 
                     UserInitiativeCounters expectedCounter;
                     if(bias > minBiasForNFInitiative){
-                        expectedCounter = new UserInitiativeCounters("FAM.ID_" + bias, INITIATIVE_ID_NF);
+                        expectedCounter = new UserInitiativeCounters("FAM.ID_" +bias, InitiativeGeneralDTO.BeneficiaryTypeEnum.NF, INITIATIVE_ID_NF);
                     } else {
-                        expectedCounter = new UserInitiativeCounters("USERID_" + bias, INITIATIVE_ID_PF);
+                        expectedCounter = new UserInitiativeCounters("USERID_" + bias, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF ,INITIATIVE_ID_PF);
                     }
                     Assertions.assertTrue(c.getUpdateDate().isBefore(expectedCounter.getUpdateDate()));
                     Assertions.assertTrue(c.getUpdateDate().isAfter(expectedCounter.getUpdateDate().truncatedTo(ChronoUnit.HOURS)));

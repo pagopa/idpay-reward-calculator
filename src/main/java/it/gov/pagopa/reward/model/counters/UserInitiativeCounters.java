@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.model.counters;
 
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -30,7 +31,9 @@ public class UserInitiativeCounters extends Counters {
     private long version;
 
     @NonNull
-    private String userId;
+    private String entityId;
+    @NonNull
+    private InitiativeGeneralDTO.BeneficiaryTypeEnum entityType;
     @NonNull
     private String initiativeId;
 
@@ -53,9 +56,10 @@ public class UserInitiativeCounters extends Counters {
     @Builder.Default
     private Map<String, Counters> yearlyCounters = new HashMap<>();
 
-    public UserInitiativeCounters(@NonNull String userId, @NonNull String initiativeId){
-        this.id=buildId(userId, initiativeId);
-        this.userId=userId;
+    public UserInitiativeCounters(@NonNull String entityId, @NonNull InitiativeGeneralDTO.BeneficiaryTypeEnum entityType, @NonNull String initiativeId){
+        this.id=buildId(entityId, initiativeId);
+        this.entityId = entityId;
+        this.entityType = entityType;
         this.initiativeId=initiativeId;
         this.updateDate = LocalDateTime.now();
 
@@ -65,38 +69,42 @@ public class UserInitiativeCounters extends Counters {
         this.monthlyCounters = new HashMap<>();
         this.yearlyCounters = new HashMap<>();
     }
+    public UserInitiativeCounters(@NonNull String entityId, @NonNull String initiativeId){
+        this(entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, initiativeId);
+    }
 
-    public static String buildId(String userId, String initiativeId) {
-        return "%s_%s".formatted(userId, initiativeId);
+    public static String buildId(String entityId, String initiativeId) {
+        return "%s_%s".formatted(entityId, initiativeId);
     }
 
     @SuppressWarnings("squid:S1452")
-    public static UserInitiativeCountersBuilder<?,?> builder(String userId, String initiativeId){
+    public static UserInitiativeCountersBuilder<?,?> builder(String entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum entityType,String initiativeId){
         return UserInitiativeCounters.hiddenBuilder()
-                .id(buildId(userId, initiativeId))
-                .userId(userId)
+                .id(buildId(entityId, initiativeId))
+                .entityId(entityId)
+                .entityType(entityType)
                 .initiativeId(initiativeId)
                 .updateDate(LocalDateTime.now());
     }
 
     public abstract static class UserInitiativeCountersBuilder<C extends UserInitiativeCounters, B extends UserInitiativeCountersBuilder<C, B>> extends CountersBuilder<C,B> {
 
-        public B userId(String userId){
-            this.userId=userId;
-            this.id=buildId(this.userId, this.initiativeId);
+        public B entityId(String entityId){
+            this.entityId =entityId;
+            this.id=buildId(this.entityId, this.initiativeId);
             return self();
         }
 
         public B initiativeId(String initiativeId){
             this.initiativeId=initiativeId;
-            this.id=buildId(this.userId, this.initiativeId);
+            this.id=buildId(this.entityId, this.initiativeId);
             return self();
         }
 
         @Override
         public C build() {
             C out = this.hiddenBuild();
-            out.setId(buildId(out.getUserId(), out.getInitiativeId()));
+            out.setId(buildId(out.getEntityId(), out.getInitiativeId()));
             return out;
         }
     }
