@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.connector.event.processor;
 
 import it.gov.pagopa.reward.service.reward.RewardCalculatorMediatorService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.binder.Binding;
 import org.springframework.cloud.stream.binder.BindingCreatedEvent;
@@ -41,18 +42,24 @@ public class TransactionProcessor implements ApplicationListener<RewardContextHo
 
     @EventListener(BindingCreatedEvent.class)
     public void onBindingCreatedEvent(BindingCreatedEvent event) {
-        if (event.getSource() instanceof Binding<?> binding && TRX_PROCESSOR_BINDING_NAME.equals(binding.getBindingName()) && contextReady) {
-            synchronized (this) {
-                binding.start();
+        if (event.getSource() instanceof Binding<?> binding && TRX_PROCESSOR_BINDING_NAME.equals(binding.getBindingName())) {
+            if (contextReady) {
+                log.info("[REWARD_CONTEXT_START] Application started and context ready");
+                synchronized (this) {
+                    binding.start();
+                }
+            } else {
+                log.info("[REWARD_CONTEXT_START] Application started but context not ready");
             }
         }
     }
 
     @Override
-    public void onApplicationEvent(RewardContextHolderServiceImpl.RewardContextHolderReadyEvent event) {
-        if(!contextReady) {
+    public void onApplicationEvent(RewardContextHolderServiceImpl.@NonNull RewardContextHolderReadyEvent event) {
+        if (!contextReady) {
             synchronized (this) {
                 contextReady = true;
+                log.info("[REWARD_CONTEXT_START] Context ready! Setting consumer as ready to start");
                 bindingsLifecycleController.changeState(TRX_PROCESSOR_BINDING_NAME, BindingsLifecycleController.State.STARTED);
             }
         }
