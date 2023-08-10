@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,10 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
     @AfterEach
     void clearData() {
         hpanInitiativesRepository.deleteAllById(
-                List.of("hpan_prova", "hpan_prova_1")).block();
+                List.of("hpan_prova",
+                        "hpan_prova_1",
+                        "hpan_prova_2"))
+                .block();
     }
 
     @Test
@@ -260,5 +265,76 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         OnboardedInitiative initiativeActivate1 = hpanAfterActiveCall1.getOnboardedInitiatives().get(1);
         Assertions.assertEquals(HpanInitiativeStatus.ACTIVE, initiativeActivate1.getStatus());
     }
+
+    @Test
+    void findAndRemoveInitiativeOnHpan(){
+        LocalDateTime now = LocalDateTime.now();
+        OnboardedInitiative onboardings1 = OnboardedInitiative.builder()
+                .initiativeId("INITIATIVEID_1")
+                .familyId("FAM")
+                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                        .startInterval(now.minusMonths(2L))
+                        .endInterval(now.minusDays(2L))
+                        .build()))
+                .build();
+        OnboardedInitiative onboardings2 = OnboardedInitiative.builder()
+                .initiativeId("INITIATIVEID_2")
+                .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
+                        .startInterval(now.minusMonths(1L).truncatedTo(ChronoUnit.MILLIS))
+                        .build()))
+                .build();
+        HpanInitiatives hpanInitiatives1 = HpanInitiativesFaker.mockInstance(1);
+        hpanInitiatives1.setHpan("hpan_prova");
+        hpanInitiatives1.setOnboardedInitiatives(List.of(onboardings1, onboardings2));
+
+        HpanInitiatives hpanInitiatives2 = HpanInitiativesFaker.mockInstance(2);
+        hpanInitiatives2.setHpan("hpan_prova_1");
+        hpanInitiatives2.setOnboardedInitiatives(List.of(onboardings1));
+
+        hpanInitiativesRepository.saveAll(List.of(hpanInitiatives1, hpanInitiatives2)).blockLast();
+
+        hpanInitiativesRepository.removeInitiativeOnHpan("INITIATIVEID_1").block();
+
+        HpanInitiatives hpanProvaAfter1 = hpanInitiativesRepository.findById("hpan_prova").block();
+        Assertions.assertNotNull(hpanProvaAfter1);
+        Assertions.assertEquals(List.of(onboardings2), hpanProvaAfter1.getOnboardedInitiatives());
+
+        HpanInitiatives hpanProvaAfter2 = hpanInitiativesRepository.findById("hpan_prova_1").block();
+        Assertions.assertNotNull(hpanProvaAfter2);
+        Assertions.assertEquals(new ArrayList<>(), hpanProvaAfter2.getOnboardedInitiatives());
+
+    }
+
+    @Test
+    void deleteHpanWithoutInitiative(){
+        HpanInitiatives hpanNullOnboardings = HpanInitiativesFaker.mockInstanceWithoutInitiative(1);
+        hpanNullOnboardings.setHpan("hpan_prova");
+
+        HpanInitiatives hpanEmptyOnboardings = HpanInitiativesFaker.mockInstanceWithoutInitiative(2);
+        hpanEmptyOnboardings.setHpan("hpan_prova_1");
+        hpanEmptyOnboardings.setOnboardedInitiatives(new ArrayList<>());
+
+        HpanInitiatives hpanWithOnboarding = HpanInitiativesFaker.mockInstance(3);
+        hpanWithOnboarding.setHpan("hpan_prova_2");
+
+        hpanInitiativesRepository.saveAll(List.of(hpanNullOnboardings, hpanEmptyOnboardings, hpanWithOnboarding)).blockLast();
+
+        List<HpanInitiatives> result = hpanInitiativesAtomicOpsRepositoryImpl.deleteHpanWithoutInitiative().collectList().block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(List.of(hpanEmptyOnboardings), result);
+
+
+        HpanInitiatives hpanProvaAfter = hpanInitiativesRepository.findById("hpan_prova").block();
+        Assertions.assertNotNull(hpanProvaAfter);
+
+        HpanInitiatives hpanProvaAfter1 = hpanInitiativesRepository.findById("hpan_prova_1").block();
+        Assertions.assertNull(hpanProvaAfter1);
+
+        HpanInitiatives hpanProvaAfter2 = hpanInitiativesRepository.findById("hpan_prova_2").block();
+        Assertions.assertNotNull(hpanProvaAfter2);
+    }
+
 }
 

@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}",
+        "${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO remove me
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -66,6 +67,7 @@ import java.util.regex.Pattern;
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO remove me
                 //endregion
 
@@ -108,6 +110,8 @@ public abstract class BaseIntegrationTest {
     protected String topicErrors;
     @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}")
     protected String topicHpanUpdateOutcome;
+    @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}")
+    protected String topicCommands;
 
     @Value("${spring.cloud.stream.bindings.trxProcessor-in-0.group}")
     protected String groupIdRewardProcessorRequest;
@@ -115,6 +119,8 @@ public abstract class BaseIntegrationTest {
     protected String groupIdRewardRuleConsumer;
     @Value("${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.group}")
     protected String groupIdHpanInitiativeLookupConsumer;
+    @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.group}")
+    protected String groupIdCommandsConsumer;
 
     @Value("${spring.data.redis.url}")
     protected String redisUrl;

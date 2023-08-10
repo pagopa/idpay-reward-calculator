@@ -25,7 +25,7 @@ class AuditLoggerTest {
     private static final String REWARD = "TEST_REWARD";
     private static final String REJECTIONREASONS = "TEST_REJECTIONREASONS";
     private static final String INIATIATIVEREJECTIONREASONS = "TEST_INIATIATIVEREJECTIONREASONS";
-
+    private static final String INITIATIVE_ID = "TEST_INITIATIVE_ID";
     private MemoryAppender memoryAppender;
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
@@ -136,6 +136,101 @@ class AuditLoggerTest {
                                 INIATIATIVEREJECTIONREASONS,
                                 CORRELATION_ID
                                 ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedRewardDroolRule(){
+        auditUtilities.logDeletedRewardDroolRule(INITIATIVE_ID);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Reward rule deleted." +
+                        " cs1Label=initiativeId cs1=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedEntityCounters(){
+        auditUtilities.logDeletedEntityCounters(INITIATIVE_ID, USER);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Entity counter deleted." +
+                        " cs1Label=initiativeId cs1=%s cs2Label=beneficiaryId cs2=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                USER
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedHpanInitiative(){
+        Long count = 10L;
+        auditUtilities.logDeletedHpanInitiative(INITIATIVE_ID, count);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Payment instruments deleted." +
+                        " cs1Label=initiativeId cs1=%s cs2Label=numberInstruments cs2=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                count
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedTransaction(){
+        Long count = 10L;
+        auditUtilities.logDeletedTransaction(INITIATIVE_ID, count);
+
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Transactions deleted." +
+                        " cs1Label=initiativeId cs1=%s cs2Label=numberTransactions cs2=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                INITIATIVE_ID,
+                                count
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedHpan(){
+        String hpan = "HPAN";
+        auditUtilities.logDeletedHpan(hpan, USER);
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Payment instruments without any initiative associate deleted." +
+                        " suser=%s cs1Label=hpan cs1=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                USER,
+                                hpan
+                        ),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logDeletedTransactionForUser(){
+        auditUtilities.logDeletedTransactionForUser(USER);
+        Assertions.assertEquals(
+                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Transactions without any initiative associate deleted." +
+                        " suser=%s")
+                        .formatted(
+                                AuditLogger.SRCIP,
+                                USER
+                        ),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }

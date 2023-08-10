@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
@@ -9,6 +10,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
@@ -85,6 +87,30 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                         new Update()
                                 .set(FIELD_INTERNAL_STATUS, status)
                                 .currentDate(FIELD_INTERNAL_UPDATE_DATE),
+                        HpanInitiatives.class
+                );
+    }
+
+    @Override
+    public Mono<UpdateResult> removeInitiativeOnHpan(String initiativeId) {
+        return mongoTemplate
+                .updateMulti(
+                        Query.query(Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)
+                                .elemMatch(Criteria.where(OnboardedInitiative.Fields.initiativeId).is(initiativeId))),
+                        new Update().pull(HpanInitiatives.Fields.onboardedInitiatives,
+                                new BasicDBObject(OnboardedInitiative.Fields.initiativeId,initiativeId)),
+                        HpanInitiatives.class
+                );
+
+    }
+
+    @Override
+    public Flux<HpanInitiatives> deleteHpanWithoutInitiative() {
+        return mongoTemplate
+                .findAllAndRemove(
+                        Query.query(
+                                Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)
+                                        .size(0)),
                         HpanInitiatives.class
                 );
     }

@@ -38,6 +38,7 @@ public class Transaction2TransactionProcessedMapper implements Function<RewardTr
             trxProcessed.setChannel(trx.getChannel());
             trxProcessed.setRuleEngineTopicPartition(trx.getRuleEngineTopicPartition());
             trxProcessed.setRuleEngineTopicOffset(trx.getRuleEngineTopicOffset());
+            trxProcessed.setInitiatives(trx.getInitiatives());
         }
         return trxProcessed;
     }

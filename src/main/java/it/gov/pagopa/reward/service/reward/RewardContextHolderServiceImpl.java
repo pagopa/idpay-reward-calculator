@@ -118,7 +118,8 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         }
     }
 
-    private Mono<KieBase> refreshKieContainerCacheMiss() {
+    @Override
+    public Mono<KieBase> refreshKieContainerCacheMiss() {
         final Flux<DroolsRule> droolsRuleFlux = Mono.defer(() -> {
             log.info("[REWARD_RULE_BUILD] Refreshing KieContainer");
             initiativeId2Config.clear();

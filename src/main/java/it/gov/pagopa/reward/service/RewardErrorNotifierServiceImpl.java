@@ -35,6 +35,11 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private final String hpanUpdateOutcomeServer;
     private final String hpanUpdateOutcomeTopic;
 
+    private final String rewardCommandsServiceType;
+    private final String rewardCommandsServer;
+    private final String rewardCommandsTopic;
+    private final String rewardCommandsGroup;
+
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
 
@@ -59,7 +64,13 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
 
                                           @Value("${spring.cloud.stream.binders.kafka-hpan-update-outcome.type}") String hpanUpdateOutcomeMessagingServiceType,
                                           @Value("${spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String hpanUpdateOutcomeServer,
-                                          @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}") String hpanUpdateOutcomeTopic) {
+                                          @Value("${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}") String hpanUpdateOutcomeTopic,
+
+                                          @Value("${spring.cloud.stream.binders.kafka-commands.type}") String rewardCommandsServiceType,
+                                          @Value("${spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardCommandsServer,
+                                          @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}") String rewardCommandsTopic,
+                                          @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.group}") String rewardCommandsGroup
+    ) {
         this.errorNotifierService = errorNotifierService;
 
         this.rewardRuleBuilderMessagingServiceType = rewardRuleBuilderMessagingServiceType;
@@ -84,6 +95,10 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
         this.hpanUpdateOutcomeMessagingServiceType = hpanUpdateOutcomeMessagingServiceType;
         this.hpanUpdateOutcomeServer = hpanUpdateOutcomeServer;
         this.hpanUpdateOutcomeTopic = hpanUpdateOutcomeTopic;
+        this.rewardCommandsServiceType = rewardCommandsServiceType;
+        this.rewardCommandsServer = rewardCommandsServer;
+        this.rewardCommandsTopic = rewardCommandsTopic;
+        this.rewardCommandsGroup = rewardCommandsGroup;
     }
 
     @Override
@@ -110,6 +125,12 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     public boolean notifyHpanUpdateOutcome(Message<?> message, String description, boolean retryable, Throwable exception) {
         return notify(hpanUpdateOutcomeMessagingServiceType, hpanUpdateOutcomeServer, hpanUpdateOutcomeTopic,null, message, description, retryable, false, exception);
     }
+
+    @Override
+    public void notifyRewardCommands(Message<String> message, String description, boolean retryable, Throwable exception) {
+        notify(rewardCommandsServiceType, rewardCommandsServer, rewardCommandsTopic, rewardCommandsGroup, message, description, retryable, true, exception);
+    }
+
 
     @Override
     public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
