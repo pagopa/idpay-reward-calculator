@@ -271,7 +271,6 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
         Assertions.assertTrue(droolsRuleRepository.findAll().toStream().noneMatch(rule -> allInitiativesDeleted.contains(rule.getId())));
 
-        System.out.println(hpanInitiativesRepository.count().block());
         List<HpanInitiatives> hpanInitiativeInDB = hpanInitiativesRepository.findAll().collectList().block();
         Assertions.assertNotNull(hpanInitiativeInDB);
         Assertions.assertEquals(VALID_MESSAGES/2, hpanInitiativeInDB.size());
