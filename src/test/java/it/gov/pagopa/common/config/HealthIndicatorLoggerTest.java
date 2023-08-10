@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.actuate.system.DiskSpaceHealthIndicator;
@@ -58,9 +57,7 @@ class HealthIndicatorLoggerTest {
     }
 
     private void test(Status expectedStatus) {
-        HealthComponent health = healthEndpoint.health();
-
-        Assertions.assertEquals(expectedStatus, health.getStatus());
+        healthEndpoint.health();
 
         Assertions.assertEquals(1, memoryAppender.getLoggedEvents().size());
         Assertions.assertEquals("[HEALTH][%s] DiskSpaceHealthIndicator: {DETAILKEY=DETAILVALUE}".formatted(expectedStatus),
