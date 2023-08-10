@@ -266,9 +266,22 @@ spring:
   redis:
     enabled: ${REDIS_CACHE_ENABLED:false}
 
-management.endpoints:
-  web:
-    exposure.include: info, health
+management:
+  health:
+    probes.enabled: true
+    redis.enabled: ${REDIS_CACHE_ENABLED:false}
+    mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
+  endpoint:
+    health:
+      group:
+        readiness.include: "*"
+        liveness.include: livenessState,diskSpace,ping,binders,streams
+      logging.slow-indicator-threshold: ${HEALTH_ACTUATOR_LOGGER_TIMEOUT_DURATION:PT1S}
+  endpoints:
+    jmx:
+      exposure.include: "*"
+    web:
+      exposure.include: info, health
 
 logging:
   level:
