@@ -150,11 +150,14 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
         Assertions.assertEquals(List.of(trxEmptyList), result);
 
 
-        List<BaseTransactionProcessed> dbAfterOperation = transactionProcessedRepository.findAll().collectList().block();
+        BaseTransactionProcessed trxNullInitiativesAfter = transactionProcessedRepository.findById("PROVA_TRXID_1").block();
+        Assertions.assertNotNull(trxNullInitiativesAfter);
 
-        Assertions.assertNotNull(dbAfterOperation);
-        Assertions.assertEquals(2, dbAfterOperation.size());
-        Assertions.assertTrue(dbAfterOperation.stream().noneMatch(trx -> "PROVA_TRXID_2".equals(trx.getId())));
+        BaseTransactionProcessed trxEmptyInitiativesAfter = transactionProcessedRepository.findById("PROVA_TRXID_2").block();
+        Assertions.assertNull(trxEmptyInitiativesAfter);
+
+        BaseTransactionProcessed trxWithInitiativesAfter = transactionProcessedRepository.findById("PROVA_TRXID_3").block();
+        Assertions.assertNotNull(trxWithInitiativesAfter);
 
     }
 }

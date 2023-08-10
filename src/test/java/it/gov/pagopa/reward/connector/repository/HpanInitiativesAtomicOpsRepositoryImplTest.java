@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -279,7 +280,7 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         OnboardedInitiative onboardings2 = OnboardedInitiative.builder()
                 .initiativeId("INITIATIVEID_2")
                 .activeTimeIntervals(List.of(ActiveTimeInterval.builder()
-                        .startInterval(now.minusMonths(1L))
+                        .startInterval(now.minusMonths(1L).truncatedTo(ChronoUnit.MILLIS))
                         .build()))
                 .build();
         HpanInitiatives hpanInitiatives1 = HpanInitiativesFaker.mockInstance(1);
@@ -294,9 +295,13 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
         hpanInitiativesRepository.findAndRemoveInitiativeOnHpan("INITIATIVEID_1").block();
 
-        Long countElements = hpanInitiativesRepository.findAll()
-                .filter(hpanInitiatives -> hpanInitiatives.getOnboardedInitiatives().stream().anyMatch(o -> "INITIATIVE_1".equals(o.getInitiativeId()))).count().block();
-        Assertions.assertEquals(0, countElements);
+        HpanInitiatives hpanProvaAfter1 = hpanInitiativesRepository.findById("hpan_prova").block();
+        Assertions.assertNotNull(hpanProvaAfter1);
+        Assertions.assertEquals(List.of(onboardings2), hpanProvaAfter1.getOnboardedInitiatives());
+
+        HpanInitiatives hpanProvaAfter2 = hpanInitiativesRepository.findById("hpan_prova_1").block();
+        Assertions.assertNotNull(hpanProvaAfter2);
+        Assertions.assertEquals(new ArrayList<>(), hpanProvaAfter2.getOnboardedInitiatives());
 
     }
 
@@ -321,11 +326,14 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         Assertions.assertEquals(List.of(hpanEmptyOnboardings), result);
 
 
-        List<HpanInitiatives> dbAfterOperation = hpanInitiativesRepository.findAll().collectList().block();
+        HpanInitiatives hpanProvaAfter = hpanInitiativesRepository.findById("hpan_prova").block();
+        Assertions.assertNotNull(hpanProvaAfter);
 
-        Assertions.assertNotNull(dbAfterOperation);
-        Assertions.assertEquals(2, dbAfterOperation.size());
-        Assertions.assertTrue(dbAfterOperation.stream().noneMatch(trx -> "hpan_prova_1".equals(trx.getHpan())));
+        HpanInitiatives hpanProvaAfter1 = hpanInitiativesRepository.findById("hpan_prova_1").block();
+        Assertions.assertNull(hpanProvaAfter1);
+
+        HpanInitiatives hpanProvaAfter2 = hpanInitiativesRepository.findById("hpan_prova_2").block();
+        Assertions.assertNotNull(hpanProvaAfter2);
     }
 
 }

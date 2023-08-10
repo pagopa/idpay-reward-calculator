@@ -10,6 +10,7 @@ import it.gov.pagopa.reward.model.OnboardedInitiative;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +28,7 @@ public final class HpanInitiativesFaker {
     public static HpanInitiatives mockInstance(Integer bias, String initiativeId){
         HpanInitiatives out = mockInstanceWithoutInitiative(bias);
 
-        LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime onboardedTime = LocalDateTime.now().with(LocalTime.MIN).truncatedTo(ChronoUnit.MILLIS);
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(initiativeId)
                 .status(HpanInitiativeStatus.ACTIVE)
