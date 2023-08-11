@@ -26,6 +26,7 @@ public class RewardTransactionDTO extends TransactionDTO implements BaseTransact
     private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 
     private Map<String, Reward> rewards;
+    private List<String> initiatives;
 
     @Builder.Default
     private LocalDateTime elaborationDateTime = LocalDateTime.now();

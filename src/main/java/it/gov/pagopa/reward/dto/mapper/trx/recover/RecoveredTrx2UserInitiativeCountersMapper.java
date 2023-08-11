@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper.trx.recover;
 
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.Counters;
@@ -12,8 +13,8 @@ import java.util.Map;
 @Service
 public class RecoveredTrx2UserInitiativeCountersMapper {
 
-    public UserInitiativeCounters apply(Reward r, TransactionProcessed trxStored, UserInitiativeCounters previous) {
-        return UserInitiativeCounters.builder(trxStored.getUserId(), r.getInitiativeId())
+    public UserInitiativeCounters apply(Reward r, TransactionProcessed trxStored, UserInitiativeCounters previous, InitiativeGeneralDTO.BeneficiaryTypeEnum entityType) {
+        return UserInitiativeCounters.builder(trxStored.getUserId(), entityType, r.getInitiativeId())
                 .version(r.getCounters().getVersion())
                 .updateDate(trxStored.getElaborationDateTime())
                 .exhaustedBudget(r.getCounters().isExhaustedBudget())

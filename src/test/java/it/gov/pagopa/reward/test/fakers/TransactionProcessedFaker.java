@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 
 import java.math.BigDecimal;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -72,6 +73,6 @@ public class TransactionProcessedFaker {
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .rewards(rewards)
-                .elaborationDateTime(LocalDateTime.now());
+                .elaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
     }
 }

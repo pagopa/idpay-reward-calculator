@@ -1,22 +1,22 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
+import it.gov.pagopa.reward.connector.repository.TransactionRepository;
+import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.recover.RecoveredTrx2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.recover.RecoveredTrx2UserInitiativeCountersMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.connector.repository.TransactionRepository;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 @Slf4j
@@ -27,19 +27,21 @@ public class RecoveryProcessedTransactionServiceImpl implements RecoveryProcesse
     private final RecoveredTrx2UserInitiativeCountersMapper recoveredTrx2UserInitiativeCountersMapper;
     private final RewardNotifierService rewardNotifierService;
     private final TransactionRepository transactionRepository;
+    private final RewardContextHolderService rewardContextHolderService;
 
-    public RecoveryProcessedTransactionServiceImpl(UserInitiativeCountersRepository countersRepository, RecoveredTrx2RewardTransactionMapper recoveredTrx2RewardTransactionMapper, RecoveredTrx2UserInitiativeCountersMapper recoveredTrx2UserInitiativeCountersMapper, RewardNotifierService rewardNotifierService, TransactionRepository transactionRepository) {
+    public RecoveryProcessedTransactionServiceImpl(UserInitiativeCountersRepository countersRepository, RecoveredTrx2RewardTransactionMapper recoveredTrx2RewardTransactionMapper, RecoveredTrx2UserInitiativeCountersMapper recoveredTrx2UserInitiativeCountersMapper, RewardNotifierService rewardNotifierService, TransactionRepository transactionRepository, RewardContextHolderService rewardContextHolderService) {
         this.countersRepository = countersRepository;
         this.recoveredTrx2RewardTransactionMapper = recoveredTrx2RewardTransactionMapper;
         this.recoveredTrx2UserInitiativeCountersMapper = recoveredTrx2UserInitiativeCountersMapper;
         this.rewardNotifierService = rewardNotifierService;
         this.transactionRepository = transactionRepository;
+        this.rewardContextHolderService = rewardContextHolderService;
     }
 
     @Override
     public Mono<Void> checkIf2Recover(TransactionDTO trx, TransactionProcessed trxStored) {
         if (!CollectionUtils.isEmpty(trxStored.getRewards())) {
-            return countersRepository.findByUserIdAndInitiativeIdIn(trxStored.getUserId(), trxStored.getRewards().keySet())
+            return countersRepository.findByEntityIdAndInitiativeIdIn(trxStored.getUserId(), trxStored.getRewards().keySet())
                     .collectMap(UserInitiativeCounters::getInitiativeId)
                     .flatMap(storedCounters -> compareCounters(trx, trxStored, storedCounters));
         } else {
@@ -49,27 +51,25 @@ public class RecoveryProcessedTransactionServiceImpl implements RecoveryProcesse
     }
 
     private Mono<Void> compareCounters(TransactionDTO trx, TransactionProcessed trxStored, Map<String, UserInitiativeCounters> storedCounters) {
-        List<UserInitiativeCounters> countersToStore = trxStored.getRewards().values()
-                .stream()
-                .map(r -> {
+        Mono<?> mono = Flux.fromIterable(trxStored.getRewards().values())
+                .flatMap(r -> {
                     UserInitiativeCounters sc = storedCounters.get(r.getInitiativeId());
-                    if(sc == null || sc.getVersion() < r.getCounters().getVersion()){
-                        return recoveredTrx2UserInitiativeCountersMapper.apply(r, trxStored, sc);
+                    if (sc == null || sc.getVersion() < r.getCounters().getVersion()) {
+                        return rewardContextHolderService.getInitiativeConfig(r.getInitiativeId())
+                                .map(i -> recoveredTrx2UserInitiativeCountersMapper.apply(r, trxStored, sc, i.getBeneficiaryType()));
                     } else {
-                        return null;
+                        return Mono.empty();
                     }
                 })
-                .filter(Objects::nonNull)
-                .toList();
-
-        Mono<?> mono;
-
-        if (!CollectionUtils.isEmpty(countersToStore)) {
-            log.info("[REWARD][RECOVERY_TRX] Found recovered transaction with updated counters {}", trxStored.getId());
-            mono = countersRepository.saveAll(countersToStore).collectList();
-        } else {
-            mono = checkIf2PublishWhenNotCountersUpdated(trx, trxStored);
-        }
+                .collectList()
+                .flatMap(countersToStore -> {
+                    if (!CollectionUtils.isEmpty(countersToStore)) {
+                        log.info("[REWARD][RECOVERY_TRX] Found recovered transaction with updated counters {}", trxStored.getId());
+                        return countersRepository.saveAll(countersToStore).collectList();
+                    } else {
+                        return checkIf2PublishWhenNotCountersUpdated(trx, trxStored);
+                    }
+                });
 
         return publishTrxIfNotEmpty(trx, trxStored, mono)
                 .then();

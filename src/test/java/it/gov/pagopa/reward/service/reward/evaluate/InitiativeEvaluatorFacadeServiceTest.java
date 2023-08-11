@@ -1,6 +1,8 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -76,6 +78,8 @@ class InitiativeEvaluatorFacadeServiceTest {
 
         invalidTrx.setEffectiveAmount(invalidTrx.getAmount().negate());
 
+        List<InitiativeConfig> initiativeConfigs = List.of(InitiativeConfig.builder().initiativeId("INITIATIVE").beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF).build());
+
         List<String> initiatives = List.of("INITIATIVE");
 
         mockUseCases(trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
@@ -127,7 +131,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     private void mockUseCases(TransactionDTO trxPartialReverse, TransactionDTO trxTotalRefund, TransactionDTO trxTotalRefundNoCharge) {
         Mockito.when(transactionProcessedService.save(Mockito.any())).thenAnswer(i -> Mono.just(reward2ProcessedMapper.apply(i.getArgument(0))));
 
-        Mockito.when(userInitiativeCountersRepositoryMock.findByUserIdAndInitiativeIdIn(Mockito.any(), Mockito.any())).thenReturn(Flux.empty());
+        Mockito.when(userInitiativeCountersRepositoryMock.findByEntityIdAndInitiativeIdIn(Mockito.any(), Mockito.any())).thenReturn(Flux.empty());
         Mockito.when(userInitiativeCountersRepositoryMock.saveAll(Mockito.<Iterable<UserInitiativeCounters>>any())).thenReturn(Flux.empty());
 
         Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.any(), Mockito.any(), Mockito.any()))
@@ -135,7 +139,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
         Mockito.when(userInitiativeCountersUpdateServiceMock.update(Mockito.any(),Mockito.any())).thenAnswer(i-> {
             UserInitiativeCountersWrapper counters = i.getArgument(0, UserInitiativeCountersWrapper.class);
-            counters.setInitiatives(Map.of("INITIATIVE", new UserInitiativeCounters(counters.getUserId(), "INITIATIVE")));
+            counters.setInitiatives(Map.of("INITIATIVE", new UserInitiativeCounters(counters.getEntityId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"INITIATIVE")));
             return Mono.just(i.getArgument(1));
         });
 
@@ -165,7 +169,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
     private void verifyUserInitiativeCounterFindByIdCalls(List<String> initiativeIds, TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(userInitiativeCountersRepositoryMock).findByUserIdAndInitiativeIdIn(t.getUserId(), initiativeIds);
+            Mockito.verify(userInitiativeCountersRepositoryMock).findByEntityIdAndInitiativeIdIn(t.getUserId(), initiativeIds);
         }
     }
 
@@ -187,7 +191,7 @@ class InitiativeEvaluatorFacadeServiceTest {
 
     private void verifyUserInitiativeCounterSaveCalls(TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(userInitiativeCountersRepositoryMock).saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(i -> i.iterator().hasNext() && StreamSupport.stream(i.spliterator(), false).allMatch(c -> c.getUserId().equals(t.getUserId()))));
+            Mockito.verify(userInitiativeCountersRepositoryMock).saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(i -> i.iterator().hasNext() && StreamSupport.stream(i.spliterator(), false).allMatch(c -> c.getEntityId().equals(t.getUserId()))));
         }
     }
 

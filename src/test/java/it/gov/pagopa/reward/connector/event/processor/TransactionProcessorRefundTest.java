@@ -59,6 +59,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .initiativeName("NAME_"+initiativeId)
             .organizationId("ORGANIZATIONID_"+initiativeId)
             .general(InitiativeGeneralDTO.builder()
+                    .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(initiativeStartDate)
                     .build())
@@ -95,6 +96,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .initiativeName("NAME_"+initiative2totalRefundId)
             .organizationId("ORGANIZATIONID_"+initiative2totalRefundId)
             .general(InitiativeGeneralDTO.builder()
+                    .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(initiativeStartDate)
                     .build())
@@ -117,6 +119,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
             .initiativeName("NAME_"+initiativeTrxMinId)
             .organizationId("ORGANIZATIONID_"+initiativeTrxMinId)
             .general(InitiativeGeneralDTO.builder()
+                    .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                     .beneficiaryBudget(BigDecimal.valueOf(100))
                     .startDate(initiativeStartDate)
                     .build())
@@ -234,7 +237,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     }
 
     private void checkUserInitiativeCounter(RewardTransactionDTO rewardedTrx, boolean isTotalRefundUseCase, int bias) {
-        final List<UserInitiativeCounters> userInitiativesCounters = userInitiativeCountersRepositorySpy.findByUserId(rewardedTrx.getUserId()).collectList().block();
+        final List<UserInitiativeCounters> userInitiativesCounters = userInitiativeCountersRepositorySpy.findByEntityId(rewardedTrx.getUserId()).collectList().block();
         Assertions.assertNotNull(userInitiativesCounters);
         Assertions.assertFalse(userInitiativesCounters.isEmpty());
 
@@ -248,13 +251,13 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         refundUseCase.expectedInitiativeFinalCounterSupplier().get().forEach(initiativeCounter ->
                 {
                     UserInitiativeCounters actual = userInitiativesCounters.stream().filter(c -> c.getInitiativeId().equals(initiativeCounter.getInitiativeId())).findFirst().orElse(null);
-                    UserInitiativeCounters expected = initiativeCounter.toBuilder().userId(rewardedTrx.getUserId()).build();
+                    UserInitiativeCounters expected = initiativeCounter.toBuilder().entityId(rewardedTrx.getUserId()).build();
                     Assertions.assertNotNull(actual);
                     Assertions.assertEquals(expected.getVersion(), actual.getVersion());
                     Assertions.assertEquals(expected.getTrxNumber(), actual.getTrxNumber());
                     Assertions.assertEquals(expected.getTotalReward(), actual.getTotalReward());
                     Assertions.assertEquals(expected.getId(), actual.getId());
-                    Assertions.assertEquals(expected.getUserId(), actual.getUserId());
+                    Assertions.assertEquals(expected.getEntityId(), actual.getEntityId());
                     Assertions.assertEquals(expected.getInitiativeId(), actual.getInitiativeId());
                     Assertions.assertEquals(expected.getUpdateDate().truncatedTo(ChronoUnit.DAYS), actual.getUpdateDate().truncatedTo(ChronoUnit.DAYS));
                     Assertions.assertEquals(expected.getUpdateDate().truncatedTo(ChronoUnit.DAYS), actual.getUpdateDate().truncatedTo(ChronoUnit.DAYS));
@@ -728,7 +731,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
                 },
                 () -> {
                     UserInitiativeCounters baseInitiativeCounter = buildSimpleFullTemporalInitiativeCounter(1L, 9, 0.9, trxDate);
-                    UserInitiativeCounters initiative2totalTefundIdCounter = UserInitiativeCounters.builder("USERID", initiative2totalRefundId)
+                    UserInitiativeCounters initiative2totalTefundIdCounter = UserInitiativeCounters.builder("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiative2totalRefundId)
                             .version(2L)
                             .initiativeId(initiative2totalRefundId).build();
                     return List.of(baseInitiativeCounter, initiative2totalTefundIdCounter);
@@ -948,7 +951,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
         return buildSimpleInitiativeCounter(2L, userId, initiativeId, trxNumber, totalAmount, totalReward, false);
     }
     private static UserInitiativeCounters buildSimpleInitiativeCounter(long version, String userId, String initiativeId, long trxNumber, double totalAmount, double totalReward, boolean budgetExhausted) {
-        return UserInitiativeCounters.builder(userId, initiativeId)
+        return UserInitiativeCounters.builder(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId)
                 .version(version)
                 .trxNumber(trxNumber)
                 .totalAmount(TestUtils.bigDecimalValue(totalAmount))
@@ -967,7 +970,7 @@ class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
     private UserInitiativeCounters buildSimpleFullTemporalInitiativeCounter(long version, String userId, String initiativeId, long trxNumber, double totalAmount, double totalReward, OffsetDateTime trxDate) {
         BigDecimal totalAmountBigDecimal = TestUtils.bigDecimalValue(totalAmount);
         BigDecimal totalRewardBigDecimal = TestUtils.bigDecimalValue(totalReward);
-        return UserInitiativeCounters.builder(userId, initiativeId)
+        return UserInitiativeCounters.builder(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId)
                 .version(version)
                 .trxNumber(trxNumber)
                 .totalAmount(totalAmountBigDecimal)

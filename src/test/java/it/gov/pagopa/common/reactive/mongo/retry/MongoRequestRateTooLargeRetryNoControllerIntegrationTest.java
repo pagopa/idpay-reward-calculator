@@ -30,19 +30,19 @@ import java.time.LocalDateTime;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
         ReactiveRequestContextFilter.class,
-        MongoRequestRateTooLargeRetryWhenNotControllerAspect.class,
+        MongoRequestRateTooLargeAutomaticRetryAspect.class,
         ErrorManager.class,
         MongoExceptionHandler.class,
 
-        MongoRequestRateTooLargeRetryWhenNoControllerTest.TestController.class,
-        MongoRequestRateTooLargeRetryWhenNoControllerTest.TestRepository.class
+        MongoRequestRateTooLargeRetryNoControllerIntegrationTest.TestController.class,
+        MongoRequestRateTooLargeRetryNoControllerIntegrationTest.TestRepository.class
 })
 @WebFluxTest
-class MongoRequestRateTooLargeRetryWhenNoControllerTest {
+class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
 
-    @Value("${mongo.request-rate-too-large.max-retry:3}")
+    @Value("${mongo.request-rate-too-large.batch.max-retry:3}")
     private int maxRetry;
-    @Value("${mongo.request-rate-too-large.max-millis-elapsed:0}")
+    @Value("${mongo.request-rate-too-large.batch.max-millis-elapsed:0}")
     private int maxMillisElapsed;
 
     @SpyBean

@@ -123,7 +123,7 @@ public class CancelTrxSynchronousServiceTest {
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId() + "_REFUND")).thenReturn(Mono.just(trxRefund));
 
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), "INITIATIVEID0")))
-                .thenReturn(Mono.just(new UserInitiativeCounters(trx.getUserId(), "INITIATIVEID0")));
+                .thenReturn(Mono.just(new UserInitiativeCounters(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"INITIATIVEID0")));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder().initiativeId("INITIATIVEID0").beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PG).build();
 
@@ -163,7 +163,7 @@ public class CancelTrxSynchronousServiceTest {
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(trx));
 
 
-        UserInitiativeCounters expectedCounter = new UserInitiativeCounters("USERID0", "INITIATIVEID0");
+        UserInitiativeCounters expectedCounter = new UserInitiativeCounters("USERID0", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"INITIATIVEID0");
         Mono<UserInitiativeCounters> expectedCounterMono;
         Mono<BaseTransactionProcessed> trxRefundedProcessedMono;
         if(expectCounter){
@@ -190,7 +190,7 @@ public class CancelTrxSynchronousServiceTest {
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID0")
-                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PG)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
 
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVEID0")).thenReturn(Mono.just(initiativeConfig));

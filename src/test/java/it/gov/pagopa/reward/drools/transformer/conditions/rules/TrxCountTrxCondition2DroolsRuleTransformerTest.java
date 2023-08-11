@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.rule.trx.TrxCountDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -59,7 +60,7 @@ class TrxCountTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondit
     @Override
     protected UserInitiativeCounters getInitiativeCounters() {
         if(startingTransactioCount!=null) {
-            final UserInitiativeCounters counters = new UserInitiativeCounters("USERID", "agendaGroup");
+            final UserInitiativeCounters counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
             counters.setTrxNumber(startingTransactioCount);
             return counters;
         } else {

@@ -317,7 +317,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 .initiativeId(expected.getId())
                 .initiativeName("NAME_0_vnj")
                 .organizationId("ORGANIZATIONID_0")
-                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PG)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .beneficiaryBudget(BigDecimal.valueOf(477.32))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)

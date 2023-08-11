@@ -13,5 +13,6 @@ public interface RewardContextHolderService {
     void setRewardRulesKieBase(KieBase kieBase);
     Mono<InitiativeConfig> getInitiativeConfig(String initiativeId);
     void setInitiativeConfig(InitiativeConfig initiativeConfig);
+    Mono<KieBase> refreshKieContainerCacheMiss();
 
 }
