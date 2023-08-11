@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,9 +26,9 @@ public class MongoExceptionHandler {
   @Autowired
   private ErrorManager errorManager;
 
-  @ExceptionHandler(UncategorizedMongoDbException.class)
-  protected ResponseEntity<ErrorDTO> handleUncategorizedMongoDbException(
-      UncategorizedMongoDbException ex, ServerWebExchange request) {
+  @ExceptionHandler(DataAccessException.class)
+  protected ResponseEntity<ErrorDTO> handleDataAccessException(
+          DataAccessException ex, ServerWebExchange request) {
 
     if (MongoRequestRateTooLargeRetryer.isRequestRateTooLargeException(ex)) {
       Long retryAfterMs = MongoRequestRateTooLargeRetryer.getRetryAfterMs(ex);

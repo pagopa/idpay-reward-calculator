@@ -134,7 +134,7 @@ class MongoRequestRateTooLargeRetryerTest {
   void testMonoRequestRateTooLargeRetryAfterMsNull() {
     long[] counter = {0};
     UncategorizedMongoDbException expectedException = new UncategorizedMongoDbException(
-        "RequestRateTooLarge", new Throwable());
+        "TooManyRequests", new Throwable());
     Mono<Object> testPublisher = Mono.fromSupplier(() -> counter[0]++)
         .map(x -> {
           if (counter[0] <= REQUEST_RATE_TOO_LARGE_MAX_RETRY) {
@@ -249,7 +249,7 @@ class MongoRequestRateTooLargeRetryerTest {
   void testFluxRequestRateTooLargeRetryAfterMsNull() {
     long[] counter = {0};
     UncategorizedMongoDbException expectedException = new UncategorizedMongoDbException(
-        "RequestRateTooLarge", new Throwable());
+        "TooManyRequests", new Throwable());
     Flux<Object> testPublisher = Flux.defer(() -> Flux.just(counter[0]++))
         .map(x -> {
           if (counter[0] <= REQUEST_RATE_TOO_LARGE_MAX_RETRY) {
