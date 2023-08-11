@@ -1,17 +1,18 @@
 package it.gov.pagopa.common.reactive.mongo.retry;
 
 import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
-import java.time.Duration;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
+import org.springframework.dao.DataAccessException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 import reactor.util.retry.Retry.RetrySignal;
 import reactor.util.retry.RetrySpec;
+
+import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class MongoRequestRateTooLargeRetryer {
@@ -81,14 +82,14 @@ public class MongoRequestRateTooLargeRetryer {
 
   public static Long getRetryAfterMs(Throwable ex) {
     Matcher matcher = RETRY_AFTER_MS_PATTERN.matcher(ex.getMessage());
-    if (ex instanceof UncategorizedMongoDbException && matcher.find()) {
+    if (ex instanceof DataAccessException && matcher.find()) {
       return Long.parseLong(matcher.group(1));
     }
     return null;
   }
 
   public static boolean isRequestRateTooLargeException(Throwable ex) {
-    return ex instanceof UncategorizedMongoDbException && ex.getMessage().contains("RequestRateTooLarge");
+    return ex instanceof DataAccessException && ex.getMessage().contains("TooManyRequests");
   }
 
 }
