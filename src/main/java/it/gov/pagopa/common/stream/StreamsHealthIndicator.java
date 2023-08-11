@@ -43,6 +43,7 @@ public class StreamsHealthIndicator extends AbstractHealthIndicator implements C
         builder.withDetails(publisherSubscriptionCounts);
     }
 
+    /** error message printed when reactive stream ends caused by unhandled error, breaking the Spring Stream */
     public static final String SUBSCRIBER_DISCONNECTED_SUFFIX = "'] doesn't have subscribers to accept messages";
     @Override
     public void afterSendCompletion(@NonNull Message<?> message, @NonNull MessageChannel channel, boolean sent, Exception ex) {
