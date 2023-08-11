@@ -93,7 +93,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
 
     private Mono<Void> deleteEntityCounters(String initiativeId){
         return userInitiativeCountersRepository.deleteByInitiativeId(initiativeId)
-                .map(UserInitiativeCounters::getUserId)
+                .map(UserInitiativeCounters::getEntityId)
                 .doOnNext(entityId -> {
                     log.info("[DELETE_INITIATIVE] Deleted counter with entityId{} on initiative {}", entityId, initiativeId);
                     auditUtilities.logDeletedEntityCounters(initiativeId, entityId);

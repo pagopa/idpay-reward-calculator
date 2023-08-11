@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
@@ -30,7 +31,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
 
     @Override
     protected UserInitiativeCounters getInitiativeCounters() {
-        final UserInitiativeCounters counter = new UserInitiativeCounters("USERID", initiativeId);
+        final UserInitiativeCounters counter = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
         counter.setDailyCounters(new HashMap<>(Map.of(
             "2022-01-08", Counters.builder().totalReward(totalReward).build()
         )));

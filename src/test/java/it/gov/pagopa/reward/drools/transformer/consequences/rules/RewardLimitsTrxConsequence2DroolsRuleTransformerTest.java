@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.drools.transformer.consequences.rules;
 
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.drools.transformer.consequences.TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
@@ -190,7 +191,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
             return null;
         } else {
             UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", new HashMap<>());
-            counters.getInitiatives().put("initiativeId", UserInitiativeCounters.builder("userId", "initiativeId")
+            counters.getInitiatives().put("initiativeId", UserInitiativeCounters.builder("userId", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"initiativeId")
                     .dailyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03-15", Counters.builder()

@@ -89,9 +89,9 @@ abstract class BaseTrxSynchronousOp {
                                                                Function<UserInitiativeCountersWrapper, Mono<RewardTransactionDTO>> evaluator) {
         return trxChecks
                 .flatMap(i2o -> counterRetriever.apply(i2o)
-                        .defaultIfEmpty(new UserInitiativeCounters(retrieveCounterEntityId(i2o.getFirst(),i2o.getSecond(),trxDTO), initiativeId))
+                        .defaultIfEmpty(new UserInitiativeCounters(retrieveCounterEntityId(i2o.getFirst(),i2o.getSecond(),trxDTO), i2o.getFirst().getBeneficiaryType() ,initiativeId))
                 )
-                .flatMap(userInitiativeCounters -> evaluator.apply(new UserInitiativeCountersWrapper(userInitiativeCounters.getUserId(), new HashMap<>(Map.of(initiativeId, userInitiativeCounters)))))
+                .flatMap(userInitiativeCounters -> evaluator.apply(new UserInitiativeCountersWrapper(userInitiativeCounters.getEntityId(), new HashMap<>(Map.of(initiativeId, userInitiativeCounters)))))
                 .map(rewardTransaction -> mapper.apply(trxDTO.getId(), initiativeId, rewardTransaction));
     }
 

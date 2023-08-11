@@ -192,7 +192,7 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected UserInitiativeCounters saveUserInitiativeCounter(TransactionDTO trx, UserInitiativeCounters initiativeRewardCounter) {
         return userInitiativeCountersRepositorySpy.save(
                 initiativeRewardCounter.toBuilder()
-                        .userId(trx.getUserId())
+                        .entityId(trx.getUserId())
                         .id(UserInitiativeCounters.buildId(trx.getUserId(), initiativeRewardCounter.getInitiativeId()))
                         .build())
                 .block();

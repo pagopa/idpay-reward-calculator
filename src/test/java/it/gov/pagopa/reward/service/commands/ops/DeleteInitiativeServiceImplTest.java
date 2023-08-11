@@ -83,7 +83,7 @@ class DeleteInitiativeServiceImplTest {
                 .thenReturn(Mono.just(updateResultMock));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
-        userInitiativeCounters.setUserId(userid);
+        userInitiativeCounters.setEntityId(userid);
         userInitiativeCounters.setInitiativeId(initiativeId);
         Mockito.when(userInitiativeCountersRepositoryMock.deleteByInitiativeId(initiativeId))
                 .thenReturn(Flux.just(userInitiativeCounters));

@@ -4,6 +4,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
@@ -84,6 +85,7 @@ class CreateTrxSynchronousServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
@@ -137,6 +139,7 @@ class CreateTrxSynchronousServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
 
@@ -147,13 +150,13 @@ class CreateTrxSynchronousServiceImplTest {
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
         userInitiativeCounters.setId(UserInitiativeCounters.buildId(previewRequest.getUserId(), initiativeId));
-        userInitiativeCounters.setUserId(previewRequest.getUserId());
+        userInitiativeCounters.setEntityId(previewRequest.getUserId());
         userInitiativeCounters.setInitiativeId(initiativeId);
         Mockito.when(userInitiativeCountersRepositoryMock.findById(Mockito.anyString())).thenReturn(existUserInitiativeCounter ? Mono.just(userInitiativeCounters) : Mono.empty());
 
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId(userInitiativeCounters.getUserId())
+                .entityId(userInitiativeCounters.getEntityId())
                 .initiatives(Map.of(initiativeId,userInitiativeCounters))
                 .build();
         Pair<UserInitiativeCountersWrapper, RewardTransactionDTO> pair = Pair.of(userInitiativeCountersWrapper, rewardTransactionDTO);
@@ -210,7 +213,7 @@ class CreateTrxSynchronousServiceImplTest {
         SynchronousTransactionResponseDTO responseExpected =
                 transactionProcessed2SyncTrxResponseDTOMapper.apply(transactionProcessed, initiativeId);
 
-        Mono<UserInitiativeCounters> counterMono = Mono.just(new UserInitiativeCounters(trx.getUserId(), initiativeId));
+        Mono<UserInitiativeCounters> counterMono = Mono.just(new UserInitiativeCounters(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId));
 
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), initiativeId)))
                 .thenReturn(counterMono);
@@ -257,6 +260,7 @@ class CreateTrxSynchronousServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
 
@@ -281,7 +285,7 @@ class CreateTrxSynchronousServiceImplTest {
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
         userInitiativeCounters.setId(UserInitiativeCounters.buildId(authorizeRequest.getUserId(), initiativeId));
-        userInitiativeCounters.setUserId(authorizeRequest.getUserId());
+        userInitiativeCounters.setEntityId(authorizeRequest.getUserId());
         userInitiativeCounters.setInitiativeId(initiativeId);
         if(previousStuck){
             userInitiativeCounters.setUpdatingTrxId(List.of(authorizeRequest.getTransactionId()));

@@ -72,7 +72,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                         boolean justTrxCountRejection = isJustTrxCountRejection(ruleEngineResult, initiativeId);
 
                                         UserInitiativeCounters initiativeCounter = userInitiativeCountersWrapper.getInitiatives()
-                                                .computeIfAbsent(initiativeId, k -> UserInitiativeCounters.builder(ruleEngineResult.getUserId(), k).build());
+                                                .computeIfAbsent(initiativeId, k -> UserInitiativeCounters.builder(ruleEngineResult.getUserId(),initiativeConfig.getBeneficiaryType(), k).build());
 
                                         if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
                                             evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
@@ -86,7 +86,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                         reward.setCounters(rewardCountersMapper.apply(initiativeCounter, ruleEngineResult, initiativeConfig));
 
                                         if (InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(initiativeConfig.getBeneficiaryType())) {
-                                            reward.setFamilyId(initiativeCounter.getUserId());
+                                            reward.setFamilyId(initiativeCounter.getEntityId());
                                         }
                                     });
                         })

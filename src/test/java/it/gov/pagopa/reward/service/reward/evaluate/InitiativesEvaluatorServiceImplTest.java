@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -31,12 +32,12 @@ class InitiativesEvaluatorServiceImplTest {
         List<String> initiatives = List.of("INITIATIVE1", "INITIATIVE2");
 
         UserInitiativeCountersWrapper userCounters = UserInitiativeCountersWrapper.builder()
-                .userId("USER1")
+                .entityId("USER1")
                 .initiatives(Map.of(
                                 "INITIATIVE1",
-                                UserInitiativeCounters.builder(trx.getUserId(), "INITIATIVE1").exhaustedBudget(true).build(),
+                                UserInitiativeCounters.builder(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"INITIATIVE1").exhaustedBudget(true).build(),
                                 "INITIATIVE2",
-                                UserInitiativeCounters.builder(trx.getUserId(), "INITIATIVE2").exhaustedBudget(false).build()
+                                UserInitiativeCounters.builder(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"INITIATIVE2").exhaustedBudget(false).build()
                         )
                 )
                 .build();

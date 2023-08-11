@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.connector.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -79,14 +80,15 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     }
 
     @Override
-    public Mono<UpdateResult> createIfNotExists(String userId, String initiativeId) {
-        String counterId = UserInitiativeCounters.buildId(userId, initiativeId);
+    public Mono<UpdateResult> createIfNotExists(String entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum entityType, String initiativeId) {
+        String counterId = UserInitiativeCounters.buildId(entityId, initiativeId);
         return mongoTemplate
                     .upsert(
                             Query.query(Criteria
                                     .where(UserInitiativeCounters.Fields.id).is(counterId)),
                             new Update()
-                                    .setOnInsert(UserInitiativeCounters.Fields.userId, userId)
+                                    .setOnInsert(UserInitiativeCounters.Fields.entityId, entityId)
+                                    .setOnInsert(UserInitiativeCounters.Fields.entityType, entityType)
                                     .setOnInsert(UserInitiativeCounters.Fields.initiativeId, initiativeId)
                                     .setOnInsert(UserInitiativeCounters.Fields.version, 0L)
                                     .setOnInsert(UserInitiativeCounters.Fields.exhaustedBudget, false)
