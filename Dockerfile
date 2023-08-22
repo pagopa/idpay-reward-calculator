@@ -14,6 +14,7 @@ RUN mvn clean package -DskipTests
 FROM amazoncorretto:17.0.8-alpine3.18@sha256:f59b4f511346db4e473fb98c65b86254926061ce2b398295e975d0632fa4e2fd as runtime
 
 RUN apk add shadow
+RUN apk add --no-cache openssl=1.1.1l-r0
 RUN useradd --uid 10000 runner
 
 VOLUME /tmp
