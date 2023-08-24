@@ -57,7 +57,7 @@ microservice-chart:
     KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID: "idpay-reward-calculator-consumer-group"
     KAFKA_REWARD_RULE_GROUP_ID: "idpay-reward-calculator-rule-consumer-group"
     KAFKA_HPAN_UPDATE_GROUP_ID: "idpay-reward-calculator-hpan-update-consumer-group"
-    KAFKA_COMMANDS_GROUP_ID: "idpay-commands-reward-calculator-consumer-group"
+    #KAFKA_COMMANDS_GROUP_ID: "idpay-commands-reward-calculator-consumer-group"
 
   envConfigMapExternals:
     idpay-common:
