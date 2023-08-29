@@ -53,7 +53,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private Mono<Void> deleteRewardDroolsRule(String initiativeId){
         return droolsRuleRepository.deleteById(initiativeId)
                 .doOnNext(v -> {
-                    log.info("[DELETE_INITIATIVE] Deleted rule on initiative {}", initiativeId);
+                    log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: reward_rule", initiativeId);
                     auditUtilities.logDeletedRewardDroolRule(initiativeId);
                 })
                 .then(rewardContextHolderService.refreshKieContainerCacheMiss())
@@ -63,7 +63,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private Mono<Void> deleteHpanInitiatives(String initiativeId){
         return hpanInitiativesRepository.removeInitiativeOnHpan(initiativeId)
                 .doOnNext(updateResult -> {
-                    log.info("[DELETE_INITIATIVE] Deleted {} instruments on initiative {}", updateResult.getModifiedCount(), initiativeId);
+                    log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: hpan_initiatives_lookup", initiativeId);
                     auditUtilities.logDeletedHpanInitiative(initiativeId, updateResult.getModifiedCount());
                 })
                 .then();
@@ -75,7 +75,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                     if(InitiativeRewardType.DISCOUNT.equals(initiativeConfig.getInitiativeRewardType())){
                         return transactionProcessedRepository.removeByInitiativeId(initiativeId)
                                 .doOnNext(deleteResult -> {
-                                    log.info("[DELETE_INITIATIVE] Deleted {} transactions on initiative {}", deleteResult.getDeletedCount(), initiativeId);
+                                    log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transactions_processed", initiativeId);
                                     auditUtilities.logDeletedTransaction(initiativeId, deleteResult.getDeletedCount());
                                 })
                                 .then();
@@ -83,7 +83,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                     else {
                         return transactionProcessedRepository.removeInitiativeOnTransaction(initiativeId)
                                 .doOnNext(updateResult -> {
-                                    log.info("[DELETE_INITIATIVE] Deleted {} transactions on initiative {}", updateResult.getModifiedCount(), initiativeId);
+                                    log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transactions_processed", initiativeId);
                                     auditUtilities.logDeletedTransaction(initiativeId, updateResult.getModifiedCount());
                                 })
                                 .then();
