@@ -4,6 +4,7 @@ microservice-chart:
   fullnameOverride: ""
 
   livenessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/liveness
       port: 8080
@@ -12,6 +13,7 @@ microservice-chart:
     periodSeconds: 10
 
   readinessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/readiness
       port: 8080
@@ -25,11 +27,13 @@ microservice-chart:
   service:
     create: true
     type: ClusterIP
-    port: 8080
+    ports:
+      - 8080
 
   ingress:
     create: true
     path: /idpay/reward/(.*)
+    servicePort: 8080
 
   serviceAccount:
     create: false

@@ -12,9 +12,12 @@
 name: Anchore Container Scan
 
 on:
+  push:
+    branches: [ "release-dev", "release-uat", "main" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "release-dev" ]
+    branches: [ "release-dev", "release-uat", "main" ]
+  workflow_dispatch:
   schedule:
     - cron: '00 07 * * *'
 
@@ -34,45 +37,54 @@ jobs:
     environment: dev
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 #v3.6.0
       - name: Build the Docker image
         run: docker build . --file ${{ env.DOCKERFILE }} --tag localbuild/testimage:latest
       - name: Run the Anchore Grype scan action
-        uses: anchore/scan-action@d5aa5b6cb9414b0c7771438046ff5bcfa2854ed7
+        uses: anchore/scan-action@24fd7c9060f3c96848dd1929fac8d796fb5ae4b4 #v3.3.6
         id: scan
         with:
           image: "localbuild/testimage:latest"
           fail-build: true
           severity-cutoff: "high"
       - name: Upload Anchore Scan Report
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@e4262713b504983e61c7728f5452be240d9385a7 #v2.14.3
         if: always()
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
+      - name: CVE Description escaped extraction and print
+        if: always()
+        run: |
+          SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
+          echo "SCAN_RESULTS=$SCAN_RESULTS" >> $GITHUB_ENV
+          echo "CVE_CRITICAL=$(echo $SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
+          echo "CVE_HIGH=$(echo $SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
+          echo "CVE_MEDIUM=$(echo $SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+          
+          echo -e $SCAN_RESULTS
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 #v1.24.0
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ steps.scan.outcome }}",
               "blocks": [
                 {
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.workspace }} - Notification Scan Result"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}!"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan result: ${{ steps.scan.outcome }}"
+                    "text": "GitHub Action scan results:\n`CRITICAL`: ${{ env.CVE_CRITICAL }}\n`HIGH`: ${{ env.CVE_HIGH }}\n`MEDIUM`: ${{ env.CVE_MEDIUM }}\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|See execution details on GitHub>"
                   }
                 }
               ]
