@@ -37,18 +37,18 @@ jobs:
     environment: dev
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 #v3.6.0
       - name: Build the Docker image
         run: docker build . --file ${{ env.DOCKERFILE }} --tag localbuild/testimage:latest
       - name: Run the Anchore Grype scan action
-        uses: anchore/scan-action@d5aa5b6cb9414b0c7771438046ff5bcfa2854ed7
+        uses: anchore/scan-action@24fd7c9060f3c96848dd1929fac8d796fb5ae4b4 #v3.3.6
         id: scan
         with:
           image: "localbuild/testimage:latest"
           fail-build: true
           severity-cutoff: "high"
       - name: Upload Anchore Scan Report
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@e4262713b504983e61c7728f5452be240d9385a7 #v2.14.3
         if: always()
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
@@ -67,8 +67,8 @@ jobs:
           echo -e $SCAN_RESULTS
       - name: Send notification to Slack
         id: slack
-        if: ${{ always() && github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
-        uses: slackapi/slack-github-action@v1.24.0
+        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
+        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 #v1.24.0
         with:
           payload: |
             {
