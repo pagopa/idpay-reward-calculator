@@ -12,9 +12,12 @@
 name: Anchore Container Scan
 
 on:
+  push:
+    branches: [ "release-dev", "release-uat", "main" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "release-dev" ]
+    branches: [ "release-dev", "release-uat", "main" ]
+  workflow_dispatch:
   schedule:
     - cron: '00 07 * * *'
 
