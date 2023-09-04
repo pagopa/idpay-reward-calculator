@@ -55,27 +55,36 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
+      - name: CVE Description escaped extraction and print
+        if: always()
+        run: |
+          SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
+          echo "SCAN_RESULTS=$SCAN_RESULTS" >> $GITHUB_ENV
+          echo "CVE_CRITICAL=$(echo $SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
+          echo "CVE_HIGH=$(echo $SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
+          echo "CVE_MEDIUM=$(echo $SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+          
+          echo -e $SCAN_RESULTS
       - name: Send notification to Slack
         id: slack
-        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
-        uses: slackapi/slack-github-action@v1.23.0
+        if: ${{ always() && github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
+        uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ steps.scan.outcome }}",
               "blocks": [
                 {
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.workspace }} - Notification Scan Result"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}!"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan result: ${{ steps.scan.outcome }}"
+                    "text": "GitHub Action scan results:\n`CRITICAL`: ${{ env.CVE_CRITICAL }}\n`HIGH`: ${{ env.CVE_HIGH }}\n`MEDIUM`: ${{ env.CVE_MEDIUM }}\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|See execution details on GitHub>"
                   }
                 }
               ]
