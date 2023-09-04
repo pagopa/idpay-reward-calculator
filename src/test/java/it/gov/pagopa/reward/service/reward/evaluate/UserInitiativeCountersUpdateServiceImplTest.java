@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.RewardCountersMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -58,6 +59,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     public void init() {
         initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID1")
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .beneficiaryBudget(BigDecimal.valueOf(10000.00))
                 .dailyThreshold(true)
                 .weeklyThreshold(true)
@@ -83,7 +85,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     void testUpdateCountersWhenNeverInitiated() {
         //Given
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId("USERID")
+                .entityId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1", "ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
@@ -304,8 +306,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
         Assertions.assertTrue(rewardMock.get("3").isCompleteRefund());
     }
 
-    private static UserInitiativeCounters createInitiativeCounter(String userId, String initiativeId, long trxNumber, double totalAmount, double totalReward) {
-        UserInitiativeCounters userInitiativeCounters1 = new UserInitiativeCounters(userId, initiativeId);
+    private static UserInitiativeCounters createInitiativeCounter(String entityId, String initiativeId, long trxNumber, double totalAmount, double totalReward) {
+        UserInitiativeCounters userInitiativeCounters1 = new UserInitiativeCounters(entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, initiativeId);
         userInitiativeCounters1.setTrxNumber(trxNumber);
         userInitiativeCounters1.setTotalAmount(BigDecimal.valueOf(totalAmount));
         userInitiativeCounters1.setTotalReward(BigDecimal.valueOf(totalReward));
@@ -320,7 +322,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setYearlyThreshold(false);
 
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId("USERID")
+                .entityId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
@@ -352,7 +354,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setYearlyThreshold(false);
 
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId("USERID")
+                .entityId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
@@ -384,7 +386,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setYearlyThreshold(false);
 
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId("USERID")
+                .entityId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
@@ -416,7 +418,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         initiativeConfig.setMonthlyThreshold(false);
 
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId("USERID")
+                .entityId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));
@@ -654,7 +656,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     void testCapRewardToEffectiveAmount() {
         //Given
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .userId("USERID")
+                .entityId("USERID")
                 .initiatives(new HashMap<>())
                 .build();
 

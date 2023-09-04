@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
+import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.recover.RecoveredTrx2RewardTransactionMapper;
@@ -12,6 +14,7 @@ import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.connector.repository.TransactionRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.RewardNotifierService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -40,6 +43,8 @@ class RecoveryProcessedTransactionServiceTest {
     private RewardNotifierService rewardNotifierServiceMock;
     @Mock
     private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private RewardContextHolderService rewardContextHolderServiceMock;
 
     private final Transaction2TransactionProcessedMapper transactionProcessedMapper = new Transaction2TransactionProcessedMapper();
 
@@ -58,7 +63,7 @@ class RecoveryProcessedTransactionServiceTest {
                 recoveredTrx2RewardTransactionMapper,
                 recoveredTrx2UserInitiativeCountersMapper,
                 rewardNotifierServiceMock,
-                transactionRepositoryMock);
+                transactionRepositoryMock, rewardContextHolderServiceMock);
 
         trx = TransactionDTOFaker.mockInstance(0);
         trxStored = transactionProcessedMapper.apply(RewardTransactionDTOFaker.mockInstance(0));
@@ -102,14 +107,14 @@ class RecoveryProcessedTransactionServiceTest {
                 expectedR2Version != null ? buildUserCounter(r2, expectedR2Version) : null
         ).filter(Objects::nonNull).toList();
 
-        Mockito.when(countersRepositoryMock.findByUserIdAndInitiativeIdIn(trx.getUserId(), Set.of(r1.getInitiativeId(), r2.getInitiativeId())))
+        Mockito.when(countersRepositoryMock.findByEntityIdAndInitiativeIdIn(trx.getUserId(), Set.of(r1.getInitiativeId(), r2.getInitiativeId())))
                 .thenReturn(Flux.fromIterable(counters));
 
         return counters;
     }
 
     private UserInitiativeCounters buildUserCounter(Reward r2, Long expectedR2Version) {
-        return UserInitiativeCounters.builder(trx.getUserId(), r2.getInitiativeId())
+        return UserInitiativeCounters.builder(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,r2.getInitiativeId())
                 .version(expectedR2Version)
                 .updateDate(trxStored.getElaborationDateTime())
                 .build();
@@ -195,6 +200,10 @@ class RecoveryProcessedTransactionServiceTest {
 
         Mockito.when(countersRepositoryMock.saveAll(Mockito.<Iterable<UserInitiativeCounters>>argThat(i->new HashSet<>((List<UserInitiativeCounters>)i).equals(expectedCountersUpdated))))
                 .thenReturn(Flux.fromIterable(expectedCountersUpdated));
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.anyString())).thenAnswer(arg -> Mono.just(InitiativeConfig.builder()
+                .initiativeId(arg.getArgument(0))
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
+                .build()));
 
         // When
         service.checkIf2Recover(trx, trxStored).block();

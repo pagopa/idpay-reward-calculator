@@ -1,13 +1,19 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.kie.api.KieBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.availability.ReadinessStateHealthIndicator;
+import org.springframework.boot.availability.ApplicationAvailability;
+import org.springframework.boot.availability.AvailabilityState;
+import org.springframework.boot.availability.ReadinessState;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -16,15 +22,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Service
 @Slf4j
-public class RewardContextHolderServiceImpl implements RewardContextHolderService {
+public class RewardContextHolderServiceImpl extends ReadinessStateHealthIndicator implements RewardContextHolderService {
 
     public static final String REWARD_CONTEXT_HOLDER_CACHE_NAME = "reward_rule";
 
@@ -39,20 +47,37 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
     private KieBase kieBase;
     private byte[] kieBaseSerialized;
 
+    private boolean contextReady = false;
+
     public RewardContextHolderServiceImpl(
+            ApplicationAvailability applicationAvailability,
+
+            ApplicationContext appContext,
             KieContainerBuilderService kieContainerBuilderService,
             DroolsRuleRepository droolsRuleRepository,
             ApplicationEventPublisher applicationEventPublisher,
             @Autowired(required = false) ReactiveRedisTemplate<String, byte[]> reactiveRedisTemplate,
             @Value("${spring.redis.enabled}") boolean isRedisCacheEnabled,
             @Value("${app.reward-rule.pre-load}") boolean preLoadContainer) {
+        super(applicationAvailability);
+
         this.kieContainerBuilderService =kieContainerBuilderService;
         this.droolsRuleRepository = droolsRuleRepository;
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.isRedisCacheEnabled = isRedisCacheEnabled;
         this.preLoadContainer = preLoadContainer;
 
-        refreshKieContainer(x -> applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this)));
+        refreshKieContainer(
+                x -> {
+                    contextReady=true;
+                    applicationEventPublisher.publishEvent(new RewardContextHolderReadyEvent(this));
+                },
+                Retry.max(3),
+                e -> {
+                    log.error("[REWARD_CONTEXT_START] Cannot build Drools container! Shutdown application!");
+                    SpringApplication.exit(appContext, () -> 503);
+                    return Mono.error(e);
+                });
     }
 
     public static class RewardContextHolderReadyEvent extends ApplicationEvent {
@@ -75,9 +100,9 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
         if (isRedisCacheEnabled) {
             kieBaseSerialized = SerializationUtils.serialize(newKieBase);
             if (kieBaseSerialized != null) {
-                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> log.info("KieContainer build and stored in cache"));
+                reactiveRedisTemplate.opsForValue().set(REWARD_CONTEXT_HOLDER_CACHE_NAME, kieBaseSerialized).subscribe(x -> log.info("[REWARD_RULE_BUILD] KieContainer build and stored in cache"));
             } else {
-                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.info("KieContainer removed from the cache"));
+                reactiveRedisTemplate.opsForValue().delete(REWARD_CONTEXT_HOLDER_CACHE_NAME).subscribe(x -> log.info("[REWARD_RULE_BUILD] KieContainer removed from the cache"));
             }
         }
     }
@@ -90,10 +115,13 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
 
     @Scheduled(initialDelayString = "${app.reward-rule.cache.refresh-ms-rate}", fixedRateString = "${app.reward-rule.cache.refresh-ms-rate}")
     public void refreshKieContainer(){
-        refreshKieContainer(x -> log.trace("Refreshed KieContainer"));
+        refreshKieContainer(x -> log.trace("Refreshed KieContainer"), Retry.max(3), Mono::error);
     }
 
-    public void refreshKieContainer(Consumer<? super KieBase> subscriber) {
+    public void refreshKieContainer(
+            Consumer<? super KieBase> subscriber,
+            Retry retrier,
+            Function<? super Throwable, ? extends Mono<? extends KieBase>> onErrorResumer) {
         if (isRedisCacheEnabled) {
             reactiveRedisTemplate.opsForValue().get(REWARD_CONTEXT_HOLDER_CACHE_NAME)
                     .mapNotNull(c -> {
@@ -112,13 +140,19 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
                         return this.kieBase;
                     })
                     .switchIfEmpty(refreshKieContainerCacheMiss())
+                    .retryWhen(retrier)
+                    .onErrorResume(onErrorResumer)
                     .subscribe(subscriber);
         } else {
-            refreshKieContainerCacheMiss().subscribe(subscriber);
+            refreshKieContainerCacheMiss()
+                    .retryWhen(retrier)
+                    .onErrorResume(onErrorResumer)
+                    .subscribe(subscriber);
         }
     }
 
-    private Mono<KieBase> refreshKieContainerCacheMiss() {
+    @Override
+    public Mono<KieBase> refreshKieContainerCacheMiss() {
         final Flux<DroolsRule> droolsRuleFlux = Mono.defer(() -> {
             log.info("[REWARD_RULE_BUILD] Refreshing KieContainer");
             initiativeId2Config.clear();
@@ -158,4 +192,11 @@ public class RewardContextHolderServiceImpl implements RewardContextHolderServic
                 .doFinally(x -> log.info("[CACHE_MISS] [PERFORMANCE_LOG] Time spent fetching initiativeId {} ({}): {} ms", initiativeId, x.toString(), System.currentTimeMillis() - startTime));
     }
     //endregion
+
+    @Override
+    protected AvailabilityState getState(ApplicationAvailability applicationAvailability) {
+        return contextReady
+                ? ReadinessState.ACCEPTING_TRAFFIC
+                : ReadinessState.REFUSING_TRAFFIC;
+    }
 }

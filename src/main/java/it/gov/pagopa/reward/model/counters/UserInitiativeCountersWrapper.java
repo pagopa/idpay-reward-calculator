@@ -12,6 +12,6 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class UserInitiativeCountersWrapper {
-    private String userId;
+    private String entityId;
     private Map<String, UserInitiativeCounters> initiatives;
 }

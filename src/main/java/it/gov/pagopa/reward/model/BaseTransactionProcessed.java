@@ -30,6 +30,7 @@ public interface BaseTransactionProcessed {
     Map<String, List<String>> getInitiativeRejectionReasons();
 
     Map<String, Reward> getRewards();
+    List<String> getInitiatives();
 
     LocalDateTime getElaborationDateTime();
     void setElaborationDateTime(LocalDateTime elaborationDateTime);

@@ -3,7 +3,9 @@ package it.gov.pagopa.common.reactive.web.exception;
 import static org.mockito.Mockito.doThrow;
 
 import com.mongodb.MongoQueryException;
+import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
+import com.mongodb.WriteError;
 import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ErrorManager;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -76,9 +79,37 @@ class MongoExceptionHandlerTest {
   }
 
   @Test
+  void handleTooManyWriteDbException() {
+
+    String writeErrorMessage = """
+            Error=16500, RetryAfterMs=34, Details='Response status code does not indicate success: TooManyRequests (429); Substatus: 3200; ActivityId: 822d212d-5aac-4f5d-a2d4-76d6da7b619e; Reason: (
+            Errors : [
+              "Request rate is large. More Request Units may be needed, so no changes were made. Please retry this request later. Learn more: http://aka.ms/cosmosdb-error-429"
+            ]
+            );
+            """;
+
+    final MongoWriteException mongoWriteException = new MongoWriteException(
+            new WriteError(16500, writeErrorMessage, BsonDocument.parse("{}")), new ServerAddress());
+    doThrow(
+            new DataIntegrityViolationException(mongoWriteException.getMessage(), mongoWriteException))
+            .when(testControllerSpy).testEndpoint();
+    ErrorDTO expectedErrorDefault = new ErrorDTO("TOO_MANY_REQUESTS","TOO_MANY_REQUESTS");
+
+    webTestClient.get()
+            .uri(uriBuilder -> uriBuilder.path("/test").build())
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+            .expectHeader().exists(HttpHeaders.RETRY_AFTER)
+            .expectHeader().valueEquals(HttpHeaders.RETRY_AFTER, "1")
+            .expectHeader().valueEquals("Retry-After-Ms", "34")
+            .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+  }
+
+  @Test
   void handleUncategorizedMongoDbExceptionNotRequestRateTooLarge() {
 
-    doThrow(new UncategorizedMongoDbException("TooManyRequests", new Exception()))
+    doThrow(new UncategorizedMongoDbException("DUMMY", new Exception()))
         .when(testControllerSpy).testEndpoint();
 
     ErrorDTO expectedErrorDefault = new ErrorDTO("Error","Something gone wrong");

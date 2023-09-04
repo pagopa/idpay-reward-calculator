@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 
 class Transaction2TransactionProcessedMapperTest {
@@ -53,6 +54,7 @@ class Transaction2TransactionProcessedMapperTest {
         trx.setRewards(rewards);
         trx.setId(TransactionDTO.computeTrxId(trx));
         trx.setRefundInfo(new RefundInfo());
+        trx.setInitiatives(List.of("REWARDS0"));
 
         String id = "IDTRXACQUIRER0ACQUIRERCODE020000101T23595700ACQUIRERID0";
 

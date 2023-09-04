@@ -34,6 +34,7 @@ public class RecoveredTrx2RewardTransactionMapper {
         rewardedTrx.setRefundInfo(trxStored.getRefundInfo());
         rewardedTrx.setStatus(trxStored.getStatus());
         rewardedTrx.setElaborationDateTime(trxStored.getElaborationDateTime());
+        rewardedTrx.setInitiatives(trxStored.getInitiatives());
 //endregion
 
         return rewardedTrx;

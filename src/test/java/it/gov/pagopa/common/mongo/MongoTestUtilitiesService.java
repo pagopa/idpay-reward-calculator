@@ -130,6 +130,7 @@ public class MongoTestUtilitiesService {
                         cleanUpsert(clone);
                         cleanFindAndModify(clone);
                         cleanInsert(clone);
+                        cleanAggregate(clone);
 
                         mongoCommands.add(new MongoCommand(
                                 event.getCommandName(),
@@ -168,6 +169,12 @@ public class MongoTestUtilitiesService {
                 private void cleanInsert(Document clone) {
                     if(clone.get("insert")!=null){
                         clearDocumentValues(clone, "documents");
+                    }
+                }
+
+                private void cleanAggregate(Document clone) {
+                    if(clone.get("aggregate")!=null){
+                        clearDocumentValues(clone, "pipeline");
                     }
                 }
 
