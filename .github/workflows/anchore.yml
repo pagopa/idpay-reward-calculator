@@ -67,7 +67,7 @@ jobs:
           echo -e $SCAN_RESULTS
       - name: Send notification to Slack
         id: slack
-        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
+        if: always() && github.event_name == 'schedule' && steps.scan.outcome == 'failure'
         uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 #v1.24.0
         with:
           payload: |
