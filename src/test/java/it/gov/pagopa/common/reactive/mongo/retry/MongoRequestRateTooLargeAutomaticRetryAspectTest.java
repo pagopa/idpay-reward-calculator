@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,7 +41,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testBatchMonoEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, true);
+            false, true);
 
     checkRetryBehaviourMono(aspect, true);
   }
@@ -49,7 +49,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testBatchMonoException() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, false);
+            false, false);
 
     checkExceptionMono(aspect, true);
   }
@@ -57,7 +57,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testBatchMonoDisabledApiEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        true, false);
+            true, false);
 
     checkExceptionMono(aspect, true);
   }
@@ -67,14 +67,14 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testBatchFluxEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, true);
+            false, true);
 
     checkRetryBehaviourFlux(aspect, true);
   }
   @Test
   void testBatchFluxException() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, false);
+            false, false);
 
     checkExceptionFlux(aspect, true);
   }
@@ -82,7 +82,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testBatchFluxDisabledApiEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        true, false);
+            true, false);
 
     checkExceptionFlux(aspect, true);
   }
@@ -92,7 +92,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testApiMonoEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        true, false);
+            true, false);
 
     checkRetryBehaviourMono(aspect, false);
   }
@@ -100,7 +100,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testApiMonoException() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, false);
+            false, false);
 
     checkExceptionMono(aspect, false);
   }
@@ -108,7 +108,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testApiMonoDisabledBatchEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, true);
+            false, true);
 
     checkExceptionMono(aspect, false);
   }
@@ -118,7 +118,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testApiFluxEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        true, false);
+            true, false);
 
     checkRetryBehaviourFlux(aspect, false);
   }
@@ -126,7 +126,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testApiFluxException() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, false);
+            false, false);
 
     checkExceptionFlux(aspect, false);
   }
@@ -134,7 +134,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   @Test
   void testApiFluxDisabledBatchEnabled() throws Throwable {
     MongoRequestRateTooLargeAutomaticRetryAspect aspect = buildMongoRequestRateTooLargeAutomaticRetryAspect(
-        false, true);
+            false, true);
 
     checkExceptionFlux(aspect, false);
   }
@@ -142,9 +142,9 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
 
   @NotNull
   private MongoRequestRateTooLargeAutomaticRetryAspect buildMongoRequestRateTooLargeAutomaticRetryAspect(
-      boolean enabledApi, boolean enabledBatch) {
+          boolean enabledApi, boolean enabledBatch) {
     return new MongoRequestRateTooLargeAutomaticRetryAspect(
-        enabledApi, maxRetry, 1000, enabledBatch, maxRetry, 1000);
+            enabledApi, maxRetry, 1000, enabledBatch, maxRetry, 1000);
   }
 
   private void configureRetryMockMono() throws Throwable {
@@ -170,7 +170,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
     Assertions.assertEquals(maxRetry+1, counter[0]);
   }
   private void checkExceptionMono(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch)
-      throws Throwable {
+          throws Throwable {
     configureRetryMockMono();
     Mono<?> mono = buildContextMono(aspect, isBatch);
     UncategorizedMongoDbException uncategorizedMongoDbException = Assertions.assertThrows(UncategorizedMongoDbException.class, mono::block);
@@ -178,11 +178,11 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   }
 
   private Mono<?> buildContextMono(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch)
-      throws Throwable {
+          throws Throwable {
     Mono<?> mono = (Mono<?>) aspect.decorateMonoRepositoryMethods(pjpMock);
     if(!isBatch){
       mono = mono.contextWrite(ctx -> ctx.put(ReactiveRequestContextHolder.CONTEXT_KEY, Mockito.mock(
-          ServerHttpRequest.class)));
+              ServerWebExchange.class)));
     }
     return mono;
   }
@@ -210,7 +210,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
     Assertions.assertEquals(maxRetry+1, counter[0]);
   }
   private void checkExceptionFlux(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch)
-      throws Throwable {
+          throws Throwable {
     configureRetryMockFlux();
     Flux<Object> flux = buildContextFlux(aspect, isBatch);
     UncategorizedMongoDbException uncategorizedMongoDbException = Assertions.assertThrows(UncategorizedMongoDbException.class, flux::blockLast);
@@ -218,12 +218,12 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   }
 
   private Flux<Object> buildContextFlux(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch)
-      throws Throwable {
+          throws Throwable {
     @SuppressWarnings("unchecked")
     Flux<Object> flux = (Flux<Object>) aspect.decorateFluxRepositoryMethods(pjpMock);
     if(!isBatch){
       flux = flux.contextWrite(ctx -> ctx.put(ReactiveRequestContextHolder.CONTEXT_KEY, Mockito.mock(
-          ServerHttpRequest.class)));
+              ServerWebExchange.class)));
     }
     return flux;
   }
