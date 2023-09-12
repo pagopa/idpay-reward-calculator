@@ -13,6 +13,6 @@ public class ReactiveRequestContextFilter implements WebFilter {
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, WebFilterChain chain) {
         return chain.filter(exchange)
-                .contextWrite(ctx -> ctx.put(ReactiveRequestContextHolder.CONTEXT_KEY, exchange.getRequest()));
+                .contextWrite(ctx -> ctx.put(ReactiveRequestContextHolder.CONTEXT_KEY, exchange));
     }
 }
