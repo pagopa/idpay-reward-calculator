@@ -10,9 +10,14 @@ import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.ContextView;
+
+import java.util.Optional;
 
 @Configuration
 @EnableAspectJAutoProxy
@@ -70,14 +75,18 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
     }
 
     private <T extends Publisher<?>> T decorateMethod(T out, ContextView ctx) {
-        if (isNotControllerContext(ctx)) {
+        Optional<ServerWebExchange> serverWebExchange = ctx.getOrEmpty(ReactiveRequestContextHolder.CONTEXT_KEY);
+        if (serverWebExchange.isEmpty()) {
             if(enabledBatch) {
                 return invokeWithRetry(out, maxRetryBatch, maxMillisElapsedBatch);
             }else {
                 return out;
             }
         } else {
-            if(enabledApi){
+            MongoRequestRateTooLargeApiRetryable apiRetryableConfig = getRequestRateTooLargeApiRetryableConfig(serverWebExchange.get());
+            if(apiRetryableConfig!=null){
+                return invokeWithRetry(out, apiRetryableConfig.maxRetry(), apiRetryableConfig.maxMillisElapsed());
+            } else if(enabledApi){
                 return invokeWithRetry(out,  maxRetryApi, maxMillisElapsedApi);
             }else {
                 return out;
@@ -89,14 +98,22 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
     private <T extends Publisher<?>> T invokeWithRetry(T out, long maxRetry, long maxMillisElapsed) {
         if(out instanceof Mono<?> mono) {
             return (T) MongoRequestRateTooLargeRetryer.withRetry(mono, maxRetry,
-                    maxMillisElapsed);
+                maxMillisElapsed);
         } else {
             return (T) MongoRequestRateTooLargeRetryer.withRetry((Flux<?>) out, maxRetry,
-                    maxMillisElapsed);
+                maxMillisElapsed);
         }
     }
 
-    private static boolean isNotControllerContext(ContextView ctx) {
-        return ctx.getOrEmpty(ReactiveRequestContextHolder.CONTEXT_KEY).isEmpty();
+    private MongoRequestRateTooLargeApiRetryable getRequestRateTooLargeApiRetryableConfig(ServerWebExchange exchange) {
+        HandlerMethod apiHandlerMethod = getApiHandlerMethod(exchange);
+        if(apiHandlerMethod!=null){
+            return apiHandlerMethod.getMethod().getAnnotation(MongoRequestRateTooLargeApiRetryable.class);
+        }
+        return null;
+    }
+
+    private static HandlerMethod getApiHandlerMethod(ServerWebExchange exchange){
+        return exchange.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
     }
 }

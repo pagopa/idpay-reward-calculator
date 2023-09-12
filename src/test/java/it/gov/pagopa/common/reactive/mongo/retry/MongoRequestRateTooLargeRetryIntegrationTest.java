@@ -34,16 +34,18 @@ import java.time.LocalDateTime;
         ErrorManager.class,
         MongoExceptionHandler.class,
 
-        MongoRequestRateTooLargeRetryNoControllerIntegrationTest.TestController.class,
-        MongoRequestRateTooLargeRetryNoControllerIntegrationTest.TestRepository.class
+        MongoRequestRateTooLargeRetryIntegrationTest.TestController.class,
+        MongoRequestRateTooLargeRetryIntegrationTest.TestRepository.class
 })
 @WebFluxTest
-class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
+class MongoRequestRateTooLargeRetryIntegrationTest {
 
     @Value("${mongo.request-rate-too-large.batch.max-retry:3}")
     private int maxRetry;
     @Value("${mongo.request-rate-too-large.batch.max-millis-elapsed:0}")
     private int maxMillisElapsed;
+
+    private static final int API_RETRYABLE_MAX_RETRY = 5;
 
     @SpyBean
     private TestRepository testRepositorySpy;
@@ -67,7 +69,18 @@ class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
             return ReactiveRequestContextHolder.getRequest()
                     .doOnNext(r -> {
                         System.out.println("OK");
-                        Assertions.assertEquals("/testMono", r.getURI().getPath());
+                        Assertions.assertEquals("/testMono", r.getRequest().getURI().getPath());
+                    })
+                    .flatMap(x -> buildNestedRepositoryMonoMethodInvoke(repository));
+        }
+
+        @MongoRequestRateTooLargeApiRetryable(maxRetry = API_RETRYABLE_MAX_RETRY)
+        @GetMapping("/testMonoRetryable")
+        Mono<String> testMonoEndpointRetryable() {
+            return ReactiveRequestContextHolder.getRequest()
+                    .doOnNext(r -> {
+                        System.out.println("OK");
+                        Assertions.assertEquals("/testMonoRetryable", r.getRequest().getURI().getPath());
                     })
                     .flatMap(x -> buildNestedRepositoryMonoMethodInvoke(repository));
         }
@@ -77,7 +90,18 @@ class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
             return ReactiveRequestContextHolder.getRequest()
                     .doOnNext(r -> {
                         System.out.println("OK");
-                        Assertions.assertEquals("/testFlux", r.getURI().getPath());
+                        Assertions.assertEquals("/testFlux", r.getRequest().getURI().getPath());
+                    })
+                    .flatMapMany(x -> buildNestedFluxChain(repository));
+        }
+
+        @MongoRequestRateTooLargeApiRetryable(maxRetry = API_RETRYABLE_MAX_RETRY)
+        @GetMapping("/testFluxRetryable")
+        Flux<LocalDateTime> testFluxEndpointRetryable() {
+            return ReactiveRequestContextHolder.getRequest()
+                    .doOnNext(r -> {
+                        System.out.println("OK");
+                        Assertions.assertEquals("/testFluxRetryable", r.getRequest().getURI().getPath());
                     })
                     .flatMapMany(x -> buildNestedFluxChain(repository));
         }
@@ -131,6 +155,17 @@ class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
     }
 
     @Test
+    void testController_MonoMethodRetryable() {
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/testMonoRetryable").build())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+
+        Assertions.assertEquals(API_RETRYABLE_MAX_RETRY + 1, counter[0]);
+    }
+
+    @Test
     void testController_FluxMethod() {
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/testFlux").build())
@@ -139,6 +174,17 @@ class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
                 .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
 
         Assertions.assertEquals(1, counter[0]);
+    }
+
+    @Test
+    void testController_FluxMethodRetryable() {
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/testFluxRetryable").build())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+
+        Assertions.assertEquals(API_RETRYABLE_MAX_RETRY + 1, counter[0]);
     }
 
     @Test
@@ -162,6 +208,6 @@ class MongoRequestRateTooLargeRetryNoControllerIntegrationTest {
             Assertions.assertTrue(e.getMillisElapsed() > 0);
         }
 
-        Assertions.assertEquals(counter[0], maxRetry + 1);
+        Assertions.assertEquals(maxRetry + 1, counter[0]);
     }
 }
