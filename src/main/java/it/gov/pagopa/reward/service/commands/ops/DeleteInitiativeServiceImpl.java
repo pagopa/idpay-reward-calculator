@@ -25,7 +25,8 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private final RewardContextHolderService rewardContextHolderService;
     private final AuditUtilities auditUtilities;
     private final int pageSize;
-    private final long delay;
+    private final Duration delayDuration;
+    private final Mono<Long> monoDelay;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public DeleteInitiativeServiceImpl(DroolsRuleRepository droolsRuleRepository,
@@ -43,19 +44,18 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         this.rewardContextHolderService = rewardContextHolderService;
         this.auditUtilities = auditUtilities;
         this.pageSize = pageSize;
-        this.delay = delay;
+        this.delayDuration = Duration.ofMillis(delay);
+        this.monoDelay = Mono.delay(delayDuration);
     }
 
     @Override
     public Mono<String> execute(String initiativeId) {
         log.info("[DELETE_INITIATIVE] Starting handle delete initiative {}", initiativeId);
-        Duration delayDuration = Duration.ofMillis(delay);
-        Mono<Long> monoDelay = Mono.delay(delayDuration);
-        return deleteTransactionProcessed(initiativeId, monoDelay)
+        return deleteTransactionProcessed(initiativeId)
                 .then(deleteRewardDroolsRule(initiativeId))
-                .then(deleteHpanInitiatives(initiativeId, monoDelay))
-                .then(deleteEntityCounters(initiativeId, delayDuration))
-                .then(removedAfterInitiativeDeletion(delayDuration))
+                .then(deleteHpanInitiatives(initiativeId))
+                .then(deleteEntityCounters(initiativeId))
+                .then(removedAfterInitiativeDeletion())
                 .then(Mono.just(initiativeId));
 
     }
@@ -70,7 +70,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .then();
     }
 
-    private Mono<Void> deleteHpanInitiatives(String initiativeId, Mono<Long> monoDelay){
+    private Mono<Void> deleteHpanInitiatives(String initiativeId){
         return hpanInitiativesRepository.findByInitiativesWithBatch(initiativeId, pageSize)
                 .flatMap(hpanToUpdate -> hpanInitiativesRepository.removeInitiativeOnHpan(hpanToUpdate.getHpan(), initiativeId)
                         .then(monoDelay), pageSize)
@@ -82,7 +82,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .then();
     }
 
-    private Mono<Void> deleteTransactionProcessed(String initiativeId, Mono<Long> monoDelay){
+    private Mono<Void> deleteTransactionProcessed(String initiativeId){
         return rewardContextHolderService.getInitiativeConfig(initiativeId)
                 .flatMap(initiativeConfig -> {
                     if(InitiativeRewardType.DISCOUNT.equals(initiativeConfig.getInitiativeRewardType())){
@@ -110,7 +110,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 });
     }
 
-    private Mono<Void> deleteEntityCounters(String initiativeId, Duration delayDuration){
+    private Mono<Void> deleteEntityCounters(String initiativeId){
         return userInitiativeCountersRepository.findByInitiativesWithBatch(initiativeId, pageSize)
                 .flatMap(counterToDelete -> userInitiativeCountersRepository.deleteById(counterToDelete.getId())
                         .then(Mono.just(counterToDelete)).delayElement(delayDuration), pageSize)
@@ -121,7 +121,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                 .then();
     }
 
-    public Mono<Void> removedAfterInitiativeDeletion(Duration delayDuration){
+    public Mono<Void> removedAfterInitiativeDeletion(){
         return hpanInitiativesRepository.findWithoutInitiativesWithBatch(pageSize)
                 .flatMap(hpanToDelete -> hpanInitiativesRepository.deleteById(hpanToDelete.getHpan())
                         .then(Mono.just(hpanToDelete)).delayElement(delayDuration), pageSize)

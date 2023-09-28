@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -97,7 +96,7 @@ class DeleteInitiativeServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void scheduleRemovedAfterInitiativeDeletionTestHandle(){
-        service.removedAfterInitiativeDeletion(Duration.ofMillis(1000)).block();
+        service.removedAfterInitiativeDeletion().block();
 
         List<HpanInitiatives> hpanInitiativesAfter = hpanInitiativesRepository.findAll().collectList().block();
 
