@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +35,8 @@ class DeleteInitiativeServiceImplIntegrationTest extends BaseIntegrationTest {
     @Autowired private RewardContextHolderService rewardContextHolderService;
     @Autowired private AuditUtilities auditUtilities;
     private DeleteInitiativeService service;
+    private static final int PAGE_SIZE = 100;
+    private static final long DELAY = 1000;
 
     @BeforeEach
     void init() {
@@ -43,7 +46,9 @@ class DeleteInitiativeServiceImplIntegrationTest extends BaseIntegrationTest {
                 transactionProcessedRepository,
                 userInitiativeCountersRepository,
                 rewardContextHolderService,
-                auditUtilities);
+                auditUtilities,
+                PAGE_SIZE,
+                DELAY);
         storeTestData();
     }
     @AfterEach
@@ -92,7 +97,7 @@ class DeleteInitiativeServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void scheduleRemovedAfterInitiativeDeletionTestHandle(){
-        service.removedAfterInitiativeDeletion().block();
+        service.removedAfterInitiativeDeletion(Duration.ofMillis(1000)).block();
 
         List<HpanInitiatives> hpanInitiativesAfter = hpanInitiativesRepository.findAll().collectList().block();
 

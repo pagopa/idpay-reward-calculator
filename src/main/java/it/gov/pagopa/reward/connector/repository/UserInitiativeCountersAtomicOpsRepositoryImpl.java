@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -101,5 +102,11 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         }
                     });
         }
+
+    @Override
+    public Flux<UserInitiativeCounters> findByInitiativesWithBatch(String initiativeId, int batchSize){
+        Query query = Query.query(Criteria.where(UserInitiativeCounters.Fields.initiativeId).is(initiativeId)).cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, UserInitiativeCounters.class);
+    }
 
 }
