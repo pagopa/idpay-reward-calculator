@@ -28,6 +28,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
     @Autowired
@@ -153,5 +155,15 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
         UpdateResult updateResult = userInitiativeCountersRepository.createIfNotExists(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId).block();
         Assertions.assertEquals(UpdateResult.acknowledged(1, 0L, null), updateResult);
+    }
+
+    @Test
+    void findByInitiativesWithBatch() {
+        storeTestCounter();
+
+        Flux<UserInitiativeCounters> result = userInitiativeCountersRepository.findByInitiativesWithBatch(initiativeId, 100);
+
+        List<UserInitiativeCounters> userInitiativeCounters = result.toStream().toList();
+        assertEquals(1, userInitiativeCounters.size());
     }
 }

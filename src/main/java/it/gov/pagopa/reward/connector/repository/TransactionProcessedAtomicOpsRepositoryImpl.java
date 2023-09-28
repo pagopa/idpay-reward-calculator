@@ -1,7 +1,5 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -18,25 +16,16 @@ public class TransactionProcessedAtomicOpsRepositoryImpl implements TransactionP
     }
 
     @Override
-    public Mono<DeleteResult> removeByInitiativeId(String initiativeId) {
+    public Mono<Void> removeInitiativeOnTransaction(String trxId, String initiativeId) {
         return mongoTemplate
-                .remove(
-                        Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).is(initiativeId)),
-                        TransactionProcessed.class
-                );
-    }
-
-    @Override
-    public Mono<UpdateResult> removeInitiativeOnTransaction(String initiativeId) {
-        return mongoTemplate
-                .updateMulti(
-                        Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).is(initiativeId)),
+                .updateFirst(
+                        Query.query(Criteria.where(TransactionProcessed.Fields.id).is(trxId)),
                         new Update()
                                 .pull(TransactionProcessed.Fields.initiatives, initiativeId)
                                 .unset("%s.%s".formatted(TransactionProcessed.Fields.rewards, initiativeId))
                                 .unset("%s.%s".formatted(TransactionProcessed.Fields.initiativeRejectionReasons, initiativeId)),
                         TransactionProcessed.class
-                );
+                ).then();
     }
 
     @Override
@@ -48,5 +37,17 @@ public class TransactionProcessedAtomicOpsRepositoryImpl implements TransactionP
                                         .size(0)),
                         TransactionProcessed.class
                 );
+    }
+
+    @Override
+    public Flux<TransactionProcessed> findByInitiativesWithBatch(String initiativeId, int batchSize){
+        Query query = Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).is(initiativeId)).cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, TransactionProcessed.class);
+    }
+
+    @Override
+    public Flux<TransactionProcessed> findWithoutInitiativesWithBatch(int batchSize){
+        Query query = Query.query(Criteria.where(TransactionProcessed.Fields.initiatives).size(0)).cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, TransactionProcessed.class);
     }
 }

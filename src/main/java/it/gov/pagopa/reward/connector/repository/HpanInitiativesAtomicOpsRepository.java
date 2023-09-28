@@ -11,6 +11,8 @@ public interface HpanInitiativesAtomicOpsRepository {
     Mono<UpdateResult> createIfNotExist(HpanInitiatives hpanInitiatives);
     Mono<UpdateResult> setInitiative(String hpan, OnboardedInitiative onboardedInitiative);
     Mono<UpdateResult> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status);
-    Mono<UpdateResult> removeInitiativeOnHpan(String initiativeId);
+    Mono<Void> removeInitiativeOnHpan(String hpan, String initiativeId);
     Flux<HpanInitiatives> deleteHpanWithoutInitiative();
+    Flux<HpanInitiatives> findByInitiativesWithBatch(String initiativeId, int batchSize);
+    Flux<HpanInitiatives> findWithoutInitiativesWithBatch(int batchSize);
 }
