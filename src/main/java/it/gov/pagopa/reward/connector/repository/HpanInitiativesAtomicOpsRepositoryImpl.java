@@ -92,15 +92,14 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> removeInitiativeOnHpan(String initiativeId) {
+    public Mono<Void> removeInitiativeOnHpan(String hpan, String initiativeId) {
         return mongoTemplate
-                .updateMulti(
-                        Query.query(Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)
-                                .elemMatch(Criteria.where(OnboardedInitiative.Fields.initiativeId).is(initiativeId))),
+                .updateFirst(
+                        Query.query(Criteria.where(HpanInitiatives.Fields.hpan).is(hpan)),
                         new Update().pull(HpanInitiatives.Fields.onboardedInitiatives,
                                 new BasicDBObject(OnboardedInitiative.Fields.initiativeId,initiativeId)),
                         HpanInitiatives.class
-                );
+                ).then();
 
     }
 
@@ -113,5 +112,20 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
                                         .size(0)),
                         HpanInitiatives.class
                 );
+    }
+
+    @Override
+    public Flux<HpanInitiatives> findByInitiativesWithBatch(String initiativeId, int batchSize){
+        Query query = Query.query(Criteria.where(HpanInitiatives.Fields.onboardedInitiatives)
+                .elemMatch(Criteria.where(OnboardedInitiative.Fields.initiativeId).is(initiativeId)))
+                .cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, HpanInitiatives.class);
+    }
+
+    @Override
+    public Flux<HpanInitiatives> findWithoutInitiativesWithBatch(int batchSize){
+        Query query = Query.query(Criteria.where(HpanInitiatives.Fields.onboardedInitiatives).size(0))
+                .cursorBatchSize(batchSize);
+        return mongoTemplate.find(query, HpanInitiatives.class);
     }
 }

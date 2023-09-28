@@ -6,12 +6,14 @@ import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
-import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 @Service
 @Slf4j
@@ -22,13 +24,18 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final RewardContextHolderService rewardContextHolderService;
     private final AuditUtilities auditUtilities;
+    private final int pageSize;
+    private final Duration delayDuration;
+    private final Mono<Long> monoDelay;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public DeleteInitiativeServiceImpl(DroolsRuleRepository droolsRuleRepository,
                                        HpanInitiativesRepository hpanInitiativesRepository,
                                        TransactionProcessedRepository transactionProcessedRepository,
                                        UserInitiativeCountersRepository userInitiativeCountersRepository,
-                                       RewardContextHolderService rewardContextHolderService, AuditUtilities auditUtilities) {
+                                       RewardContextHolderService rewardContextHolderService, AuditUtilities auditUtilities,
+                                       @Value("${app.delete.paginationSize}")int pageSize,
+                                       @Value("${app.delete.delayTime}")long delay) {
 
         this.droolsRuleRepository = droolsRuleRepository;
         this.hpanInitiativesRepository = hpanInitiativesRepository;
@@ -36,6 +43,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.rewardContextHolderService = rewardContextHolderService;
         this.auditUtilities = auditUtilities;
+        this.pageSize = pageSize;
+        this.delayDuration = Duration.ofMillis(delay);
+        this.monoDelay = Mono.delay(delayDuration);
     }
 
     @Override
@@ -61,10 +71,13 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteHpanInitiatives(String initiativeId){
-        return hpanInitiativesRepository.removeInitiativeOnHpan(initiativeId)
-                .doOnNext(updateResult -> {
+        return hpanInitiativesRepository.findByInitiativesWithBatch(initiativeId, pageSize)
+                .flatMap(hpanToUpdate -> hpanInitiativesRepository.removeInitiativeOnHpan(hpanToUpdate.getHpan(), initiativeId)
+                        .then(monoDelay), pageSize)
+                .count()
+                .doOnNext(totalHpansUpdated -> {
                     log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: hpan_initiatives_lookup", initiativeId);
-                    auditUtilities.logDeletedHpanInitiative(initiativeId, updateResult.getModifiedCount());
+                    auditUtilities.logDeletedHpanInitiative(initiativeId, totalHpansUpdated);
                 })
                 .then();
     }
@@ -73,18 +86,24 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
         return rewardContextHolderService.getInitiativeConfig(initiativeId)
                 .flatMap(initiativeConfig -> {
                     if(InitiativeRewardType.DISCOUNT.equals(initiativeConfig.getInitiativeRewardType())){
-                        return transactionProcessedRepository.removeByInitiativeId(initiativeId)
-                                .doOnNext(deleteResult -> {
+                        return transactionProcessedRepository.findByInitiativesWithBatch(initiativeId, pageSize)
+                                .flatMap(trxToDelete -> transactionProcessedRepository.deleteById(trxToDelete.getId())
+                                        .then(monoDelay), pageSize)
+                                .count()
+                                .doOnNext(totalTrxDeleted -> {
                                     log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transactions_processed", initiativeId);
-                                    auditUtilities.logDeletedTransaction(initiativeId, deleteResult.getDeletedCount());
+                                    auditUtilities.logDeletedTransaction(initiativeId, totalTrxDeleted);
                                 })
                                 .then();
                     }
                     else {
-                        return transactionProcessedRepository.removeInitiativeOnTransaction(initiativeId)
-                                .doOnNext(updateResult -> {
+                        return transactionProcessedRepository.findByInitiativesWithBatch(initiativeId, pageSize)
+                                .flatMap(trxToUpdate -> transactionProcessedRepository.removeInitiativeOnTransaction(trxToUpdate.getId(), initiativeId)
+                                        .then(monoDelay), pageSize)
+                                .count()
+                                .doOnNext(totalTrxUpdated -> {
                                     log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transactions_processed", initiativeId);
-                                    auditUtilities.logDeletedTransaction(initiativeId, updateResult.getModifiedCount());
+                                    auditUtilities.logDeletedTransaction(initiativeId, totalTrxUpdated);
                                 })
                                 .then();
                     }
@@ -92,19 +111,24 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteEntityCounters(String initiativeId){
-        return userInitiativeCountersRepository.deleteByInitiativeId(initiativeId)
-                .map(UserInitiativeCounters::getEntityId)
-                .doOnNext(entityId -> {
-                    log.info("[DELETE_INITIATIVE] Deleted counter with entityId{} on initiative {}", entityId, initiativeId);
-                    auditUtilities.logDeletedEntityCounters(initiativeId, entityId);
+        return userInitiativeCountersRepository.findByInitiativesWithBatch(initiativeId, pageSize)
+                .flatMap(counterToDelete -> userInitiativeCountersRepository.deleteById(counterToDelete.getId())
+                        .then(Mono.just(counterToDelete)).delayElement(delayDuration), pageSize)
+                .doOnNext(deletedCounter -> {
+                    log.info("[DELETE_INITIATIVE] Deleted counter with entityId{} on initiative {}", deletedCounter.getEntityId(), initiativeId);
+                    auditUtilities.logDeletedEntityCounters(initiativeId, deletedCounter.getEntityId());
                 })
                 .then();
     }
 
     public Mono<Void> removedAfterInitiativeDeletion(){
-        return hpanInitiativesRepository.deleteHpanWithoutInitiative()
+        return hpanInitiativesRepository.findWithoutInitiativesWithBatch(pageSize)
+                .flatMap(hpanToDelete -> hpanInitiativesRepository.deleteById(hpanToDelete.getHpan())
+                        .then(Mono.just(hpanToDelete)).delayElement(delayDuration), pageSize)
                 .doOnNext(hpanInitiative -> auditUtilities.logDeletedHpan(hpanInitiative.getHpan(), hpanInitiative.getUserId()))
-                .then(transactionProcessedRepository.deleteTransactionsWithoutInitiative()
+                .then(transactionProcessedRepository.findWithoutInitiativesWithBatch(pageSize)
+                        .flatMap(trxToDelete -> transactionProcessedRepository.deleteById(trxToDelete.getId())
+                                .then(Mono.just(trxToDelete)).delayElement(delayDuration), pageSize)
                         .distinct(TransactionProcessed::getUserId)
                         .doOnNext(trx -> auditUtilities.logDeletedTransactionForUser(trx.getUserId()))
                         .then());
