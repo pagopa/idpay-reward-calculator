@@ -344,5 +344,5 @@ app:
   synchronousTransactions:
       throttlingSeconds: ${SYNCHRONOUS_REWARD_THROTTLING_SECONDS:${REWARD_THROTTLING_SECONDS:1}}
   delete:
-    paginationSize: ${DELETE_PAGINATION_SIZE:100}
+    paginationSize: ${DELETE_PAGINATION_SIZE:50}
     delayTime: ${DELETE_DELAY_TIME:1000}
