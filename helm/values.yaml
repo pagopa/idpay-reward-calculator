@@ -62,6 +62,8 @@ microservice-chart:
     KAFKA_REWARD_RULE_GROUP_ID: "idpay-reward-calculator-rule-consumer-group"
     KAFKA_HPAN_UPDATE_GROUP_ID: "idpay-reward-calculator-hpan-update-consumer-group"
     KAFKA_COMMANDS_GROUP_ID: "idpay-commands-reward-calculator-consumer-group"
+    DELETE_PAGINATION_SIZE: "50"
+    DELETE_DELAY_TIME: "1000"
 
   envConfigMapExternals:
     idpay-common:

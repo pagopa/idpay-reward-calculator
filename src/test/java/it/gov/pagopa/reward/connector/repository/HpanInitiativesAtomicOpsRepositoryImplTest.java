@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,11 +26,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
     @Autowired
     protected HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
     private HpanInitiativesAtomicOpsRepositoryImpl hpanInitiativesAtomicOpsRepositoryImpl;
+
+    private static final String INITIATIVE_ID1 = "INITIATIVE_1";
 
     @AfterEach
     void clearData() {
@@ -293,7 +298,8 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
         hpanInitiativesRepository.saveAll(List.of(hpanInitiatives1, hpanInitiatives2)).blockLast();
 
-        hpanInitiativesRepository.removeInitiativeOnHpan("INITIATIVEID_1").block();
+        hpanInitiativesRepository.removeInitiativeOnHpan("hpan_prova","INITIATIVEID_1").block();
+        hpanInitiativesRepository.removeInitiativeOnHpan("hpan_prova_1","INITIATIVEID_1").block();
 
         HpanInitiatives hpanProvaAfter1 = hpanInitiativesRepository.findById("hpan_prova").block();
         Assertions.assertNotNull(hpanProvaAfter1);
@@ -336,5 +342,39 @@ class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
         Assertions.assertNotNull(hpanProvaAfter2);
     }
 
+    @Test
+    void findByInitiativesWithBatch() {
+        String hpan = "hpan_prova";
+
+        LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime end = now.minusDays(2L).with(LocalTime.MAX);
+
+        storeHpanInitiatives(hpan, now, end, null);
+
+        Flux<HpanInitiatives> result = hpanInitiativesRepository.findByInitiativesWithBatch(INITIATIVE_ID1, 100);
+
+        List<HpanInitiatives> hpanInitiatives = result.toStream().toList();
+        assertEquals(1, hpanInitiatives.size());
+    }
+
+    @Test
+    void findWithoutInitiativesWithBatch() {
+        String hpan = "hpan_prova";
+        List<OnboardedInitiative> onboardedInitiativeList = Collections.emptyList();
+        HpanInitiatives hpanInitiativesFirst = HpanInitiatives.builder()
+                .userId("USERID")
+                .hpan(hpan)
+                .maskedPan("MASKED_PAN")
+                .brandLogo("BRAND_LOGO")
+                .onboardedInitiatives(onboardedInitiativeList)
+                .brand("BRAND").build();
+
+        hpanInitiativesRepository.save(hpanInitiativesFirst).block();
+
+        Flux<HpanInitiatives> result = hpanInitiativesRepository.findWithoutInitiativesWithBatch(100);
+
+        List<HpanInitiatives> hpanInitiatives = result.toStream().toList();
+        assertEquals(1, hpanInitiatives.size());
+    }
 }
 

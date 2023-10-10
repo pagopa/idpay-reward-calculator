@@ -1,8 +1,6 @@
 package it.gov.pagopa.reward.service.commands.ops;
 
 import com.mongodb.MongoException;
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -10,6 +8,7 @@ import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepositor
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.HpanInitiatives;
+import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -29,6 +28,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @ExtendWith(MockitoExtension.class)
 class DeleteInitiativeServiceImplTest {
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
@@ -38,6 +39,17 @@ class DeleteInitiativeServiceImplTest {
     @Mock private RewardContextHolderService rewardContextHolderServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     private DeleteInitiativeServiceImpl deleteInitiativeService;
+    private static final String INITIATIVE_ID = "INITIATIVEID";
+    private static final int PAGE_SIZE = 100;
+    private static final long DELAY = 1500;
+    private static final TransactionProcessed TRANSACTION_PROCESSED = TransactionProcessed.builder()
+            .id("TRANSACTION_PROCESSED_ID")
+            .initiatives(List.of(INITIATIVE_ID))
+            .build();
+    private static final HpanInitiatives HPAN_INITIATIVES = HpanInitiatives.builder()
+            .hpan("HPAN")
+            .onboardedInitiatives(List.of(OnboardedInitiative.builder().initiativeId(INITIATIVE_ID).build()))
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -47,81 +59,92 @@ class DeleteInitiativeServiceImplTest {
                 transactionProcessedRepositoryMock,
                 userInitiativeCountersRepositoryMock,
                 rewardContextHolderServiceMock,
-                auditUtilitiesMock
+                auditUtilitiesMock,
+                PAGE_SIZE,
+                DELAY
         ));
     }
 
     @ParameterizedTest
     @EnumSource(InitiativeRewardType.class)
     void executeInitiativeOK(InitiativeRewardType initiativeRewardType) {
-        String initiativeId = "INITIATIVEID";
         String userid = "USERID";
 
         InitiativeConfig initiativeConfigMock = InitiativeConfig.builder()
-                .initiativeId(initiativeId)
+                .initiativeId(INITIATIVE_ID)
                 .initiativeRewardType(initiativeRewardType)
                 .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(INITIATIVE_ID))
                 .thenReturn(Mono.just(initiativeConfigMock));
 
+        Mockito.when(transactionProcessedRepositoryMock.findByInitiativesWithBatch(INITIATIVE_ID, 100))
+                .thenReturn(Flux.just(TRANSACTION_PROCESSED));
         if(InitiativeRewardType.DISCOUNT.equals(initiativeRewardType)) {
-            Mockito.when(transactionProcessedRepositoryMock.removeByInitiativeId(initiativeId))
-                    .thenReturn(Mono.just(Mockito.mock(DeleteResult.class)));
+            Mockito.when(transactionProcessedRepositoryMock.deleteById(TRANSACTION_PROCESSED.getId()))
+                    .thenReturn(Mono.empty());
         } else {
-            Mockito.when(transactionProcessedRepositoryMock.removeInitiativeOnTransaction(initiativeId))
-                    .thenReturn(Mono.just(Mockito.mock(UpdateResult.class)));
+            Mockito.when(transactionProcessedRepositoryMock.removeInitiativeOnTransaction(TRANSACTION_PROCESSED.getId(), INITIATIVE_ID))
+                    .thenReturn(Mono.empty());
         }
 
-        Mockito.when(droolsRuleRepositoryMock.deleteById(initiativeId))
+        Mockito.when(droolsRuleRepositoryMock.deleteById(INITIATIVE_ID))
                 .thenReturn(Mono.just(Mockito.mock(Void.class)));
 
         Mockito.when(rewardContextHolderServiceMock.refreshKieContainerCacheMiss())
                 .thenReturn(Mono.just(Mockito.mock(KieBase.class)));
 
-        UpdateResult updateResultMock = Mockito.mock(UpdateResult.class);
-        Mockito.when(hpanInitiativesRepositoryMock.removeInitiativeOnHpan(initiativeId))
-                .thenReturn(Mono.just(updateResultMock));
+        Mockito.when(hpanInitiativesRepositoryMock.findByInitiativesWithBatch(INITIATIVE_ID, 100))
+                .thenReturn(Flux.just(HPAN_INITIATIVES));
+        Mockito.when(hpanInitiativesRepositoryMock.removeInitiativeOnHpan(HPAN_INITIATIVES.getHpan(), INITIATIVE_ID))
+                .thenReturn(Mono.empty());
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        userInitiativeCounters.setId("INITIATIVE_COUNTERS_ID");
         userInitiativeCounters.setEntityId(userid);
-        userInitiativeCounters.setInitiativeId(initiativeId);
-        Mockito.when(userInitiativeCountersRepositoryMock.deleteByInitiativeId(initiativeId))
+        userInitiativeCounters.setInitiativeId(INITIATIVE_ID);
+        Mockito.when(userInitiativeCountersRepositoryMock.findByInitiativesWithBatch(INITIATIVE_ID, 100))
                 .thenReturn(Flux.just(userInitiativeCounters));
+        Mockito.when(userInitiativeCountersRepositoryMock.deleteById(userInitiativeCounters.getId()))
+                .thenReturn(Mono.empty());
 
-        Flux<HpanInitiatives> hpansDeleted = Flux.just(HpanInitiativesFaker.mockInstance(1));
-        Mockito.when(hpanInitiativesRepositoryMock.deleteHpanWithoutInitiative())
-                .thenReturn(hpansDeleted);
+        HpanInitiatives hpanWithoutInitiatives = HpanInitiativesFaker.mockInstance(1);
+        Mockito.when(hpanInitiativesRepositoryMock.findWithoutInitiativesWithBatch(100))
+                .thenReturn(Flux.just(hpanWithoutInitiatives));
+        Mockito.when(hpanInitiativesRepositoryMock.deleteById(hpanWithoutInitiatives.getHpan()))
+                .thenReturn(Mono.empty());
 
-        Flux<TransactionProcessed> trxProcessedDelete = Flux.just(TransactionProcessedFaker.mockInstance(1));
-        Mockito.when(transactionProcessedRepositoryMock.deleteTransactionsWithoutInitiative())
-                .thenReturn(trxProcessedDelete);
-        String result = deleteInitiativeService.execute(initiativeId).block();
+        TransactionProcessed trxProcessedWithoutInitiatives = TransactionProcessedFaker.mockInstance(1);
+        Mockito.when(transactionProcessedRepositoryMock.findWithoutInitiativesWithBatch(100))
+                .thenReturn(Flux.just(trxProcessedWithoutInitiatives));
+        Mockito.when(transactionProcessedRepositoryMock.deleteById(trxProcessedWithoutInitiatives.getId()))
+                .thenReturn(Mono.empty());
+
+        String result = deleteInitiativeService.execute(INITIATIVE_ID).block();
 
         Assertions.assertNotNull(result);
 
         Mockito.verify(droolsRuleRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyString());
-        Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).removeInitiativeOnHpan(Mockito.anyString());
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).deleteByInitiativeId(Mockito.anyString());
+        Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).removeInitiativeOnHpan(Mockito.anyString(), Mockito.anyString());
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getInitiativeConfig(Mockito.anyString());
+        Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).findByInitiativesWithBatch(Mockito.anyString(), Mockito.anyInt());
 
         if(InitiativeRewardType.DISCOUNT.equals(initiativeRewardType)) {
-            Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).removeByInitiativeId(Mockito.anyString());
-            Mockito.verify(transactionProcessedRepositoryMock, Mockito.never()).removeInitiativeOnTransaction(Mockito.anyString());
+            Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(2)).deleteById(Mockito.anyString());
+            Mockito.verify(transactionProcessedRepositoryMock, Mockito.never()).removeInitiativeOnTransaction(Mockito.anyString(), Mockito.anyString());
 
         } else {
-            Mockito.verify(transactionProcessedRepositoryMock, Mockito.never()).removeByInitiativeId(Mockito.anyString());
-            Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).removeInitiativeOnTransaction(Mockito.anyString());
+            Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyString());
+            Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).removeInitiativeOnTransaction(Mockito.anyString(), Mockito.anyString());
         }
     }
 
     @Test
     void executeError() {
-        String initiativeId = "INITIATIVEID";
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(INITIATIVE_ID))
                 .thenThrow(new MongoException("DUMMY_EXCEPTION"));
 
         try{
-            deleteInitiativeService.execute(initiativeId).block();
+            deleteInitiativeService.execute(INITIATIVE_ID).block();
             Assertions.fail();
         }catch (Throwable t){
             Assertions.assertTrue(t instanceof  MongoException);

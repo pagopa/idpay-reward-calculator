@@ -1,7 +1,5 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
@@ -12,12 +10,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
@@ -25,6 +23,7 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
     private TransactionProcessedRepository transactionProcessedRepository;
     @Autowired
     private TransactionProcessedAtomicOpsRepositoryImpl transactionProcessedAtomicOpsRepositoryImpl;
+    private static final String INITIATIVE_ID = "INITIATIVE_ID";
 
     @AfterEach
     void clearData() {
@@ -36,39 +35,7 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
     }
 
     @Test
-    void deleteByInitiativeId() {
-        String initiativeId = "INITIATIVE";
-
-        Reward reward = Reward.builder()
-                .initiativeId(initiativeId)
-                .providedReward(BigDecimal.TEN)
-                .accruedReward(BigDecimal.TEN)
-                .build();
-        TransactionProcessed trxRewarded = TransactionProcessedFaker.mockInstance(1);
-        trxRewarded.setId("PROVA_TRXID_1");
-        trxRewarded.setRewards(Map.of(initiativeId, reward));
-        trxRewarded.setInitiatives(List.of(initiativeId));
-        trxRewarded.setInitiativeRejectionReasons(null);
-        trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
-
-        TransactionProcessed trxRejected = TransactionProcessedFaker.mockInstance(2);
-        trxRejected.setId("PROVA_TRXID_2");
-        trxRejected.setRewards(null);
-        trxRejected.setInitiatives(List.of(initiativeId));
-        trxRejected.setInitiativeRejectionReasons(Map.of(initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_DUPLICATE_CORRELATION_ID)));
-        trxRejected.setStatus(RewardConstants.REWARD_STATE_REJECTED);
-
-        transactionProcessedRepository.saveAll(List.of(trxRewarded,trxRejected)).blockLast();
-
-        DeleteResult result = transactionProcessedAtomicOpsRepositoryImpl.removeByInitiativeId(initiativeId).block();
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.getDeletedCount());
-        Assertions.assertEquals(0, transactionProcessedRepository.count().block());
-    }
-
-    @Test
-    void findAndRemoveInitiativeOnTransaction() {
+    void removeInitiativeOnTransaction() {
         String initiativeId = "INITIATIVE";
         String initiativeRemain = "ANOTHER_INITIATIVE";
         String initiativeRejected = "INITIATIVE_REJECTED";
@@ -103,10 +70,8 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
 
         transactionProcessedRepository.saveAll(List.of(trxRewarded, trxRejected)).count().block();
 
-        UpdateResult result = transactionProcessedAtomicOpsRepositoryImpl.removeInitiativeOnTransaction(initiativeId).block();
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(2, result.getModifiedCount());
+        transactionProcessedAtomicOpsRepositoryImpl.removeInitiativeOnTransaction(trxRewarded.getId(), initiativeId).block();
+        transactionProcessedAtomicOpsRepositoryImpl.removeInitiativeOnTransaction(trxRejected.getId(), initiativeId).block();
 
         Assertions.assertEquals(2L, transactionProcessedRepository.count().block());
 
@@ -160,4 +125,35 @@ class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTes
         Assertions.assertNotNull(trxWithInitiativesAfter);
 
     }
+
+    @Test
+    void findByInitiativesWithBatch() {
+        TransactionProcessed trxWithInitiativeList = TransactionProcessedFaker.mockInstance(3);
+        trxWithInitiativeList.setInitiatives(List.of(INITIATIVE_ID));
+        trxWithInitiativeList.setId("PROVA_TRXID_3");
+        trxWithInitiativeList.setInitiatives(List.of(INITIATIVE_ID));
+
+        transactionProcessedRepository.save(trxWithInitiativeList).block();
+
+        Flux<TransactionProcessed> result = transactionProcessedAtomicOpsRepositoryImpl.findByInitiativesWithBatch(INITIATIVE_ID, 100);
+
+        List<TransactionProcessed> transactionProcessed = result.toStream().toList();
+        assertEquals(1, transactionProcessed.size());
+    }
+
+    @Test
+    void findWithoutInitiativesWithBatch() {
+        TransactionProcessed trxWithInitiativeWithoutList = TransactionProcessedFaker.mockInstance(3);
+        trxWithInitiativeWithoutList.setInitiatives(List.of(INITIATIVE_ID));
+        trxWithInitiativeWithoutList.setId("PROVA_TRXID_3");
+        trxWithInitiativeWithoutList.setInitiatives(Collections.emptyList());
+
+        transactionProcessedRepository.save(trxWithInitiativeWithoutList).block();
+
+        Flux<TransactionProcessed> result = transactionProcessedRepository.findWithoutInitiativesWithBatch(100);
+
+        List<TransactionProcessed> transactionProcessed = result.toStream().toList();
+        assertEquals(1, transactionProcessed.size());
+    }
+
 }
