@@ -89,7 +89,7 @@ class CreateTrxSynchronousServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(previewRequest.getUserId())), Mockito.same(previewRequest.getTrxDate()),
+                .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())), Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
         // When
@@ -144,7 +144,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
 
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(previewRequest.getUserId())),
+                .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())),
                 Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
@@ -280,7 +280,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(transactionProcessedRepositoryMock.findById(authorizeRequest.getTransactionId())).thenReturn(previousTrxProcessMono);
 
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(authorizeRequest.getUserId())), Mockito.same(authorizeRequest.getTrxDate()),
+                .getPaymentInstrument(authorizeRequest.getUserId(), authorizeRequest.getChannel())), Mockito.same(authorizeRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();

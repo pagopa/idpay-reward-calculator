@@ -10,6 +10,9 @@ public final class RewardConstants {
 
     //region transactions' channels
     public static final String TRX_CHANNEL_RTD = "RTD";
+    public static final String TRX_CHANNEL_QRCODE = "QRCODE";
+    public static final String TRX_CHANNEL_IDPAYCODE = "IDPAYCODE";
+    public static final String TRX_CHANNEL_BARCODE = "BARCODE";
     //endregion
 
     //region initiative's build rejection reasons

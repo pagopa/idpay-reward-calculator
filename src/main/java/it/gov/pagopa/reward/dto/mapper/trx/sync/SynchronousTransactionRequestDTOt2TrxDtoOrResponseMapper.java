@@ -30,7 +30,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
-        out.setHpan(getPaymentInstrument(trx.getUserId()));
+        out.setHpan(getPaymentInstrument(trx.getUserId(), trx.getChannel()));
         out.setOperationType(chargeOperation);
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
         out.setCorrelationId(trx.getTransactionId());
@@ -66,7 +66,10 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         return out;
     }
 
-    public static String getPaymentInstrument(String userId){
+    public static String getPaymentInstrument(String userId, String channel){
+        if (RewardConstants.TRX_CHANNEL_IDPAYCODE.equals(channel)){
+            return RewardConstants.TRX_CHANNEL_IDPAYCODE+"_"+userId;
+        }
         return PREFIX_PAYMENT_INSTRUMENT.formatted(userId);
     }
 }
