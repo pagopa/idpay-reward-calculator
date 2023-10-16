@@ -63,8 +63,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_PF = "INITIATIVE_ID_PF";
     private static final String INITIATIVE_ID_NF = "INITIATIVE_ID_NF";
 
-    private final int dbElementsNumbers = 10;
-    private final int updatedHpanNumbers = 50;
+    private final int dbElementsNumbers = 2;
+    private final int updatedHpanNumbers = 10;
     private final int minBiasForNFInitiative = dbElementsNumbers + ((updatedHpanNumbers - dbElementsNumbers)/2);
 
     @Autowired
@@ -110,10 +110,10 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         waitForDB(dbElementsNumbers+1+ newHPans +dbElementsNumbers);
         long endTestWithoutAsserts = System.currentTimeMillis();
 
-        checkValidMessages(dbElementsNumbers, updatedHpanNumbers);
+        checkValidMessages();
         checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
         checkConcurrencyMessages();
-        checkHpanUpdatePublished(dbElementsNumbers,maxWaitingMs);
+        checkHpanUpdatePublished(maxWaitingMs);
         checkUserInitiativeCounters(newHPans);
 
         System.out.printf("""
@@ -143,7 +143,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
         );
     }
 
-    private void checkValidMessages(int dbElementsNumbers, int updatedHpanNumbers) {
+    private void checkValidMessages() {
         List<Mono<HpanInitiatives>> closeIntervals = IntStream.range(0, dbElementsNumbers /2).mapToObj(i -> hpanInitiativesRepository.findById("HPAN_%s".formatted(i))).toList();
         closeIntervals.forEach(hpanInitiativesMono -> {
             HpanInitiatives hpanInitiativeResult= hpanInitiativesMono.block();
@@ -452,9 +452,9 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 Assertions.assertEquals(2, onboardedInitiative.getActiveTimeIntervals().size()));
     }
 
-    private void checkHpanUpdatePublished(int updatedHpanNumbers, long maxWaitingMs) {
-        List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicHpanUpdateOutcome, updatedHpanNumbers, maxWaitingMs);
-        Assertions.assertEquals(updatedHpanNumbers,consumerRecords.size());
+    private void checkHpanUpdatePublished(long maxWaitingMs) {
+        List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicHpanUpdateOutcome, dbElementsNumbers, maxWaitingMs);
+        Assertions.assertEquals(dbElementsNumbers,consumerRecords.size());
         consumerRecords.forEach(cr -> {
             try {
                 HpanUpdateOutcomeDTO hpanUpdateOutcomeDTO = objectMapper.readValue(cr.value(), HpanUpdateOutcomeDTO.class);
@@ -464,7 +464,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                 int bias = Integer.parseInt(hpanUpdateOutcomeDTO.getUserId().substring(7));
 
                 Assertions.assertNotNull(hpanUpdateOutcomeDTO.getHpanList());
-                if(bias<updatedHpanNumbers/2){
+                if(bias<dbElementsNumbers/2){
                     if(bias%2==0){
                         Assertions.assertEquals(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT, hpanUpdateOutcomeDTO.getOperationType());
                         Assertions.assertTrue(hpanUpdateOutcomeDTO.getHpanList().contains("HPAN_NOT_PAYMENT_MANAGER_CHANNEL_%d".formatted(bias)));

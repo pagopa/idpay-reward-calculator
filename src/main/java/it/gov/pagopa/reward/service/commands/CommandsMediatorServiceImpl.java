@@ -92,4 +92,9 @@ public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperat
         return "REWARD_CALCULATOR_COMMANDS";
     }
 
+    @Override
+    protected int getConcurrency() {
+        // We will process a single command at time, in order to limit the RU consumption
+        return 1;
+    }
 }
