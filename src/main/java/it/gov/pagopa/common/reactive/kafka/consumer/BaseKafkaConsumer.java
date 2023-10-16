@@ -1,8 +1,8 @@
 package it.gov.pagopa.common.reactive.kafka.consumer;
 
 import com.fasterxml.jackson.databind.ObjectReader;
-import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.reactive.kafka.exception.UncommittableError;
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +12,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.concurrent.Queues;
 import reactor.util.context.Context;
 
 import java.nio.charset.StandardCharsets;
@@ -78,7 +79,7 @@ public abstract class BaseKafkaConsumer<T, R> {
     public final void execute(Flux<Message<String>> messagesFlux) {
         Flux<List<R>> processUntilCommits =
                 messagesFlux
-                        .flatMapSequential(this::executeAcknowledgeAware)
+                        .flatMapSequential(this::executeAcknowledgeAware, getConcurrency())
 
                         .buffer(getCommitDelay())
                         .map(p -> {
@@ -100,6 +101,11 @@ public abstract class BaseKafkaConsumer<T, R> {
                         );
 
         subscribeAfterCommits(processUntilCommits);
+    }
+
+    /** Concurrency level used to process polled messages */
+    protected int getConcurrency() {
+        return Queues.SMALL_BUFFER_SIZE;
     }
 
     /** The {@link Duration} to wait before to commit processed messages */
