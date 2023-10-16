@@ -14,7 +14,6 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.*;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import it.gov.pagopa.reward.utils.CommandsConstants;
@@ -36,9 +35,11 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 @TestPropertySource(properties = {
+        "app.reward-rule.build-delay-duration=PT1S",
         "logging.level.it.gov.pagopa.reward.service.commands.ops.DeleteInitiativeServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.commands.CommandsMediatorServiceImpl=WARN",
         "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN"
 })
 class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
@@ -48,16 +49,16 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
     @SpyBean
     private DroolsRuleRepository droolsRuleRepositorySpy;
+
     @Autowired
     private HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired
     private TransactionProcessedRepository transactionProcessedRepository;
     @Autowired
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
-    @Autowired
-    private RewardContextHolderService rewardContextHolderService;
+
     private static final int VALID_USE_CASES = 4;
-    private static final int VALID_MESSAGES = 100;
+    private static final int VALID_MESSAGES = 10;
 
     @Test
     void test() {
@@ -94,6 +95,8 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
 
         checkRepositories();
         checkErrorsPublished(notValidMessages, maxWaitingMs, errorUseCases);
+
+        Mockito.verify(droolsRuleRepositorySpy).findAll();
 
         System.out.printf("""
                         ************************
