@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -115,7 +116,11 @@ public class TestUtils {
     /** To wait for the configured time */
     public static void wait(long timeout, TimeUnit timeoutUnit) {
         try{
-            Awaitility.await().timeout(timeout, timeoutUnit).until(()->false);
+            Awaitility.await()
+                    .pollDelay(Duration.ZERO)
+                    .timeout(timeout, timeoutUnit)
+                    .pollInterval(timeout, timeoutUnit)
+                    .until(()->false);
         } catch (ConditionTimeoutException ex){
             // Do Nothing
         }

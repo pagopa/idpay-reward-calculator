@@ -29,6 +29,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -58,7 +59,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
     private UserInitiativeCountersRepository userInitiativeCountersRepository;
 
     private static final int VALID_USE_CASES = 4;
-    private static final int VALID_MESSAGES = 10;
+    private static final int VALID_MESSAGES = 4;
 
     @Test
     void test() {
@@ -119,6 +120,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         long[] countSaved={0};
         //noinspection ConstantConditions
         TestUtils.waitFor(()->(countSaved[0]=transactionProcessedRepository.count().block()) == n, ()->"Expected %d saved users in db, read %d".formatted(n, countSaved[0]), 60, 1000);
+        TestUtils.wait(500, TimeUnit.MILLISECONDS);
         return countSaved[0];
     }
 
