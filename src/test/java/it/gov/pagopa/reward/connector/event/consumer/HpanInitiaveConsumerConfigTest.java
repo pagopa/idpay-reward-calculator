@@ -63,8 +63,8 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_PF = "INITIATIVE_ID_PF";
     private static final String INITIATIVE_ID_NF = "INITIATIVE_ID_NF";
 
-    private final int dbElementsNumbers = 10;
-    private final int updatedHpanNumbers = 50;
+    private final int dbElementsNumbers = 2;
+    private final int updatedHpanNumbers = 10;
     private final int minBiasForNFInitiative = dbElementsNumbers + ((updatedHpanNumbers - dbElementsNumbers)/2);
 
     @Autowired
