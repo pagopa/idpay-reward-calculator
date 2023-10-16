@@ -133,7 +133,7 @@ public class TestUtils {
 
     /** it will set to null the provided datetime field from payload */
     public static String setNullFieldValue(String payload, String fieldName) {
-        return payload.replaceAll("(\""+fieldName+"\":)(?:[^,}]+)", "$1:null");
+        return payload.replaceAll("(\""+fieldName+"\":)[^,}]+", "$1:null");
     }
 
     /** It will read a field value from json string */
