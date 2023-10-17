@@ -6,6 +6,7 @@ import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.reward.dto.commands.CommandOperationDTO;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.commands.ops.DeleteInitiativeService;
+import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.CommandsConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,20 +25,29 @@ import java.util.function.Consumer;
 public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperationDTO, String> implements CommandsMediatorService {
 
     private final Duration commitDelay;
+    private final Duration rewardRulesBuildDelayMinusCommit;
     private final DeleteInitiativeService deleteInitiativeService;
     private final RewardErrorNotifierService rewardErrorNotifierService;
+    private final RewardContextHolderService rewardContextHolderService;
     private final ObjectReader objectReader;
 
     protected CommandsMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.commandsConsumer-in-0.consumer.ackTime}")  long commitMillis,
+            @Value("${app.reward-rule.build-delay-duration}") String rewardRulesBuildDelay,
+
             DeleteInitiativeService deleteInitiativeService, RewardErrorNotifierService rewardErrorNotifierService,
-            ObjectMapper objectMapper) {
+            RewardContextHolderService rewardContextHolderService, ObjectMapper objectMapper) {
         super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
         this.deleteInitiativeService = deleteInitiativeService;
         this.rewardErrorNotifierService = rewardErrorNotifierService;
+        this.rewardContextHolderService = rewardContextHolderService;
         this.objectReader = objectMapper.readerFor(CommandOperationDTO.class);
+
+        Duration rewardRulesBuildDelayDuration = Duration.parse(rewardRulesBuildDelay).minusMillis(commitMillis);
+        Duration defaultDurationDelay = Duration.ofMillis(2L);
+        rewardRulesBuildDelayMinusCommit = defaultDurationDelay.compareTo(rewardRulesBuildDelayDuration) >= 0 ? defaultDurationDelay : rewardRulesBuildDelayDuration;
     }
 
     @Override
@@ -48,6 +58,8 @@ public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperat
     @Override
     protected void subscribeAfterCommits(Flux<List<String>> afterCommits2subscribe) {
         afterCommits2subscribe
+                .buffer(rewardRulesBuildDelayMinusCommit)
+                .then(rewardContextHolderService.refreshKieContainerCacheMiss())
                 .subscribe(r -> log.info("[REWARD_CALCULATOR_COMMANDS] Processed offsets committed successfully"));
     }
 
@@ -80,4 +92,9 @@ public class CommandsMediatorServiceImpl extends BaseKafkaConsumer<CommandOperat
         return "REWARD_CALCULATOR_COMMANDS";
     }
 
+    @Override
+    protected int getConcurrency() {
+        // We will process a single command at time, in order to limit the RU consumption
+        return 1;
+    }
 }

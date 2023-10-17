@@ -52,38 +52,6 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
     }
 
     @Override
-    public Mono<KieBase> build(Flux<DroolsRule> rules) {
-        return Mono.defer(() -> {
-            KieServices kieServices = KieServices.Factory.get();
-            KieFileSystem kieFileSystem = KieServices.get().newKieFileSystem();
-
-            return rules.map(r -> kieFileSystem.write(String.format("src/main/resources/%s/%s.drl", RULES_BUILT_DIR, r.getId()), r.getRule()))
-                    .then(Mono.fromSupplier(() -> {
-                        KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
-                        kieBuilder.buildAll();
-
-                        if (kieBuilder.getResults().hasMessages(Message.Level.ERROR)) {
-                            throw new IllegalArgumentException("Build Errors:" + kieBuilder.getResults().toString());
-                        }
-
-                        KieModule kieModule = kieBuilder.getKieModule();
-                        KieBase newKieBase = kieServices.newKieContainer(kieModule.getReleaseId()).getKieBase();
-
-                        log.info("Build completed");
-                        if (log.isDebugEnabled()) {
-                            KiePackage kiePackage = newKieBase.getKiePackage(RULES_BUILT_PACKAGE);
-                            log.debug("The container now will contain the following rules inside %s package: %s".formatted(
-                                    RULES_BUILT_PACKAGE,
-                                    kiePackage != null
-                                            ? kiePackage.getRules().stream().map(Rule::getId).toList()
-                                            : "0"));
-                        }
-                        return newKieBase;
-                    }));
-        });
-    }
-
-    @Override
     public void preLoadKieBase(KieBase kieBase) {
         try {
             log.info("[DROOLS_CONTAINER_COMPILE] Starting KieContainer compile");
@@ -108,5 +76,37 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
         } catch (Exception e){
             log.warn("[DROOLS_CONTAINER_COMPILE] An error occurred while pre-compiling Drools rules. This will not influence the right behavior of the application, the rules will be compiled the first time they are used", e);
         }
+    }
+
+    @Override
+    public Mono<KieBase> build(Flux<DroolsRule> rules) {
+        return Mono.defer(() -> {
+            KieServices kieServices = KieServices.Factory.get();
+            KieFileSystem kieFileSystem = KieServices.get().newKieFileSystem();
+
+            return rules.map(r -> kieFileSystem.write(String.format("src/main/resources/%s/%s.drl", RULES_BUILT_DIR, r.getId()), r.getRule()))
+                    .then(Mono.fromSupplier(() -> {
+                        KieBuilder kieBuilder = kieServices.newKieBuilder(kieFileSystem);
+                        kieBuilder.buildAll();
+
+                        if (kieBuilder.getResults().hasMessages(Message.Level.ERROR)) {
+                            throw new IllegalArgumentException("Build Errors:" + kieBuilder.getResults().toString());
+                        }
+
+                        KieModule kieModule = kieBuilder.getKieModule();
+                        KieBase newKieBase = kieServices.newKieContainer(kieModule.getReleaseId()).getKieBase();
+
+                        log.info("[REWARD_RULE_BUILD] Build completed");
+                        if (log.isDebugEnabled()) {
+                            KiePackage kiePackage = newKieBase.getKiePackage(RULES_BUILT_PACKAGE);
+                            log.debug("[REWARD_RULE_BUILD] The container now will contain the following rules inside %s package: %s".formatted(
+                                    RULES_BUILT_PACKAGE,
+                                    kiePackage != null
+                                            ? kiePackage.getRules().stream().map(Rule::getId).toList()
+                                            : "0"));
+                        }
+                        return newKieBase;
+                    }));
+        });
     }
 }
