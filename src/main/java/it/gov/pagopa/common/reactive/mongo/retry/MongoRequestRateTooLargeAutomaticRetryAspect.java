@@ -1,6 +1,7 @@
 package it.gov.pagopa.common.reactive.mongo.retry;
 
 import it.gov.pagopa.common.reactive.web.ReactiveRequestContextHolder;
+import lombok.Generated;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -47,6 +48,12 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
         this.maxMillisElapsedBatch = maxMillisElapsedBatch;
     }
 
+    @Generated
+    @Pointcut("execution(* org.springframework.data.mongodb.repository.*MongoRepository+.*(..))")
+    public void inSpringRepositoryClass() {
+    }
+
+    @Generated
     @Pointcut("within(*..*Repository*)")
     public void inRepositoryClass() {
     }
@@ -59,14 +66,14 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
     public void returnFlux() {
     }
 
-    @Around("inRepositoryClass() && returnMono()")
+    @Around("(inRepositoryClass() or inSpringRepositoryClass()) && returnMono()")
     public Object decorateMonoRepositoryMethods(ProceedingJoinPoint pjp) throws Throwable {
         Mono<?> out = (Mono<?>) pjp.proceed();
 
         return Mono.deferContextual(ctx -> decorateMethod(out, ctx));
     }
 
-    @Around("inRepositoryClass() && returnFlux()")
+    @Around("(inRepositoryClass() or inSpringRepositoryClass()) && returnFlux()")
     public Object decorateFluxRepositoryMethods(ProceedingJoinPoint pjp) throws Throwable {
         @SuppressWarnings("unchecked") // only with Flux the compiler return error when using wildcard, so here we are using Object
         Flux<Object> out = (Flux<Object>) pjp.proceed();
