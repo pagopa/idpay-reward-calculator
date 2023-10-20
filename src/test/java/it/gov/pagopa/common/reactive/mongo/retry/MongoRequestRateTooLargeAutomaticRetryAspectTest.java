@@ -2,6 +2,7 @@ package it.gov.pagopa.common.reactive.mongo.retry;
 
 import it.gov.pagopa.common.reactive.web.ReactiveRequestContextHolder;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -155,6 +156,10 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
       }
       return expectedMonoResult;
     })).when(pjpMock).proceed();
+
+    Signature signatureMock = Mockito.mock(Signature.class);
+    Mockito.lenient().when(signatureMock.toShortString()).thenReturn("ClassName.jointPointName(..)");
+    Mockito.lenient().when(pjpMock.getSignature()).thenReturn(signatureMock);
   }
 
   private void checkRetryBehaviourMono(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch) throws Throwable {
@@ -195,6 +200,10 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
       }
       return expectedFluxResult;
     })).when(pjpMock).proceed();
+
+    Signature signatureMock = Mockito.mock(Signature.class);
+    Mockito.lenient().when(signatureMock.toShortString()).thenReturn("ClassName.jointPointName(..)");
+    Mockito.lenient().when(pjpMock.getSignature()).thenReturn(signatureMock);
   }
 
   private void checkRetryBehaviourFlux(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch) throws Throwable {
