@@ -123,7 +123,7 @@ class MongoExceptionHandlerTest {
 
   @Test
   void handleMongoRequestRateTooLargeRetryExpiredException() {
-    doThrow(new MongoRequestRateTooLargeRetryExpiredException(3,3,0,100,34L,new Exception()))
+    doThrow(new MongoRequestRateTooLargeRetryExpiredException("FLOWNAME",3,3,0,100,34L,new Exception()))
         .when(testControllerSpy).testEndpoint();
 
     ErrorDTO expectedErrorDefault = new ErrorDTO("TOO_MANY_REQUESTS","TOO_MANY_REQUESTS");
