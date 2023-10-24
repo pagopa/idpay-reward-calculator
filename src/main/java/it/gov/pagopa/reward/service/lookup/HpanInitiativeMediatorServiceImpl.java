@@ -21,7 +21,6 @@ import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -159,7 +158,6 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
                 .map(ur -> hpanUpdateEvaluateDTO.getHpan());
     }
 
-    @NotNull
     private Mono<OnboardedInitiative> initializeCounterAndRetrieveFamily(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative oi) {
         if(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT.equals(hpanUpdateEvaluateDTO.getOperationType()) && oi.getActiveTimeIntervals().size() == 1){
             return retrieveAndEvaluateInitiative(hpanUpdateEvaluateDTO)

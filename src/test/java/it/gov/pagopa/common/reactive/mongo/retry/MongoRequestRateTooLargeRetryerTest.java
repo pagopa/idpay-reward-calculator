@@ -10,7 +10,6 @@ import com.mongodb.ServerAddress;
 import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
 import it.gov.pagopa.common.utils.MemoryAppender;
 import org.bson.BsonDocument;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -265,7 +264,6 @@ class MongoRequestRateTooLargeRetryerTest {
     }
 //endregion
 
-    @NotNull
     public static UncategorizedMongoDbException buildRequestRateTooLargeMongodbException() {
         String mongoFullErrorResponse = """
         {"ok": 0.0, "errmsg": "Error=16500, RetryAfterMs=34,\s
@@ -279,7 +277,6 @@ class MongoRequestRateTooLargeRetryerTest {
         return new UncategorizedMongoDbException(mongoQueryException.getMessage(), mongoQueryException);
     }
 
-    @NotNull
     public static UncategorizedMongoDbException throwRequestRateTooLargeMongodbException() {
 
         throw buildRequestRateTooLargeMongodbException();

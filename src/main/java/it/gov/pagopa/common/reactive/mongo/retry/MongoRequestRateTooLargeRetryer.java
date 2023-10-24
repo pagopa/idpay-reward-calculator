@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.DataAccessException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -65,7 +64,6 @@ public class MongoRequestRateTooLargeRetryer {
     }
 
 
-    @NotNull
     private static MongoRequestRateTooLargeRetryExpiredException buildMongoRequestRateTooLargeRetryExpiredException(
             String flowName, long maxRetry, RetrySignal e, long maxMillisElapsed, long startTime, Long retryAfterMs) {
         return new MongoRequestRateTooLargeRetryExpiredException(flowName, maxRetry, e.totalRetries() + 1,
