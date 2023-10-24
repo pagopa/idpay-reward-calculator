@@ -156,14 +156,14 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
         public Mono<String> testMono() {
             return Mono.defer(() -> {
                 counter[0]++;
-                return Mono.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException());
+                return Mono.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading());
             });
         }
 
         public Flux<LocalDateTime> testFlux() {
             return Flux.defer(() -> {
                 counter[0]++;
-                return Flux.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException());
+                return Flux.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading());
             });
         }
     }

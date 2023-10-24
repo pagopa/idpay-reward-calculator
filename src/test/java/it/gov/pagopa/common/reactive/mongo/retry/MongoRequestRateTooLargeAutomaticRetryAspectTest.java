@@ -150,7 +150,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
 
     Mockito.doAnswer(i -> Mono.deferContextual(ctx -> {
       if (counter[0]++ < maxRetry){
-        return Mono.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException());
+        return Mono.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading());
       }
       return expectedMonoResult;
     })).when(pjpMock).proceed();
@@ -177,7 +177,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
     configureRetryMockMono();
     Mono<?> mono = buildContextMono(aspect, isBatch);
     UncategorizedMongoDbException uncategorizedMongoDbException = Assertions.assertThrows(UncategorizedMongoDbException.class, mono::block);
-    Assertions.assertEquals( MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException().getMessage() ,uncategorizedMongoDbException.getMessage());
+    Assertions.assertEquals( MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading().getMessage() ,uncategorizedMongoDbException.getMessage());
   }
 
   private Mono<?> buildContextMono(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch)
@@ -194,7 +194,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
 
     Mockito.doAnswer(i -> Flux.deferContextual(ctx -> {
       if (counter[0]++ < maxRetry){
-        return Flux.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException());
+        return Flux.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading());
       }
       return expectedFluxResult;
     })).when(pjpMock).proceed();
@@ -221,7 +221,7 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
     configureRetryMockFlux();
     Flux<Object> flux = buildContextFlux(aspect, isBatch);
     UncategorizedMongoDbException uncategorizedMongoDbException = Assertions.assertThrows(UncategorizedMongoDbException.class, flux::blockLast);
-    Assertions.assertEquals( MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException().getMessage() ,uncategorizedMongoDbException.getMessage());
+    Assertions.assertEquals( MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading().getMessage() ,uncategorizedMongoDbException.getMessage());
   }
 
   private Flux<Object> buildContextFlux(MongoRequestRateTooLargeAutomaticRetryAspect aspect, boolean isBatch)
