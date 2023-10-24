@@ -3,7 +3,6 @@ package it.gov.pagopa.common.reactive.mongo.retry;
 import it.gov.pagopa.common.reactive.web.ReactiveRequestContextHolder;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -141,7 +140,6 @@ class MongoRequestRateTooLargeAutomaticRetryAspectTest {
   }
   //endregion
 
-  @NotNull
   private MongoRequestRateTooLargeAutomaticRetryAspect buildMongoRequestRateTooLargeAutomaticRetryAspect(
       boolean enabledApi, boolean enabledBatch) {
     return new MongoRequestRateTooLargeAutomaticRetryAspect(

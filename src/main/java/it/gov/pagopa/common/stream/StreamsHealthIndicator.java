@@ -1,7 +1,6 @@
 package it.gov.pagopa.common.stream;
 
 import lombok.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.messaging.DirectWithAttributesChannel;
@@ -23,10 +22,13 @@ import java.util.stream.Collectors;
 @GlobalChannelInterceptor
 public class StreamsHealthIndicator extends AbstractHealthIndicator implements ChannelInterceptor {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
 
     private final Set<String> disconnectedSubscribers = new HashSet<>();
+
+    public StreamsHealthIndicator(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     @Override
     protected void doHealthCheck(Health.Builder builder) {
