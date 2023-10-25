@@ -1,6 +1,7 @@
 package it.gov.pagopa.common.reactive.mongo.retry;
 
 import it.gov.pagopa.common.reactive.web.ReactiveRequestContextHolder;
+import lombok.Generated;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -47,6 +48,12 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
         this.maxMillisElapsedBatch = maxMillisElapsedBatch;
     }
 
+    @Generated
+    @Pointcut("execution(* org.springframework.data.mongodb.repository.*MongoRepository+.*(..))")
+    public void inSpringRepositoryClass() {
+    }
+
+    @Generated
     @Pointcut("within(*..*Repository*)")
     public void inRepositoryClass() {
     }
@@ -59,35 +66,35 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
     public void returnFlux() {
     }
 
-    @Around("inRepositoryClass() && returnMono()")
+    @Around("(inRepositoryClass() or inSpringRepositoryClass()) && returnMono()")
     public Object decorateMonoRepositoryMethods(ProceedingJoinPoint pjp) throws Throwable {
         Mono<?> out = (Mono<?>) pjp.proceed();
-
-        return Mono.deferContextual(ctx -> decorateMethod(out, ctx));
+        String flowName = pjp.getSignature().toShortString();
+        return Mono.deferContextual(ctx -> decorateMethod(flowName, out, ctx));
     }
 
-    @Around("inRepositoryClass() && returnFlux()")
+    @Around("(inRepositoryClass() or inSpringRepositoryClass()) && returnFlux()")
     public Object decorateFluxRepositoryMethods(ProceedingJoinPoint pjp) throws Throwable {
         @SuppressWarnings("unchecked") // only with Flux the compiler return error when using wildcard, so here we are using Object
         Flux<Object> out = (Flux<Object>) pjp.proceed();
-
-        return Flux.deferContextual(ctx -> decorateMethod(out, ctx));
+        String flowName = pjp.getSignature().toShortString();
+        return Flux.deferContextual(ctx -> decorateMethod(flowName, out, ctx));
     }
 
-    private <T extends Publisher<?>> T decorateMethod(T out, ContextView ctx) {
+    private <T extends Publisher<?>> T decorateMethod(String flowName, T out, ContextView ctx) {
         Optional<ServerWebExchange> serverWebExchange = ctx.getOrEmpty(ReactiveRequestContextHolder.CONTEXT_KEY);
         if (serverWebExchange.isEmpty()) {
             if(enabledBatch) {
-                return invokeWithRetry(out, maxRetryBatch, maxMillisElapsedBatch);
+                return invokeWithRetry(flowName, out, maxRetryBatch, maxMillisElapsedBatch);
             }else {
                 return out;
             }
         } else {
             MongoRequestRateTooLargeApiRetryable apiRetryableConfig = getRequestRateTooLargeApiRetryableConfig(serverWebExchange.get());
             if(apiRetryableConfig!=null){
-                return invokeWithRetry(out, apiRetryableConfig.maxRetry(), apiRetryableConfig.maxMillisElapsed());
+                return invokeWithRetry(flowName, out, apiRetryableConfig.maxRetry(), apiRetryableConfig.maxMillisElapsed());
             } else if(enabledApi){
-                return invokeWithRetry(out,  maxRetryApi, maxMillisElapsedApi);
+                return invokeWithRetry(flowName, out,  maxRetryApi, maxMillisElapsedApi);
             }else {
                 return out;
             }
@@ -95,12 +102,12 @@ public class MongoRequestRateTooLargeAutomaticRetryAspect {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Publisher<?>> T invokeWithRetry(T out, long maxRetry, long maxMillisElapsed) {
+    private <T extends Publisher<?>> T invokeWithRetry(String flowName, T out, long maxRetry, long maxMillisElapsed) {
         if(out instanceof Mono<?> mono) {
-            return (T) MongoRequestRateTooLargeRetryer.withRetry(mono, maxRetry,
+            return (T) MongoRequestRateTooLargeRetryer.withRetry(flowName, mono, maxRetry,
                 maxMillisElapsed);
         } else {
-            return (T) MongoRequestRateTooLargeRetryer.withRetry((Flux<?>) out, maxRetry,
+            return (T) MongoRequestRateTooLargeRetryer.withRetry(flowName, (Flux<?>) out, maxRetry,
                 maxMillisElapsed);
         }
     }

@@ -19,7 +19,6 @@ import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeSe
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -103,7 +102,6 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             throw buildTransactionSynchronousException(request,initiativeId, trxRejectionReasonNoInitiative);
         }
     }
-    @NotNull
     private TransactionSynchronousException buildTransactionSynchronousException(SynchronousTransactionRequestDTO request, String initiativeId, String trxRejectionReason) {
         return new TransactionSynchronousException(syncTrxRequest2TransactionDtoMapper
                 .apply(request, initiativeId, List.of(trxRejectionReason)));
