@@ -1,5 +1,8 @@
 package it.gov.pagopa.common.reactive.mongo.retry;
 
+import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.reactive.mongo.DummySpringRepository;
+import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
 import it.gov.pagopa.common.reactive.web.ReactiveRequestContextFilter;
 import it.gov.pagopa.common.reactive.web.ReactiveRequestContextHolder;
@@ -10,13 +13,17 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,17 +34,33 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+@TestPropertySource(
+        properties = {
+                "de.flapdoodle.mongodb.embedded.version=4.0.21",
+
+                "spring.data.mongodb.database=idpay",
+                "spring.data.mongodb.config.connectionPool.maxSize: 100",
+                "spring.data.mongodb.config.connectionPool.minSize: 0",
+                "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
+                "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
+                "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
+                "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
+        })
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
         ReactiveRequestContextFilter.class,
         MongoRequestRateTooLargeAutomaticRetryAspect.class,
         ErrorManager.class,
         MongoExceptionHandler.class,
+        MongoConfig.class,
+        ReactiveMongoConfig.class,
 
         MongoRequestRateTooLargeRetryIntegrationTest.TestController.class,
         MongoRequestRateTooLargeRetryIntegrationTest.TestRepository.class
 })
 @WebFluxTest
+@AutoConfigureDataMongo
+@EnableAutoConfiguration
 class MongoRequestRateTooLargeRetryIntegrationTest {
 
     @Value("${mongo.request-rate-too-large.batch.max-retry:3}")
@@ -49,6 +72,11 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
 
     @SpyBean
     private TestRepository testRepositorySpy;
+    @Autowired
+    private DummySpringRepository dummySpringRepository;
+
+    @SpyBean
+    private MongoRequestRateTooLargeAutomaticRetryAspect automaticRetryAspectSpy;
 
     private static int[] counter;
 
@@ -128,14 +156,14 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
         public Mono<String> testMono() {
             return Mono.defer(() -> {
                 counter[0]++;
-                return Mono.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException());
+                return Mono.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading());
             });
         }
 
         public Flux<LocalDateTime> testFlux() {
             return Flux.defer(() -> {
                 counter[0]++;
-                return Flux.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException());
+                return Flux.error(MongoRequestRateTooLargeRetryerTest.buildRequestRateTooLargeMongodbException_whenReading());
             });
         }
     }
@@ -209,5 +237,16 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
         }
 
         Assertions.assertEquals(maxRetry + 1, counter[0]);
+    }
+
+    @Test
+    void testSpringRepositoryInterceptor() throws Throwable {
+        // When
+        dummySpringRepository.findByIdOrderById("ID");
+        dummySpringRepository.findByIdOrderByIdDesc("ID2");
+
+        // Then
+        Mockito.verify(automaticRetryAspectSpy).decorateMonoRepositoryMethods(Mockito.argThat(i -> i.getArgs()[0].equals("ID")));
+        Mockito.verify(automaticRetryAspectSpy).decorateFluxRepositoryMethods(Mockito.argThat(i -> i.getArgs()[0].equals("ID2")));
     }
 }

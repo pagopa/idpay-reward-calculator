@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.commands.ops;
 
+import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -51,13 +52,17 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     @Override
     public Mono<String> execute(String initiativeId) {
         log.info("[DELETE_INITIATIVE] Starting handle delete initiative {}", initiativeId);
-        return deleteTransactionProcessed(initiativeId)
-                .then(deleteRewardDroolsRule(initiativeId))
-                .then(deleteHpanInitiatives(initiativeId))
-                .then(deleteEntityCounters(initiativeId))
-                .then(removedAfterInitiativeDeletion())
+        return execAndLogTiming("DELETE_TRANSACTION_PROCESSED", initiativeId, deleteTransactionProcessed(initiativeId))
+                .then(execAndLogTiming("DELETE_DROOLS_RULE", initiativeId, deleteRewardDroolsRule(initiativeId)))
+                .then(execAndLogTiming("DELETE_HPAN_LOOKUP", initiativeId, deleteHpanInitiatives(initiativeId)))
+                .then(execAndLogTiming("DELETE_COUNTERS", initiativeId, deleteEntityCounters(initiativeId)))
+                .then(execAndLogTiming("CLEAN_AFTER_DELETE", initiativeId, removedAfterInitiativeDeletion()))
                 .then(Mono.just(initiativeId));
 
+    }
+
+    private Mono<?> execAndLogTiming(String deleteFlowName, String initiativeId, Mono<?> deleteMono) {
+        return PerformanceLogger.logTimingFinally(deleteFlowName, deleteMono, initiativeId);
     }
 
     private Mono<Void> deleteRewardDroolsRule(String initiativeId){
@@ -66,7 +71,6 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
                     log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: reward_rule", initiativeId);
                     auditUtilities.logDeletedRewardDroolRule(initiativeId);
                 })
-                .then(rewardContextHolderService.refreshKieContainerCacheMiss())
                 .then();
     }
 
