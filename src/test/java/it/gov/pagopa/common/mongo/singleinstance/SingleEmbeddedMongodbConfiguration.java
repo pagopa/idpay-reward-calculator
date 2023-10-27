@@ -93,6 +93,16 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
                     singleMongodWrapperInstance,
                     () -> createMongodWrapper(unprotectedReactiveClientServerFactoryConstructor, version, properties, mongod, mongodArguments));
         }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public EmbeddedMongodbTestClient embeddedMongodbTestClient() {
+            try {
+                return (EmbeddedMongodbTestClient) Class.forName("it.gov.pagopa.common.reactive.mongo.EmbeddedMongodbTestReactiveClient").getConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
+                throw new IllegalStateException("Cannot create EmbeddedMongodbTestClient", e);
+            }
+        }
     }
 
     @ConditionalOnClass(name = {
@@ -111,6 +121,16 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
             return Objects.requireNonNullElseGet(
                     singleMongodWrapperInstance,
                     () -> createMongodWrapper(unprotectedSyncClientServerFactoryConstructor, version, properties, mongod, mongodArguments));
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public EmbeddedMongodbTestClient embeddedMongodbTestClient() {
+            try {
+                return (EmbeddedMongodbTestClient) Class.forName("it.gov.pagopa.common.mongo.EmbeddedMongodbTestSyncClient").getConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
+                throw new IllegalStateException("Cannot create EmbeddedMongodbTestClient", e);
+            }
         }
     }
 

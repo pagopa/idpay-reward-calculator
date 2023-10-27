@@ -9,7 +9,7 @@ import reactor.core.publisher.BaseSubscriber;
 
 @Slf4j
 @Service
-public class ReactiveEmbeddedMongodbTestClient implements EmbeddedMongodbTestClient {
+public class EmbeddedMongodbTestReactiveClient implements EmbeddedMongodbTestClient {
     @Override
     public void dropDatabase(String mongodbUrl, String dbName) {
         try(MongoClient mongoClient = MongoClients.create(mongodbUrl)){
