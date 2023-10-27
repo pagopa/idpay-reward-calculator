@@ -1,6 +1,7 @@
 package it.gov.pagopa.common.reactive.mongo.retry;
 
 import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.reactive.mongo.DummySpringRepository;
 import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
@@ -17,7 +18,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
@@ -59,7 +59,7 @@ import java.time.LocalDateTime;
         MongoRequestRateTooLargeRetryIntegrationTest.TestRepository.class
 })
 @WebFluxTest
-@AutoConfigureDataMongo
+@AutoConfigureSingleInstanceMongodb
 @EnableAutoConfiguration
 class MongoRequestRateTooLargeRetryIntegrationTest {
 
