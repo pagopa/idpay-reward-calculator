@@ -55,6 +55,7 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
         this.embeddedMongodbTestClient = embeddedMongodbTestClient;
     }
 
+    @ConditionalOnMissingBean
     @Bean
     @Override
     public Net net(ConfigurableApplicationContext context) throws IOException {
@@ -64,8 +65,7 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
                     Map.of("spring.data.mongodb.port", SingleInstanceMongodWrapper.singleMongodNet.getPort())));
             super.net(context);
 
-            String mongodbUrl = context.getEnvironment().getProperty("spring.data.mongodb.uri");
-            Objects.requireNonNull(mongodbUrl);
+            String mongodbUrl = "mongodb://localhost:" + SingleInstanceMongodWrapper.singleMongodNet.getPort();
             String dbName = StringUtils.substringAfterLast(mongodbUrl, "/");
 
             embeddedMongodbTestClient.dropDatabase(mongodbUrl, dbName);

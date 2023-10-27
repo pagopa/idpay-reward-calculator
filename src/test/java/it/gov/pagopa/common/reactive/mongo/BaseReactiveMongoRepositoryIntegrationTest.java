@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @TestPropertySource(properties = {
-        "de.flapdoodle.mongodb.embedded.version=4.0.21",
+        "de.flapdoodle.mongodb.embedded.version=4.2.24",
 
         "spring.data.mongodb.database=idpay",
         "spring.data.mongodb.config.connectionPool.maxSize: 100",
@@ -37,7 +37,7 @@ import java.util.Map;
 })
 @ExtendWith(SpringExtension.class)
 @AutoConfigureSingleInstanceMongodb
-@ContextConfiguration(classes = {BaseReactiveMongoRepositoryIntegrationTest.TestMongoRepositoryConfig.class, ReactiveMongoConfig.class, MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class})
+@ContextConfiguration(classes = {ReactiveMongoConfig.class, MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class})
 class BaseReactiveMongoRepositoryIntegrationTest {
 
     static {
