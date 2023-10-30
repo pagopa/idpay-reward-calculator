@@ -1,9 +1,9 @@
 package it.gov.pagopa.common.mongo.singleinstance;
 
 import de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 
 import java.lang.annotation.*;
 
@@ -12,7 +12,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @AutoConfigureDataMongo
-@EnableAutoConfiguration(exclude = EmbeddedMongoAutoConfiguration.class)
+@TestPropertySource(locations = {
+        "classpath:/mongodbEmbeddedDisabled.properties",
+})
 @Import(SingleEmbeddedMongodbConfiguration.class)
 public @interface AutoConfigureSingleInstanceMongodb {
 }

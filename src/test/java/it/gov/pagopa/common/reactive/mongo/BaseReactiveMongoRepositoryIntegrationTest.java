@@ -37,7 +37,7 @@ import java.util.Map;
 })
 @ExtendWith(SpringExtension.class)
 @AutoConfigureSingleInstanceMongodb
-@ContextConfiguration(classes = {ReactiveMongoConfig.class, MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class})
+@ContextConfiguration(classes = {BaseReactiveMongoRepositoryIntegrationTest.TestMongoRepositoryConfig.class, ReactiveMongoConfig.class, MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class})
 class BaseReactiveMongoRepositoryIntegrationTest {
 
     static {

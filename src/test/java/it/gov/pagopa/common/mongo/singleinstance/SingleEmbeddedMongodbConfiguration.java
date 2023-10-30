@@ -6,7 +6,6 @@ import de.flapdoodle.embed.mongo.distribution.IFeatureAwareVersion;
 import de.flapdoodle.embed.mongo.spring.autoconfigure.*;
 import de.flapdoodle.embed.mongo.transitions.Mongod;
 import it.gov.pagopa.common.mongo.EmbeddedMongodbTestClient;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,6 +15,7 @@ import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfigurati
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 
 import java.io.IOException;
@@ -65,10 +65,7 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
                     Map.of("spring.data.mongodb.port", SingleInstanceMongodWrapper.singleMongodNet.getPort())));
             super.net(context);
 
-            String mongodbUrl = "mongodb://localhost:" + SingleInstanceMongodWrapper.singleMongodNet.getPort();
-            String dbName = StringUtils.substringAfterLast(mongodbUrl, "/");
-
-            embeddedMongodbTestClient.dropDatabase(mongodbUrl, dbName);
+            embeddedMongodbTestClient.dropDatabase();
 
             return SingleInstanceMongodWrapper.singleMongodNet;
         }else {
@@ -96,9 +93,9 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
 
         @Bean
         @ConditionalOnMissingBean
-        public EmbeddedMongodbTestClient embeddedMongodbTestClient() {
+        public EmbeddedMongodbTestClient embeddedMongodbTestClient(Environment env) {
             try {
-                return (EmbeddedMongodbTestClient) Class.forName("it.gov.pagopa.common.reactive.mongo.EmbeddedMongodbTestReactiveClient").getConstructor().newInstance();
+                return (EmbeddedMongodbTestClient) Class.forName("it.gov.pagopa.common.reactive.mongo.EmbeddedMongodbTestReactiveClient").getConstructor(Environment.class).newInstance(env);
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
                 throw new IllegalStateException("Cannot create EmbeddedMongodbTestClient", e);
             }
