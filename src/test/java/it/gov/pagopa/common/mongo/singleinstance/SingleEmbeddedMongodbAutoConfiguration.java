@@ -28,9 +28,9 @@ import java.util.Objects;
  * Used to start just once Mongodb instance for the entire duration of the test, dropping the database at each new Spring Context
  */
 @AutoConfiguration(
-        before = {MongoAutoConfiguration.class, MongoReactiveAutoConfiguration.class}
+        before = {MongoAutoConfiguration.class, MongoReactiveAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class}
 )
-public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfiguration {
+public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoConfiguration {
 
     private static MongodWrapper singleMongodWrapperInstance;
 
@@ -51,11 +51,10 @@ public class SingleEmbeddedMongodbConfiguration extends EmbeddedMongoAutoConfigu
 
     private final EmbeddedMongodbTestClient embeddedMongodbTestClient;
 
-    public SingleEmbeddedMongodbConfiguration(EmbeddedMongodbTestClient embeddedMongodbTestClient) {
+    public SingleEmbeddedMongodbAutoConfiguration(EmbeddedMongodbTestClient embeddedMongodbTestClient) {
         this.embeddedMongodbTestClient = embeddedMongodbTestClient;
     }
 
-    @ConditionalOnMissingBean
     @Bean
     @Override
     public Net net(ConfigurableApplicationContext context) throws IOException {

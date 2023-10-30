@@ -30,7 +30,9 @@ public class EmbeddedMongodbTestReactiveClient implements EmbeddedMongodbTestCli
                 @Override
                 protected void hookOnComplete() {
                     log.info("Database {} dropped", dbName);
-                    mongoClient.notify();
+                    synchronized (mongoClient){
+                        mongoClient.notify();
+                    }
                 }
             });
             synchronized (mongoClient){
