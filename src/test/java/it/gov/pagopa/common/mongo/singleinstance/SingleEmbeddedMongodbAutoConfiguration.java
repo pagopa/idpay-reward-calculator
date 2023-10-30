@@ -93,11 +93,7 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
         @Bean
         @ConditionalOnMissingBean
         public EmbeddedMongodbTestClient embeddedMongodbTestClient(Environment env) {
-            try {
-                return (EmbeddedMongodbTestClient) Class.forName("it.gov.pagopa.common.reactive.mongo.EmbeddedMongodbTestReactiveClient").getConstructor(Environment.class).newInstance(env);
-            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
-                throw new IllegalStateException("Cannot create EmbeddedMongodbTestClient", e);
-            }
+            return createEmbeddedMongodbTestClient("it.gov.pagopa.common.reactive.mongo.EmbeddedMongodbTestReactiveClient", env);
         }
     }
 
@@ -121,12 +117,8 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
 
         @Bean
         @ConditionalOnMissingBean
-        public EmbeddedMongodbTestClient embeddedMongodbTestClient() {
-            try {
-                return (EmbeddedMongodbTestClient) Class.forName("it.gov.pagopa.common.mongo.EmbeddedMongodbTestSyncClient").getConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
-                throw new IllegalStateException("Cannot create EmbeddedMongodbTestClient", e);
-            }
+        public EmbeddedMongodbTestClient embeddedMongodbTestClient(Environment env) {
+            return createEmbeddedMongodbTestClient("it.gov.pagopa.common.mongo.EmbeddedMongodbTestSyncClient", env);
         }
     }
 
@@ -135,6 +127,14 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
             return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(unprotectedSyncClientServerFactoryConstructor.newInstance(properties).createWrapper(version, mongod, mongodArguments));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("Cannot call protected constructor", e);
+        }
+    }
+
+    private static EmbeddedMongodbTestClient createEmbeddedMongodbTestClient(String embeddedMongodbTestClientClassName, Environment env) {
+        try {
+            return (EmbeddedMongodbTestClient) Class.forName(embeddedMongodbTestClientClassName).getConstructor(Environment.class).newInstance(env);
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InvocationTargetException | NoSuchMethodException e) {
+            throw new IllegalStateException("Cannot create EmbeddedMongodbTestClient", e);
         }
     }
 }
