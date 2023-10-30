@@ -50,7 +50,6 @@ public class SingleInstanceMongodWrapper extends MongodWrapper {
     @SuppressWarnings("unused") // called by Spring
     private void stop() {
         if (counter.decrementAndGet() == 0) {
-            singleMongodNet=null;
             unprotectedStop.run();
         }
     }

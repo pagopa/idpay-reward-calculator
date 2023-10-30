@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.test.context.event.annotation.AfterTestClass;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -34,21 +35,6 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
 
     private static MongodWrapper singleMongodWrapperInstance;
 
-    private final static Constructor<ReactiveClientServerFactory> unprotectedReactiveClientServerFactoryConstructor;
-    private final static Constructor<SyncClientServerFactory> unprotectedSyncClientServerFactoryConstructor;
-
-    static {
-        try {
-            unprotectedReactiveClientServerFactoryConstructor = ReactiveClientServerFactory.class.getDeclaredConstructor(MongoProperties.class);
-            unprotectedReactiveClientServerFactoryConstructor.setAccessible(true);
-
-            unprotectedSyncClientServerFactoryConstructor = SyncClientServerFactory.class.getDeclaredConstructor(MongoProperties.class);
-            unprotectedSyncClientServerFactoryConstructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("Cannot unprotect AbstractServerFactory constructor", e);
-        }
-    }
-
     private final EmbeddedMongodbTestClient embeddedMongodbTestClient;
 
     public SingleEmbeddedMongodbAutoConfiguration(EmbeddedMongodbTestClient embeddedMongodbTestClient) {
@@ -64,12 +50,15 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
                     Map.of("spring.data.mongodb.port", SingleInstanceMongodWrapper.singleMongodNet.getPort())));
             super.net(context);
 
-            embeddedMongodbTestClient.dropDatabase();
-
             return SingleInstanceMongodWrapper.singleMongodNet;
         }else {
             return SingleInstanceMongodWrapper.singleMongodNet = super.net(context);
         }
+    }
+
+    @AfterTestClass
+    void clearData(){
+        embeddedMongodbTestClient.dropDatabase();
     }
 
     @ConditionalOnClass(name = {
@@ -77,7 +66,17 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
             "org.springframework.data.mongodb.core.ReactiveMongoClientFactoryBean"
     })
     static class ReactiveClientServerWrapperConfig {
-        ReactiveClientServerWrapperConfig() {}
+
+        private final Constructor<ReactiveClientServerFactory> unprotectedReactiveClientServerFactoryConstructor;
+
+        ReactiveClientServerWrapperConfig() {
+            try {
+                unprotectedReactiveClientServerFactoryConstructor = ReactiveClientServerFactory.class.getDeclaredConstructor(MongoProperties.class);
+                unprotectedReactiveClientServerFactoryConstructor.setAccessible(true);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException("Cannot unprotect AbstractServerFactory constructor", e);
+            }
+        }
 
         @Bean(
                 initMethod = "start",
@@ -102,7 +101,17 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
             "org.springframework.data.mongodb.core.MongoClientFactoryBean"
     })
     static class SyncClientServerWrapperConfig {
-        SyncClientServerWrapperConfig() {}
+
+        private final Constructor<SyncClientServerFactory> unprotectedSyncClientServerFactoryConstructor;
+
+        SyncClientServerWrapperConfig() {
+            try {
+                unprotectedSyncClientServerFactoryConstructor = SyncClientServerFactory.class.getDeclaredConstructor(MongoProperties.class);
+                unprotectedSyncClientServerFactoryConstructor.setAccessible(true);
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException("Cannot unprotect AbstractServerFactory constructor", e);
+            }
+        }
 
         @Bean(
                 initMethod = "start",
