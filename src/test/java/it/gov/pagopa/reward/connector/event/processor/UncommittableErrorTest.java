@@ -132,7 +132,10 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
 
         assertCounters();
 
-        kafkaTestUtilitiesService.assertCommitOrder("REWARD", totalSendMessages);
+        TestUtils.waitFor(()-> {
+            kafkaTestUtilitiesService.assertCommitOrder("REWARD", totalSendMessages);
+            return true;
+        }, () -> "Cannot verify commits", 10, 500);
 
         System.out.printf("""
                         ************************
