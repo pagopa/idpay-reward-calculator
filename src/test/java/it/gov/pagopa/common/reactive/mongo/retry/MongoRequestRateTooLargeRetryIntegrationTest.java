@@ -1,6 +1,7 @@
 package it.gov.pagopa.common.reactive.mongo.retry;
 
 import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.reactive.mongo.DummySpringRepository;
 import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import it.gov.pagopa.common.reactive.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
@@ -12,19 +13,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,9 +33,14 @@ import java.time.LocalDateTime;
 
 @TestPropertySource(
         properties = {
-                "de.flapdoodle.mongodb.embedded.version=4.0.21",
+                "mongo.request-rate-too-large.api.enabled: false",
+                "mongo.request-rate-too-large.batch.enabled: true",
+                "mongo.request-rate-too-large.batch.max-retry: 3",
+                "mongo.request-rate-too-large.batch.max-millis-elapsed: 0",
 
-                "spring.data.mongodb.database=idpay",
+                "de.flapdoodle.mongodb.embedded.version: 4.2.24",
+
+                "spring.data.mongodb.database: idpay",
                 "spring.data.mongodb.config.connectionPool.maxSize: 100",
                 "spring.data.mongodb.config.connectionPool.minSize: 0",
                 "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
@@ -46,7 +48,6 @@ import java.time.LocalDateTime;
                 "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
                 "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
         })
-@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
         ReactiveRequestContextFilter.class,
         MongoRequestRateTooLargeAutomaticRetryAspect.class,
@@ -58,9 +59,8 @@ import java.time.LocalDateTime;
         MongoRequestRateTooLargeRetryIntegrationTest.TestController.class,
         MongoRequestRateTooLargeRetryIntegrationTest.TestRepository.class
 })
+@AutoConfigureSingleInstanceMongodb
 @WebFluxTest
-@AutoConfigureDataMongo
-@EnableAutoConfiguration
 class MongoRequestRateTooLargeRetryIntegrationTest {
 
     @Value("${mongo.request-rate-too-large.batch.max-retry:3}")

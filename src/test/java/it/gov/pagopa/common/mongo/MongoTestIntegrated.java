@@ -12,9 +12,14 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@TestPropertySource(locations = {
-        "classpath:/mongodbEmbeddedDisabled.properties",
-        "classpath:/secrets/mongodbConnectionString.properties"
-})
+@TestPropertySource(
+        properties = {
+                "spring.autoconfigure.exclude=" +
+                        "  de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration," +
+                        "  it.gov.pagopa.common.mongo.singleinstance.SingleEmbeddedMongodbAutoConfiguration"
+        },
+        locations = {
+                "classpath:/secrets/mongodbConnectionString.properties"
+        })
 public @interface MongoTestIntegrated {
 }
