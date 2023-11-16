@@ -1,17 +1,13 @@
 package it.gov.pagopa.common.kafka;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
-import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
-import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.common.utils.TestUtils;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.admin.OffsetSpec;
+import org.apache.kafka.clients.admin.RecordsToDelete;
+import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
@@ -20,7 +16,6 @@ import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Assertions;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -34,16 +29,19 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import org.springframework.test.context.event.annotation.AfterTestClass;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -80,6 +78,32 @@ public class KafkaTestUtilitiesService {
         }
     }
 
+    @AfterTestClass
+    void clearTopics() {
+        kafkaBroker.doWithAdmin(admin -> {
+            try {
+                Collection<TopicListing> topics = admin.listTopics().listings().get();
+                admin.deleteRecords(
+                                admin.listOffsets(
+                                                topics.stream()
+                                                        .filter(topicListing -> !topicListing.isInternal())
+                                                        .flatMap(t -> IntStream.range(0, kafkaBroker.getPartitionsPerTopic())
+                                                                .boxed()
+                                                                .map(p -> new TopicPartition(t.name(), p)))
+                                                        .collect(Collectors.toMap(tp -> tp,
+                                                                tp -> OffsetSpec.latest()))
+                                        ).all().get().entrySet().stream()
+                                        .filter(e -> e.getValue().offset() > 0)
+                                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                                e -> RecordsToDelete.beforeOffset(e.getValue().offset()))))
+                        .all().get();
+
+            } catch (InterruptedException | ExecutionException e) {
+                throw new IllegalStateException("Something gone wrong while emptying topics", e);
+            }
+        });
+    }
+
     /** It will return usefull URLs related to embedded kafka */
     public String getKafkaUrls() {
         return "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes);
@@ -98,7 +122,7 @@ public class KafkaTestUtilitiesService {
         }
 
         Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(groupId, "true", kafkaBroker);
-        consumerProps.put("key.deserializer", StringDeserializer.class);
+        consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         DefaultKafkaConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
         Consumer<String, String> consumer = cf.createConsumer();
         if(attachToBroker){
@@ -249,45 +273,6 @@ public class KafkaTestUtilitiesService {
         Map<TopicPartition, Long> endOffsets = getEndOffsets(topic);
         Assertions.assertEquals(expectedPublishedMessages, endOffsets.values().stream().mapToLong(x->x).sum());
         return endOffsets;
-    }
-//endregion
-
-//region check commit by logs
-    protected MemoryAppender commitLogMemoryAppender;
-    /** To be called before each test in order to perform the asserts on {@link #assertCommitOrder(String, int)} */
-    public void setupCommitLogMemoryAppender() {
-        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BaseKafkaConsumer.class.getName());
-        commitLogMemoryAppender = new MemoryAppender();
-        commitLogMemoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-        logger.setLevel(ch.qos.logback.classic.Level.INFO);
-        logger.addAppender(commitLogMemoryAppender);
-        commitLogMemoryAppender.start();
-    }
-
-    private final Pattern partitionCommitsPattern = Pattern.compile("partition (\\d+): (\\d+) - (\\d+)");
-    /** It will assert the right offset commit and the total messages by the provided {@link BaseKafkaConsumer#getFlowName()}.<br />
-     * In order to be used, you have to call {@link #setupCommitLogMemoryAppender()} before each test */
-    public void assertCommitOrder(String flowName, int totalSendMessages) {
-        Map<Integer, Integer> partition2last = new HashMap<>(Map.of(0, -1, 1, -1));
-        for (ILoggingEvent loggedEvent : commitLogMemoryAppender.getLoggedEvents()) {
-            if(loggedEvent.getMessage().equals("[KAFKA_COMMIT][{}] Committing {} messages: {}") && flowName.equals(loggedEvent.getArgumentArray()[0])){
-                Arrays.stream(((String)loggedEvent.getArgumentArray()[2]).split(";"))
-                        .forEach(s -> {
-                            Matcher matcher = partitionCommitsPattern.matcher(s);
-                            Assertions.assertTrue(matcher.matches(), "Unexpected partition commit string: " + s);
-                            int partition = Integer.parseInt(matcher.group(1));
-                            int startOffset = Integer.parseInt(matcher.group(2));
-                            int endOffset = Integer.parseInt(matcher.group(3));
-                            Assertions.assertTrue(endOffset>=startOffset, "EndOffset less than StartOffset!: " + s);
-
-                            Integer lastCommittedOffset = partition2last.get(partition);
-                            Assertions.assertEquals(lastCommittedOffset, startOffset-1);
-                            partition2last.put(partition, endOffset);
-                        });
-            }
-        }
-
-        Assertions.assertEquals(totalSendMessages, partition2last.values().stream().mapToInt(x->x+1).sum());
     }
 //endregion
 
