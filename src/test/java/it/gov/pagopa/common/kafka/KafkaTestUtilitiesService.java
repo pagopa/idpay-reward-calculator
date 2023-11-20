@@ -1,8 +1,12 @@
 package it.gov.pagopa.common.kafka;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.common.utils.TestUtils;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.RecordsToDelete;
@@ -16,6 +20,7 @@ import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Assertions;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -273,6 +278,45 @@ public class KafkaTestUtilitiesService {
         Map<TopicPartition, Long> endOffsets = getEndOffsets(topic);
         Assertions.assertEquals(expectedPublishedMessages, endOffsets.values().stream().mapToLong(x->x).sum());
         return endOffsets;
+    }
+//endregion
+
+//region check commit by logs
+    protected MemoryAppender commitLogMemoryAppender;
+    /** To be called before each test in order to perform the asserts on {@link #assertCommitOrder(String, int)} */
+    public void setupCommitLogMemoryAppender() {
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BaseKafkaConsumer.class.getName());
+        commitLogMemoryAppender = new MemoryAppender();
+        commitLogMemoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(ch.qos.logback.classic.Level.INFO);
+        logger.addAppender(commitLogMemoryAppender);
+        commitLogMemoryAppender.start();
+    }
+
+    private final Pattern partitionCommitsPattern = Pattern.compile("partition (\\d+): (\\d+) - (\\d+)");
+    /** It will assert the right offset commit and the total messages by the provided {@link BaseKafkaConsumer#getFlowName()}.<br />
+     * In order to be used, you have to call {@link #setupCommitLogMemoryAppender()} before each test */
+    public void assertCommitOrder(String flowName, int totalSendMessages) {
+        Map<Integer, Integer> partition2last = new HashMap<>(Map.of(0, -1, 1, -1));
+        for (ILoggingEvent loggedEvent : commitLogMemoryAppender.getLoggedEvents()) {
+            if(loggedEvent.getMessage().equals("[KAFKA_COMMIT][{}] Committing {} messages: {}") && flowName.equals(loggedEvent.getArgumentArray()[0])){
+                Arrays.stream(((String)loggedEvent.getArgumentArray()[2]).split(";"))
+                        .forEach(s -> {
+                            Matcher matcher = partitionCommitsPattern.matcher(s);
+                            Assertions.assertTrue(matcher.matches(), "Unexpected partition commit string: " + s);
+                            int partition = Integer.parseInt(matcher.group(1));
+                            int startOffset = Integer.parseInt(matcher.group(2));
+                            int endOffset = Integer.parseInt(matcher.group(3));
+                            Assertions.assertTrue(endOffset>=startOffset, "EndOffset less than StartOffset!: " + s);
+
+                            Integer lastCommittedOffset = partition2last.get(partition);
+                            Assertions.assertEquals(lastCommittedOffset, startOffset-1);
+                            partition2last.put(partition, endOffset);
+                        });
+            }
+        }
+
+        Assertions.assertEquals(totalSendMessages, partition2last.values().stream().mapToInt(x->x+1).sum());
     }
 //endregion
 
