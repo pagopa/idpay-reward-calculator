@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MongoRequestRateTooLargeRetryerTest {
 
-    private static final int REQUEST_RATE_TOO_LARGE_MAX_RETRY = 10;
-    public static final int REQUEST_RATE_TOO_LARGE_MAX_MILLIS_ELAPSED = 1000;
+    private static final int REQUEST_RATE_TOO_LARGE_MAX_RETRY = 1;
+    public static final int REQUEST_RATE_TOO_LARGE_MAX_MILLIS_ELAPSED = 200;
     private MemoryAppender memoryAppender;
 
     @BeforeEach
