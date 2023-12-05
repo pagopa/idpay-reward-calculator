@@ -1,7 +1,6 @@
 package it.gov.pagopa.common.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
@@ -13,8 +12,11 @@ import java.util.List;
 @Service
 public class HealthIndicatorLogger implements HealthIndicator {
 
-    @Autowired
-    private List<HealthIndicator> healthIndicatorList;
+    private final List<HealthIndicator> healthIndicatorList;
+
+    public HealthIndicatorLogger(List<HealthIndicator> healthIndicatorList) {
+        this.healthIndicatorList = healthIndicatorList;
+    }
 
     @Override
     public Health health() {
