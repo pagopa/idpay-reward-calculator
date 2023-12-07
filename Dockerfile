@@ -13,6 +13,9 @@ RUN mvn clean package -DskipTests
 #
 FROM amazoncorretto:17.0.9-alpine3.18@sha256:df48bf2e183230040890460ddb4359a10aa6c7aad24bd88899482c52053c7e17 AS runtime
 
+# security fixes
+RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
+
 RUN apk --no-cache add shadow
 RUN useradd --uid 10000 runner
 

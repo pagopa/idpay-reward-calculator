@@ -304,6 +304,7 @@ logging:
     org.hibernate: ${LOG_LEVEL_ORG_HIBERNATE:INFO}
     org.kie: ${LOG_LEVEL_ORG_KIE:WARN}
     org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
+    org.drools.mvel.MVELConstraint: ${LOG_LEVEL_ORG_DROOLS_COMPILE:ERROR}
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
 
 app:

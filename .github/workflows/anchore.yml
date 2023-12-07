@@ -58,7 +58,7 @@ jobs:
       - name: CVE Description escaped extraction and print
         if: always()
         run: |
-          SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
+          SCAN_RESULTS=$(jq -r 'try .runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
           echo "SCAN_RESULTS=$SCAN_RESULTS" >> $GITHUB_ENV
           echo "CVE_CRITICAL=$(echo $SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
           echo "CVE_HIGH=$(echo $SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
