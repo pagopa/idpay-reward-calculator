@@ -21,7 +21,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
     @Override
     public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
-        log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction", trxPreviewRequest.getUserId());
+        log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction having id {} on initiativeId {}", trxPreviewRequest.getUserId(), trxPreviewRequest.getTransactionId(), initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
@@ -31,7 +31,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
     @Override
     public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
-        log.info("[SYNC_AUTHORIZE_TRANSACTION] The user {} requests authorize transaction {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId());
+        log.info("[SYNC_AUTHORIZE_TRANSACTION] The user {} requests authorize transaction {} on initiativeId {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId(), initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
                 rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId)
