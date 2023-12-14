@@ -26,6 +26,7 @@ public class TransactionSynchronousException extends RuntimeException{
         return switch(rejectionReasons.get(0)){
             case RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE-> HttpStatus.FORBIDDEN;
+            case RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY -> HttpStatus.TOO_MANY_REQUESTS;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }

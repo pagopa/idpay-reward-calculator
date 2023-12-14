@@ -5,6 +5,7 @@ import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.service.build.KieContainerBuilderService;
 import lombok.extern.slf4j.Slf4j;
+import org.drools.core.definitions.rule.impl.RuleImpl;
 import org.kie.api.KieBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,10 +26,13 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,6 +49,7 @@ public class RewardContextHolderServiceImpl extends ReadinessStateHealthIndicato
     private final boolean preLoadContainer;
 
     private KieBase kieBase;
+    private Set<String> kieInitiatives = Collections.emptySet();
     private byte[] kieBaseSerialized;
 
     private boolean contextReady = false;
@@ -93,9 +98,13 @@ public class RewardContextHolderServiceImpl extends ReadinessStateHealthIndicato
     }
 
     @Override
+    public Set<String> getRewardRulesKieInitiativeIds() {
+        return kieInitiatives;
+    }
+
+    @Override
     public void setRewardRulesKieBase(KieBase newKieBase) {
-        preLoadKieBase(newKieBase);
-        this.kieBase = newKieBase;
+        acceptNewKieBase(newKieBase);
 
         if (isRedisCacheEnabled) {
             kieBaseSerialized = SerializationUtils.serialize(newKieBase);
@@ -129,9 +138,7 @@ public class RewardContextHolderServiceImpl extends ReadinessStateHealthIndicato
                             this.kieBaseSerialized = c;
                             try{
                                 KieBase newKieBase = org.apache.commons.lang3.SerializationUtils.deserialize(c);
-                                preLoadKieBase(newKieBase);
-
-                                this.kieBase=newKieBase;
+                                acceptNewKieBase(newKieBase);
                             } catch (Exception e){
                                 log.warn("[REWARD_RULE_BUILD] Cached KieContainer cannot be executed! refreshing it!");
                                 return null;
@@ -148,6 +155,23 @@ public class RewardContextHolderServiceImpl extends ReadinessStateHealthIndicato
                     .retryWhen(retrier)
                     .onErrorResume(onErrorResumer)
                     .subscribe(subscriber);
+        }
+    }
+
+    private void acceptNewKieBase(KieBase newKieBase) {
+        preLoadKieBase(newKieBase);
+        this.kieBase= newKieBase;
+        this.kieInitiatives = readKieInitiatives(newKieBase);
+    }
+
+    private Set<String> readKieInitiatives(KieBase kieBase) {
+        if (kieBase == null) {
+            return Collections.emptySet();
+        } else {
+            return kieBase.getKiePackages().stream()
+                    .flatMap(p -> p.getRules().stream())
+                    .map(r -> ((RuleImpl) r).getAgendaGroup())
+                    .collect(Collectors.toSet());
         }
     }
 

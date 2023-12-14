@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.PaymentMethodInfoDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -20,6 +21,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
+import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -63,6 +65,7 @@ import java.util.stream.StreamSupport;
 class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
+    public static final String INITIATIVEID_NOTINCONTAINER = "INITIATIVEID_NOTINCONTAINER";
     public static final String INITIATIVEID_NF = "INITIATIVEID_NF";
     private final BigDecimal beneficiaryBudget = BigDecimal.valueOf(10_000, 2);
     public static final long AMOUNT_CENTS = 200_00L;
@@ -171,6 +174,15 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
         List.of(rule, ruleNF).forEach(r -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, r));
         RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
+
+        droolsRuleRepository.save(DroolsRule.builder() // stored but not compiled
+                        .id(INITIATIVEID_NOTINCONTAINER)
+                        .initiativeConfig(InitiativeConfig.builder()
+                                .initiativeId(INITIATIVEID_NOTINCONTAINER)
+                                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                                .build())
+                        .build())
+                .block();
     }
 
     //region API invokes
@@ -331,7 +343,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
             SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest,
                     RewardConstants.REWARD_STATE_REJECTED,
-                    List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE),
+                    List.of(RewardConstants.TRX_REJECTION_REASON_BUDGET_EXHAUSTED, RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE),
                     null);
 
             assertPreview(trxRequest, HttpStatus.OK, expectedResponse);
@@ -539,6 +551,15 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
             waitThrottling();
 
             assertCancel(authorizeResponse, INITIATIVEID_NF, HttpStatus.OK);
+        });
+
+        //useCase 15: initiative stored, but not in container
+        useCases.add(i -> {
+            SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
+            SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID_NOTINCONTAINER, trxRequest, RewardConstants.REWARD_STATE_REJECTED, List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY), null);
+
+            assertPreview(trxRequest, INITIATIVEID_NOTINCONTAINER, HttpStatus.TOO_MANY_REQUESTS, expectedResponse);
+            assertAuthorize(trxRequest, INITIATIVEID_NOTINCONTAINER, HttpStatus.TOO_MANY_REQUESTS, expectedResponse);
         });
     }
 
