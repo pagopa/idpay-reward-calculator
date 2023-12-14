@@ -565,7 +565,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                     },
                     evaluation -> assertRejectedInitiativesState(evaluation,
                             Map.of(
-                                    INITIATIVE_ID_EXHAUSTED, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)
+                                    INITIATIVE_ID_EXHAUSTED, List.of(RewardConstants.TRX_REJECTION_REASON_BUDGET_EXHAUSTED)
                             ),
                             List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
             ),

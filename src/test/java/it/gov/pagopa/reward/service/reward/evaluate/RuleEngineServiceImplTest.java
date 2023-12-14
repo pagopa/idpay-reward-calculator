@@ -3,17 +3,17 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
-import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.build.*;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl;
@@ -35,6 +35,7 @@ import reactor.core.publisher.Flux;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
@@ -128,6 +129,7 @@ class RuleEngineServiceImplTest {
 
         RewardContextHolderService rewardContextHolderServiceMock = Mockito.mock(RewardContextHolderServiceImpl.class);
         Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieBase()).thenReturn(kieContainerBuilder.build(Flux.fromIterable(rules)).block());
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(rules.stream().map(DroolsRule::getId).collect(Collectors.toSet()));
 
         RuleEngineConfig ruleEngineConfig = new RuleEngineConfig();
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
@@ -138,9 +140,14 @@ class RuleEngineServiceImplTest {
                 .effectiveAmount(BigDecimal.valueOf(11))
                 .mcc("MCC_0")
                 .build();
-        RewardTransactionDTO result = ruleEngineService.applyRules(trx, rules.stream().map(DroolsRule::getId).collect(Collectors.toList()), new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>()));
+        List<String> evaluatingInitiativeIds = Stream.concat(
+                        Stream.of("NOTINCONTAINERINITIATIVEID"),
+                        rules.stream().map(DroolsRule::getId))
+                .collect(Collectors.toList());
+        RewardTransactionDTO result = ruleEngineService.applyRules(trx, evaluatingInitiativeIds, new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>()));
 
         Assertions.assertEquals(Map.of(
+                "NOTINCONTAINERINITIATIVEID", List.of("RULE_ENGINE_NOT_READY"),
                 "ID_0_ssx", shortCircuited ? List.of("TRX_RULE_MCCFILTER_FAIL") :List.of("TRX_RULE_MCCFILTER_FAIL","TRX_RULE_THRESHOLD_FAIL"),
                 "ID_1_rah", List.of("TRX_RULE_THRESHOLD_FAIL")
         ), result.getInitiativeRejectionReasons());

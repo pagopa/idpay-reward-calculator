@@ -55,7 +55,7 @@ class InitiativesEvaluatorServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
-        final Map<String, List<String>> rejectedInitiatives = Map.of("INITIATIVE1", List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
+        final Map<String, List<String>> rejectedInitiatives = Map.of("INITIATIVE1", List.of(RewardConstants.TRX_REJECTION_REASON_BUDGET_EXHAUSTED));
         Assertions.assertEquals(rejectedInitiatives, result.getInitiativeRejectionReasons());
         Mockito.verify(ruleEngineService).applyRules(trx, List.of("INITIATIVE2"), userCounters);
 
