@@ -30,6 +30,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 
 @ExtendWith(MockitoExtension.class)
 class RewardContextHolderServiceImplTest {
@@ -77,6 +78,7 @@ class RewardContextHolderServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(Collections.emptySet(), rewardContextHolderService.getRewardRulesKieInitiativeIds());
         if (!isRedisCacheEnabled) {
             Assertions.assertSame(expectedKieBase, result);
         }

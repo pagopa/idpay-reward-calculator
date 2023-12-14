@@ -15,10 +15,6 @@ public final class RewardConstants {
     public static final String TRX_CHANNEL_BARCODE = "BARCODE";
     //endregion
 
-    //region initiative's build rejection reasons
-    public static final String INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
-    //endregion
-
     //region rules' order and default rejection reasons
     /** The order of execution of the trx condition */
     public enum InitiativeTrxConditionOrder {
@@ -57,6 +53,8 @@ public final class RewardConstants {
     public static final String TRX_REJECTION_REASON_INVALID_REFUND = "INVALID_REFUND";
     public static final String TRX_REJECTION_REASON_REFUND_NOT_MATCH = "REFUND_NOT_MATCH";
     public static final String TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND = "INITIATIVE_NOT_FOUND";
+    public static final String TRX_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
+    public static final String TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY = "RULE_ENGINE_NOT_READY";
     //endregion
 
     //region reward status

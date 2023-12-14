@@ -90,7 +90,8 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return rewardContextHolderService.getInitiativeConfig(initiativeId)
                 .map(i -> InitiativeRewardType.DISCOUNT.equals(i.getInitiativeRewardType()))
                 .switchIfEmpty(Mono.just(false))
-                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
+                .map(b -> checkingResult(b, request, initiativeId, RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND))
+                .map(b -> checkingResult(rewardContextHolderService.getRewardRulesKieInitiativeIds().contains(initiativeId), request, initiativeId, RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY));
     }
 
     private Mono<Pair<InitiativeConfig, OnboardingInfo>> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {

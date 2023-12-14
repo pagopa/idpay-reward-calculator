@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +48,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         if(!initiatives.isEmpty()){
             StatelessKieSession statelessKieSession = rewardContextHolderService.getRewardRulesKieBase().newStatelessKieSession();
 
+            rejectInitiativeNotInKieBase(initiatives, trx);
+
             trx.setInitiatives(initiatives);
             trx.setRewards(new HashMap<>());
 
@@ -69,6 +72,18 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             trx.getRejectionReasons().add(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE);
         }
         return transactionDroolsDTO2RewardTransactionMapper.apply(trx);
+    }
+
+    private static final List<String> INITIATIVE_REJECTION_REASON_RULE_ENGINE_NOT_READY = List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY);
+
+    private void rejectInitiativeNotInKieBase(List<String> initiatives, TransactionDroolsDTO trx) {
+        Set<String> rewardRulesKieInitiativeIds = rewardContextHolderService.getRewardRulesKieInitiativeIds();
+
+        trx.getInitiativeRejectionReasons().putAll(
+                initiatives.stream()
+                        .filter(i -> !rewardRulesKieInitiativeIds.contains(i)) // the initiative is not inside the container drools
+                        .collect(Collectors.toMap(Function.identity(), i -> INITIATIVE_REJECTION_REASON_RULE_ENGINE_NOT_READY))
+        );
     }
 
     private UserInitiativeCountersWrapper setRefundCounters(TransactionDTO transaction, UserInitiativeCountersWrapper userInitiativeCountersWrapper) {
