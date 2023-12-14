@@ -84,10 +84,9 @@ public final class RewardConstants {
     }
 
     public static final class ExceptionMessage {
-        public static final String INITIATIVE_NOT_ACTIVE_FOR_USER_MSG = "The initiative with id [%] is not active for the current user";
-        public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG = "The initiative with id [%] is not found or not discount";
+        public static final String INITIATIVE_NOT_ACTIVE_FOR_USER_MSG = "The initiative with id [%s] is not active for the current user";
+        public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG = "The initiative with id [%s] is not found or not discount";
         public static final String TOO_MANY_REQUESTS_MSG = "Too Many Requests";
-        public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%] is not ready";
-
+        public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
     }
 }

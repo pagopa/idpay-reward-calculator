@@ -2,8 +2,8 @@ package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -14,13 +14,13 @@ import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository {
     private final int throttlingSeconds;
     private final ReactiveMongoTemplate mongoTemplate;
@@ -51,7 +51,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                 .switchIfEmpty(mongoTemplate.exists(Query.query(criteriaById(id)), UserInitiativeCounters.class)
                         .mapNotNull(counterExist -> {
                             if (Boolean.TRUE.equals(counterExist)) {
-                                throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS");
+                                throw new TooManyRequestsException(ExceptionMessage.TOO_MANY_REQUESTS_MSG);
                             } else {
                                 return null;
                             }

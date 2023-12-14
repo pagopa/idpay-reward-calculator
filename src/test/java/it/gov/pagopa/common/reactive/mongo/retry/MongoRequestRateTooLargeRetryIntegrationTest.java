@@ -177,7 +177,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testMono").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json("{\"code\":\"REWARD_CALCULATOR_TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
 
         Assertions.assertEquals(1, counter[0]);
     }
@@ -188,7 +188,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testMonoRetryable").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json("{\"code\":\"REWARD_CALCULATOR_TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
 
         Assertions.assertEquals(API_RETRYABLE_MAX_RETRY + 1, counter[0]);
     }
@@ -199,7 +199,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testFlux").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json("{\"code\":\"REWARD_CALCULATOR_TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
 
         Assertions.assertEquals(1, counter[0]);
     }
@@ -210,7 +210,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testFluxRetryable").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json("{\"code\":\"REWARD_CALCULATOR_TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
 
         Assertions.assertEquals(API_RETRYABLE_MAX_RETRY + 1, counter[0]);
     }

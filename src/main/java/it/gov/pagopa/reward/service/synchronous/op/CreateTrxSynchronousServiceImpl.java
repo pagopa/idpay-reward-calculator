@@ -12,6 +12,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
+import it.gov.pagopa.reward.exception.custom.InitiativeNotInContainerException;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
@@ -96,7 +97,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     private Mono<Pair<InitiativeConfig, OnboardingInfo>> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
         return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxChargeDate(), initiativeId)
-                .switchIfEmpty(Mono.error(new InitiativeNotActiveException(ExceptionMessage.INITIATIVE_NOT_ACTIVE_FOR_USER_MSG,syncTrxRequest2TransactionDtoMapper
+                .switchIfEmpty(Mono.error(new InitiativeNotActiveException(String.format(ExceptionMessage.INITIATIVE_NOT_ACTIVE_FOR_USER_MSG,initiativeId),syncTrxRequest2TransactionDtoMapper
                         .apply(request, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)))));
     }
 
@@ -104,8 +105,15 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         if (b.equals(Boolean.TRUE)) {
             return Boolean.TRUE;
         } else {
-            throw new InitiativeNotFoundOrNotDiscountException(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG,syncTrxRequest2TransactionDtoMapper
-                    .apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+            if (RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND.equalsIgnoreCase(trxRejectionReasonNoInitiative)) {
+                throw new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId), syncTrxRequest2TransactionDtoMapper
+                        .apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+            } else {
+                throw new InitiativeNotInContainerException(String.format(ExceptionMessage.INITIATIVE_NOT_READY_MSG, initiativeId), syncTrxRequest2TransactionDtoMapper
+                        .apply(request, initiativeId, List.of(trxRejectionReasonNoInitiative)));
+            }
         }
+
     }
-}
+
+    }

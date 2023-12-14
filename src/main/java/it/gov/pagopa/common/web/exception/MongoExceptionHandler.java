@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
+
 @RestControllerAdvice
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -66,7 +68,7 @@ public class MongoExceptionHandler {
     }
 
     return bodyBuilder
-        .body(new ErrorDTO("TOO_MANY_REQUESTS", "TOO_MANY_REQUESTS"));
+        .body(new ErrorDTO(ExceptionCode.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS"));
   }
 
 }

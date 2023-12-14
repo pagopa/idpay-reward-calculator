@@ -1,7 +1,10 @@
 package it.gov.pagopa.common.reactive.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.common.web.exception.*;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.ErrorManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {ErrorManagerTest.TestController.class, ErrorManager.class})
 @WebFluxTest
@@ -76,7 +80,7 @@ class ErrorManagerTest {
 
     @Test
     void handleExceptionClientExceptionTest(){
-        ErrorDTO expectedErrorClientException = new ErrorDTO("Error","Something gone wrong");
+        ErrorDTO expectedErrorClientException = new ErrorDTO(ExceptionCode.GENERIC_ERROR,"Something gone wrong");
 
         Mockito.doThrow(ClientException.class)
                 .when(testController).testEndpoint();
@@ -108,7 +112,7 @@ class ErrorManagerTest {
 
     @Test
     void handleExceptionRuntimeException(){
-        ErrorDTO expectedErrorDefault = new ErrorDTO("Error","Something gone wrong");
+        ErrorDTO expectedErrorDefault = new ErrorDTO(ExceptionCode.GENERIC_ERROR,"Something gone wrong");
 
         Mockito.doThrow(RuntimeException.class)
                 .when(testController).testEndpoint();
