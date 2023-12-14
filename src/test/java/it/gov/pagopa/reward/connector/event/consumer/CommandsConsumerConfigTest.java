@@ -262,7 +262,7 @@ class CommandsConsumerConfigTest extends BaseIntegrationTest {
         errorUseCases.add(Pair.of(
                 () -> {
                     Mockito.doThrow(new MongoException("Command error dummy"))
-                            .when(droolsRuleRepositorySpy).deleteById(errorInitiativeId);
+                            .when(droolsRuleRepositorySpy).removeById(errorInitiativeId);
                     return commandOperationErrorString;
                 },
                 errorMessage -> checkErrorMessageHeaders(errorMessage, "[REWARD_CALCULATOR_COMMANDS] An error occurred evaluating commands", commandOperationErrorString)
