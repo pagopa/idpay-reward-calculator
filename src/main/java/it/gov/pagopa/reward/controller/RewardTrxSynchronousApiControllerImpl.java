@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,6 +25,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
         return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
+                        .doOnNext(r -> log.info("[SYNC_PREVIEW_TRANSACTION] The preview requested by userId {} of a transaction having id {} on initiativeId {} resulted into status {} and rejections {}", trxPreviewRequest.getUserId(), trxPreviewRequest.getTransactionId(), initiativeId, r.getStatus(), r.getRejectionReasons()))
                         .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
                 trxPreviewRequest.toString());
     }
@@ -35,6 +36,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
 
         return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
                 rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId)
+                        .doOnNext(r -> log.info("[SYNC_AUTHORIZE_TRANSACTION] The authorization requested by userId {} of a transaction having id {} on initiativeId {} resulted into status {} and rejections {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId(), initiativeId, r.getStatus(), r.getRejectionReasons()))
                         .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Cannot find initiative having id " + initiativeId))),
                 trxAuthorizeRequest.toString());
     }
