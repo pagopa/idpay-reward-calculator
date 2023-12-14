@@ -74,4 +74,22 @@ public final class RewardConstants {
     //region sync trx contants
     public static final String SYNC_TRX_REFUND_ID_SUFFIX = "_REFUND";
     //endregion
+
+    public static final class ExceptionCode {
+        public static final String INITIATIVE_NOT_ACTIVE_FOR_USER = "REWARD_CALCULATOR_INITIATIVE_NOT_ACTIVE_FOR_USER";
+        public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT = "REWARD_CALCULATOR_INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT";
+        public static final String INITIATIVE_NOT_READY = "REWARD_CALCULATOR_INITIATIVE_NOT_READY";
+        public static final String CONFLICT_ERROR = "REWARD_CALCULATOR_CONFLICT_ERROR";
+        public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
+        public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
+
+    }
+
+    public static final class ExceptionMessage {
+        public static final String INITIATIVE_NOT_ACTIVE_FOR_USER_MSG = "The initiative with id [%] is not active for the current user";
+        public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG = "The initiative with id [%] is not found or not discount";
+        public static final String TOO_MANY_REQUESTS_MSG = "Too Many Requests";
+        public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%] is not ready";
+
+    }
 }
