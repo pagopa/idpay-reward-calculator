@@ -40,10 +40,13 @@ public class ReactiveMongoRepositoryImpl<E, I extends Serializable> extends Simp
         return mongoOperations
                 .remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName());
     }
+
+    @SuppressWarnings("squid:S2177") // suppressing overriding private super method
     private Query getIdQuery(Object id) {
         return new Query(getIdCriteria(id));
     }
 
+    @SuppressWarnings("squid:S2177") // suppressing overriding private super method
     private Criteria getIdCriteria(Object id) {
         return where(entityInformation.getIdAttribute()).is(id);
     }
