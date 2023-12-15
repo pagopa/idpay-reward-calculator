@@ -88,5 +88,6 @@ public final class RewardConstants {
         public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG = "The initiative with id [%s] is not found or not discount";
         public static final String TOO_MANY_REQUESTS_MSG = "Too Many Requests";
         public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
+        public static final String GENERIC_ERROR_MSG = "Something gone wrong";
     }
 }

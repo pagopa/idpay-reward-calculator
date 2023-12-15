@@ -8,6 +8,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
+import it.gov.pagopa.reward.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -68,13 +69,14 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(responseDTO);
     }
 
+    //TODO: check this test
     @Test
     void SynchronousHandleExceptionClientExceptionInitiativeInternalServerError() {
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         SynchronousTransactionResponseDTO responseDTO = SynchronousTransactionResponseDTOFaker.mockInstance(1);
         responseDTO.setRejectionReasons(List.of("ANOTHER_REJECTION"));
 
-        Mockito.doThrow(new TransactionSynchronousException(responseDTO))
+        Mockito.doThrow(new InternalServerErrorException(RewardConstants.ExceptionMessage.GENERIC_ERROR_MSG,responseDTO))
                 .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionInternalServerError"));
 
         webTestClient.post()
