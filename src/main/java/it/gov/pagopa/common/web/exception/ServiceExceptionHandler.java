@@ -1,7 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
 
-import it.gov.pagopa.common.web.dto.ErrorDTO;
+import it.gov.pagopa.reward.exception.ErrorManagerExtended;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,15 +18,20 @@ import java.util.Map;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ServiceExceptionHandler {
     private final ErrorManager errorManager;
+    private final ErrorManagerExtended errorManagerExtended;
     private final Map<Class<? extends ServiceException>, HttpStatus> transcodeMap;
 
-    public ServiceExceptionHandler(ErrorManager errorManager, Map<Class<? extends ServiceException>, HttpStatus> transcodeMap) {
+    public ServiceExceptionHandler(ErrorManager errorManager, ErrorManagerExtended errorManagerExtended, Map<Class<? extends ServiceException>, HttpStatus> transcodeMap) {
         this.errorManager = errorManager;
+        this.errorManagerExtended = errorManagerExtended;
         this.transcodeMap = transcodeMap;
     }
-
+//TODO: Check this handle
     @ExceptionHandler(ServiceException.class)
-    protected ResponseEntity<ErrorDTO> handleException(ServiceException error, ServerWebExchange exchange) {
+    protected ResponseEntity<?> handleException(ServiceException error, ServerWebExchange exchange) {
+        if(null != error.getResponse()){
+            return errorManagerExtended.synchronousTrxHandleException(error,exchange,transcodeException(error));
+        }
         return errorManager.handleException(transcodeException(error), exchange);
     }
 

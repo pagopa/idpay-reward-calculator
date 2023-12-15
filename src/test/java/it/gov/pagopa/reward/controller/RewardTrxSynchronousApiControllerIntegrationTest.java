@@ -55,13 +55,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
 @TestPropertySource(
-        properties = {
-                "logging.level.it.gov.pagopa.reward=WARN",
-                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
-                "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
-                "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
-                "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
-        })
+       properties = {
+        "logging.level.it.gov.pagopa.reward=WARN",
+        "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
+        "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
+        "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
+        "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
+})
 class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
