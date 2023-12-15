@@ -13,7 +13,4 @@ public class InitiativeNotActiveException extends ServiceException {
         super(code, message, response);
     }
 
-    public InitiativeNotActiveException(String code, String message, boolean printStackTrace, Throwable ex, SynchronousTransactionResponseDTO response) {
-        super(code, message, printStackTrace, ex, response);
-    }
  }

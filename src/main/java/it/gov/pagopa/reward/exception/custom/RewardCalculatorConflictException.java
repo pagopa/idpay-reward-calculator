@@ -17,7 +17,4 @@ public class RewardCalculatorConflictException extends ServiceException {
         super(code, message, response);
     }
 
-    public RewardCalculatorConflictException(String code, String message, boolean printStackTrace, Throwable ex, SynchronousTransactionResponseDTO response) {
-        super(code, message, printStackTrace, ex, response);
-    }
 }

@@ -14,7 +14,4 @@ public class InitiativeNotInContainerException  extends ServiceException {
         super(code, message, response);
     }
 
-    public InitiativeNotInContainerException(String code, String message, boolean printStackTrace, Throwable ex, SynchronousTransactionResponseDTO response) {
-        super(code, message, printStackTrace, ex, response);
-    }
 }
