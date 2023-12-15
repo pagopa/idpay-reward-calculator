@@ -26,11 +26,18 @@ public class ServiceExceptionHandler {
         this.errorManagerExtended = errorManagerExtended;
         this.transcodeMap = transcodeMap;
     }
-//TODO: Check this handle
+
+    /**
+     * Return two types of ResponseEntity:
+     * <ol>
+     *     <li>ErrorDTO: when ServiceException not contains a specific response</li>
+     *     <li>SynchronousTransactionResponseDTO: when ServiceException contains a specific response</li>
+     * </ol>
+     */
     @ExceptionHandler(ServiceException.class)
     protected ResponseEntity<?> handleException(ServiceException error, ServerWebExchange exchange) {
         if(null != error.getResponse()){
-            return errorManagerExtended.synchronousTrxHandleException(error,exchange,transcodeException(error));
+            return errorManagerExtended.synchronousTrxHandleException(error,transcodeException(error));
         }
         return errorManager.handleException(transcodeException(error), exchange);
     }

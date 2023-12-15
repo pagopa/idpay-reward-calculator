@@ -21,6 +21,7 @@ public class ServiceExceptionConfig {
 
         // NotFound
         exceptionMap.put(InitiativeNotFoundOrNotDiscountException.class, HttpStatus.NOT_FOUND);
+        exceptionMap.put(TransactioNotFoundException.class, HttpStatus.NOT_FOUND);
 
         // Conflict
         exceptionMap.put(RewardCalculatorConflictException.class, HttpStatus.CONFLICT);
@@ -29,8 +30,6 @@ public class ServiceExceptionConfig {
         exceptionMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
         exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
 
-        // InternalServerError
-        exceptionMap.put(InternalServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR);
         return exceptionMap;
     }
 }

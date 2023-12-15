@@ -7,6 +7,9 @@ import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.INITIATIV
 
 public class InitiativeNotFoundOrNotDiscountException extends ServiceException {
 
+    public InitiativeNotFoundOrNotDiscountException(String message) {
+        this(INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT, message,null);
+    }
     public InitiativeNotFoundOrNotDiscountException(String message, SynchronousTransactionResponseDTO response) {
         this(INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT, message,response);
     }
@@ -14,7 +17,4 @@ public class InitiativeNotFoundOrNotDiscountException extends ServiceException {
         super(code, message, response);
     }
 
-    public InitiativeNotFoundOrNotDiscountException(String code, String message, boolean printStackTrace, Throwable ex, SynchronousTransactionResponseDTO response) {
-        super(code, message, printStackTrace, ex, response);
-    }
 }

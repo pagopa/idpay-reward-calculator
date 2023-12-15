@@ -8,18 +8,14 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-//TODO: Check this handle
 @Order(Ordered.HIGHEST_PRECEDENCE)
-//@RestControllerAdvice
-@Service
+@RestControllerAdvice
 @Slf4j
 public class ErrorManagerExtended {
 
- //   @ExceptionHandler(TransactionSynchronousException.class)
-    public ResponseEntity<SynchronousTransactionResponseDTO> synchronousTrxHandleException(ServiceException error, ServerWebExchange exchange, ClientException clientException){
+    public ResponseEntity<SynchronousTransactionResponseDTO> synchronousTrxHandleException(ServiceException error, ClientException clientException){
         return ResponseEntity.status(clientException.getHttpStatus())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error.getResponse());

@@ -16,7 +16,10 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
+import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
+import it.gov.pagopa.reward.exception.custom.InitiativeNotInContainerException;
+import it.gov.pagopa.reward.exception.custom.RewardCalculatorConflictException;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -41,7 +44,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -49,7 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
 @ExtendWith(MockitoExtension.class)
 class CreateTrxSynchronousServiceImplTest {
 
@@ -101,8 +103,8 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
-            Assertions.assertInstanceOf(TransactionSynchronousException.class, e);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
+            Assertions.assertInstanceOf(InitiativeNotActiveException.class, e);
+            SynchronousTransactionResponseDTO resultResponse = ((InitiativeNotActiveException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
             SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), resultResponse);
         }
@@ -122,8 +124,8 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
-            Assertions.assertInstanceOf(TransactionSynchronousException.class, e);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
+            Assertions.assertInstanceOf(InitiativeNotFoundOrNotDiscountException.class, e);
+            SynchronousTransactionResponseDTO resultResponse = ((InitiativeNotFoundOrNotDiscountException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
             SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND), resultResponse);
 
@@ -206,8 +208,8 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
-            Assertions.assertInstanceOf(TransactionSynchronousException.class, e);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
+            Assertions.assertInstanceOf(InitiativeNotInContainerException.class, e);
+            SynchronousTransactionResponseDTO resultResponse = ((InitiativeNotInContainerException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
             SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY), resultResponse);
         }
@@ -255,11 +257,11 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
-            Assertions.assertInstanceOf(TransactionSynchronousException.class, e);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
+            Assertions.assertInstanceOf(RewardCalculatorConflictException.class, e);
+            SynchronousTransactionResponseDTO resultResponse = ((RewardCalculatorConflictException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
             Assertions.assertEquals(responseExpected, resultResponse);
-            Assertions.assertEquals(HttpStatus.CONFLICT,((TransactionSynchronousException) e).getHttpStatus());
+            Assertions.assertEquals(ExceptionCode.CONFLICT_ERROR,((RewardCalculatorConflictException) e).getCode());
         }
 
         // When
@@ -268,11 +270,11 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
-            Assertions.assertInstanceOf(TransactionSynchronousException.class, e);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
+            Assertions.assertInstanceOf(RewardCalculatorConflictException.class, e);
+            SynchronousTransactionResponseDTO resultResponse = ((RewardCalculatorConflictException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
             Assertions.assertEquals(responseExpected, resultResponse);
-            Assertions.assertEquals(HttpStatus.CONFLICT,((TransactionSynchronousException) e).getHttpStatus());
+            Assertions.assertEquals(ExceptionCode.CONFLICT_ERROR,((RewardCalculatorConflictException) e).getCode());
         }
     }
 
@@ -377,8 +379,8 @@ class CreateTrxSynchronousServiceImplTest {
             Assertions.fail("Expected an Exception");
 
         } catch (Exception e){
-            Assertions.assertInstanceOf(TransactionSynchronousException.class, e);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
+            Assertions.assertInstanceOf(InitiativeNotInContainerException.class, e);
+            SynchronousTransactionResponseDTO resultResponse = ((InitiativeNotInContainerException) e).getResponse();
             Assertions.assertNotNull(resultResponse);
             SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(authorizeRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY), resultResponse);
         }

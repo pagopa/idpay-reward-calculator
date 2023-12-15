@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.exception;
 
-import com.jayway.jsonpath.Criteria;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.controller.RewardTrxSynchronousApiController;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
@@ -8,7 +7,6 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
-import it.gov.pagopa.reward.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -20,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 
 import java.util.List;
-
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
 class ErrorManagerExtendedTest extends BaseIntegrationTest {
 
     @SpyBean
@@ -31,6 +29,10 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
 
     @Autowired
     SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper;
+    
+    private final String INITIATIVEID_EXCEPTION_NOT_ONBOARDED = "TransactionSynchronousExceptionNotOnboarded";
+
+    private final String INITIATIVEID_EXCEPTION_NOT_FOUND = "TransactionSynchronousExceptionInitiativeNotFound";
 
     @Test
     void SynchronousHandleExceptionClientExceptionInitiativeNotFound() {
@@ -38,12 +40,12 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
         SynchronousTransactionResponseDTO responseDTO = SynchronousTransactionResponseDTOFaker.mockInstance(1);
         responseDTO.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND));
 
-        Mockito.doThrow(new InitiativeNotFoundOrNotDiscountException(String.format(RewardConstants.ExceptionMessage.INITIATIVE_NOT_READY_MSG, "TransactionSynchronousExceptionInitiativeNotFound"),responseDTO))
-                .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionInitiativeNotFound"));
+        Mockito.doThrow(new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_READY_MSG, INITIATIVEID_EXCEPTION_NOT_FOUND),responseDTO))
+                .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq(INITIATIVEID_EXCEPTION_NOT_FOUND));
 
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
-                        .build("TransactionSynchronousExceptionInitiativeNotFound"))
+                        .build(INITIATIVEID_EXCEPTION_NOT_FOUND))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isNotFound()
@@ -57,34 +59,15 @@ class ErrorManagerExtendedTest extends BaseIntegrationTest {
         responseDTO.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE));
 
 
-        Mockito.doThrow(new InitiativeNotActiveException(String.format(RewardConstants.ExceptionMessage.INITIATIVE_NOT_ACTIVE_FOR_USER_MSG,"TransactionSynchronousExceptionNotOnboarded"),responseDTO))
-                .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionNotOnboarded"));
+        Mockito.doThrow(new InitiativeNotActiveException(String.format(ExceptionMessage.INITIATIVE_NOT_ACTIVE_FOR_USER_MSG,INITIATIVEID_EXCEPTION_NOT_ONBOARDED),responseDTO))
+                .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq(INITIATIVEID_EXCEPTION_NOT_ONBOARDED));
 
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
-                        .build("TransactionSynchronousExceptionNotOnboarded"))
+                        .build(INITIATIVEID_EXCEPTION_NOT_ONBOARDED))
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isForbidden()
-                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(responseDTO);
-    }
-
-    //TODO: check this test
-    @Test
-    void SynchronousHandleExceptionClientExceptionInitiativeInternalServerError() {
-        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
-        SynchronousTransactionResponseDTO responseDTO = SynchronousTransactionResponseDTOFaker.mockInstance(1);
-        responseDTO.setRejectionReasons(List.of("ANOTHER_REJECTION"));
-
-        Mockito.doThrow(new InternalServerErrorException(RewardConstants.ExceptionMessage.GENERIC_ERROR_MSG,responseDTO))
-                .when(rewardTrxSynchronousApiController).previewTransaction(Mockito.any(), Mockito.eq("TransactionSynchronousExceptionInternalServerError"));
-
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/reward/initiative/preview/{initiativeId}")
-                        .build("TransactionSynchronousExceptionInternalServerError"))
-                .body(BodyInserters.fromValue(request))
-                .exchange()
-                .expectStatus().is5xxServerError()
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(responseDTO);
     }
 }
