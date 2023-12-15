@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.commands.ops;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.result.DeleteResult;
 import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -86,8 +87,8 @@ class DeleteInitiativeServiceImplTest {
                     .thenReturn(Mono.empty());
         }
 
-        Mockito.when(droolsRuleRepositoryMock.deleteById(INITIATIVE_ID))
-                .thenReturn(Mono.just(Mockito.mock(Void.class)));
+        Mockito.when(droolsRuleRepositoryMock.removeById(INITIATIVE_ID))
+                .thenReturn(Mono.just(Mockito.mock(DeleteResult.class)));
 
         Mockito.when(hpanInitiativesRepositoryMock.findByInitiativesWithBatch(INITIATIVE_ID, 100))
                 .thenReturn(Flux.just(HPAN_INITIATIVES));
@@ -119,7 +120,7 @@ class DeleteInitiativeServiceImplTest {
 
         Assertions.assertNotNull(result);
 
-        Mockito.verify(droolsRuleRepositoryMock, Mockito.times(1)).deleteById(Mockito.anyString());
+        Mockito.verify(droolsRuleRepositoryMock, Mockito.times(1)).removeById(Mockito.anyString());
         Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).removeInitiativeOnHpan(Mockito.anyString(), Mockito.anyString());
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getInitiativeConfig(Mockito.anyString());
         Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).findByInitiativesWithBatch(Mockito.anyString(), Mockito.anyInt());
@@ -142,8 +143,8 @@ class DeleteInitiativeServiceImplTest {
         try{
             deleteInitiativeService.execute(INITIATIVE_ID).block();
             Assertions.fail();
-        }catch (Throwable t){
-            Assertions.assertTrue(t instanceof  MongoException);
+        }catch (MongoException t){
+            // Do nothing
         }
     }
 }

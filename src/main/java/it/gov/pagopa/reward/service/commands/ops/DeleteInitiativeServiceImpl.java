@@ -66,9 +66,9 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     }
 
     private Mono<Void> deleteRewardDroolsRule(String initiativeId){
-        return droolsRuleRepository.deleteById(initiativeId)
+        return droolsRuleRepository.removeById(initiativeId)
                 .doOnNext(v -> {
-                    log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: reward_rule", initiativeId);
+                    log.info("[DELETE_INITIATIVE] Deleted {} initiative {} from collection: reward_rule", v.getDeletedCount(), initiativeId);
                     auditUtilities.logDeletedRewardDroolRule(initiativeId);
                 })
                 .then();
