@@ -24,19 +24,11 @@ public class ServiceExceptionHandler {
         this.errorManager = errorManager;
         this.transcodeMap = transcodeMap;
     }
-
-    /**
-     * Return two types of ResponseEntity:
-     * <ol>
-     *     <li>ErrorDTO: when ServiceException not contains a specific response</li>
-     *     <li>SynchronousTransactionResponseDTO: when ServiceException contains a specific response</li>
-     * </ol>
-     */
     @SuppressWarnings("squid:S1452")
     @ExceptionHandler(ServiceException.class)
     protected ResponseEntity<? extends ServiceExceptionResponse> handleException(ServiceException error, ServerWebExchange exchange) {
         if(null != error.getResponse()){
-            return synchronousTrxHandleException(error,transcodeException(error));
+            return handleBodyProvidedException(error,transcodeException(error));
         }
         return errorManager.handleException(transcodeException(error), exchange);
     }
@@ -52,7 +44,7 @@ public class ServiceExceptionHandler {
         return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.getCause());
     }
 
-    private ResponseEntity<? extends ServiceExceptionResponse> synchronousTrxHandleException(ServiceException error, ClientException clientException){
+    private ResponseEntity<? extends ServiceExceptionResponse> handleBodyProvidedException(ServiceException error, ClientException clientException){
         return ResponseEntity.status(clientException.getHttpStatus())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error.getResponse());

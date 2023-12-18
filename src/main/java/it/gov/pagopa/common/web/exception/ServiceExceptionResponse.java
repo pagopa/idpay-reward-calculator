@@ -1,5 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
-public interface ServiceExceptionResponse {
-    
+import java.io.Serializable;
+
+public interface ServiceExceptionResponse extends Serializable{
+
 }
