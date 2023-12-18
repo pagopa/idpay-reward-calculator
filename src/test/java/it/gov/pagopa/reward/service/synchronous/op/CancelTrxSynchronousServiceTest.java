@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -132,7 +133,7 @@ public class CancelTrxSynchronousServiceTest {
         // When
         Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
         RewardCalculatorConflictException resultException = Assertions.assertThrows(RewardCalculatorConflictException.class, mono::block);
-        SynchronousTransactionResponseDTO result = resultException.getResponse();
+        ServiceExceptionResponse result = resultException.getResponse();
 
         // Then
         Assertions.assertNotNull(result);
