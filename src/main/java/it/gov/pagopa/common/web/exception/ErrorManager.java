@@ -9,13 +9,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
+
 
 @RestControllerAdvice
 @Slf4j
 public class ErrorManager {
     private static final ErrorDTO defaultErrorDTO;
     static {
-        defaultErrorDTO =new ErrorDTO("Error", "Something gone wrong");
+        defaultErrorDTO =new ErrorDTO(ExceptionCode.GENERIC_ERROR, "Something gone wrong");
     }
     @ExceptionHandler(RuntimeException.class)
     protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerWebExchange exchange) {

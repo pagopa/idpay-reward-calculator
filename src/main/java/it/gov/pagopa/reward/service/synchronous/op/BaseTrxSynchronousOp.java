@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.exception.custom.RewardCalculatorConflictException;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -20,7 +20,6 @@ import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeSe
 import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
@@ -63,7 +62,7 @@ abstract class BaseTrxSynchronousOp {
                                     .flatMap(i2o -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxProcessed.getUserId()), initiativeId))
                                             .mapNotNull(ctr -> {
                                                 if (CollectionUtils.isEmpty(ctr.getUpdatingTrxId()) || !ctr.getUpdatingTrxId().contains(trxId)) {
-                                                    throw new TransactionSynchronousException(HttpStatus.CONFLICT, response);
+                                                    throw new RewardCalculatorConflictException(response);
                                                 } else {
                                                     log.info("[SYNC_TRANSACTION] Actual trx was stuck! recovering it: trxId:{} counterId:{}", trxId, ctr.getId());
                                                     return null;
