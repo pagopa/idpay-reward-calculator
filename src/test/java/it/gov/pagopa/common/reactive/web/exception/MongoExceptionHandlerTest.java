@@ -33,6 +33,9 @@ import static org.mockito.Mockito.doThrow;
     MongoExceptionHandlerTest.TestController.class, ErrorManager.class})
 class MongoExceptionHandlerTest {
 
+  public static final ErrorDTO EXPECTED_DEFAULT_ERROR = new ErrorDTO("Error", "Something gone wrong");
+  public static final ErrorDTO EXPECTED_TOO_MANY_REQUESTS_ERROR = new ErrorDTO("TOO_MANY_REQUESTS", "Too Many Requests");
+
   @Autowired
   private WebTestClient webTestClient;
 
@@ -75,7 +78,7 @@ class MongoExceptionHandlerTest {
         .expectHeader().exists(HttpHeaders.RETRY_AFTER)
         .expectHeader().valueEquals(HttpHeaders.RETRY_AFTER, "1")
         .expectHeader().valueEquals("Retry-After-Ms", "34")
-        .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+        .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_TOO_MANY_REQUESTS_ERROR);
   }
 
   @Test
@@ -103,7 +106,7 @@ class MongoExceptionHandlerTest {
             .expectHeader().exists(HttpHeaders.RETRY_AFTER)
             .expectHeader().valueEquals(HttpHeaders.RETRY_AFTER, "1")
             .expectHeader().valueEquals("Retry-After-Ms", "34")
-            .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+            .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_TOO_MANY_REQUESTS_ERROR);
   }
 
   @Test
@@ -118,7 +121,7 @@ class MongoExceptionHandlerTest {
         .uri(uriBuilder -> uriBuilder.path("/test").build())
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-        .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+        .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_DEFAULT_ERROR);
   }
 
   @Test
@@ -132,6 +135,6 @@ class MongoExceptionHandlerTest {
         .uri(uriBuilder -> uriBuilder.path("/test").build())
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-        .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+        .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_TOO_MANY_REQUESTS_ERROR);
   }
 }
