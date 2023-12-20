@@ -91,7 +91,7 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ErrorDTO.class);
 
-            ErrorDTO errorDTOExpected = new ErrorDTO(ExceptionCode.GENERIC_ERROR, "Something gone wrong");
+            ErrorDTO errorDTOExpected = new ErrorDTO(ExceptionCode.GENERIC_ERROR, "A generic error occurred");
             Assertions.assertEquals(errorDTOExpected, errorDTOResult);
 
             ErrorDTO errorDTORollbackResult = extractResponse(enableUserInitiativeInstruments(webTestClient, "USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
