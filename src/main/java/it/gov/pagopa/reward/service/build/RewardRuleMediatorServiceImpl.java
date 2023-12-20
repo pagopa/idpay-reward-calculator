@@ -99,11 +99,6 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
     }
 
     @Override
-    protected void doFinally(Message<String> message, DroolsRule r, Map<String, Object> ctx) {
-        // Do nothing, we are not interested in log performance here
-    }
-
-    @Override
     public String getFlowName() {
         return "REWARD_RULE_BUILD";
     }

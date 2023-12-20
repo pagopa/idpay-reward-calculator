@@ -32,7 +32,7 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
             UserInitiativeCounters userInitiativeCounters = userCounters.getInitiatives().get(initiativeId);
             // exhausted initiative to be considered in case of REFUND in order to
             if(userInitiativeCounters != null && userInitiativeCounters.isExhaustedBudget() && !isExhausted2Reverse(trx, initiativeId)) {
-                rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
+                rejectedInitiativesForBudget.put(initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_BUDGET_EXHAUSTED));
             } else {
                 notExhaustedInitiatives.add(initiativeId);
             }

@@ -1,7 +1,5 @@
 package it.gov.pagopa.common.reactive.web.exception;
 
-import static org.mockito.Mockito.doThrow;
-
 import com.mongodb.MongoQueryException;
 import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
@@ -27,11 +25,16 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
+import static org.mockito.Mockito.doThrow;
 @ExtendWith(SpringExtension.class)
 @WebFluxTest
 @ContextConfiguration(classes = {MongoExceptionHandler.class,
     MongoExceptionHandlerTest.TestController.class, ErrorManager.class})
 class MongoExceptionHandlerTest {
+
+  public static final ErrorDTO EXPECTED_DEFAULT_ERROR = new ErrorDTO("Error", "Something gone wrong");
+  public static final ErrorDTO EXPECTED_TOO_MANY_REQUESTS_ERROR = new ErrorDTO("TOO_MANY_REQUESTS", "Too Many Requests");
 
   @Autowired
   private WebTestClient webTestClient;
@@ -66,7 +69,7 @@ class MongoExceptionHandlerTest {
     doThrow(
         new UncategorizedMongoDbException(mongoQueryException.getMessage(), mongoQueryException))
         .when(testControllerSpy).testEndpoint();
-    ErrorDTO expectedErrorDefault = new ErrorDTO("TOO_MANY_REQUESTS","TOO_MANY_REQUESTS");
+    ErrorDTO expectedErrorDefault = new ErrorDTO(ExceptionCode.TOO_MANY_REQUESTS,"TOO_MANY_REQUESTS");
 
     webTestClient.get()
         .uri(uriBuilder -> uriBuilder.path("/test").build())
@@ -75,7 +78,7 @@ class MongoExceptionHandlerTest {
         .expectHeader().exists(HttpHeaders.RETRY_AFTER)
         .expectHeader().valueEquals(HttpHeaders.RETRY_AFTER, "1")
         .expectHeader().valueEquals("Retry-After-Ms", "34")
-        .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+        .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_TOO_MANY_REQUESTS_ERROR);
   }
 
   @Test
@@ -94,7 +97,7 @@ class MongoExceptionHandlerTest {
     doThrow(
             new DataIntegrityViolationException(mongoWriteException.getMessage(), mongoWriteException))
             .when(testControllerSpy).testEndpoint();
-    ErrorDTO expectedErrorDefault = new ErrorDTO("TOO_MANY_REQUESTS","TOO_MANY_REQUESTS");
+    ErrorDTO expectedErrorDefault = new ErrorDTO(ExceptionCode.TOO_MANY_REQUESTS,"TOO_MANY_REQUESTS");
 
     webTestClient.get()
             .uri(uriBuilder -> uriBuilder.path("/test").build())
@@ -103,7 +106,7 @@ class MongoExceptionHandlerTest {
             .expectHeader().exists(HttpHeaders.RETRY_AFTER)
             .expectHeader().valueEquals(HttpHeaders.RETRY_AFTER, "1")
             .expectHeader().valueEquals("Retry-After-Ms", "34")
-            .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+            .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_TOO_MANY_REQUESTS_ERROR);
   }
 
   @Test
@@ -112,13 +115,13 @@ class MongoExceptionHandlerTest {
     doThrow(new UncategorizedMongoDbException("DUMMY", new Exception()))
         .when(testControllerSpy).testEndpoint();
 
-    ErrorDTO expectedErrorDefault = new ErrorDTO("Error","Something gone wrong");
+    ErrorDTO expectedErrorDefault = new ErrorDTO(ExceptionCode.GENERIC_ERROR,"Something gone wrong");
 
     webTestClient.get()
         .uri(uriBuilder -> uriBuilder.path("/test").build())
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-        .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+        .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_DEFAULT_ERROR);
   }
 
   @Test
@@ -126,12 +129,12 @@ class MongoExceptionHandlerTest {
     doThrow(new MongoRequestRateTooLargeRetryExpiredException("FLOWNAME",3,3,0,100,34L,new Exception()))
         .when(testControllerSpy).testEndpoint();
 
-    ErrorDTO expectedErrorDefault = new ErrorDTO("TOO_MANY_REQUESTS","TOO_MANY_REQUESTS");
+    ErrorDTO expectedErrorDefault = new ErrorDTO(ExceptionCode.TOO_MANY_REQUESTS,"TOO_MANY_REQUESTS");
 
     webTestClient.get()
         .uri(uriBuilder -> uriBuilder.path("/test").build())
         .exchange()
         .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-        .expectBody(ErrorDTO.class).isEqualTo(expectedErrorDefault);
+        .expectBody(ErrorDTO.class).isEqualTo(EXPECTED_TOO_MANY_REQUESTS_ERROR);
   }
 }

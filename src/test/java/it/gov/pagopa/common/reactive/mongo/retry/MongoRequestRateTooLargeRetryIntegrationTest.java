@@ -63,6 +63,8 @@ import java.time.LocalDateTime;
 @WebFluxTest
 class MongoRequestRateTooLargeRetryIntegrationTest {
 
+    public static final String EXPECTED_TOO_MANY_REQUESTS_ERROR = "{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"Too Many Requests\"}";
+
     @Value("${mongo.request-rate-too-large.batch.max-retry:3}")
     private int maxRetry;
     @Value("${mongo.request-rate-too-large.batch.max-millis-elapsed:0}")
@@ -177,7 +179,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testMono").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json(EXPECTED_TOO_MANY_REQUESTS_ERROR);
 
         Assertions.assertEquals(1, counter[0]);
     }
@@ -188,7 +190,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testMonoRetryable").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json(EXPECTED_TOO_MANY_REQUESTS_ERROR);
 
         Assertions.assertEquals(API_RETRYABLE_MAX_RETRY + 1, counter[0]);
     }
@@ -199,7 +201,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testFlux").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json(EXPECTED_TOO_MANY_REQUESTS_ERROR);
 
         Assertions.assertEquals(1, counter[0]);
     }
@@ -210,7 +212,7 @@ class MongoRequestRateTooLargeRetryIntegrationTest {
                 .uri(uriBuilder -> uriBuilder.path("/testFluxRetryable").build())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().json("{\"code\":\"TOO_MANY_REQUESTS\",\"message\":\"TOO_MANY_REQUESTS\"}");
+                .expectBody().json(EXPECTED_TOO_MANY_REQUESTS_ERROR);
 
         Assertions.assertEquals(API_RETRYABLE_MAX_RETRY + 1, counter[0]);
     }

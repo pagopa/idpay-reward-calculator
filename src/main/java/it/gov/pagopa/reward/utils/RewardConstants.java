@@ -15,10 +15,6 @@ public final class RewardConstants {
     public static final String TRX_CHANNEL_BARCODE = "BARCODE";
     //endregion
 
-    //region initiative's build rejection reasons
-    public static final String INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
-    //endregion
-
     //region rules' order and default rejection reasons
     /** The order of execution of the trx condition */
     public enum InitiativeTrxConditionOrder {
@@ -57,6 +53,8 @@ public final class RewardConstants {
     public static final String TRX_REJECTION_REASON_INVALID_REFUND = "INVALID_REFUND";
     public static final String TRX_REJECTION_REASON_REFUND_NOT_MATCH = "REFUND_NOT_MATCH";
     public static final String TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND = "INITIATIVE_NOT_FOUND";
+    public static final String TRX_REJECTION_REASON_BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED";
+    public static final String TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY = "RULE_ENGINE_NOT_READY";
     //endregion
 
     //region reward status
@@ -74,4 +72,22 @@ public final class RewardConstants {
     //region sync trx contants
     public static final String SYNC_TRX_REFUND_ID_SUFFIX = "_REFUND";
     //endregion
+
+    public static final class ExceptionCode {
+        public static final String INITIATIVE_NOT_ACTIVE_FOR_USER = "REWARD_CALCULATOR_INITIATIVE_NOT_ACTIVE_FOR_USER";
+        public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT = "REWARD_CALCULATOR_INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT";
+        public static final String TRANSACTION_NOT_FOUND = "REWARD_CALCULATOR_TRANSACTION_NOT_FOUND";
+        public static final String INITIATIVE_NOT_READY = "REWARD_CALCULATOR_INITIATIVE_NOT_READY";
+        public static final String CONFLICT_ERROR = "REWARD_CALCULATOR_CONFLICT_ERROR";
+        public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
+        public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
+    }
+
+    public static final class ExceptionMessage {
+        public static final String INITIATIVE_NOT_ACTIVE_FOR_USER_MSG = "The initiative with id [%s] is not active for the current user";
+        public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG = "The initiative with id [%s] is not found or not discount";
+        public static final String TRANSACTION_NOT_FOUND_MSG = "The transaction with id [%s] is not found";
+        public static final String TOO_MANY_REQUESTS_MSG = "Too Many Requests";
+        public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
+    }
 }

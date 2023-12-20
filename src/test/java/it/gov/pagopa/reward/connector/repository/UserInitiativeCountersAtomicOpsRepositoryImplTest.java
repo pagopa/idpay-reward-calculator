@@ -3,9 +3,9 @@ package it.gov.pagopa.reward.connector.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,7 +27,9 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
 
@@ -64,8 +65,8 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
             mono.block();
             Assertions.fail("Expected exception");
         } catch (RuntimeException e){
-            if (e instanceof  ClientExceptionNoBody exceptionNoBody) {
-                Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, exceptionNoBody.getHttpStatus());
+            if (e instanceof  TooManyRequestsException exception) {
+                Assertions.assertEquals(ExceptionCode.TOO_MANY_REQUESTS, exception.getCode());
             }else {
                 Assertions.fail("Expected ClientExceptionNoBody");
             }
@@ -87,8 +88,8 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
         MongoTestUtilitiesService.startMongoCommandListener("findByIdThrottled_Concurrent");
         Long successfulLocks = Flux.fromStream(IntStream.range(0, N).boxed())
                 .flatMap(x -> userInitiativeCountersRepository.findByIdThrottled(userCounterId, "TRXID")
-                        .onErrorResume(ClientExceptionNoBody.class, e -> {
-                            Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+                        .onErrorResume(TooManyRequestsException.class, e -> {
+                            Assertions.assertEquals(ExceptionCode.TOO_MANY_REQUESTS, e.getCode());
                             dropped.incrementAndGet();
                             return Mono.empty();
                         }))

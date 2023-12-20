@@ -1,16 +1,20 @@
 package it.gov.pagopa.common.reactive.mongo;
 
+import com.mongodb.client.result.DeleteResult;
 import lombok.NonNull;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 
-public class ReactiveMongoRepositoryImpl<E, I extends Serializable> extends SimpleReactiveMongoRepository<E, I> {
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
+public class ReactiveMongoRepositoryImpl<E, I extends Serializable> extends SimpleReactiveMongoRepository<E, I> implements ReactiveMongoRepositoryExt<E, I> {
 
     private final ReactiveMongoOperations mongoOperations;
     private final MongoEntityInformation<E, I> entityInformation;
@@ -27,6 +31,24 @@ public class ReactiveMongoRepositoryImpl<E, I extends Serializable> extends Simp
         return mongoOperations.find(
                 new Query(Criteria.where("_id").is(id)).cursorBatchSize(0),
                 entityInformation.getJavaType(), entityInformation.getCollectionName()).singleOrEmpty();
+    }
+
+    @Override
+    public Mono<DeleteResult> removeById(I id) {
+        Assert.notNull(id, "The given id must not be null");
+
+        return mongoOperations
+                .remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName());
+    }
+
+    @SuppressWarnings("squid:S2177") // suppressing overriding private super method
+    private Query getIdQuery(Object id) {
+        return new Query(getIdCriteria(id));
+    }
+
+    @SuppressWarnings("squid:S2177") // suppressing overriding private super method
+    private Criteria getIdCriteria(Object id) {
+        return where(entityInformation.getIdAttribute()).is(id);
     }
 
 }

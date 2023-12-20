@@ -18,6 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
 @TestPropertySource(
         properties = {
                 "logging.level.it.gov.pagopa.reward=WARN",
@@ -90,7 +91,7 @@ public class InstrumentApiControllerIntegrationTest extends BaseApiControllerInt
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     ErrorDTO.class);
 
-            ErrorDTO errorDTOExpected = new ErrorDTO("Error", "Something gone wrong");
+            ErrorDTO errorDTOExpected = new ErrorDTO(ExceptionCode.GENERIC_ERROR, "A generic error occurred");
             Assertions.assertEquals(errorDTOExpected, errorDTOResult);
 
             ErrorDTO errorDTORollbackResult = extractResponse(enableUserInitiativeInstruments(webTestClient, "USERDUMMY_%d".formatted(i), "INITIATIVEDUMMY_%d".formatted(i)),
