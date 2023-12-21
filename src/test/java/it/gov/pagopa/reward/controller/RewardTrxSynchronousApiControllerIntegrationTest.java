@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
@@ -328,6 +329,10 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
 
             // case already processed 409, expecting same result
             assertAuthorize(trxRequest, HttpStatus.CONFLICT, authorizeResponse);
+
+            // case trying to authorize with another user
+            ErrorDTO anotherUserErrotDto = extractResponse(authorizeTrx(trxRequest.toBuilder().userId("ANOTHERUSER").build(), INITIATIVEID), HttpStatus.FORBIDDEN, ErrorDTO.class);
+            Assertions.assertEquals(RewardConstants.ExceptionCode.TRANSACTION_ASSIGNED_TO_ANOTHER_USER, anotherUserErrotDto.getCode());
         });
 
         // useCase 5: Budget exhausted
