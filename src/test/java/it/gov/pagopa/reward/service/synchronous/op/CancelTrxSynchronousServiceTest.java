@@ -15,7 +15,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.custom.RewardCalculatorConflictException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -132,7 +132,7 @@ public class CancelTrxSynchronousServiceTest {
 
         // When
         Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
-        RewardCalculatorConflictException resultException = Assertions.assertThrows(RewardCalculatorConflictException.class, mono::block);
+        TransactionAlreadyProcessedException resultException = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono::block);
         ServiceExceptionResponse result = resultException.getResponse();
 
         // Then

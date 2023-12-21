@@ -80,7 +80,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         TransactionDTO trxDTO = syncTrxRequest2TransactionDtoMapper.apply(trxAuthorizeRequest);
 
         Mono<Pair<InitiativeConfig,OnboardingInfo>> trxChecks = checkInitiative(trxAuthorizeRequest, initiativeId)
-                .flatMap(initiativeFound -> checkSyncTrxAlreadyProcessed(trxAuthorizeRequest.getTransactionId(), initiativeId))
+                .flatMap(initiativeFound -> checkSyncTrxAlreadyProcessed(trxAuthorizeRequest.getTransactionId(), trxAuthorizeRequest.getUserId(), initiativeId))
                 .defaultIfEmpty(EMPTY_RESPONSE)
                 .flatMap(x -> checkOnboarded(trxAuthorizeRequest, trxDTO, initiativeId));
 
