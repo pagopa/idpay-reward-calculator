@@ -1,6 +1,5 @@
 package it.gov.pagopa.common.web.exception;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -24,11 +23,12 @@ public class ServiceExceptionHandler {
         this.errorManager = errorManager;
         this.transcodeMap = transcodeMap;
     }
+
     @SuppressWarnings("squid:S1452")
     @ExceptionHandler(ServiceException.class)
-    protected ResponseEntity<? extends ServiceExceptionResponse> handleException(ServiceException error, ServerWebExchange exchange) {
-        if(null != error.getResponse()){
-            return handleBodyProvidedException(error,transcodeException(error));
+    protected ResponseEntity<? extends ServiceExceptionPayload> handleException(ServiceException error, ServerWebExchange exchange) {
+        if (null != error.getPayload()) {
+            return handleBodyProvidedException(error, exchange);
         }
         return errorManager.handleException(transcodeException(error), exchange);
     }
@@ -41,12 +41,15 @@ public class ServiceExceptionHandler {
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.getCause());
+        return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.isPrintStackTrace(), error);
     }
 
-    private ResponseEntity<? extends ServiceExceptionResponse> handleBodyProvidedException(ServiceException error, ClientException clientException){
+    private ResponseEntity<? extends ServiceExceptionPayload> handleBodyProvidedException(ServiceException error, ServerWebExchange exchange) {
+        ClientException clientException = transcodeException(error);
+        ErrorManager.logClientException(clientException, exchange);
+
         return ResponseEntity.status(clientException.getHttpStatus())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(error.getResponse());
+                .body(error.getPayload());
     }
 }

@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -20,7 +20,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotInContainerException;
-import it.gov.pagopa.reward.exception.custom.RewardCalculatorConflictException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -104,7 +104,7 @@ class CreateTrxSynchronousServiceImplTest {
 
         InitiativeNotActiveException resultException = Assertions.assertThrows(InitiativeNotActiveException.class, mono::block);
 
-        ServiceExceptionResponse resultResponse = resultException.getResponse();
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
         Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class, resultResponse);
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_ACTIVE_FOR_USER,resultException.getCode());
@@ -123,7 +123,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
         InitiativeNotFoundOrNotDiscountException resultException = Assertions.assertThrows(InitiativeNotFoundOrNotDiscountException.class, mono::block);
 
-        ServiceExceptionResponse resultResponse = resultException.getResponse();
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
         Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class, resultResponse);
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT,resultException.getCode());
@@ -204,7 +204,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
         InitiativeNotInContainerException resultException = Assertions.assertThrows(InitiativeNotInContainerException.class, mono::block);
 
-        ServiceExceptionResponse resultResponse = resultException.getResponse();
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
         Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class, resultResponse);
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_READY,resultException.getCode());
@@ -249,9 +249,9 @@ class CreateTrxSynchronousServiceImplTest {
                 .thenReturn(counterMono);
 
         Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId);
-        RewardCalculatorConflictException resultException = Assertions.assertThrows(RewardCalculatorConflictException.class, mono::block);
+        TransactionAlreadyProcessedException resultException = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono::block);
 
-        ServiceExceptionResponse resultResponse = resultException.getResponse();
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
         Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class,resultResponse);
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(responseExpected, resultResponse);
@@ -259,9 +259,9 @@ class CreateTrxSynchronousServiceImplTest {
 
         // When
         Mono<SynchronousTransactionResponseDTO> mono1 = service.authorizeTransaction(authorizeRequest, initiativeId);
-        RewardCalculatorConflictException resultException1 = Assertions.assertThrows(RewardCalculatorConflictException.class, mono1::block);
+        TransactionAlreadyProcessedException resultException1 = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono1::block);
 
-        ServiceExceptionResponse resultResponse1 = resultException1.getResponse();
+        ServiceExceptionPayload resultResponse1 = resultException1.getPayload();
         Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class,resultResponse1);
         Assertions.assertNotNull(resultResponse1);
         Assertions.assertEquals(responseExpected, resultResponse1);
@@ -367,7 +367,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId);
         InitiativeNotInContainerException resultException = Assertions.assertThrows(InitiativeNotInContainerException.class, mono::block);
 
-        ServiceExceptionResponse resultResponse = resultException.getResponse();
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
         Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class,resultResponse);
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_READY,resultException.getCode());
