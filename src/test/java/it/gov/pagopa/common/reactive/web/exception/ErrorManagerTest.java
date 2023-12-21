@@ -51,18 +51,18 @@ public class ErrorManagerTest {
 
     @BeforeAll
     static void configureMemoryAppender(){
-        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ErrorManager.class.getName());
         memoryAppender = new MemoryAppender();
         memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-        logger.setLevel(ch.qos.logback.classic.Level.INFO);
-        logger.addAppender(memoryAppender);
         memoryAppender.start();
     }
-
     @BeforeEach
     void clearMemoryAppender(){
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ErrorManager.class.getName());
+        logger.setLevel(ch.qos.logback.classic.Level.INFO);
+        logger.addAppender(memoryAppender);
         memoryAppender.reset();
     }
+
 
     @Test
     void handleExceptionClientExceptionNoBody() {
