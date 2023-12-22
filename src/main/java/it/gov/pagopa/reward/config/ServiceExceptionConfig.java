@@ -18,13 +18,14 @@ public class ServiceExceptionConfig {
 
         // Forbidden
         exceptionMap.put(InitiativeNotActiveException.class, HttpStatus.FORBIDDEN);
+        exceptionMap.put(TransactionAssignedToAnotherUserException.class, HttpStatus.FORBIDDEN);
 
         // NotFound
         exceptionMap.put(InitiativeNotFoundOrNotDiscountException.class, HttpStatus.NOT_FOUND);
         exceptionMap.put(TransactioNotFoundException.class, HttpStatus.NOT_FOUND);
 
         // Conflict
-        exceptionMap.put(RewardCalculatorConflictException.class, HttpStatus.CONFLICT);
+        exceptionMap.put(TransactionAlreadyProcessedException.class, HttpStatus.CONFLICT);
 
         // TooManyRequests
         exceptionMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
