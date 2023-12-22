@@ -101,7 +101,7 @@ abstract class BaseTrxSynchronousOp {
 
     protected String retrieveCounterEntityId(InitiativeConfig initiativeConfig, OnboardingInfo onboardingInfo, TransactionDTO trxDTO) {
 
-            return retrieveCounterEntityId(initiativeConfig, onboardingInfo, trxDTO.getUserId());
+        return retrieveCounterEntityId(initiativeConfig, onboardingInfo, trxDTO.getUserId());
     }
 
     private   String retrieveCounterEntityId(InitiativeConfig initiativeConfig, OnboardingInfo onboardingInfo, String userId) {

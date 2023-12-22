@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.dto.synchronous;
 
-import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SynchronousTransactionResponseDTO implements ServiceExceptionResponse {
+public class SynchronousTransactionResponseDTO implements ServiceExceptionPayload {
     private String transactionId;
     private String channel;
     private String initiativeId;
