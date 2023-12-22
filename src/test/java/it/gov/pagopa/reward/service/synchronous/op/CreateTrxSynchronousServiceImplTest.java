@@ -268,6 +268,34 @@ class CreateTrxSynchronousServiceImplTest {
         Assertions.assertEquals(ExceptionCode.CONFLICT_ERROR,resultException1.getCode());
 
     }
+    @Test
+    void authorizeTransactionAlreadyProcessedByAnotherUser() {
+        //Given
+        SynchronousTransactionRequestDTO authorizeRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        String initiativeId = "INITIATIVEID";
+
+        TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
+        trx.setUserId("ANOTHERUSER");
+        trx.setId(authorizeRequest.getTransactionId());
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
+
+        TransactionProcessed transactionProcessed = TransactionProcessed.builder()
+                .id(trx.getId())
+                .rewards(Map.of(
+                        initiativeId,
+                        new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
+                .userId(trx.getUserId())
+                .build();
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(transactionProcessed));
+
+        Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId);
+        Assertions.assertThrows(TransactionAssignedToAnotherUserException.class, mono::block);
+    }
 
     @ParameterizedTest
     @CsvSource({

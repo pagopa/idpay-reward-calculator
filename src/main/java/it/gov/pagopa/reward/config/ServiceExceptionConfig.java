@@ -18,6 +18,7 @@ public class ServiceExceptionConfig {
 
         // Forbidden
         exceptionMap.put(InitiativeNotActiveException.class, HttpStatus.FORBIDDEN);
+        exceptionMap.put(TransactionAssignedToAnotherUserException.class, HttpStatus.FORBIDDEN);
 
         // NotFound
         exceptionMap.put(InitiativeNotFoundOrNotDiscountException.class, HttpStatus.NOT_FOUND);
