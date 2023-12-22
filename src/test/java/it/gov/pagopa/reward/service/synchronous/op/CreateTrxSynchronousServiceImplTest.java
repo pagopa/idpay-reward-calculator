@@ -17,10 +17,7 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotInContainerException;
-import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
+import it.gov.pagopa.reward.exception.custom.*;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -97,7 +94,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
         Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())), Mockito.same(previewRequest.getTrxDate()),
+                        .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())), Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
         Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
@@ -147,7 +144,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
 
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())),
+                        .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())),
                 Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
@@ -234,8 +231,8 @@ class CreateTrxSynchronousServiceImplTest {
         TransactionProcessed transactionProcessed = TransactionProcessed.builder()
                 .id(trx.getId())
                 .rewards(Map.of(
-                                initiativeId,
-                                new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
+                        initiativeId,
+                        new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
                 .userId(trx.getUserId())
                 .build();
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(transactionProcessed));
@@ -322,8 +319,8 @@ class CreateTrxSynchronousServiceImplTest {
             TransactionProcessed trxProcessed = TransactionProcessed.builder()
                     .id(authorizeRequest.getTransactionId())
                     .rewards(Map.of(
-                                    initiativeId,
-                                    new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
+                            initiativeId,
+                            new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
                     .userId(authorizeRequest.getUserId())
                     .build();
             previousTrxProcessMono = Mono.just(trxProcessed);
@@ -333,7 +330,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(transactionProcessedRepositoryMock.findById(authorizeRequest.getTransactionId())).thenReturn(previousTrxProcessMono);
 
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(authorizeRequest.getUserId(), authorizeRequest.getChannel())), Mockito.same(authorizeRequest.getTrxDate()),
+                        .getPaymentInstrument(authorizeRequest.getUserId(), authorizeRequest.getChannel())), Mockito.same(authorizeRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
