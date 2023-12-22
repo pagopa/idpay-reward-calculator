@@ -41,12 +41,14 @@ class ServiceExceptionHandlerTest {
         memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
         memoryAppender.start();
     }
+
     @BeforeEach
-    void clearMemoryAppender(){
+    void clearAndAppendMemoryAppender(){
+        memoryAppender.reset();
+
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ErrorManager.class.getName());
         logger.setLevel(ch.qos.logback.classic.Level.INFO);
         logger.addAppender(memoryAppender);
-        memoryAppender.reset();
     }
 
     @RestController
