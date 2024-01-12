@@ -65,8 +65,6 @@ public class KafkaTestUtilitiesService {
     private String applicationName;
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("${spring.cloud.stream.kafka.binder.zkNodes}")
-    private String zkNodes;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -111,7 +109,7 @@ public class KafkaTestUtilitiesService {
 
     /** It will return usefull URLs related to embedded kafka */
     public String getKafkaUrls() {
-        return "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes);
+        return "bootstrapServers: %s".formatted(bootstrapServers);
     }
 
 //region consume messages
