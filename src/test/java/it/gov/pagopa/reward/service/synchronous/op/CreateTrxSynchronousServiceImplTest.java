@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -16,7 +17,7 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.exception.custom.*;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -41,13 +42,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
 @ExtendWith(MockitoExtension.class)
 class CreateTrxSynchronousServiceImplTest {
 
@@ -88,24 +92,22 @@ class CreateTrxSynchronousServiceImplTest {
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())), Mockito.same(previewRequest.getTrxDate()),
+                        .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())), Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
-        // When
-        try {
-            service.previewTransaction(previewRequest, initiativeId).block();
-            Assertions.fail("Expected an Exception");
+        Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
 
-        } catch (Exception e){
-            Assertions.assertTrue(e instanceof TransactionSynchronousException);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
-            Assertions.assertNotNull(resultResponse);
-            SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), resultResponse);
-        }
+        InitiativeNotActiveException resultException = Assertions.assertThrows(InitiativeNotActiveException.class, mono::block);
+
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
+        Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class, resultResponse);
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_ACTIVE_FOR_USER,resultException.getCode());
+        SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), (SynchronousTransactionResponseDTO) resultResponse);
+
     }
-
-    //endregion
 
     @Test
     void postTransactionPreviewInitiativeNotFound(){
@@ -115,18 +117,15 @@ class CreateTrxSynchronousServiceImplTest {
 
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.empty());
 
-        // When
-        try {
-            service.previewTransaction(previewRequest, initiativeId).block();
-            Assertions.fail("Expected an Exception");
+        Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
+        InitiativeNotFoundOrNotDiscountException resultException = Assertions.assertThrows(InitiativeNotFoundOrNotDiscountException.class, mono::block);
 
-        } catch (Exception e){
-            Assertions.assertTrue(e instanceof TransactionSynchronousException);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
-            Assertions.assertNotNull(resultResponse);
-            SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND), resultResponse);
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
+        Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class, resultResponse);
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT,resultException.getCode());
+        SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_INITIATIVE_NOT_FOUND), (SynchronousTransactionResponseDTO) resultResponse);
 
-        }
     }
 
     @ParameterizedTest
@@ -142,9 +141,10 @@ class CreateTrxSynchronousServiceImplTest {
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
 
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())),
+                        .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())),
                 Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
@@ -184,6 +184,32 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.only()).findById(Mockito.anyString());
         Mockito.verify(initiativesEvaluatorFacadeServiceMock, Mockito.only()).evaluateInitiativesBudgetAndRules(Mockito.any(),Mockito.any(),Mockito.any());
     }
+    @Test
+    void postTransactionPreviewNotInContainer(){
+        // Given
+        SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        String initiativeId = "INITIATIVEID";
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Collections.emptySet());
+
+        Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
+        InitiativeNotInContainerException resultException = Assertions.assertThrows(InitiativeNotInContainerException.class, mono::block);
+
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
+        Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class, resultResponse);
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_READY,resultException.getCode());
+        SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(previewRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY), (SynchronousTransactionResponseDTO) resultResponse);
+
+    }
+
+    //endregion
 
     //region authorize
     @Test
@@ -200,12 +226,13 @@ class CreateTrxSynchronousServiceImplTest {
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
 
         TransactionProcessed transactionProcessed = TransactionProcessed.builder()
                 .id(trx.getId())
                 .rewards(Map.of(
-                                initiativeId,
-                                new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
+                        initiativeId,
+                        new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
                 .userId(trx.getUserId())
                 .build();
         Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(transactionProcessed));
@@ -218,31 +245,53 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trx.getUserId(), initiativeId)))
                 .thenReturn(counterMono);
 
-        // When
-        try {
-            service.authorizeTransaction(authorizeRequest, initiativeId).block();
-            Assertions.fail("Expected an Exception");
+        Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId);
+        TransactionAlreadyProcessedException resultException = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono::block);
 
-        } catch (Exception e){
-            Assertions.assertTrue(e instanceof TransactionSynchronousException, () -> {e.printStackTrace(); return "Unexpected exception";});
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
-            Assertions.assertNotNull(resultResponse);
-            Assertions.assertEquals(responseExpected, resultResponse);
-            Assertions.assertEquals(HttpStatus.CONFLICT,((TransactionSynchronousException) e).getHttpStatus());
-        }
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
+        Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class,resultResponse);
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(responseExpected, resultResponse);
+        Assertions.assertEquals(ExceptionCode.CONFLICT_ERROR,resultException.getCode());
 
         // When
-        try {
-            service.authorizeTransaction(authorizeRequest, initiativeId).block();
-            Assertions.fail("Expected an Exception");
+        Mono<SynchronousTransactionResponseDTO> mono1 = service.authorizeTransaction(authorizeRequest, initiativeId);
+        TransactionAlreadyProcessedException resultException1 = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono1::block);
 
-        } catch (Exception e){
-            Assertions.assertTrue(e instanceof TransactionSynchronousException);
-            SynchronousTransactionResponseDTO resultResponse = ((TransactionSynchronousException) e).getResponse();
-            Assertions.assertNotNull(resultResponse);
-            Assertions.assertEquals(responseExpected, resultResponse);
-            Assertions.assertEquals(HttpStatus.CONFLICT,((TransactionSynchronousException) e).getHttpStatus());
-        }
+        ServiceExceptionPayload resultResponse1 = resultException1.getPayload();
+        Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class,resultResponse1);
+        Assertions.assertNotNull(resultResponse1);
+        Assertions.assertEquals(responseExpected, resultResponse1);
+        Assertions.assertEquals(ExceptionCode.CONFLICT_ERROR,resultException1.getCode());
+
+    }
+    @Test
+    void authorizeTransactionAlreadyProcessedByAnotherUser() {
+        //Given
+        SynchronousTransactionRequestDTO authorizeRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        String initiativeId = "INITIATIVEID";
+
+        TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
+        trx.setUserId("ANOTHERUSER");
+        trx.setId(authorizeRequest.getTransactionId());
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
+
+        TransactionProcessed transactionProcessed = TransactionProcessed.builder()
+                .id(trx.getId())
+                .rewards(Map.of(
+                        initiativeId,
+                        new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
+                .userId(trx.getUserId())
+                .build();
+        Mockito.when(transactionProcessedRepositoryMock.findById(trx.getId())).thenReturn(Mono.just(transactionProcessed));
+
+        Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId);
+        Assertions.assertThrows(TransactionAssignedToAnotherUserException.class, mono::block);
     }
 
     @ParameterizedTest
@@ -263,14 +312,15 @@ class CreateTrxSynchronousServiceImplTest {
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(initiativeId));
 
         Mono<BaseTransactionProcessed> previousTrxProcessMono;
         if(previousStuck){
             TransactionProcessed trxProcessed = TransactionProcessed.builder()
                     .id(authorizeRequest.getTransactionId())
                     .rewards(Map.of(
-                                    initiativeId,
-                                    new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
+                            initiativeId,
+                            new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(20))))
                     .userId(authorizeRequest.getUserId())
                     .build();
             previousTrxProcessMono = Mono.just(trxProcessed);
@@ -280,7 +330,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(transactionProcessedRepositoryMock.findById(authorizeRequest.getTransactionId())).thenReturn(previousTrxProcessMono);
 
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                .getPaymentInstrument(authorizeRequest.getUserId(), authorizeRequest.getChannel())), Mockito.same(authorizeRequest.getTrxDate()),
+                        .getPaymentInstrument(authorizeRequest.getUserId(), authorizeRequest.getChannel())), Mockito.same(authorizeRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
@@ -320,6 +370,35 @@ class CreateTrxSynchronousServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(responseDTO, result);
+    }
+
+
+    @Test
+    void authorizeTransactionInitiativeNotInContainer() {
+        //Given
+        SynchronousTransactionRequestDTO authorizeRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        String initiativeId = "INITIATIVEID";
+
+        TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
+        trx.setUserId(authorizeRequest.getUserId());
+        trx.setId(authorizeRequest.getTransactionId());
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Collections.emptySet());
+
+        Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId);
+        InitiativeNotInContainerException resultException = Assertions.assertThrows(InitiativeNotInContainerException.class, mono::block);
+
+        ServiceExceptionPayload resultResponse = resultException.getPayload();
+        Assertions.assertInstanceOf(SynchronousTransactionResponseDTO.class,resultResponse);
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(ExceptionCode.INITIATIVE_NOT_READY,resultException.getCode());
+        Assertions.assertEquals(String.format(ExceptionMessage.INITIATIVE_NOT_READY_MSG,initiativeId),resultException.getMessage());
+        SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(authorizeRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY), (SynchronousTransactionResponseDTO) resultResponse);
+
     }
 //end region
 }

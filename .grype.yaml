@@ -1,6 +1,6 @@
 ignore:
   # false positive match on reactor-netty packages due to a bug on grype: https://github.com/anchore/grype/issues/431
-  # Actually we are using netty 4.1.100
+  # Actually we are using netty 4.1.104
   - vulnerability: CVE-2014-3488  # solved in netty 3.9.2
   - vulnerability: CVE-2015-2156  # solved in netty 4.1.42
   - vulnerability: CVE-2019-16869 # solved in netty 4.1.42

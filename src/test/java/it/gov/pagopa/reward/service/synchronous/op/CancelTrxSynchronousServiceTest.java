@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -14,7 +15,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.exception.TransactionSynchronousException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -131,8 +132,8 @@ public class CancelTrxSynchronousServiceTest {
 
         // When
         Mono<SynchronousTransactionResponseDTO> mono = service.cancelTransaction(trx.getId());
-        TransactionSynchronousException resultException = Assertions.assertThrows(TransactionSynchronousException.class, mono::block);
-        SynchronousTransactionResponseDTO result = resultException.getResponse();
+        TransactionAlreadyProcessedException resultException = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono::block);
+        ServiceExceptionPayload result = resultException.getPayload();
 
         // Then
         Assertions.assertNotNull(result);

@@ -56,7 +56,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return transactionProcessedRepository.findById(trxId)
                 .flatMap(trx -> {
                     log.debug("[SYNC_CANCEL_TRANSACTION] Transaction to be refunded has been found: {}", trxId);
-                    if(trx.getRewards()==null || trx.getRewards().size()==0){
+                    if(trx.getRewards()==null || trx.getRewards().isEmpty()){
                         return Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "REJECTED authorization"));
                     }
                     else if(trx.getRewards().size()>1){
@@ -65,7 +65,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
                     Reward reward = trx.getRewards().values().iterator().next();
 
-                    return checkSyncTrxAlreadyProcessed(buildRefundId(trxId), reward.getInitiativeId())
+                    return checkSyncTrxAlreadyProcessed(buildRefundId(trxId), null, reward.getInitiativeId())
 
                             .switchIfEmpty(Mono.defer(() -> refundTransaction((TransactionProcessed) trx, reward)));
                 });

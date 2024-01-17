@@ -12,9 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
+
+import java.util.Optional;
 
 @RestControllerAdvice
 @Slf4j
@@ -23,9 +26,15 @@ public class MongoExceptionHandler {
 
   private final ErrorManager errorManager;
 
-  public MongoExceptionHandler(ErrorManager errorManager) {
+  private final ErrorDTO tooManyRequestsErrorDTO;
+
+  public MongoExceptionHandler(ErrorManager errorManager, @Nullable ErrorDTO tooManyRequestsErrorDTO) {
     this.errorManager = errorManager;
+
+    this.tooManyRequestsErrorDTO = Optional.ofNullable(tooManyRequestsErrorDTO)
+            .orElse(new ErrorDTO("TOO_MANY_REQUESTS", "Too Many Requests"));
   }
+
 
   @ExceptionHandler(DataAccessException.class)
   protected ResponseEntity<ErrorDTO> handleDataAccessException(
@@ -66,7 +75,7 @@ public class MongoExceptionHandler {
     }
 
     return bodyBuilder
-        .body(new ErrorDTO("TOO_MANY_REQUESTS", "TOO_MANY_REQUESTS"));
+        .body(tooManyRequestsErrorDTO);
   }
 
 }

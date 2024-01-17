@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class SynchronousTransactionRequestDTO {
     private String transactionId;
     private String userId;
