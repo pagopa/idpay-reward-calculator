@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.controller;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -174,7 +174,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         ruleNF.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
 
         List.of(rule, ruleNF).forEach(r -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, r));
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
+        RewardRuleConsumerConfigTestDeprecated.waitForKieContainerBuild(2, rewardContextHolderService);
 
         droolsRuleRepository.save(DroolsRule.builder() // stored but not compiled
                         .id(INITIATIVEID_NOTINCONTAINER)

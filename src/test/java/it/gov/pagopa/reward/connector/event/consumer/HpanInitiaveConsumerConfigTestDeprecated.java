@@ -59,7 +59,8 @@ import java.util.stream.Stream;
         "logging.level.it.gov.pagopa.reward.service.lookup.ops.DeleteHpanServiceImpl=OFF",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
-class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class HpanInitiaveConsumerConfigTestDeprecated extends BaseIntegrationTest {
     private static final String INITIATIVE_ID_PF = "INITIATIVE_ID_PF";
     private static final String INITIATIVE_ID_NF = "INITIATIVE_ID_NF";
 
@@ -292,7 +293,7 @@ class HpanInitiaveConsumerConfigTest extends BaseIntegrationTest {
                         .map(TestUtils::jsonSerializer)
                                 .forEach(m -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, m) );
 
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
+        RewardRuleConsumerConfigTestDeprecated.waitForKieContainerBuild(2, rewardContextHolderService);
     }
     private void waitForDB(int N) {
         long[] countSaved={0};

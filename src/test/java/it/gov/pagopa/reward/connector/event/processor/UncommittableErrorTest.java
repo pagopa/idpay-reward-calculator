@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.connector.event.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -192,10 +192,10 @@ class UncommittableErrorTest extends BaseTransactionProcessorTest {
                         buildInitiative(INITIATIVE_ID1),
                         buildInitiative(INITIATIVE_ID2)
                 )
-                .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
+                .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTestDeprecated.calcDroolsRuleGenerated(i))
                 .forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
 
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
+        RewardRuleConsumerConfigTestDeprecated.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
     }
 
     private static InitiativeReward2BuildDTO buildInitiative(String initiativeId) {
