@@ -71,6 +71,7 @@ microservice-chart:
     idpay-eventhub-00:
       KAFKA_REWARD_RESPONSE_BROKER: kafka_broker
       KAFKA_REWARD_RESPONSE_TOPIC: idpay_transaction_topic
+#      KAFKA_REWARD_RESPONSE_GROUP_ID: reward-calculator-transaction-group # TODO TBD
     idpay-eventhub-01:
       KAFKA_BROKER: kafka_broker
       KAFKA_REWARD_SASL_MECHANISM: kafka_sasl_mechanism
@@ -88,6 +89,7 @@ microservice-chart:
     KAFKA_RTD_SASL_JAAS_CONFIG: evh-rtd-trx-rtd-trx-consumer-rtd
     KAFKA_RTD_PROD_SASL_JAAS_CONFIG: evh-rtd-trx-rtd-trx-producer-rtd
     KAFKA_REWARD_RESPONSE_SASL_JAAS_CONFIG: evh-idpay-transaction-idpay-transaction-producer-jaas-config-idpay-00
+    KAFKA_REWARD_RESPONSE_CONSUMER_SASL_JAAS_CONFIG: evh-idpay-transaction-idpay-transaction-consumer-jaas-config-idpay-00
     KAFKA_REWARD_RULE_REQUEST_SASL_JAAS_CONFIG: evh-idpay-rule-update-idpay-rule-update-consumer-jaas-config-idpay-01
     KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG: evh-idpay-transaction-user-id-splitter-idpay-transaction-user-id-splitter-consumer-jaas-config-idpay-01
     KAFKA_TRANSACTION_USER_ID_SPLITTER_PRODUCER_SASL_JAAS_CONFIG: evh-idpay-transaction-user-id-splitter-idpay-transaction-user-id-splitter-producer-jaas-config-idpay-01

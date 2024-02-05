@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.model.counters;
 
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -45,6 +46,7 @@ public class UserInitiativeCounters extends Counters {
      * See <a href="https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/727778640/Gestione+transazionalit+salvataggio+transazione+e+contatori+aggiornati">Confluence page</a>.
      * */
     private List<String> updatingTrxId;
+    private List<RewardTransactionDTO> pendingTrxId; //TODO TBV
 
     private boolean exhaustedBudget;
     @Builder.Default

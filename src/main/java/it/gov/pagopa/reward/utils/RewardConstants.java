@@ -60,6 +60,8 @@ public final class RewardConstants {
     //region reward status
     public static final String REWARD_STATE_REWARDED = "REWARDED";
     public static final String REWARD_STATE_REJECTED = "REJECTED";
+
+    public static final String REWARD_STATE_AUTHORIZED = "AUTHORIZED";
     //endregion
 
     //region dateFormatters
