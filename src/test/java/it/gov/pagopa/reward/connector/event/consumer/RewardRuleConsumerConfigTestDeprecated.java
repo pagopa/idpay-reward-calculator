@@ -38,7 +38,8 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl=DEBUG",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
 })
-public class RewardRuleConsumerConfigTest extends BaseIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+public class RewardRuleConsumerConfigTestDeprecated extends BaseIntegrationTest {
 
     @SpyBean
     private KieContainerBuilderService kieContainerBuilderServiceSpy;

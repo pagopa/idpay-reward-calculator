@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.reactive.service.LockServiceImpl;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.BaseIntegrationTest;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
@@ -106,11 +106,11 @@ abstract class BaseTransactionProcessorTest extends BaseIntegrationTest {
     protected void publishRewardRules(List<InitiativeReward2BuildDTO> initiatives) {
         int[] expectedRules = {0};
         initiatives.forEach(i -> {
-            expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i);
+            expectedRules[0] += RewardRuleConsumerConfigTestDeprecated.calcDroolsRuleGenerated(i);
             kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i);
         });
 
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
+        RewardRuleConsumerConfigTestDeprecated.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
         initiatives.forEach(i-> Assertions.assertNotNull(rewardContextHolderService.getInitiativeConfig(i.getInitiativeId()).block()));
     }
 

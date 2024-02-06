@@ -42,7 +42,8 @@ import java.util.stream.IntStream;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN"
 })
-class CommandsConsumerConfigTest extends BaseIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class CommandsConsumerConfigTestDeprecated extends BaseIntegrationTest {
     private final String INITIATIVEID = "INITIATIVEID_%d";
     private final Set<String> USER_INITIATIVES_DISCOUNT = new HashSet<>();
     private final Set<String> INITIATIVES_DELETED_DISCOUNT_OR_SINGLE_REFUND = new HashSet<>();
