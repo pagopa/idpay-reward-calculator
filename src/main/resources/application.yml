@@ -66,7 +66,7 @@ spring:
           binder: kafka-commands
         trxResponseConsumer-in-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
-          group: ${KAFKA_REWARD_RESPONSE_GROUP_ID:idpay-transaction-reward-calculator-consumer-group}
+          group: ${KAFKA_REWARD_RESPONSE_GROUP_ID:idpay-reward-calculator-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-transaction-response
         # TODO remove me

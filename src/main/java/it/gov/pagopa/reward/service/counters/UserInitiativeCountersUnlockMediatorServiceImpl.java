@@ -86,7 +86,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaCo
     @Nullable
     private Mono<UserInitiativeCounters> handlerUnlockType(RewardTransactionDTO trx) {
         if(REWARD_STATE_AUTHORIZED.equals(trx.getStatus())) {
-            return userInitiativeCountersRepository.unlockPendingTrx(UserInitiativeCounters.buildId(trx.getUserId(), trx.getInitiatives().get(0)), trx.getId());
+            return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
         //TODO handle expired event (CANCELED status), rollback and unlock counter
         return null;

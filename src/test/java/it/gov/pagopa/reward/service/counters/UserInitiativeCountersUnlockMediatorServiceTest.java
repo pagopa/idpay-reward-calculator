@@ -61,9 +61,8 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
         rewardTransactionDTO.setStatus(RewardConstants.REWARD_STATE_AUTHORIZED);
 
-        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(
-                        UserInitiativeCounters.buildId(rewardTransactionDTO.getUserId(), rewardTransactionDTO.getInitiatives().get(0)), rewardTransactionDTO.getId()))
-                        .thenReturn(Mono.just(new UserInitiativeCounters()));
+        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(rewardTransactionDTO.getId()))
+                .thenReturn(Mono.just(new UserInitiativeCounters()));
 
         userInitiativeCountersUnlockMediatorService.execute(Flux
                 .just(
@@ -73,7 +72,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
                                 .setHeader(KafkaHeaders.OFFSET, 0L)
                                 .build()));
 
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).unlockPendingTrx(any(), any());
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).unlockPendingTrx(any());
         Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(0)).notifyTransactionResponse(any(), any(), eq(true), any());
 
     }
@@ -91,7 +90,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
                                 .setHeader(KafkaHeaders.OFFSET, 0L)
                                 .build()));
 
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(0)).unlockPendingTrx(any(), any());
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(0)).unlockPendingTrx(any());
         Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(0)).notifyTransactionResponse(any(), any(), eq(true), any());
 
     }

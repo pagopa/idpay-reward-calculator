@@ -112,11 +112,10 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     }
 
     @Override
-    public Mono<UserInitiativeCounters> unlockPendingTrx(String id, String trxId) {
+    public Mono<UserInitiativeCounters> unlockPendingTrx(String trxId) {
         return mongoTemplate
                 .findAndModify(
-                        Query.query(criteriaById(id))
-                                .addCriteria(Criteria.where(PENDING_TRX_ID_FIELD).is(trxId)),
+                        Query.query(Criteria.where(PENDING_TRX_ID_FIELD).is(trxId)),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
                                 .set(UserInitiativeCounters.Fields.pendingTrx, null),

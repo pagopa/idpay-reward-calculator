@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.model.counters;
 
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
-import it.gov.pagopa.reward.model.TransactionProcessed;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -45,9 +45,8 @@ public class UserInitiativeCounters extends Counters {
     /** Used in Sync trx flow in order to handle transactional updates of {@link it.gov.pagopa.reward.model.TransactionProcessed} and this entity.<br/>
      * See <a href="https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/727778640/Gestione+transazionalit+salvataggio+transazione+e+contatori+aggiornati">Confluence page</a>.
      * */
-    //TODO change in IDP-2279
     private List<String> updatingTrxId;
-    private List<TransactionProcessed> pendingTrx; //TODO Pending from IDP-2279
+    private TransactionDTO pendingTrx; //TODO Pending from IDP-2279
 
     private boolean exhaustedBudget;
     @Builder.Default

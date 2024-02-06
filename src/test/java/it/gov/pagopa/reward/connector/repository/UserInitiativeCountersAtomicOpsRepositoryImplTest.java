@@ -5,10 +5,10 @@ import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.exception.custom.TooManyRequestsException;
-import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
-import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
+import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -176,15 +176,15 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
         userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
 
-        TransactionProcessed trxProcessed = TransactionProcessedFaker.mockInstance(1);
-        trxProcessed.setUserId(userId);
-        trxProcessed.setInitiatives(List.of(initiativeId));
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setInitiatives(List.of(initiativeId));
+        trx.setUserId(userId);
 
-        userInitiativeCounters.setPendingTrx(List.of(trxProcessed));
+        userInitiativeCounters.setPendingTrx(trx);
         UserInitiativeCounters storedBefore = userInitiativeCountersRepository.save(userInitiativeCounters).block();
 
         // Where
-        UserInitiativeCounters updateResult = userInitiativeCountersRepository.unlockPendingTrx(UserInitiativeCounters.buildId(trxProcessed.getUserId(), trxProcessed.getInitiatives().get(0)), trxProcessed.getId()).block();
+        UserInitiativeCounters updateResult = userInitiativeCountersRepository.unlockPendingTrx(trx.getId()).block();
 
         assertNotNull(updateResult);
         assertNull(updateResult.getPendingTrx());
@@ -193,7 +193,6 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
         LocalDateTime updateDateBefore = storedBefore.getUpdateDate();
         assertNotNull(updateDateBefore);
         assertTrue(updateDateBefore.isBefore(updateResult.getUpdateDate()));
-
 
     }
 }

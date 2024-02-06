@@ -11,5 +11,5 @@ public interface UserInitiativeCountersAtomicOpsRepository {
     Mono<UserInitiativeCounters> setUpdatingTrx(String id, String updatingTrxId);
     Mono<UpdateResult> createIfNotExists(String entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum entityType, String initiativeId);
     Flux<UserInitiativeCounters> findByInitiativesWithBatch(String initiativeId, int batchSize);
-    Mono<UserInitiativeCounters> unlockPendingTrx(String id, String trxId);
+    Mono<UserInitiativeCounters> unlockPendingTrx(String trxId);
 }
