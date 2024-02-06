@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.connector.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository {
+    private static final String PENDING_TRX_ID_FIELD = String.format("%s.%s", UserInitiativeCounters.Fields.pendingTrx, TransactionDTO.Fields.id);
     private final int throttlingSeconds;
     private final ReactiveMongoTemplate mongoTemplate;
 
@@ -109,4 +111,17 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
         return mongoTemplate.find(query, UserInitiativeCounters.class);
     }
 
+    @Override
+    public Mono<UserInitiativeCounters> unlockPendingTrx(String id, String trxId) {
+        return mongoTemplate
+                .findAndModify(
+                        Query.query(criteriaById(id))
+                                .addCriteria(Criteria.where(PENDING_TRX_ID_FIELD).is(trxId)),
+                        new Update()
+                                .currentDate(UserInitiativeCounters.Fields.updateDate)
+                                .set(UserInitiativeCounters.Fields.pendingTrx, null),
+                        FindAndModifyOptions.options().returnNew(true),
+                        UserInitiativeCounters.class
+                );
+    }
 }

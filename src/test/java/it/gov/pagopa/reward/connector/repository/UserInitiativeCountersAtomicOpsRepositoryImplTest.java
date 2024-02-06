@@ -6,7 +6,9 @@ import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
@@ -166,5 +168,32 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
         List<UserInitiativeCounters> userInitiativeCounters = result.toStream().toList();
         assertEquals(1, userInitiativeCounters.size());
+    }
+
+    @Test
+    void unlockPendingTrx(){
+        // When
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
+
+        TransactionProcessed trxProcessed = TransactionProcessedFaker.mockInstance(1);
+        trxProcessed.setUserId(userId);
+        trxProcessed.setInitiatives(List.of(initiativeId));
+
+        userInitiativeCounters.setPendingTrx(List.of(trxProcessed));
+        UserInitiativeCounters storedBefore = userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+        // Where
+        UserInitiativeCounters updateResult = userInitiativeCountersRepository.unlockPendingTrx(UserInitiativeCounters.buildId(trxProcessed.getUserId(), trxProcessed.getInitiatives().get(0)), trxProcessed.getId()).block();
+
+        assertNotNull(updateResult);
+        assertNull(updateResult.getPendingTrx());
+
+        assertNotNull(storedBefore);
+        LocalDateTime updateDateBefore = storedBefore.getUpdateDate();
+        assertNotNull(updateDateBefore);
+        assertTrue(updateDateBefore.isBefore(updateResult.getUpdateDate()));
+
+
     }
 }

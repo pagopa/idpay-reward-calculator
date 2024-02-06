@@ -7,6 +7,6 @@ import reactor.core.publisher.Flux;
 /**
  *  This component will take a {@link RewardTransactionDTO} and unlock the {@link it.gov.pagopa.reward.model.counters.UserInitiativeCounters}
  * */
-public interface TransactionResponseMediatorService {
+public interface UserInitiativeCountersUnlockMediatorService {
     void execute(Flux<Message<String>> transactionDTO);
 }

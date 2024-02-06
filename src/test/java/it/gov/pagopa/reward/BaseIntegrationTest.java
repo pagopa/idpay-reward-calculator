@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
         "${spring.cloud.stream.bindings.hpanInitiativeConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.hpanUpdateOutcome-out-0.destination}",
         "${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}",
+        "${spring.cloud.stream.bindings.trxResponseConsumer-in-0.destination}",
         "${spring.cloud.stream.bindings.trxProducer-out-0.destination}", // TODO remove me
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -64,6 +65,7 @@ import java.util.regex.Pattern;
                 "spring.cloud.stream.binders.kafka-idpay-hpan-update.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-hpan-update-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-idpay-transaction-response.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-rtd-producer.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}", // TODO remove me
                 //endregion
 
