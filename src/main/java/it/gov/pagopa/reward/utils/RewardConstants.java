@@ -81,6 +81,7 @@ public final class RewardConstants {
         public static final String TRANSACTION_NOT_FOUND = "REWARD_CALCULATOR_TRANSACTION_NOT_FOUND";
         public static final String INITIATIVE_NOT_READY = "REWARD_CALCULATOR_INITIATIVE_NOT_READY";
         public static final String TRANSACTION_ASSIGNED_TO_ANOTHER_USER = "REWARD_CALCULATOR_TRANSACTION_ASSIGNED_TO_ANOTHER_USER";
+        public static final String INVALID_COUNTER_VERSION = "INVALID_COUNTER_VERSION";
         public static final String CONFLICT_ERROR = "REWARD_CALCULATOR_CONFLICT_ERROR";
         public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
         public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
@@ -95,5 +96,6 @@ public final class RewardConstants {
         public static final String TOO_MANY_REQUESTS_MSG = "Too Many Requests";
         public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
         public static final String TRANSACTION_ASSIGNED_TO_ANOTHER_USER = "The user %s cannot operate on transaction %s because is assigned to another user";
+        public static final String INVALID_COUNTER_VERSION = "Invalid counter version provided when authorizing transaction %s of user %s on initiative %s: %d";
     }
 }

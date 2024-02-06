@@ -27,29 +27,31 @@ public class HandleSyncCounterUpdatingTrxServiceImpl implements HandleSyncCounte
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
     }
 
+    /** @deprecated Remove when the cancel operation will not more use it */
+    @Deprecated
     @Override
     public Mono<UserInitiativeCounters> checkUpdatingTrx(TransactionDTO trxDTO, UserInitiativeCounters counters) {
-        if(List.of(trxDTO.getId()).equals(counters.getUpdatingTrxId())){
+        if(List.of(trxDTO.getId()).equals(counters.getUpdatingTrx())){
             emptyUpdatingTrxId(counters);
             return Mono.just(counters);
         } else {
-            log.info("[SYNC_TRANSACTION] Found stuck transaction {} while handling new trx {} (counterId:{}), removing it", counters.getUpdatingTrxId(), trxDTO.getId(), counters.getId());
+            log.info("[SYNC_TRANSACTION] Found stuck transaction {} while handling new trx {} (counterId:{}), removing it", counters.getUpdatingTrx(), trxDTO.getId(), counters.getId());
 
             Mono<Void> deleteAllIdsMono;
-            if(!CollectionUtils.isEmpty(counters.getUpdatingTrxId())){
-                deleteAllIdsMono = transactionProcessedRepository.deleteAllById(counters.getUpdatingTrxId());
-
-                if(OperationType.REFUND.equals(trxDTO.getOperationTypeTranscoded())
-                        && List.of(trxDTO.getId().replace(RewardConstants.SYNC_TRX_REFUND_ID_SUFFIX, "")).equals(counters.getUpdatingTrxId())){
-                    log.info("[SYNC_CANCEL_TRANSACTION] Cancelling stuck authorization found when elaborating cancel request {} (counterId:{}), removing it", trxDTO.getId(), counters.getId());
-
-                    deleteAllIdsMono = deleteAllIdsMono
-                            .then(userInitiativeCountersRepository.setUpdatingTrx(counters.getId(), null))
-                            .then(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cancelling stuck authorization")));
-                }
-            } else {
+//            if(!CollectionUtils.isEmpty(counters.getUpdatingTrx())){
+//                deleteAllIdsMono = transactionProcessedRepository.deleteAllById(counters.getUpdatingTrx());
+//
+//                if(OperationType.REFUND.equals(trxDTO.getOperationTypeTranscoded())
+//                        && List.of(trxDTO.getId().replace(RewardConstants.SYNC_TRX_REFUND_ID_SUFFIX, "")).equals(counters.getUpdatingTrx())){
+//                    log.info("[SYNC_CANCEL_TRANSACTION] Cancelling stuck authorization found when elaborating cancel request {} (counterId:{}), removing it", trxDTO.getId(), counters.getId());
+//
+//                    deleteAllIdsMono = deleteAllIdsMono
+//                            .then(userInitiativeCountersRepository.setUpdatingTrx(counters.getId(), null))
+//                            .then(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cancelling stuck authorization")));
+//                }
+//            } else {
                 deleteAllIdsMono = Mono.empty();
-            }
+//            }
 
             return deleteAllIdsMono
                     .then(userInitiativeCountersRepository.setUpdatingTrx(counters.getId(), trxDTO.getId()))
@@ -58,6 +60,6 @@ public class HandleSyncCounterUpdatingTrxServiceImpl implements HandleSyncCounte
     }
 
     private void emptyUpdatingTrxId(UserInitiativeCounters counters) {
-        counters.setUpdatingTrxId(null);
+        counters.setUpdatingTrx(null);
     }
 }

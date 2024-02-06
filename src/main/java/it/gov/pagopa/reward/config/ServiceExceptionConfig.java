@@ -16,6 +16,9 @@ public class ServiceExceptionConfig {
     public Map<Class<? extends ServiceException>, HttpStatus> serviceExceptionMapper() {
         Map<Class<? extends ServiceException>, HttpStatus> exceptionMap = new HashMap<>();
 
+        // ClientError
+        exceptionMap.put(InvalidCounterVersionException.class, HttpStatus.PRECONDITION_FAILED);
+
         // Forbidden
         exceptionMap.put(InitiativeNotActiveException.class, HttpStatus.FORBIDDEN);
         exceptionMap.put(TransactionAssignedToAnotherUserException.class, HttpStatus.FORBIDDEN);

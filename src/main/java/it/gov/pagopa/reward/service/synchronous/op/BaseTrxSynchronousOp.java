@@ -56,6 +56,8 @@ abstract class BaseTrxSynchronousOp {
         this.rewardContextHolderService = rewardContextHolderService;
     }
 
+    /** @deprecated Remove when the cancel operation will not more use it */
+    @Deprecated
     protected Mono<SynchronousTransactionResponseDTO> checkSyncTrxAlreadyProcessed(String trxId, String userId, String initiativeId) {
         return transactionProcessedRepository.findById(trxId)
                 .flatMap(trxProcessed -> {
@@ -66,17 +68,19 @@ abstract class BaseTrxSynchronousOp {
                                     .flatMap(i2o -> userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxProcessed.getUserId()), initiativeId))
                                             .mapNotNull(ctr -> {
                                                 // if the requested trx is not stuck, thus it has already been processed
-                                                if (CollectionUtils.isEmpty(ctr.getUpdatingTrxId()) || !ctr.getUpdatingTrxId().contains(trxId)) {
+//                                                if (CollectionUtils.isEmpty(ctr.getUpdatingTrx()) || !ctr.getUpdatingTrx().contains(trxId)) {
                                                     throw new TransactionAlreadyProcessedException(syncTrxResponseDTOMapper.apply(trxProcessed, initiativeId));
-                                                } else {
-                                                    log.info("[SYNC_TRANSACTION] Actual trx was stuck! recovering it: trxId:{} counterId:{}", trxId, ctr.getId());
-                                                    return null;
-                                                }
+//                                                } else {
+//                                                    log.info("[SYNC_TRANSACTION] Actual trx was stuck! recovering it: trxId:{} counterId:{}", trxId, ctr.getId());
+//                                                    return null;
+//                                                }
                                             }));
                         }
                 );
     }
 
+    /** @deprecated Remove when the cancel operation will not more use it */
+    @Deprecated
     protected Mono<SynchronousTransactionResponseDTO> lockCounterAndEvaluate(Mono<Pair<InitiativeConfig, OnboardingInfo>> trxChecks, TransactionDTO trxDTO, String initiativeId) {
         return evaluate(trxChecks, trxDTO, initiativeId,
                 i2o -> userInitiativeCountersRepository.findByIdThrottled(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(),i2o.getSecond(),trxDTO), initiativeId), trxDTO.getId())

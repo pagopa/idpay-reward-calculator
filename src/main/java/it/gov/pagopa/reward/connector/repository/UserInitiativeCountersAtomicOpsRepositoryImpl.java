@@ -33,6 +33,8 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
         this.mongoTemplate = mongoTemplate;
     }
 
+    /** @deprecated Remove when the cancel operation will not more use it */
+    @Deprecated
     @Override
     public Mono<UserInitiativeCounters> findByIdThrottled(String id, String updatingTrxId) {
         return mongoTemplate
@@ -44,7 +46,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                                                         .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * throttlingSeconds)))),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
-                                .push(UserInitiativeCounters.Fields.updatingTrxId).slice(1).each(updatingTrxId),
+                                .push(UserInitiativeCounters.Fields.updatingTrx).slice(1).each(updatingTrxId),
                         FindAndModifyOptions.options().returnNew(true),
                         UserInitiativeCounters.class
                 )
@@ -63,6 +65,8 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                 .where(UserInitiativeCounters.Fields.id).is(id);
     }
 
+    /** @deprecated Remove when the cancel operation will not more use it */
+    @Deprecated
     @Override
     public Mono<UserInitiativeCounters> setUpdatingTrx(String id, String updatingTrxId) {
         List<String> nextUpdatingTrx=null;
@@ -74,7 +78,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         Query.query(criteriaById(id)),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
-                                .set(UserInitiativeCounters.Fields.updatingTrxId, nextUpdatingTrx),
+                                .set(UserInitiativeCounters.Fields.updatingTrx, nextUpdatingTrx),
                         FindAndModifyOptions.options().returnNew(true),
                         UserInitiativeCounters.class
                 );

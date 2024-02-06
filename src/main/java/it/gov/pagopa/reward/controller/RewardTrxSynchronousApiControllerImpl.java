@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
@@ -33,11 +34,11 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
+    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(long counterVersion, SynchronousTransactionAuthRequestDTO trxAuthorizeRequest, String initiativeId) {
         log.info("[SYNC_AUTHORIZE_TRANSACTION] The user {} requests authorize transaction {} on initiativeId {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId(), initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
-                rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId)
+                rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId, counterVersion)
                         .doOnNext(r -> log.info("[SYNC_AUTHORIZE_TRANSACTION] The authorization requested by userId {} of a transaction having id {} on initiativeId {} resulted into status {} and rejections {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId(), initiativeId, r.getStatus(), r.getRejectionReasons()))
                         .switchIfEmpty(Mono.error(new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
                 trxAuthorizeRequest.toString());
