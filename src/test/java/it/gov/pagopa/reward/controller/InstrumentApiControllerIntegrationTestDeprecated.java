@@ -25,7 +25,8 @@ import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
                 "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
                 "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN"
         })
-public class InstrumentApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+public class InstrumentApiControllerIntegrationTestDeprecated extends BaseApiControllerIntegrationTest {
     @SpyBean
     private HpanInitiativesRepository hpanInitiativesRepositorySpy;
 
