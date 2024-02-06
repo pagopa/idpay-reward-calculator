@@ -6,7 +6,7 @@ import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
-import it.gov.pagopa.reward.controller.InstrumentApiControllerIntegrationTest;
+import it.gov.pagopa.reward.controller.InstrumentApiControllerIntegrationTestDeprecated;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -360,7 +360,7 @@ class TransactionProcessorTestDeprecated extends BaseTransactionProcessorTest {
         final TransactionDTO trx = useCases.get(useCase).getFirst().apply(bias);
         onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED, INITIATIVE_ID_INSTRUMENT_INACTIVE);
 
-        InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
+        InstrumentApiControllerIntegrationTestDeprecated.disableUserInitiativeInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
 
         return trx;
     }
