@@ -63,7 +63,8 @@ import java.util.stream.StreamSupport;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
 })
-class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class RewardTrxSynchronousApiControllerIntegrationTestDeprecated extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
     public static final String INITIATIVEID_NOTINCONTAINER = "INITIATIVEID_NOTINCONTAINER";
@@ -531,7 +532,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         //useCase 13: user unsubscribed to the initiative
         useCases.add(i -> {
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
-            InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
+            InstrumentApiControllerIntegrationTestDeprecated.disableUserInitiativeInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
             SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REJECTED, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), null);
 
             assertPreview(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);
