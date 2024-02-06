@@ -38,7 +38,7 @@ public class UserInitiativeCounters extends Counters {
     private String initiativeId;
 
     private LocalDateTime updateDate;
-    private TransactionDTO updatingTrx;
+    private TransactionDTO pendingTrx;
 
     private boolean exhaustedBudget;
     @Builder.Default

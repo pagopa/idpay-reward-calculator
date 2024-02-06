@@ -27,9 +27,6 @@ public class ServiceExceptionConfig {
         exceptionMap.put(InitiativeNotFoundOrNotDiscountException.class, HttpStatus.NOT_FOUND);
         exceptionMap.put(TransactioNotFoundException.class, HttpStatus.NOT_FOUND);
 
-        // Conflict
-        exceptionMap.put(TransactionAlreadyProcessedException.class, HttpStatus.CONFLICT);
-
         // TooManyRequests
         exceptionMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
         exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);

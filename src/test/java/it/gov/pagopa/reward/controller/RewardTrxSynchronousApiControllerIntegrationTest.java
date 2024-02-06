@@ -615,7 +615,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getMonthlyCounters()).orElse(Collections.emptyMap()), storedCounter.getMonthlyCounters());
                 Assertions.assertEquals(Optional.ofNullable(authCounter.getYearlyCounters()).orElse(Collections.emptyMap()), storedCounter.getYearlyCounters());
                 Assertions.assertEquals(counterSubjectId,storedCounter.getEntityId());
-                Assertions.assertNull(storedCounter.getUpdatingTrxId());
+                Assertions.assertNull(storedCounter.getPendingTrx());
             }
         } else {
             Assertions.assertNull(stored);
