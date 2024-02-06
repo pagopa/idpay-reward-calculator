@@ -111,7 +111,7 @@ class RecoveredTrx2UserInitiativeCountersMapperTest {
         Assertions.assertEquals(buildExpectedTemporalCounter(reward.getCounters().getMonthlyCounters(), previous != null? previous.getMonthlyCounters(): new HashMap<>()), result.getMonthlyCounters());
         Assertions.assertEquals(buildExpectedTemporalCounter(reward.getCounters().getYearlyCounters(), previous != null? previous.getYearlyCounters(): new HashMap<>()), result.getYearlyCounters());
 
-        TestUtils.checkNotNullFields(result, "updatingTrxId");
+        TestUtils.checkNotNullFields(result, "updatingTrxId", "pendingTrx");
     }
 
     private static Map<String, Counters> buildTemporalCounter(String key) {
