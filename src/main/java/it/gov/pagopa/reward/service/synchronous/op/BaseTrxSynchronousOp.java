@@ -22,6 +22,7 @@ import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -97,6 +98,7 @@ abstract class BaseTrxSynchronousOp {
 
     private RewardTransactionDTO buildRewardedTrxHavingRewardCents(TransactionDTO trxDTO, String initiativeId, long rewardCents, InitiativeConfig i) {
         RewardTransactionDTO rewardedTrx = rewardTransactionMapper.apply(trxDTO);
+        rewardedTrx.setInitiatives(List.of(initiativeId));
         rewardedTrx.getRewards().put(initiativeId, new Reward(initiativeId, i.getOrganizationId(), CommonUtilities.centsToEuro(rewardCents)));
         return rewardedTrx;
     }
