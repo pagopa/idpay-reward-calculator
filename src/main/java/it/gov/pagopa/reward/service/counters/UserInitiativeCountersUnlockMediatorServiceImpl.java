@@ -78,6 +78,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaCo
 
     @Override
     protected Mono<UserInitiativeCounters> execute(RewardTransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
+        log.info("[USER_COUNTER_UNLOCK] Started processing transaction response " + payload);
         return Mono.just(payload)
                 .filter(trx -> ACCEPTED_STATUS.contains(trx.getStatus()))
                 .flatMap(this::handlerUnlockType);
@@ -85,6 +86,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaCo
 
     private Mono<UserInitiativeCounters> handlerUnlockType(RewardTransactionDTO trx) {
         if(REWARD_STATE_AUTHORIZED.equals(trx.getStatus())) {
+            log.info("[USER_COUNTER_UNLOCK] Started processing transaction in status AUTHORIZED");
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
         //TODO handle expired event (CANCELED status)
