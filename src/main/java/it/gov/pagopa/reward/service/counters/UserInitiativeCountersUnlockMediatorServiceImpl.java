@@ -83,12 +83,11 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaCo
                 .flatMap(this::handlerUnlockType);
     }
 
-    @Nullable
     private Mono<UserInitiativeCounters> handlerUnlockType(RewardTransactionDTO trx) {
         if(REWARD_STATE_AUTHORIZED.equals(trx.getStatus())) {
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
-        //TODO handle expired event (CANCELED status), rollback and unlock counter
-        return null;
+        //TODO handle expired event (CANCELED status)
+        return Mono.empty();
     }
 }
