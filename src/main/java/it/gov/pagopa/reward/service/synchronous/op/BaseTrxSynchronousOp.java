@@ -10,7 +10,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
+import it.gov.pagopa.reward.exception.custom.PendingCounterException;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -18,7 +18,6 @@ import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
@@ -71,12 +70,12 @@ abstract class BaseTrxSynchronousOp {
                 ? onboardingInfo.getFamilyId() : userId;
     }
 
-    protected Mono<RewardTransactionDTO> handlePendingCounter(String flowName, TransactionDTO trxDTO, String initiativeId, UserInitiativeCounters counter, InvalidCounterVersionException invalidCounterVersionException, long rewardCents) {
+    protected Mono<RewardTransactionDTO> handlePendingCounter(String flowName, TransactionDTO trxDTO, String initiativeId, UserInitiativeCounters counter, long rewardCents) {
         if(!counter.getPendingTrx().getId().equals(trxDTO.getId()) ||
-                !counter.getPendingTrx().getOperationTypeTranscoded().equals(trxDTO.getOperationTypeTranscoded())){
+                !trxDTO.getOperationTypeTranscoded().equals(counter.getPendingTrx().getOperationTypeTranscoded())){
             log.info("[{}] Cannot process transaction {} of userId {} on initiative {}: another transaction ({} {}) is locking the counter {}",
                     flowName, trxDTO.getId(), trxDTO.getUserId(), initiativeId, counter.getPendingTrx().getOperationTypeTranscoded(), counter.getPendingTrx().getId(), counter.getId());
-            return Mono.error(invalidCounterVersionException);
+            return Mono.error(new PendingCounterException());
         } else {
             log.info("[{}] processing an already pending transaction: {} of userId {} on initiative {} on counter {}",
                     flowName, trxDTO.getId(), trxDTO.getUserId(), initiativeId, counter.getId());
@@ -96,7 +95,6 @@ abstract class BaseTrxSynchronousOp {
                 });
     }
 
-    @NotNull
     private RewardTransactionDTO buildRewardedTrxHavingRewardCents(TransactionDTO trxDTO, String initiativeId, long rewardCents, InitiativeConfig i) {
         RewardTransactionDTO rewardedTrx = rewardTransactionMapper.apply(trxDTO);
         rewardedTrx.getRewards().put(initiativeId, new Reward(initiativeId, i.getOrganizationId(), CommonUtilities.centsToEuro(rewardCents)));

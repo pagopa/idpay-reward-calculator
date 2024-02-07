@@ -77,10 +77,6 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                         .map(Pair::getSecond));
     }
 
-    private Mono<UserInitiativeCounters> findUserInitiativeCounter(String initiativeId, Pair<InitiativeConfig, OnboardingInfo> i2o, TransactionDTO trxDTO) {
-        return userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxDTO), initiativeId));
-    }
-
     @Override
     public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionAuthRequestDTO trxAuthorizeRequest, String initiativeId, long counterVersion) {
         log.trace("[SYNC_AUTHORIZE_TRANSACTION] Starting authorization for transaction {} having reward {} on counterVersion {}", trxAuthorizeRequest.getTransactionId(), trxAuthorizeRequest.getRewardCents(), counterVersion);
@@ -93,6 +89,10 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                 i2o -> findUserInitiativeCounter(initiativeId, i2o, trxDTO),
                 counters -> checkCounterOrEvaluateThenUpdate(trxDTO, initiativeId, counters, counterVersion, trxAuthorizeRequest.getRewardCents())
         );
+    }
+
+    private Mono<UserInitiativeCounters> findUserInitiativeCounter(String initiativeId, Pair<InitiativeConfig, OnboardingInfo> i2o, TransactionDTO trxDTO) {
+        return userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxDTO), initiativeId));
     }
 
     private Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId) {
@@ -125,14 +125,13 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     private Mono<RewardTransactionDTO> checkCounterOrEvaluateThenUpdate(TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long counterVersion, long rewardCents) {
         UserInitiativeCounters counter = counters.getInitiatives().get(initiativeId);
-        InvalidCounterVersionException invalidCounterVersionException = new InvalidCounterVersionException(ExceptionMessage.INVALID_COUNTER_VERSION.formatted(trxDTO.getId(), trxDTO.getUserId(), initiativeId, counterVersion));
 
         Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> ctr2rewardMono;
         if(counter.getPendingTrx()!=null){
-            return handlePendingCounter("SYNC_AUTHORIZE_TRANSACTION", trxDTO, initiativeId, counter, invalidCounterVersionException, rewardCents);
+            return handlePendingCounter("SYNC_AUTHORIZE_TRANSACTION", trxDTO, initiativeId, counter, rewardCents);
         } else if(counterVersion != counter.getVersion()+1){
             log.info("[SYNC_AUTHORIZE_TRANSACTION] counterVersion provided by authorization of transaction {} of userId {} on initiative {} doesn't meet counter {}: requested {}, actual {}", trxDTO.getId(), trxDTO.getUserId(), initiativeId, counter.getId(), counterVersion, counter.getVersion());
-            ctr2rewardMono = handleAuthorizationCounterVersionMismatch(trxDTO, initiativeId, counters, rewardCents, counter, invalidCounterVersionException);
+            ctr2rewardMono = handleAuthorizationCounterVersionMismatch(trxDTO, initiativeId, counters, rewardCents, counter, counterVersion);
         } else {
             ctr2rewardMono = handleUnlockedCounter("SYNC_AUTHORIZE_TRANSACTION", trxDTO, initiativeId, counters, rewardCents);
         }
@@ -140,13 +139,20 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return lockCounter(ctr2rewardMono, trxDTO, counter);
     }
 
-    private Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> handleAuthorizationCounterVersionMismatch(TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long rewardCents, UserInitiativeCounters counter, InvalidCounterVersionException invalidCounterVersionException) {
+    private Mono<Pair<UserInitiativeCountersWrapper, RewardTransactionDTO>> handleAuthorizationCounterVersionMismatch(TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long rewardCents, UserInitiativeCounters counter, long counterVersion) {
         return initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), counters)
                 .doOnNext(ctr2reward -> {
-                    if(CommonUtilities.euroToCents(ctr2reward.getSecond().getRewards().get(initiativeId).getAccruedReward())
+                    if(ctr2reward.getSecond().getRewards().get(initiativeId)==null ||
+                            !CommonUtilities.euroToCents(ctr2reward.getSecond().getRewards().get(initiativeId).getAccruedReward())
                             .equals(rewardCents)){
-                        log.info("[SYNC_AUTHORIZE_TRANSACTION] Cannot authorize transaction {} of userId {} on initiative {}: another transaction ({}) is locking the counter {}", trxDTO.getId(), trxDTO.getUserId(), initiativeId, counter.getPendingTrx().getId(), counter.getId());
-                        throw invalidCounterVersionException;
+                        log.info("[SYNC_AUTHORIZE_TRANSACTION] Cannot authorize transaction {} of userId {} on initiative {}: counter ({}) version mismatch ({} actual {}) and reward is not more valid (requested {} actual {})",
+                                trxDTO.getId(), trxDTO.getUserId(), initiativeId,
+                                counter.getId(),
+                                counter.getVersion(),
+                                counterVersion,
+                                rewardCents,
+                                ctr2reward.getSecond().getRewards().get(initiativeId));
+                        throw new InvalidCounterVersionException();
                     }
                 });
     }
