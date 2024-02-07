@@ -6,6 +6,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
+import it.gov.pagopa.reward.exception.custom.PendingCounterException;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -131,7 +132,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .build();
         long counterVersion = 50L;
 
-        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), counterVersion)).thenReturn(Mono.just(response));
+        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion))).thenReturn(Mono.just(response));
 
         webClient.post()
                 .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
@@ -142,7 +143,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .expectStatus().isOk()
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
-        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), counterVersion);
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
     }
 
     @Test
@@ -169,7 +170,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .expectStatus().isForbidden()
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
-        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), counterVersion);
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
     }
 
     @Test
@@ -211,6 +212,7 @@ class RewardTrxSynchronousApiControllerImplTest {
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
     }
+
     @Test
     void postTransactionAuthorizeInvalidCounterVersion(){
         String initiativeId = " INITIATIVEID";
@@ -227,6 +229,26 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .header(HttpHeaders.IF_MATCH, String.valueOf(counterVersion))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.PRECONDITION_FAILED);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
+    }
+
+    @Test
+    void postTransactionAuthorizePendingCounter(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        long counterVersion = 50L;
+
+        Mockito.when(rewardTrxSynchronousServiceMock.authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion))).thenThrow(new PendingCounterException("DUMMY"));
+
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .header(HttpHeaders.IF_MATCH, String.valueOf(counterVersion))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.LOCKED);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
     }

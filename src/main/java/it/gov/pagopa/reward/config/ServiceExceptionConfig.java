@@ -31,6 +31,9 @@ public class ServiceExceptionConfig {
         exceptionMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
         exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
 
+        //Locked
+        exceptionMap.put(PendingCounterException.class, HttpStatus.LOCKED);
+
         return exceptionMap;
     }
 }
