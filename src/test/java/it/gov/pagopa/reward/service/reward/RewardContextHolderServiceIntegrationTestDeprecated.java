@@ -6,7 +6,7 @@ import it.gov.pagopa.common.redis.config.EmbeddedRedisTestConfiguration;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -36,7 +36,8 @@ import java.util.Map;
         }
 )
 @ContextConfiguration(classes = EmbeddedRedisTestConfiguration.class)
-class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class RewardContextHolderServiceIntegrationTestDeprecated extends BaseIntegrationTest {
 
     @Autowired
     private KieContainerBuilderService kieContainerBuilderService;
@@ -51,7 +52,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
     void testKieBuildWithRedisCache() {
 
         // Assert the starting built rule size is 0
-        int startingRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        int startingRuleBuiltSize = RewardRuleConsumerConfigTestDeprecated.getRuleBuiltSize(rewardContextHolderService);
 
         Assertions.assertEquals(0, startingRuleBuiltSize);
 
@@ -117,7 +118,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
         KieBase resultKieBase = rewardContextHolderService.getRewardRulesKieBase();
         Assertions.assertNotNull(resultKieBase);
 
-        int resultRuleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        int resultRuleBuiltSize = RewardRuleConsumerConfigTestDeprecated.getRuleBuiltSize(rewardContextHolderService);
         Assertions.assertEquals(0, resultRuleBuiltSize);
     }
 
@@ -129,7 +130,7 @@ class RewardContextHolderServiceIntegrationTest extends BaseIntegrationTest {
                 10,
                 500
         );
-        int ruleBuiltSize = RewardRuleConsumerConfigTest.getRuleBuiltSize(rewardContextHolderService);
+        int ruleBuiltSize = RewardRuleConsumerConfigTestDeprecated.getRuleBuiltSize(rewardContextHolderService);
         Assertions.assertEquals(expected, ruleBuiltSize);
     }
 

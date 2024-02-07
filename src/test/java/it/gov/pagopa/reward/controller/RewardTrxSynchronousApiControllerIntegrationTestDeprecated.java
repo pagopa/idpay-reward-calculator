@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.controller;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
@@ -63,7 +63,8 @@ import java.util.stream.StreamSupport;
         "logging.level.it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl=WARN",
         "logging.level.it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer=WARN",
 })
-class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiControllerIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class RewardTrxSynchronousApiControllerIntegrationTestDeprecated extends BaseApiControllerIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
     public static final String INITIATIVEID_NOTINCONTAINER = "INITIATIVEID_NOTINCONTAINER";
@@ -174,7 +175,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         ruleNF.getGeneral().setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
 
         List.of(rule, ruleNF).forEach(r -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, r));
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(2, rewardContextHolderService);
+        RewardRuleConsumerConfigTestDeprecated.waitForKieContainerBuild(2, rewardContextHolderService);
 
         droolsRuleRepository.save(DroolsRule.builder() // stored but not compiled
                         .id(INITIATIVEID_NOTINCONTAINER)
@@ -531,7 +532,7 @@ class RewardTrxSynchronousApiControllerIntegrationTest extends BaseApiController
         //useCase 13: user unsubscribed to the initiative
         useCases.add(i -> {
             SynchronousTransactionRequestDTO trxRequest = buildTrxRequest(i);
-            InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
+            InstrumentApiControllerIntegrationTestDeprecated.disableUserInitiativeInstruments(webTestClient, trxRequest.getUserId(), INITIATIVEID);
             SynchronousTransactionResponseDTO expectedResponse = getExpectedChargeResponse(INITIATIVEID, trxRequest, RewardConstants.REWARD_STATE_REJECTED, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), null);
 
             assertPreview(trxRequest, HttpStatus.FORBIDDEN, expectedResponse);

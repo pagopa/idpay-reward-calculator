@@ -19,7 +19,9 @@ import org.springframework.web.reactive.function.BodyInserters;
 
 import java.util.List;
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
-class ErrorManagerExtendedTest extends BaseIntegrationTest {
+
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class ErrorManagerExtendedTestDeprecated extends BaseIntegrationTest {
 
     @SpyBean
     private RewardTrxSynchronousApiController rewardTrxSynchronousApiController;

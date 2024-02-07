@@ -22,7 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-class DeleteInitiativeServiceImplIntegrationTest extends BaseIntegrationTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class DeleteInitiativeServiceImplIntegrationTestDeprecated extends BaseIntegrationTest {
     private static final String USER_TO_DELETE = "USER_TO_DELETE";
     private final List<HpanInitiatives> hpanInitiativesTestData = new ArrayList<>();
     private final List<TransactionProcessed> transactionsProcessedTestData = new ArrayList<>();

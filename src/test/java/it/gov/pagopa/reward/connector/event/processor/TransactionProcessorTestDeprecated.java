@@ -5,8 +5,8 @@ import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTest;
-import it.gov.pagopa.reward.controller.InstrumentApiControllerIntegrationTest;
+import it.gov.pagopa.reward.connector.event.consumer.RewardRuleConsumerConfigTestDeprecated;
+import it.gov.pagopa.reward.controller.InstrumentApiControllerIntegrationTestDeprecated;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -62,7 +62,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
                 "logging.level.it.gov.pagopa.common.reactive.utils.PerformanceLogger=WARN",
                 "logging.level.it.gov.pagopa.reward.controller.InstrumentApiControllerImpl=WARN"
         })
-class TransactionProcessorTest extends BaseTransactionProcessorTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class TransactionProcessorTestDeprecated extends BaseTransactionProcessorTest {
 
     public static final long TRX_NUMBER_MIN_NUMBER_INITIATIVE_ID_TRXCOUNT = 9L;
     public static final String DUPLICATE_SUFFIX = "_DUPLICATE";
@@ -347,10 +348,10 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
                                         .build())
                                 .build()
                 )
-                .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTest.calcDroolsRuleGenerated(i))
+                .peek(i -> expectedRules[0] += RewardRuleConsumerConfigTestDeprecated.calcDroolsRuleGenerated(i))
                 .forEach(i -> kafkaTestUtilitiesService.publishIntoEmbeddedKafka(topicRewardRuleConsumer, null, null, i));
 
-        RewardRuleConsumerConfigTest.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
+        RewardRuleConsumerConfigTestDeprecated.waitForKieContainerBuild(expectedRules[0], rewardContextHolderService);
     }
     //endregion
 
@@ -359,7 +360,7 @@ class TransactionProcessorTest extends BaseTransactionProcessorTest {
         final TransactionDTO trx = useCases.get(useCase).getFirst().apply(bias);
         onboardTrxHPanNoCreateUserCounter(trx, INITIATIVE_ID_EXPIRED, INITIATIVE_ID_NOT_STARTED, INITIATIVE_ID_INSTRUMENT_INACTIVE);
 
-        InstrumentApiControllerIntegrationTest.disableUserInitiativeInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
+        InstrumentApiControllerIntegrationTestDeprecated.disableUserInitiativeInstruments(webTestClient, trx.getUserId(), INITIATIVE_ID_INSTRUMENT_INACTIVE);
 
         return trx;
     }
