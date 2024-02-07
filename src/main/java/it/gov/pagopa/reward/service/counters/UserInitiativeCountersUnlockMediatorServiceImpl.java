@@ -8,7 +8,6 @@ import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -20,13 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static it.gov.pagopa.reward.utils.RewardConstants.REWARD_STATE_AUTHORIZED;
+import static it.gov.pagopa.reward.utils.RewardConstants.PAYMENT_STATE_AUTHORIZED;
 
 @Service
 @Slf4j
 public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaConsumer<RewardTransactionDTO, UserInitiativeCounters>  implements UserInitiativeCountersUnlockMediatorService {
 
-    private static final List<String> ACCEPTED_STATUS = List.of(REWARD_STATE_AUTHORIZED);
+    private static final List<String> ACCEPTED_STATUS = List.of(PAYMENT_STATE_AUTHORIZED);
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
     private final RewardErrorNotifierService rewardErrorNotifierService;
     private final Duration commitDelay;
@@ -72,21 +71,19 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaCo
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        rewardErrorNotifierService.notifyTransactionResponse(message, "[USER_COUNTER_UNLOCK] An error occurred evaluating hpan update", false, e);
+        rewardErrorNotifierService.notifyTransactionResponse(message, "[USER_COUNTER_UNLOCK] An error occurred evaluating transaction", false, e);
 
     }
 
     @Override
     protected Mono<UserInitiativeCounters> execute(RewardTransactionDTO payload, Message<String> message, Map<String, Object> ctx) {
-        log.info("[USER_COUNTER_UNLOCK] Started processing transaction response " + payload);
         return Mono.just(payload)
                 .filter(trx -> ACCEPTED_STATUS.contains(trx.getStatus()))
                 .flatMap(this::handlerUnlockType);
     }
 
     private Mono<UserInitiativeCounters> handlerUnlockType(RewardTransactionDTO trx) {
-        if(REWARD_STATE_AUTHORIZED.equals(trx.getStatus())) {
-            log.info("[USER_COUNTER_UNLOCK] Started processing transaction in status AUTHORIZED");
+        if(PAYMENT_STATE_AUTHORIZED.equals(trx.getStatus())) {
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
         //TODO handle expired event (CANCELED status)

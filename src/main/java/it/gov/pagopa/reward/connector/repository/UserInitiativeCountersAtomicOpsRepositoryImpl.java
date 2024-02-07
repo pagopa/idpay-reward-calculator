@@ -119,6 +119,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
                                 .set(UserInitiativeCounters.Fields.pendingTrx, null),
+                        FindAndModifyOptions.options().returnNew(true),
                         UserInitiativeCounters.class
                 );
     }

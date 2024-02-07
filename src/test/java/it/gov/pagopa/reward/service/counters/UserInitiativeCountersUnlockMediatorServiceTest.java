@@ -59,7 +59,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     @Test
     void acceptedStateAuthorized() {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
-        rewardTransactionDTO.setStatus(RewardConstants.REWARD_STATE_AUTHORIZED);
+        rewardTransactionDTO.setStatus(RewardConstants.PAYMENT_STATE_AUTHORIZED);
 
         Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(rewardTransactionDTO.getId()))
                 .thenReturn(Mono.just(new UserInitiativeCounters()));
