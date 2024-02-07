@@ -21,15 +21,12 @@ public class ServiceExceptionConfig {
 
         // Forbidden
         exceptionMap.put(InitiativeNotActiveException.class, HttpStatus.FORBIDDEN);
-        exceptionMap.put(TransactionAssignedToAnotherUserException.class, HttpStatus.FORBIDDEN);
 
         // NotFound
         exceptionMap.put(InitiativeNotFoundOrNotDiscountException.class, HttpStatus.NOT_FOUND);
-        exceptionMap.put(TransactioNotFoundException.class, HttpStatus.NOT_FOUND);
 
         // TooManyRequests
         exceptionMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
-        exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
 
         //Locked
         exceptionMap.put(PendingCounterException.class, HttpStatus.LOCKED);

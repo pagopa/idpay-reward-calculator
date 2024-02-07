@@ -5,7 +5,6 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
-import it.gov.pagopa.reward.exception.custom.TransactioNotFoundException;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,8 +48,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
         log.info("[SYNC_CANCEL_TRANSACTION] Requesting to cancel transaction {}", trxId);
 
         return PerformanceLogger.logTimingFinally("SYNC_CANCEL_TRANSACTION",
-                rewardTrxSynchronousService.cancelTransaction(trxId)
-                        .switchIfEmpty(Mono.error(new TransactioNotFoundException(String.format(ExceptionMessage.TRANSACTION_NOT_FOUND_MSG, trxId)))),
+                rewardTrxSynchronousService.cancelTransaction(trxId),
                 trxId);
     }
 }
