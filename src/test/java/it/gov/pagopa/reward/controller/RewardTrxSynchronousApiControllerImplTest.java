@@ -83,7 +83,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueEquals(HttpHeaders.ETAG, "null")
+                .expectHeader().doesNotExist(HttpHeaders.ETAG)
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));

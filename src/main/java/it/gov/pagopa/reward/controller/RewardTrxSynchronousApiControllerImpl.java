@@ -30,11 +30,16 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
         return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
                         .doOnNext(r -> log.info("[SYNC_PREVIEW_TRANSACTION] The preview requested by userId {} of a transaction having id {} on initiativeId {} resulted into status {} and rejections {}", trxPreviewRequest.getUserId(), trxPreviewRequest.getTransactionId(), initiativeId, r.getStatus(), r.getRejectionReasons()))
-                        .map(r -> ResponseEntity
-                                .ok()
-                                .header(HttpHeaders.ETAG, String.valueOf(r.getReward() != null ?
-                                        r.getReward().getCounters().getVersion() : null))
-                                .body(r))
+                        .map(r -> r.getReward() != null
+                                ?
+                                ResponseEntity
+                                        .ok()
+                                        .header(HttpHeaders.ETAG, String.valueOf(r.getReward().getCounters().getVersion()))
+                                        .body(r)
+                                :
+                                ResponseEntity
+                                        .ok()
+                                        .body(r))
                         .switchIfEmpty(Mono.error(new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
                 trxPreviewRequest.toString());
     }
