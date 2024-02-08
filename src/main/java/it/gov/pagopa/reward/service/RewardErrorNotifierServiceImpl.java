@@ -148,7 +148,7 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
 
     @Override
     public boolean notifyTransactionResponse(Message<String> message, String description, boolean retryable, Throwable exception) {
-        return notify(trxResponseServiceType, trxResponseServer, trxResponseTopic,trxResponseGroup, message, description, retryable, false, exception);
+        return notify(trxResponseServiceType, trxResponseServer, trxResponseTopic,trxResponseGroup, message, description, retryable, true, exception);
 
     }
 

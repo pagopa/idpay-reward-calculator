@@ -71,7 +71,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl extends BaseKafkaCo
 
     @Override
     protected void notifyError(Message<String> message, Throwable e) {
-        rewardErrorNotifierService.notifyTransactionResponse(message, "[USER_COUNTER_UNLOCK] An error occurred evaluating transaction", false, e);
+        rewardErrorNotifierService.notifyTransactionResponse(message, "[USER_COUNTER_UNLOCK] An error occurred evaluating transaction", true, e);
 
     }
 

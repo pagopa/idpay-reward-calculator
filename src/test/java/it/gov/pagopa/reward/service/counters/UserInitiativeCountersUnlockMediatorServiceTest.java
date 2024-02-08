@@ -46,7 +46,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     }
 
     @Test
-    void unexpectedJson() {
+    void execute_UnexpectedJson() {
         userInitiativeCountersUnlockMediatorService.execute(Flux
                 .just(getMessage("INVALID JSON")));
 
@@ -54,7 +54,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     }
 
     @Test
-    void acceptedStateAuthorized() {
+    void execute_AcceptedStateAuthorized() {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
         rewardTransactionDTO.setStatus(RewardConstants.PAYMENT_STATE_AUTHORIZED);
 
@@ -69,7 +69,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     }
 
     @Test
-    void notAcceptedState () {
+    void execute_NotAcceptedState () {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
         rewardTransactionDTO.setStatus(RewardConstants.REWARD_STATE_REJECTED);
 
@@ -77,6 +77,21 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
 
         Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(0)).unlockPendingTrx(any());
         Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(0)).notifyTransactionResponse(any(), any(), eq(true), any());
+
+    }
+
+    @Test
+    void execute_WithException() {
+        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
+        rewardTransactionDTO.setStatus(RewardConstants.PAYMENT_STATE_AUTHORIZED);
+
+        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(rewardTransactionDTO.getId()))
+                .thenThrow(new RuntimeException("Dummy exception"));
+
+        userInitiativeCountersUnlockMediatorService.execute(Flux.just(getMessage(TestUtils.jsonSerializer(rewardTransactionDTO))));
+
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).unlockPendingTrx(any());
+        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(1)).notifyTransactionResponse(any(), any(), eq(true), any());
 
     }
 
