@@ -1,31 +1,36 @@
 package it.gov.pagopa.reward.service.counters;
 
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.mongodb.MongoException;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
-import it.gov.pagopa.reward.utils.RewardConstants;
-import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
+import java.util.function.Consumer;
+
+import static it.gov.pagopa.reward.utils.RewardConstants.PAYMENT_STATE_AUTHORIZED;
+import static it.gov.pagopa.reward.utils.RewardConstants.REWARD_STATE_REJECTED;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 class UserInitiativeCountersUnlockMediatorServiceTest {
+    private static final long COMMIT_MILLIS = 10L;
 
     @Mock
     UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
@@ -33,74 +38,113 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     @Mock
     RewardErrorNotifierService rewardErrorNotifierServiceMock;
 
-    UserInitiativeCountersUnlockMediatorService  userInitiativeCountersUnlockMediatorService;
+    UserInitiativeCountersUnlockMediatorServiceImpl userInitiativeCountersUnlockMediatorServiceImpl;
 
     @BeforeEach
     void setUp() {
-        userInitiativeCountersUnlockMediatorService = new UserInitiativeCountersUnlockMediatorServiceImpl(
+        userInitiativeCountersUnlockMediatorServiceImpl = new UserInitiativeCountersUnlockMediatorServiceImpl(
                 "appName",
                 userInitiativeCountersRepositoryMock,
                 rewardErrorNotifierServiceMock,
-                0L,
+                COMMIT_MILLIS,
                 TestUtils.objectMapper);
     }
 
     @Test
-    void execute_UnexpectedJson() {
-        userInitiativeCountersUnlockMediatorService.execute(Flux
-                .just(getMessage("INVALID JSON")));
+    void execute_statusAcceptedAuthorized(){
+        RewardTransactionDTO payload = RewardTransactionDTOFaker.mockInstance(1);
+        payload.setStatus(PAYMENT_STATE_AUTHORIZED);
+        Message<String> message = MessageBuilder.withPayload("DUMMY PAYLOAD MESSAGE").build();
+        Map<String, Object> ctx = Collections.emptyMap();
 
-        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(1)).notifyTransactionResponse(any(), any(), eq(true), any());
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(payload.getId()))
+                        .thenReturn(Mono.just(userInitiativeCounters));
+
+        UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(payload, message, ctx).block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(userInitiativeCounters, result);
+
+        Mockito.verifyNoMoreInteractions(userInitiativeCountersRepositoryMock);
     }
 
     @Test
-    void execute_AcceptedStateAuthorized() {
-        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
-        rewardTransactionDTO.setStatus(RewardConstants.PAYMENT_STATE_AUTHORIZED);
+    void execute_statusNotAccepted(){
+        RewardTransactionDTO payload = RewardTransactionDTOFaker.mockInstance(1);
+        payload.setStatus(REWARD_STATE_REJECTED);
+        Message<String> message = MessageBuilder.withPayload("DUMMY PAYLOAD MESSAGE").build();
+        Map<String, Object> ctx = Collections.emptyMap();
 
-        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(rewardTransactionDTO.getId()))
-                .thenReturn(Mono.just(new UserInitiativeCounters()));
 
-        userInitiativeCountersUnlockMediatorService.execute(Flux.just(getMessage(TestUtils.jsonSerializer(rewardTransactionDTO))));
+        UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(payload, message, ctx).block();
 
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).unlockPendingTrx(any());
-        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(0)).notifyTransactionResponse(any(), any(), eq(true), any());
-
+        Assertions.assertNull(result);
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.never()).unlockPendingTrx(any());
     }
 
     @Test
-    void execute_NotAcceptedState () {
-        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
-        rewardTransactionDTO.setStatus(RewardConstants.REWARD_STATE_REJECTED);
+    void execute_withException(){
+        RewardTransactionDTO payload = RewardTransactionDTOFaker.mockInstance(1);
+        payload.setStatus(PAYMENT_STATE_AUTHORIZED);
+        Message<String> message = MessageBuilder.withPayload("DUMMY PAYLOAD MESSAGE").build();
+        Map<String, Object> ctx = Collections.emptyMap();
 
-        userInitiativeCountersUnlockMediatorService.execute(Flux.just(getMessage(TestUtils.jsonSerializer(rewardTransactionDTO))));
+        String errorMessage = "DUMMY MONGO EXCEPTION";
+        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(payload.getId()))
+                .thenThrow(new MongoException(errorMessage));
 
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(0)).unlockPendingTrx(any());
-        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(0)).notifyTransactionResponse(any(), any(), eq(true), any());
+        Mono<UserInitiativeCounters> execute = userInitiativeCountersUnlockMediatorServiceImpl.execute(payload, message, ctx);
+        MongoException mongoException = Assertions.assertThrows(MongoException.class, execute::block);
 
+        Assertions.assertEquals(errorMessage, mongoException.getMessage());
+
+        Mockito.verifyNoMoreInteractions(userInitiativeCountersRepositoryMock);
     }
 
     @Test
-    void execute_WithException() {
-        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(1);
-        rewardTransactionDTO.setStatus(RewardConstants.PAYMENT_STATE_AUTHORIZED);
+    void getCommitDelay(){
+        Duration result = userInitiativeCountersUnlockMediatorServiceImpl.getCommitDelay();
 
-        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(rewardTransactionDTO.getId()))
-                .thenThrow(new RuntimeException("Dummy exception"));
-
-        userInitiativeCountersUnlockMediatorService.execute(Flux.just(getMessage(TestUtils.jsonSerializer(rewardTransactionDTO))));
-
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).unlockPendingTrx(any());
-        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.times(1)).notifyTransactionResponse(any(), any(), eq(true), any());
-
+        Assertions.assertEquals(Duration.ofMillis(COMMIT_MILLIS), result);
     }
 
-    @NotNull
-    private static Message<String> getMessage(String jsonMessage) {
-        return MessageBuilder.withPayload(jsonMessage)
-                .setHeader(KafkaHeaders.ACKNOWLEDGMENT, Mockito.mock(Acknowledgment.class))
-                .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
-                .setHeader(KafkaHeaders.OFFSET, 0L)
-                .build();
+    @Test
+    void getObjectReader(){
+        ObjectReader objectReaderResult = userInitiativeCountersUnlockMediatorServiceImpl.getObjectReader();
+
+        Assertions.assertNotNull(objectReaderResult);
     }
+
+    @Test
+    void getFlowName(){
+        String flowNameResult = userInitiativeCountersUnlockMediatorServiceImpl.getFlowName();
+
+        Assertions.assertNotNull(flowNameResult);
+        Assertions.assertEquals("USER_COUNTER_UNLOCK", flowNameResult);
+    }
+
+    @Test
+    void onDeserializationError(){
+        Message<String> dummyMessage = MessageBuilder.withPayload("DUMMY_MESSAGE").build();
+
+        Consumer<Throwable> result = userInitiativeCountersUnlockMediatorServiceImpl.onDeserializationError(dummyMessage);
+
+        Assertions.assertNotNull(result);
+    }
+
+    @Test
+    void notifyError(){
+        Message<String> dummyMessage = MessageBuilder.withPayload("DUMMY_MESSAGE").build();
+        RuntimeException exception = new RuntimeException("DUMMY_EXCEPTION");
+
+
+        Mockito.when(rewardErrorNotifierServiceMock.notifyTransactionResponse(dummyMessage, "[USER_COUNTER_UNLOCK] An error occurred evaluating transaction", true, exception))
+                .thenReturn(true);
+
+        userInitiativeCountersUnlockMediatorServiceImpl.notifyError(dummyMessage, exception);
+
+        Mockito.verifyNoMoreInteractions(userInitiativeCountersRepositoryMock, rewardErrorNotifierServiceMock);
+    }
+
 }
