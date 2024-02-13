@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.trx;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.enums.OperationType;
@@ -66,6 +67,7 @@ public class TransactionDTO {
     private String par;
 
     //region calculated fields
+    @JsonAlias("_id")
     private String id;
     private OperationType operationTypeTranscoded;
     @Builder.Default
