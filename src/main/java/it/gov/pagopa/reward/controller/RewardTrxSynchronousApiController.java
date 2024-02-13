@@ -4,6 +4,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -11,8 +12,8 @@ import reactor.core.publisher.Mono;
 public interface RewardTrxSynchronousApiController {
 
     @PostMapping("/initiative/preview/{initiativeId}")
-    Mono<SynchronousTransactionResponseDTO> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
-                                                               @PathVariable("initiativeId") String initiativeId);
+    Mono<ResponseEntity<SynchronousTransactionResponseDTO>> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
+                                                                               @PathVariable("initiativeId") String initiativeId);
 
     @PostMapping("/initiative/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestHeader(HttpHeaders.IF_MATCH) long counterVersion,

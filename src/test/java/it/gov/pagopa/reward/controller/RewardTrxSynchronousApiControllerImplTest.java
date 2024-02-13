@@ -6,9 +6,11 @@ import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.reward.config.ServiceExceptionConfig;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
 import it.gov.pagopa.reward.exception.custom.PendingCounterException;
+import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
@@ -44,10 +46,14 @@ class RewardTrxSynchronousApiControllerImplTest {
     void postTransactionPreviewOK(){
 
         String initiativeId = "INITIATIVEID";
+        Reward reward = new Reward();
+        reward.setCounters(new RewardCounters());
+        reward.getCounters().setVersion(5);
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
                 .initiativeId(initiativeId)
                 .status(RewardConstants.REWARD_STATE_REWARDED)
+                .reward(reward)
                 .build();
 
         Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.just(response));
@@ -58,6 +64,31 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isOk()
+                .expectHeader().valueEquals(HttpHeaders.ETAG, response.getReward().getCounters().getVersion())
+                .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void postTransactionPreview_REJECTED(){
+
+        String initiativeId = "INITIATIVEID";
+        SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
+        SynchronousTransactionResponseDTO response = SynchronousTransactionResponseDTO.builder()
+                .initiativeId(initiativeId)
+                .status(RewardConstants.REWARD_STATE_REJECTED)
+                .build();
+
+        Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.just(response));
+
+        webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(rewardPreviewPath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().doesNotExist(HttpHeaders.ETAG)
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
@@ -83,6 +114,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isForbidden()
+                .expectHeader().doesNotExist(HttpHeaders.ETAG)
                 .expectBody(SynchronousTransactionResponseDTO.class).isEqualTo(response);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));

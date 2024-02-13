@@ -7,6 +7,8 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
@@ -22,12 +24,19 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
+    public Mono<ResponseEntity<SynchronousTransactionResponseDTO>> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId) {
         log.info("[SYNC_PREVIEW_TRANSACTION] The user {} requests preview of a transaction having id {} on initiativeId {}", trxPreviewRequest.getUserId(), trxPreviewRequest.getTransactionId(), initiativeId);
 
         return PerformanceLogger.logTimingFinally("SYNC_PREVIEW_TRANSACTION",
                 rewardTrxSynchronousService.previewTransaction(trxPreviewRequest, initiativeId)
                         .doOnNext(r -> log.info("[SYNC_PREVIEW_TRANSACTION] The preview requested by userId {} of a transaction having id {} on initiativeId {} resulted into status {} and rejections {}", trxPreviewRequest.getUserId(), trxPreviewRequest.getTransactionId(), initiativeId, r.getStatus(), r.getRejectionReasons()))
+                        .map(r -> {
+                            HttpHeaders headers = new HttpHeaders();
+                            if (r.getReward() != null) {
+                                headers.set(HttpHeaders.ETAG, String.valueOf(r.getReward().getCounters().getVersion()));
+                            }
+                            return ResponseEntity.ok().headers(headers).body(r);
+                        })
                         .switchIfEmpty(Mono.error(new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
                 trxPreviewRequest.toString());
     }
