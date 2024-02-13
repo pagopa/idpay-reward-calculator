@@ -343,8 +343,6 @@ app:
       retries: ${TRX_RETRY_REWARD_NOTIFY_ATTEMPTS:3}
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
-  synchronousTransactions:
-      throttlingSeconds: ${SYNCHRONOUS_REWARD_THROTTLING_SECONDS:${REWARD_THROTTLING_SECONDS:1}}
   delete:
     paginationSize: ${DELETE_PAGINATION_SIZE:50}
     delayTime: ${DELETE_DELAY_TIME:1000}

@@ -26,5 +26,6 @@ public class SynchronousTransactionResponseDTO implements ServiceExceptionPayloa
     private BigDecimal effectiveAmount;
     private String status;
     private Reward reward;
+    //TODO counterVersion?
     private List<String> rejectionReasons;
 }
