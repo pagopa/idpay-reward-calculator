@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                             evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
                                             final BigDecimal previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedReward).orElse(null) : null;
                                             initiativeCounter.setVersion(initiativeCounter.getVersion()+1L);
+                                            initiativeCounter.setUpdateDate(LocalDateTime.now());
                                             updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmount(), ruleEngineResult.getEffectiveAmount(), justTrxCountRejection);
                                             updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
                                         }

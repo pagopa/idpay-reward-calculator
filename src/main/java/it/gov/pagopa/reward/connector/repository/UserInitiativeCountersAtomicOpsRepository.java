@@ -7,8 +7,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface UserInitiativeCountersAtomicOpsRepository {
-    Mono<UserInitiativeCounters> findByIdThrottled(String id, String updatingTrxId);
-    Mono<UserInitiativeCounters> setUpdatingTrx(String id, String updatingTrxId);
     Mono<UpdateResult> createIfNotExists(String entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum entityType, String initiativeId);
     Flux<UserInitiativeCounters> findByInitiativesWithBatch(String initiativeId, int batchSize);
     Mono<UserInitiativeCounters> unlockPendingTrx(String trxId);

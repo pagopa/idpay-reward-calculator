@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Data
@@ -38,15 +37,8 @@ public class UserInitiativeCounters extends Counters {
     @NonNull
     private String initiativeId;
 
-    /** Used in Sync trx flow in order to handle throttling on user's initiative counter.<br/>
-     * See <a href="https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/674169248/Transazioni+sincrone">Confluence page</a>
-     * */
     private LocalDateTime updateDate;
-    /** Used in Sync trx flow in order to handle transactional updates of {@link it.gov.pagopa.reward.model.TransactionProcessed} and this entity.<br/>
-     * See <a href="https://pagopa.atlassian.net/wiki/spaces/IDPAY/pages/727778640/Gestione+transazionalit+salvataggio+transazione+e+contatori+aggiornati">Confluence page</a>.
-     * */
-    private List<String> updatingTrxId;
-    private TransactionDTO pendingTrx; //TODO Pending from IDP-2279
+    private TransactionDTO pendingTrx;
 
     private boolean exhaustedBudget;
     @Builder.Default
