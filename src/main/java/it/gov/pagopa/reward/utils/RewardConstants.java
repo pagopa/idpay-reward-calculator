@@ -79,6 +79,7 @@ public final class RewardConstants {
         public static final String PENDING_COUNTER = "PENDING_COUNTER";
         public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
         public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
+        public static final String INVALID_REQUEST= "REWARD_CALCULATOR_INVALID_REQUEST";
     }
 
     public static final class ExceptionMessage {
