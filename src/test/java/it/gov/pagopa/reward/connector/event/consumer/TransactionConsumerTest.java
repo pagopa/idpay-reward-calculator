@@ -36,11 +36,11 @@ class TransactionConsumerTest {
     @Mock
     RewardErrorNotifierService rewardErrorNotifierServiceMock;
 
-    TransactionConsumerImpl transactionConsumer;
+    TransactionConsumer transactionConsumer;
 
     @BeforeEach
     void setUp() {
-        transactionConsumer = new TransactionConsumerImpl(
+        transactionConsumer = new TransactionConsumer(
                 "appName",
                 rewardErrorNotifierServiceMock,
                 userInitiativeCountersUnlockMediatorServiceMock,
