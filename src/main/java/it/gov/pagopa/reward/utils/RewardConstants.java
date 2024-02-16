@@ -62,6 +62,11 @@ public final class RewardConstants {
     public static final String REWARD_STATE_REJECTED = "REJECTED";
     //endregion
 
+    //region payment status
+    public static final String PAYMENT_STATE_AUTHORIZED = "AUTHORIZED";
+    public static final String PAYMENT_STATE_REWARDED = "REWARDED";
+    //endregion
+
     //region dateFormatters
     public static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     public static final DateTimeFormatter weekDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);

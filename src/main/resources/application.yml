@@ -24,7 +24,7 @@ spring:
       on-profile: default
   cloud:
     function:
-      definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter;commandsConsumer
+      definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter;commandsConsumer;trxResponseConsumer
     stream:
       bindings:
         trxProcessor-in-0:
@@ -64,6 +64,11 @@ spring:
           group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-reward-calculator-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-commands
+        trxResponseConsumer-in-0:
+          destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
+          group: ${KAFKA_REWARD_RESPONSE_GROUP_ID:idpay-reward-calculator-consumer-group}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-idpay-transaction-response
         # TODO remove me
         trxProducer-out-0:
           destination: ${KAFKA_RTD_TOPIC:rtd-trx}
@@ -137,6 +142,13 @@ spring:
               brokers: ${KAFKA_COMMANDS_BROKER:${KAFKA_BROKER:}}
               configuration:
                 sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
+        kafka-idpay-transaction-response:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_REWARD_RESPONSE_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_REWARD_RESPONSE_CONSUMER_SASL_JAAS_CONFIG:}
       kafka:
         binder:
           auto-create-topics: false
@@ -248,6 +260,21 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_COMMANDS_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_COMMANDS_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+          trxResponseConsumer-in-0:
+            consumer:
+              startOffset: ${KAFKA_REWARD_RESPONSE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+              autoCommitOffset: false
+              ackMode: MANUAL_IMMEDIATE
+              ackTime: ${KAFKA_REWARD_RESPONSE_ACK_MILLIS:500}
+              standardHeaders: ${KAFKA_TRANSACTION_RESPONSE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              configuration:
+                max.poll:
+                  records: ${KAFKA_REWARD_RESPONSE_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                  interval.ms: ${KAFKA_REWARD_RESPONSE_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                connections.max.idle.ms: ${KAFKA_REWARD_RESPONSE_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:180000}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_REWARD_RESPONSE_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_REWARD_RESPONSE_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
   data:
     redis:
       url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}

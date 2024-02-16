@@ -3,7 +3,9 @@ package it.gov.pagopa.reward.connector.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.BaseIntegrationTest;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -14,7 +16,7 @@ import reactor.core.publisher.Flux;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
@@ -66,5 +68,31 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationT
 
         List<UserInitiativeCounters> userInitiativeCounters = result.toStream().toList();
         assertEquals(1, userInitiativeCounters.size());
+    }
+
+    @Test
+    void unlockPendingTrx(){
+        // When
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
+
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setInitiatives(List.of(initiativeId));
+        trx.setUserId(userId);
+
+        userInitiativeCounters.setPendingTrx(trx);
+        UserInitiativeCounters storedBefore = userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+        // Where
+        UserInitiativeCounters updateResult = userInitiativeCountersRepository.unlockPendingTrx(trx.getId()).block();
+
+        assertNotNull(updateResult);
+        assertNull(updateResult.getPendingTrx());
+
+        assertNotNull(storedBefore);
+        LocalDateTime updateDateBefore = storedBefore.getUpdateDate();
+        assertNotNull(updateDateBefore);
+        assertTrue(updateDateBefore.isBefore(updateResult.getUpdateDate()));
+
     }
 }
