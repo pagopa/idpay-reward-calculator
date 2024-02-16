@@ -62,6 +62,11 @@ public final class RewardConstants {
     public static final String REWARD_STATE_REJECTED = "REJECTED";
     //endregion
 
+    //region payment status
+    public static final String PAYMENT_STATE_AUTHORIZED = "AUTHORIZED";
+    public static final String PAYMENT_STATE_REWARDED = "REWARDED";
+    //endregion
+
     //region dateFormatters
     public static final DateTimeFormatter dayDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     public static final DateTimeFormatter weekDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-W", Locale.ITALY);
@@ -69,21 +74,17 @@ public final class RewardConstants {
     public static final DateTimeFormatter yearDateFormatter = DateTimeFormatter.ofPattern("yyyy");
     //endregion
 
-    //region sync trx contants
-    public static final String SYNC_TRX_REFUND_ID_SUFFIX = "_REFUND";
-    //endregion
-
     public static final class ExceptionCode {
         private ExceptionCode() {}
 
         public static final String INITIATIVE_NOT_ACTIVE_FOR_USER = "REWARD_CALCULATOR_INITIATIVE_NOT_ACTIVE_FOR_USER";
         public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT = "REWARD_CALCULATOR_INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT";
-        public static final String TRANSACTION_NOT_FOUND = "REWARD_CALCULATOR_TRANSACTION_NOT_FOUND";
         public static final String INITIATIVE_NOT_READY = "REWARD_CALCULATOR_INITIATIVE_NOT_READY";
-        public static final String TRANSACTION_ASSIGNED_TO_ANOTHER_USER = "REWARD_CALCULATOR_TRANSACTION_ASSIGNED_TO_ANOTHER_USER";
-        public static final String CONFLICT_ERROR = "REWARD_CALCULATOR_CONFLICT_ERROR";
+        public static final String INVALID_COUNTER_VERSION = "INVALID_COUNTER_VERSION";
+        public static final String PENDING_COUNTER = "PENDING_COUNTER";
         public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
         public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
+        public static final String INVALID_REQUEST= "REWARD_CALCULATOR_INVALID_REQUEST";
     }
 
     public static final class ExceptionMessage {
@@ -91,9 +92,8 @@ public final class RewardConstants {
 
         public static final String INITIATIVE_NOT_ACTIVE_FOR_USER_MSG = "The initiative with id [%s] is not active for the current user";
         public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG = "The initiative with id [%s] is not found or not discount";
-        public static final String TRANSACTION_NOT_FOUND_MSG = "The transaction with id [%s] is not found";
-        public static final String TOO_MANY_REQUESTS_MSG = "Too Many Requests";
         public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
-        public static final String TRANSACTION_ASSIGNED_TO_ANOTHER_USER = "The user %s cannot operate on transaction %s because is assigned to another user";
+        public static final String INVALID_COUNTER_VERSION = "Invalid counter version provided";
+        public static final String PENDING_COUNTER = "The counter is actually locked";
     }
 }

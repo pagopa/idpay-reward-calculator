@@ -38,8 +38,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
-
-class TransactionProcessorRefundTest extends BaseTransactionProcessorTest {
+@SuppressWarnings({"squid:S3577", "NewClassNamingConvention"})
+class TransactionProcessorRefundTestDeprecated extends BaseTransactionProcessorTest {
 
     final LocalDateTime trxDateLocalDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 1), LocalTime.of(0, 0));
     final OffsetDateTime trxDate = OffsetDateTime.of(trxDateLocalDateTime, CommonConstants.ZONEID.getRules().getOffset(trxDateLocalDateTime));

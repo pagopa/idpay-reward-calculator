@@ -16,20 +16,20 @@ public class ServiceExceptionConfig {
     public Map<Class<? extends ServiceException>, HttpStatus> serviceExceptionMapper() {
         Map<Class<? extends ServiceException>, HttpStatus> exceptionMap = new HashMap<>();
 
+        // ClientError
+        exceptionMap.put(InvalidCounterVersionException.class, HttpStatus.PRECONDITION_FAILED);
+
         // Forbidden
         exceptionMap.put(InitiativeNotActiveException.class, HttpStatus.FORBIDDEN);
-        exceptionMap.put(TransactionAssignedToAnotherUserException.class, HttpStatus.FORBIDDEN);
 
         // NotFound
         exceptionMap.put(InitiativeNotFoundOrNotDiscountException.class, HttpStatus.NOT_FOUND);
-        exceptionMap.put(TransactioNotFoundException.class, HttpStatus.NOT_FOUND);
-
-        // Conflict
-        exceptionMap.put(TransactionAlreadyProcessedException.class, HttpStatus.CONFLICT);
 
         // TooManyRequests
         exceptionMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
-        exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
+
+        //Locked
+        exceptionMap.put(PendingCounterException.class, HttpStatus.LOCKED);
 
         return exceptionMap;
     }

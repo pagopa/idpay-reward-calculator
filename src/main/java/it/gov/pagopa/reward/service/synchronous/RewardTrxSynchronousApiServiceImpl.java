@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.synchronous;
 
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.service.synchronous.op.CancelTrxSynchronousService;
@@ -27,8 +28,8 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionRequestDTO trxAuthorizeRequest, String initiativeId) {
-        return createTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId);
+    public Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionAuthRequestDTO trxAuthorizeRequest, String initiativeId, long counterVersion) {
+        return createTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId, counterVersion);
     }
 
     @Override
