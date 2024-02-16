@@ -36,7 +36,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
             || PAYMENT_STATE_REWARDED.equals(trx.getStatus())) {
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
-        //TODO handle expired event (CANCELLED status)
+        //TODO [IDP-2297] handle expired event (CANCELLED status)
         return Mono.empty();
     }
 }
