@@ -10,12 +10,13 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.PAYMENT_STATE_AUTHORIZED;
+import static it.gov.pagopa.reward.utils.RewardConstants.PAYMENT_STATE_REWARDED;
 
 @Service
 @Slf4j
 public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInitiativeCountersUnlockMediatorService {
 
-    private static final List<String> ACCEPTED_STATUS = List.of(PAYMENT_STATE_AUTHORIZED);
+    private static final List<String> ACCEPTED_STATUS = List.of(PAYMENT_STATE_AUTHORIZED, PAYMENT_STATE_REWARDED);
     private final UserInitiativeCountersRepository userInitiativeCountersRepository;
 
     public UserInitiativeCountersUnlockMediatorServiceImpl(UserInitiativeCountersRepository userInitiativeCountersRepository){
@@ -31,10 +32,11 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
     }
 
     private Mono<UserInitiativeCounters> handlerUnlockType(RewardTransactionDTO trx) {
-        if(PAYMENT_STATE_AUTHORIZED.equals(trx.getStatus())) {
+        if(PAYMENT_STATE_AUTHORIZED.equals(trx.getStatus())
+            || PAYMENT_STATE_REWARDED.equals(trx.getStatus())) {
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
-        //TODO handle expired event (CANCELED status)
+        //TODO handle expired event (CANCELLED status)
         return Mono.empty();
     }
 }

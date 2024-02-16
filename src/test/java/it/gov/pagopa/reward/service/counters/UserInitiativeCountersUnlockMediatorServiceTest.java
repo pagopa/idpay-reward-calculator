@@ -9,13 +9,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-import static it.gov.pagopa.reward.utils.RewardConstants.PAYMENT_STATE_AUTHORIZED;
-import static it.gov.pagopa.reward.utils.RewardConstants.REWARD_STATE_REJECTED;
+import static it.gov.pagopa.reward.utils.RewardConstants.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,10 +32,11 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
                 userInitiativeCountersRepositoryMock);
     }
 
-    @Test
-    void execute_statusAcceptedAuthorized(){
+    @ParameterizedTest
+    @ValueSource(strings = {PAYMENT_STATE_AUTHORIZED, PAYMENT_STATE_REWARDED})
+    void execute_statusAccepted(String statusAccepted){
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
-        trx.setStatus(PAYMENT_STATE_AUTHORIZED);
+        trx.setStatus(statusAccepted);
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
         Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(trx.getId()))
