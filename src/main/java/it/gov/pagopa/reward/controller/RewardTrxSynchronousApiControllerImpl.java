@@ -53,11 +53,11 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(String trxId) {
-        log.info("[SYNC_CANCEL_TRANSACTION] Requesting to cancel transaction {}", trxId);
+    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(SynchronousTransactionAuthRequestDTO trxCancelRequest, String initiativeId) {
+        log.info("[SYNC_CANCEL_TRANSACTION] Requesting to cancel transaction {}", trxCancelRequest.getTransactionId());
 
         return PerformanceLogger.logTimingFinally("SYNC_CANCEL_TRANSACTION",
-                rewardTrxSynchronousService.cancelTransaction(trxId),
-                trxId);
+                rewardTrxSynchronousService.cancelTransaction(trxCancelRequest, initiativeId),
+                trxCancelRequest.getTransactionId());
     }
 }

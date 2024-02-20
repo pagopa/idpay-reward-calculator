@@ -8,5 +8,5 @@ import reactor.core.publisher.Mono;
 public interface RewardTrxSynchronousApiService {
     Mono<SynchronousTransactionResponseDTO> previewTransaction(SynchronousTransactionRequestDTO trxPreviewRequest, String initiativeId);
     Mono<SynchronousTransactionResponseDTO> authorizeTransaction(SynchronousTransactionAuthRequestDTO trxAuthorizeRequest, String initiativeId, long counterVersion);
-    Mono<SynchronousTransactionResponseDTO> cancelTransaction(String trxId);
+    Mono<SynchronousTransactionResponseDTO> cancelTransaction(SynchronousTransactionAuthRequestDTO trxCancelRequest, String initiativeId);
 }
