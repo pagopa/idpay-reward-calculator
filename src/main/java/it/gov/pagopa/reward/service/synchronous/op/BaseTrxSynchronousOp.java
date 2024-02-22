@@ -46,7 +46,7 @@ abstract class BaseTrxSynchronousOp {
     private final OnboardedInitiativesService onboardedInitiativesService;
     protected final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper;
 
-
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     protected BaseTrxSynchronousOp(
             UserInitiativeCountersRepository userInitiativeCountersRepository,
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
