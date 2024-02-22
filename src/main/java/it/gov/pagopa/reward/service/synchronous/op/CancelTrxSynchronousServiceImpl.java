@@ -42,6 +42,7 @@ import java.util.Map;
 @Slf4j
 public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implements CancelTrxSynchronousService {
 
+    private static final BigDecimal BIG_DECIMAL_ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
     private final String refundOperationType;
 
     public CancelTrxSynchronousServiceImpl(
@@ -98,7 +99,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         trx.setOperationType(refundOperationType);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setTrxDate(OffsetDateTime.now());
-        trx.setEffectiveAmount(BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY));
+        trx.setEffectiveAmount(BIG_DECIMAL_ZERO);
 
         Map<String, RefundInfo.PreviousReward> previousRewardMap = Map.of(
                 initiativeId,
