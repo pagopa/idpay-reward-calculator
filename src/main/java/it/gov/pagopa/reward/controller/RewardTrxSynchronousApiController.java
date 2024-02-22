@@ -19,7 +19,7 @@ public interface RewardTrxSynchronousApiController {
     Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestHeader(HttpHeaders.IF_MATCH) long counterVersion,
                                                                  @RequestBody SynchronousTransactionAuthRequestDTO trxAuthorizeRequest,
                                                                  @PathVariable("initiativeId") String initiativeId);
-    @DeleteMapping("/{initiativeId}") //TODO IDP-2357 cambia il path
+    @DeleteMapping("/initiative/{initiativeId}")
     Mono<SynchronousTransactionResponseDTO> cancelTransaction(@RequestBody SynchronousTransactionAuthRequestDTO trxCancelRequest,
                                                               @PathVariable("initiativeId") String initiativeId);
 }

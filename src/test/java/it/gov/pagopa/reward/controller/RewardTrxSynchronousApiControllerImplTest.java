@@ -4,6 +4,7 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ErrorManager;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.reward.config.ServiceExceptionConfig;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -12,7 +13,9 @@ import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
 import it.gov.pagopa.reward.exception.custom.PendingCounterException;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
+import it.gov.pagopa.reward.test.fakers.SynchronousTransactionAuthRequestDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionRequestDTOFaker;
+import it.gov.pagopa.reward.test.fakers.SynchronousTransactionResponseDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,6 +24,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -298,5 +302,59 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .expectStatus().isEqualTo(HttpStatus.LOCKED);
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
+    }
+
+    @Test
+    void deleteTransactionCancelOk(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionAuthRequestDTO request = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
+
+        Mockito.when(rewardTrxSynchronousServiceMock.cancelTransaction(Mockito.any(), Mockito.eq(initiativeId)))
+                .thenReturn(Mono.just(SynchronousTransactionResponseDTOFaker.mockInstance(1)));
+
+        webClient.method(HttpMethod.DELETE)
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.OK);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).cancelTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void deleteTransactionPendingTrx(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionAuthRequestDTO request = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
+
+        Mockito.when(rewardTrxSynchronousServiceMock.cancelTransaction(Mockito.any(), Mockito.eq(initiativeId)))
+                .thenReturn(Mono.error(new PendingCounterException("DUMMY")));
+
+        webClient.method(HttpMethod.DELETE)
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.LOCKED);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).cancelTransaction(Mockito.any(), Mockito.eq(initiativeId));
+    }
+
+    @Test
+    void deleteTransactionNotOnboarded(){
+        String initiativeId = " INITIATIVEID";
+        SynchronousTransactionAuthRequestDTO request = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
+
+        Mockito.when(rewardTrxSynchronousServiceMock.cancelTransaction(Mockito.any(), Mockito.eq(initiativeId)))
+                .thenReturn(Mono.error(new InitiativeNotActiveException("DUMMY", SynchronousTransactionResponseDTOFaker.mockInstance(1))));
+
+        webClient.method(HttpMethod.DELETE)
+                .uri(uriBuilder -> uriBuilder.path(rewardAuthorizePath)
+                        .build(initiativeId))
+                .body(BodyInserters.fromValue(request))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.FORBIDDEN);
+
+        Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).cancelTransaction(Mockito.any(), Mockito.eq(initiativeId));
     }
 }
