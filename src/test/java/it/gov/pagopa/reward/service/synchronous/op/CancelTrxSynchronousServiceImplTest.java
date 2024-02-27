@@ -161,18 +161,20 @@ class CancelTrxSynchronousServiceImplTest{
         //Given
         SynchronousTransactionAuthRequestDTO trxCancelRequest = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
 
+        InitiativeConfig initiativeConfig = getInitiativeConfig();
+        initiativeConfig.setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(INITIATIVEID))
-                .thenReturn(Mono.just(getInitiativeConfig()));
+                .thenReturn(Mono.just(initiativeConfig));
 
         Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(INITIATIVEID));
 
         OnboardedInitiative onboardingInitiative = OnboardedInitiative.builder().initiativeId(INITIATIVEID).familyId("FAMILYID").build();
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(any(),any(),eq(INITIATIVEID))).thenReturn(Mono.just(Pair.of(getInitiativeConfig(), onboardingInitiative)));
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(any(),any(),eq(INITIATIVEID))).thenReturn(Mono.just(Pair.of(initiativeConfig, onboardingInitiative)));
 
         UserInitiativeCounters userCounter = getUserInitiativeCounters(trxCancelRequest);
         userCounter.setPendingTrx(TransactionDTOFaker.mockInstance(2));
 
-        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trxCancelRequest.getUserId(), INITIATIVEID)))
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId("FAMILYID", INITIATIVEID)))
                 .thenReturn(Mono.just(userCounter));
 
 

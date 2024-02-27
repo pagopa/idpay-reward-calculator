@@ -1,17 +1,22 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
+import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
@@ -28,7 +33,14 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class HpanInitiativesAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
+@TestPropertySource(properties = {
+        "de.flapdoodle.mongodb.embedded.version=4.2.24",
+        "spring.data.mongodb.database=idpay",
+})
+@ExtendWith(SpringExtension.class)
+@AutoConfigureSingleInstanceMongodb
+@ContextConfiguration(classes = {HpanInitiativesAtomicOpsRepositoryImpl.class, ReactiveMongoConfig.class})
+class HpanInitiativesAtomicOpsRepositoryImplTest {
     @Autowired
     protected HpanInitiativesRepository hpanInitiativesRepository;
     @Autowired

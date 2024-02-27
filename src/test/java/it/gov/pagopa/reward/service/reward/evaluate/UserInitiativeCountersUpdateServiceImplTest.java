@@ -84,8 +84,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
     @Test
     void testUpdateCountersWhenNeverInitiated() {
         //Given
+        initiativeConfig.setBeneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF);
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = UserInitiativeCountersWrapper.builder()
-                .entityId("USERID")
+                .entityId("FAMILYID")
                 .initiatives(new HashMap<>())
                 .build();
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1", "ORGANIZATION", BigDecimal.valueOf(50), BigDecimal.valueOf(50), false, false));

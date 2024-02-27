@@ -21,7 +21,16 @@ class RewardErrorNotifierServiceTest {
 
     private static final String TRX_RESPONSE_TOPIC = "trx-response-topic";
     private static final String TRX_RESPONSE_GROUP = "trx-response-group";
-
+    private static final String REWARD_RULE_TOPIC = "reward-rule-topic";
+    private static final String REWARD_RULE_GROUP = "rewrd-rule-group";
+    private static final String TRANSACTIONS_TOPIC = "trx-topic";
+    private static final String TRANSACTIONS_GROUP = "trx-Group";
+    private static final String TRANSACTION_REWARDED_TOPIC = "trx-reward-topic";
+    private static final String HPAN_UPDATE_TOPIC = "hpan-update-topic";
+    private static final String HPAN_UPDATE_GROUP = "hpan-update-group";
+    private static final String HPAN_UPDATE_OUTCOME_TOPIC = "hpanUpdateOutcome-topic";
+    private static final String COMMANDS_TOPIC ="commands-topic";
+    private static final String COMMANDS_GROUP ="commands-group";
     private static final Message<String> dummyMessage = MessageBuilder.withPayload(DUMMY_MESSAGE).build();
 
     @Mock
@@ -36,31 +45,31 @@ class RewardErrorNotifierServiceTest {
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
 
-                "reward-rule-topic",
-                "rewrd-rule-group",
+                REWARD_RULE_TOPIC,
+                REWARD_RULE_GROUP,
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
 
-                "trx-topic",
-                "trx-Group",
+                TRANSACTIONS_TOPIC,
+                TRANSACTIONS_GROUP,
 
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
-                "trx-reward-topic",
+                TRANSACTION_REWARDED_TOPIC,
 
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
-                "hpan-update-topic",
-                "hpan-update-group",
+                HPAN_UPDATE_TOPIC,
+                HPAN_UPDATE_GROUP,
 
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
-                "hpanUpdateOutcome-topic",
+                HPAN_UPDATE_OUTCOME_TOPIC,
 
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
-                "commands-topic",
-                "commands-group",
+                COMMANDS_TOPIC,
+                COMMANDS_GROUP,
 
                 BINDER_KAFKA_TYPE,
                 BINDER_BROKER,
@@ -70,11 +79,60 @@ class RewardErrorNotifierServiceTest {
     }
 
     @Test
+    void notifyRewardRuleBuilder() {
+
+        errorNotifyMock(REWARD_RULE_TOPIC, REWARD_RULE_GROUP, true, true );
+
+        boolean result = rewardErrorNotifierService.notifyRewardRuleBuilder(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        Assertions.assertTrue(result);
+        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
+    }
+    @Test
+    void notifyTransactionEvaluation() {
+
+        errorNotifyMock(TRANSACTIONS_TOPIC, TRANSACTIONS_GROUP, true, true );
+
+        boolean result = rewardErrorNotifierService.notifyTransactionEvaluation(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        Assertions.assertTrue(result);
+        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
+    }
+    @Test
+    void notifyRewardedTransaction() {
+
+        errorNotifyMock(TRANSACTION_REWARDED_TOPIC, null, false, false );
+
+        boolean result = rewardErrorNotifierService.notifyRewardedTransaction(dummyMessage, DUMMY_MESSAGE, false, new Throwable(DUMMY_MESSAGE));
+
+        Assertions.assertTrue(result);
+        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
+    }
+    @Test
     void notifyTransactionResponse() {
 
         errorNotifyMock(TRX_RESPONSE_TOPIC, TRX_RESPONSE_GROUP, true, true );
 
         boolean result = rewardErrorNotifierService.notifyTransactionResponse(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        Assertions.assertTrue(result);
+        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
+    }
+    @Test
+    void notifyRewardCommands() {
+
+        errorNotifyMock(COMMANDS_TOPIC, COMMANDS_GROUP, true, true);
+
+        rewardErrorNotifierService.notifyRewardCommands(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
+    }
+    @Test
+    void notifyHpanUpdateOutcome() {
+
+        errorNotifyMock(HPAN_UPDATE_OUTCOME_TOPIC, null, true, false );
+
+        boolean result = rewardErrorNotifierService.notifyHpanUpdateOutcome(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
 
         Assertions.assertTrue(result);
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);

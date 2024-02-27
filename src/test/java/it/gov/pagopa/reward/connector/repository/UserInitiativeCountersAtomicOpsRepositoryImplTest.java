@@ -1,7 +1,9 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
+import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -10,7 +12,11 @@ import org.bson.BsonString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
@@ -18,9 +24,21 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestPropertySource(properties = {
+        "de.flapdoodle.mongodb.embedded.version=4.2.24",
 
-class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
-
+        "spring.data.mongodb.database=idpay",
+        "spring.data.mongodb.config.connectionPool.maxSize: 100",
+        "spring.data.mongodb.config.connectionPool.minSize: 0",
+        "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
+        "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
+        "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
+        "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
+})
+@ExtendWith(SpringExtension.class)
+@AutoConfigureSingleInstanceMongodb
+@ContextConfiguration(classes = {UserInitiativeCountersRepository.class, ReactiveMongoConfig.class, MongoConfig.class})
+class UserInitiativeCountersAtomicOpsRepositoryImplTest {
     @Autowired
     protected UserInitiativeCountersRepository userInitiativeCountersRepository;
 

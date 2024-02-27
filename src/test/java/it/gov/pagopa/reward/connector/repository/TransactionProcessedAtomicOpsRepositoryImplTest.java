@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
+import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
@@ -9,7 +10,11 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
@@ -17,8 +22,14 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class TransactionProcessedAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
-
+@TestPropertySource(properties = {
+        "de.flapdoodle.mongodb.embedded.version=4.2.24",
+        "spring.data.mongodb.database=idpay",
+})
+@ExtendWith(SpringExtension.class)
+@AutoConfigureSingleInstanceMongodb
+@ContextConfiguration(classes = {TransactionProcessedAtomicOpsRepositoryImpl.class, ReactiveMongoConfig.class})
+class TransactionProcessedAtomicOpsRepositoryImplTest{
     @Autowired
     private TransactionProcessedRepository transactionProcessedRepository;
     @Autowired
