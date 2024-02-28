@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -32,9 +31,11 @@ import java.lang.annotation.*;
                 "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
                 "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
         })
-@ContextConfiguration(classes= MongoTest.MongoTestConfiguration.class)
 @AutoConfigureSingleInstanceMongodb
-@Import({MongoTestUtilitiesService.TestMongoConfiguration.class, ReactiveMongoConfig.class, MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class, MongoConfig.class})
+@Import({MongoTestUtilitiesService.TestMongoConfiguration.class,
+        ReactiveMongoConfig.class,
+        SimpleMeterRegistry.class,
+        MongoTest.MongoTestConfiguration.class})
 public @interface MongoTest {
     @TestConfiguration
     class MongoTestConfiguration extends MongoConfig {
@@ -48,6 +49,5 @@ public @interface MongoTest {
                 builder.addCommandListener(mongoMetricsCommandListener);
             };
         }
-
     }
 }

@@ -11,13 +11,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.context.annotation.Import;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @MongoTest
-@ContextConfiguration(classes = {Transaction2RewardTransactionMapper.class})
+@Import(Transaction2RewardTransactionMapper.class)
 class TransactionProcessedRepositoryTest {
 
     private static final String TEST_TRX = "TEST_TRX";
