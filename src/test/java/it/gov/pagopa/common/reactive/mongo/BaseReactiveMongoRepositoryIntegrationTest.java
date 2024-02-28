@@ -3,41 +3,22 @@ package it.gov.pagopa.common.reactive.mongo;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import io.micrometer.core.instrument.binder.mongodb.MongoMetricsCommandListener;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.mongo.config.MongoConfig;
-import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
-import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Map;
 
-@TestPropertySource(properties = {
-        "de.flapdoodle.mongodb.embedded.version=4.2.24",
-
-        "spring.data.mongodb.database=idpay",
-        "spring.data.mongodb.config.connectionPool.maxSize: 100",
-        "spring.data.mongodb.config.connectionPool.minSize: 0",
-        "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
-        "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
-        "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
-        "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
-})
-@ExtendWith(SpringExtension.class)
-@AutoConfigureSingleInstanceMongodb
-@ContextConfiguration(classes = {BaseReactiveMongoRepositoryIntegrationTest.TestMongoRepositoryConfig.class, ReactiveMongoConfig.class, MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class})
+@MongoTest
 class BaseReactiveMongoRepositoryIntegrationTest {
 
     static {

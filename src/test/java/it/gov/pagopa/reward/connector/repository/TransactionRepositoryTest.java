@@ -1,28 +1,19 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
-import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
+import it.gov.pagopa.common.mongo.MongoTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@TestPropertySource(properties = {
-        "de.flapdoodle.mongodb.embedded.version=4.2.24",
-        "spring.data.mongodb.database=idpay",
-})
-@ExtendWith(SpringExtension.class)
-@AutoConfigureSingleInstanceMongodb
-@ContextConfiguration(classes = {TransactionRepositoryImpl.class, ReactiveMongoConfig.class})
+@MongoTest
+@ContextConfiguration(classes = {TransactionRepositoryImpl.class})
 class TransactionRepositoryTest {
 
     @Autowired

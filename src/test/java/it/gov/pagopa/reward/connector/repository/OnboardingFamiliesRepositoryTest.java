@@ -1,30 +1,19 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
-import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.test.fakers.OnboardingFamiliesFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-@TestPropertySource(properties = {
-        "de.flapdoodle.mongodb.embedded.version=4.2.24",
-        "spring.data.mongodb.database=idpay",
-})
-@ExtendWith(SpringExtension.class)
-@AutoConfigureSingleInstanceMongodb
-@ContextConfiguration(classes = {OnboardingFamiliesRepository.class, ReactiveMongoConfig.class})
+@MongoTest
 class OnboardingFamiliesRepositoryTest {
     @Autowired
     private OnboardingFamiliesRepository repository;

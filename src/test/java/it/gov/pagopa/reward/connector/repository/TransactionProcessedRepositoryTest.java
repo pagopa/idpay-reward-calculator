@@ -1,8 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.common.mongo.config.MongoConfig;
-import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
-import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
@@ -12,32 +10,14 @@ import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-@TestPropertySource(properties = {
-        "de.flapdoodle.mongodb.embedded.version=4.2.24",
-
-        "spring.data.mongodb.database=idpay",
-        "spring.data.mongodb.config.connectionPool.maxSize: 100",
-        "spring.data.mongodb.config.connectionPool.minSize: 0",
-        "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
-        "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
-        "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
-        "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
-})
-@ExtendWith(SpringExtension.class)
-@AutoConfigureSingleInstanceMongodb
-@ContextConfiguration(classes = {TransactionProcessedRepository.class,
-        ReactiveMongoConfig.class,
-        Transaction2RewardTransactionMapper.class,
-        MongoConfig.class})
+@MongoTest
+@ContextConfiguration(classes = {Transaction2RewardTransactionMapper.class})
 class TransactionProcessedRepositoryTest {
 
     private static final String TEST_TRX = "TEST_TRX";
