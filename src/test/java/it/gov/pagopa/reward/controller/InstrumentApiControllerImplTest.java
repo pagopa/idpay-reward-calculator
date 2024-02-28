@@ -9,7 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-@WebFluxTest(controllers = {InstrumentApiController.class}) //TODO MOCKITO MONO VOID
+@WebFluxTest(controllers = {InstrumentApiController.class})
 class InstrumentApiControllerImplTest {
     private static final String USERID = "USERID";
     private static final String INITIATIVEID = "INITIATIVEID";
@@ -24,21 +24,32 @@ class InstrumentApiControllerImplTest {
 
     @Test
     void disableUserInitiativeInstruments_success() {
-        Void voidMock = Mockito.mock(Void.class);
-//        Mockito.doNothing().when(instrumentApiServiceMock)
-//                        .disableUserInitiativeInstruments(USERID, INITIATIVEID);
-
 
         Mockito.when(instrumentApiServiceMock.disableUserInitiativeInstruments(USERID, INITIATIVEID))
-                .thenReturn(Mono.just(voidMock));
+                .thenReturn(Mono.empty());
 
         webClient.delete()
                 .uri(uriBuilder -> uriBuilder.path(disableInstrumentPath)
                         .build(USERID, INITIATIVEID))
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isNoContent();
 
         Mockito.verify(instrumentApiServiceMock, Mockito.only()).disableUserInitiativeInstruments(Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    void enableUserInitiativeInstruments_success(){
+        Mockito.when(instrumentApiServiceMock.enableUserInitiativeInstruments(USERID, INITIATIVEID))
+                .thenReturn(Mono.empty());
+
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder.path(enableInstrumentPath)
+                        .build(USERID, INITIATIVEID))
+                .exchange()
+                .expectStatus().isNoContent();
+
+        Mockito.verify(instrumentApiServiceMock, Mockito.only()).enableUserInitiativeInstruments(Mockito.any(), Mockito.any());
+
     }
 
 }
