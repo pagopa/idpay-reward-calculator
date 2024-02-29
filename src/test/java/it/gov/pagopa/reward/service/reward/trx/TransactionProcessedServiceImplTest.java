@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
+import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
@@ -7,7 +8,6 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
-import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.service.reward.TrxRePublisherService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;

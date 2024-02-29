@@ -1,16 +1,16 @@
 package it.gov.pagopa.reward.service.build;
 
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,7 +75,7 @@ class RewardRuleMediatorServiceImplTest {
 
     @ParameterizedTest
     @ValueSource(longs = {800,1000,1010})
-    void testSuccessful(long commitDelay){
+    void executeSuccessful(long commitDelay){
         // Given
         int N = 10;
         List<InitiativeReward2BuildDTO> initiatives = IntStream.range(0, N).mapToObj(InitiativeReward2BuildDTOFaker::mockInstance).collect(Collectors.toList());
@@ -158,5 +158,44 @@ class RewardRuleMediatorServiceImplTest {
         Mockito.verify(rewardContextHolderServiceMock, Mockito.atLeast(1)).setRewardRulesKieBase(newKieBaseBuiltMock);
 
         Mockito.verifyNoInteractions(rewardRule2DroolsRuleServiceMock, droolsRuleRepositoryMock, rewardErrorNotifierServiceMock);
+    }
+
+    @Test
+    void executeError(){
+        // Given
+        InitiativeReward2BuildDTO initiativeReward2BuildDTO = InitiativeReward2BuildDTOFaker.mockInstance(1);
+        Flux<Message<String>> inputFlux = Flux.just(initiativeReward2BuildDTO)
+                .map(TestUtils::jsonSerializer)
+                .map(payload -> MessageBuilder
+                        .withPayload(payload)
+                        .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
+                        .setHeader(KafkaHeaders.OFFSET, 0L)
+                )
+                .map(MessageBuilder::build);
+
+        RewardRuleMediatorService rewardRuleMediatorService = new RewardRuleMediatorServiceImpl(
+                "appName",
+                1000L,
+                "PT1S",
+                rewardRule2DroolsRuleServiceMock,
+                droolsRuleRepositoryMock,
+                kieContainerBuilderServiceMock,
+                rewardContextHolderServiceMock,
+                rewardErrorNotifierServiceMock,
+                TestUtils.objectMapper);
+
+        Mockito.when(rewardRule2DroolsRuleServiceMock.apply(Mockito.any())).thenThrow(new RuntimeException("DUMMY_EXCEPTION"));
+        Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));
+
+        // When
+        rewardRuleMediatorService.execute(inputFlux);
+
+        // Then
+        Mockito.verify(rewardRule2DroolsRuleServiceMock, Mockito.only()).apply(Mockito.any());
+        Mockito.verify(droolsRuleRepositoryMock, Mockito.never()).save(Mockito.any());
+
+        Mockito.verify(kieContainerBuilderServiceMock, Mockito.atLeast(1)).buildAll();
+        Mockito.verify(rewardContextHolderServiceMock, Mockito.atLeast(1)).setRewardRulesKieBase(Mockito.same(newKieBaseBuiltMock));
+        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.only()).notifyRewardRuleBuilder(Mockito.any(), Mockito.any(), Mockito.anyBoolean(), Mockito.any());
     }
 }

@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
@@ -11,11 +11,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-class TransactionProcessedRepositoryTest extends BaseIntegrationTest {
+@MongoTest
+@Import(Transaction2RewardTransactionMapper.class)
+class TransactionProcessedRepositoryTest {
 
     private static final String TEST_TRX = "TEST_TRX";
 
