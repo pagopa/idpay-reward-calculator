@@ -128,6 +128,16 @@ class RewardErrorNotifierServiceTest {
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
+    void notifyHpanUpdateEvaluation() {
+
+        errorNotifyMock(HPAN_UPDATE_TOPIC, HPAN_UPDATE_GROUP, true, true );
+
+        boolean result = rewardErrorNotifierService.notifyHpanUpdateEvaluation(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        Assertions.assertTrue(result);
+        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
+    }
+    @Test
     void notifyHpanUpdateOutcome() {
 
         errorNotifyMock(HPAN_UPDATE_OUTCOME_TOPIC, null, true, false );
