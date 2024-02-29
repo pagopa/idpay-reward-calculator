@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.test.fakers.OnboardingFamiliesFaker;
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +13,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-class OnboardingFamiliesRepositoryTest extends BaseIntegrationTest {
+@MongoTest
+class OnboardingFamiliesRepositoryTest {
     @Autowired
     private OnboardingFamiliesRepository repository;
 

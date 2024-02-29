@@ -1,17 +1,20 @@
 package it.gov.pagopa.reward.connector.repository;
 
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.HashMap;
 import java.util.Map;
 
-class TransactionRepositoryTest extends BaseIntegrationTest {
+@MongoTest
+@ContextConfiguration(classes = {TransactionRepositoryImpl.class})
+class TransactionRepositoryTest {
 
     @Autowired
     private TransactionRepository repository;

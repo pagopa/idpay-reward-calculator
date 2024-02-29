@@ -33,7 +33,7 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(String trxId) {
-        return cancelTrxSynchronousService.cancelTransaction(trxId);
+    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(SynchronousTransactionAuthRequestDTO trxCancelRequest, String initiativeId) {
+        return cancelTrxSynchronousService.cancelTransaction(trxCancelRequest, initiativeId);
     }
 }

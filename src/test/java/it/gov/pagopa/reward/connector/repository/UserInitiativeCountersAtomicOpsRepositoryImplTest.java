@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.connector.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.BaseIntegrationTest;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -18,9 +18,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
-class UserInitiativeCountersAtomicOpsRepositoryImplTest extends BaseIntegrationTest {
-
+@MongoTest
+class UserInitiativeCountersAtomicOpsRepositoryImplTest {
     @Autowired
     protected UserInitiativeCountersRepository userInitiativeCountersRepository;
 

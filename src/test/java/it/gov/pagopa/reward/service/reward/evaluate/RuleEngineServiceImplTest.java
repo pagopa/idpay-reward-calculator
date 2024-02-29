@@ -8,17 +8,21 @@ import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
+import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.build.*;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderServiceImpl;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -157,5 +161,43 @@ class RuleEngineServiceImplTest {
         Assertions.assertEquals(Map.of(
                 "ID_2_sga", new Reward("ID_2_sga", "ORGANIZATIONID_2", BigDecimal.valueOf(0.08))
         ), result.getRewards());
+    }
+
+    @Test
+    void applyRulesAndSetRefundCounters(){
+        // Given
+        RewardContextHolderService rewardContextHolderService = Mockito.mock(RewardContextHolderServiceImpl.class);
+        Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = Mockito.mock(Transaction2TransactionDroolsMapper.class);
+        TransactionDroolsDTO2RewardTransactionMapper transactionDroolsDTO2RewardTransactionMapper = Mockito.mock(TransactionDroolsDTO2RewardTransactionMapper.class);
+
+        RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
+
+        TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
+        List<String> initiatives =  List.of("Initiative1");
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
+        RefundInfo refundInfo = new RefundInfo(List.of(TransactionProcessedFaker.mockInstance(1)), Map.of("Initiative1", new RefundInfo.PreviousReward("Initiative1", "OrganizationId1", BigDecimal.ONE)));
+        trx.setRefundInfo(refundInfo);
+        UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", Map.of("Initiative1", new UserInitiativeCounters("userId", "Initiative1")));
+
+        TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
+        Mockito.when(transaction2TransactionDroolsMapper.apply(Mockito.same(trx))).thenReturn(rewardTrx);
+
+        KieBase kieBase = Mockito.mock(KieBase.class);
+        Mockito.when(rewardContextHolderService.getRewardRulesKieBase()).thenReturn(kieBase);
+        StatelessKieSession statelessKieSession = Mockito.mock(StatelessKieSession.class);
+        Mockito.when(kieBase.newStatelessKieSession()).thenReturn(statelessKieSession);
+
+        RewardTransactionDTO rewardTrxDto = Mockito.mock(RewardTransactionDTO.class);
+        Mockito.when(transactionDroolsDTO2RewardTransactionMapper.apply(Mockito.same(rewardTrx))).thenReturn(rewardTrxDto);
+
+        // When
+        ruleEngineService.applyRules(trx, initiatives, counters);
+
+        // Then
+        Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
+        Mockito.verify(rewardContextHolderService).getRewardRulesKieBase();
+        Mockito.verify(statelessKieSession).execute(Mockito.any(Command.class));
+        Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));
+
     }
 }

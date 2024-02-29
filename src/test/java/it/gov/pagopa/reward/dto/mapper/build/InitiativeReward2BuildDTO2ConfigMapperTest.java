@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 class InitiativeReward2BuildDTO2ConfigMapperTest {
-
     @Test
     void test() {
         // Given
