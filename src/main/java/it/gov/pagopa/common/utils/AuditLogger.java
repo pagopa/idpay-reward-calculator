@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 @Slf4j(topic = "AUDIT")
 public class AuditLogger {
@@ -25,7 +26,8 @@ public class AuditLogger {
     }
 
     public static void logAuditString(String pattern, String... parameters) {
-        log.info(pattern, (Object[]) parameters);
+        Object[] params = Arrays.asList(parameters).toArray();
+        log.info(pattern,params);
     }
 
 }
