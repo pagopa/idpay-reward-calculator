@@ -38,7 +38,7 @@ public final class HpanInitiativesFaker {
                 .endInterval(onboardedTime.minusYears(2L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval1);
 
-        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusMonths(5L).plusDays(2L)).build();
+        ActiveTimeInterval interval2 = ActiveTimeInterval.builder().startInterval(onboardedTime.minusMonths(5L).plusDays(1L)).build();
         onboardedInitiative.getActiveTimeIntervals().add(interval2);
 
         out.setOnboardedInitiatives(List.of(onboardedInitiative));
