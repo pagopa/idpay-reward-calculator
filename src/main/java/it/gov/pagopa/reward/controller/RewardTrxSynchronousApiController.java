@@ -1,7 +1,10 @@
 package it.gov.pagopa.reward.controller;
 
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -9,12 +12,14 @@ import reactor.core.publisher.Mono;
 public interface RewardTrxSynchronousApiController {
 
     @PostMapping("/initiative/preview/{initiativeId}")
-    Mono<SynchronousTransactionResponseDTO> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
-                                                               @PathVariable("initiativeId") String initiativeId);
+    Mono<ResponseEntity<SynchronousTransactionResponseDTO>> previewTransaction(@RequestBody SynchronousTransactionRequestDTO trxPreviewRequest,
+                                                                               @PathVariable("initiativeId") String initiativeId);
 
     @PostMapping("/initiative/{initiativeId}")
-    Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestBody SynchronousTransactionRequestDTO trxAuthorizeRequest,
-                                                               @PathVariable("initiativeId") String initiativeId);
-    @DeleteMapping("/{transactionId}")
-    Mono<SynchronousTransactionResponseDTO> cancelTransaction(@PathVariable("transactionId") String trxId);
+    Mono<SynchronousTransactionResponseDTO> authorizeTransaction(@RequestHeader(HttpHeaders.IF_MATCH) long counterVersion,
+                                                                 @RequestBody SynchronousTransactionAuthRequestDTO trxAuthorizeRequest,
+                                                                 @PathVariable("initiativeId") String initiativeId);
+    @DeleteMapping("/initiative/{initiativeId}")
+    Mono<SynchronousTransactionResponseDTO> cancelTransaction(@RequestBody SynchronousTransactionAuthRequestDTO trxCancelRequest,
+                                                              @PathVariable("initiativeId") String initiativeId);
 }

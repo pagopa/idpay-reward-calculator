@@ -40,6 +40,12 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private final String rewardCommandsTopic;
     private final String rewardCommandsGroup;
 
+
+    private final String trxResponseServiceType;
+    private final String trxResponseServer;
+    private final String trxResponseTopic;
+    private final String trxResponseGroup;
+
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
 
@@ -69,8 +75,12 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
                                           @Value("${spring.cloud.stream.binders.kafka-commands.type}") String rewardCommandsServiceType,
                                           @Value("${spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers}") String rewardCommandsServer,
                                           @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.destination}") String rewardCommandsTopic,
-                                          @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.group}") String rewardCommandsGroup
-    ) {
+                                          @Value("${spring.cloud.stream.bindings.commandsConsumer-in-0.group}") String rewardCommandsGroup,
+
+                                          @Value("${spring.cloud.stream.binders.kafka-idpay-transaction-response.type}") String trxResponseServiceType,
+                                          @Value("${spring.cloud.stream.binders.kafka-idpay-transaction-response.environment.spring.cloud.stream.kafka.binder.brokers}") String trxResponseServer,
+                                          @Value("${spring.cloud.stream.bindings.trxResponseConsumer-in-0.destination}") String trxResponseTopic,
+                                          @Value("${spring.cloud.stream.bindings.trxResponseConsumer-in-0.group}") String trxResponseGroup) {
         this.errorNotifierService = errorNotifierService;
 
         this.rewardRuleBuilderMessagingServiceType = rewardRuleBuilderMessagingServiceType;
@@ -99,6 +109,11 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
         this.rewardCommandsServer = rewardCommandsServer;
         this.rewardCommandsTopic = rewardCommandsTopic;
         this.rewardCommandsGroup = rewardCommandsGroup;
+
+        this.trxResponseServiceType = trxResponseServiceType;
+        this.trxResponseServer = trxResponseServer;
+        this.trxResponseTopic = trxResponseTopic;
+        this.trxResponseGroup = trxResponseGroup;
     }
 
     @Override
@@ -129,6 +144,12 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     @Override
     public void notifyRewardCommands(Message<String> message, String description, boolean retryable, Throwable exception) {
         notify(rewardCommandsServiceType, rewardCommandsServer, rewardCommandsTopic, rewardCommandsGroup, message, description, retryable, true, exception);
+    }
+
+    @Override
+    public boolean notifyTransactionResponse(Message<String> message, String description, boolean retryable, Throwable exception) {
+        return notify(trxResponseServiceType, trxResponseServer, trxResponseTopic,trxResponseGroup, message, description, retryable, true, exception);
+
     }
 
 

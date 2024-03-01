@@ -1,30 +1,40 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.CommonConstants;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTransactionResponseDTOMapper;
-import it.gov.pagopa.reward.dto.mapper.trx.sync.TransactionProcessed2SyncTrxResponseDTOMapper;
+import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
+import it.gov.pagopa.reward.exception.custom.PendingCounterException;
+import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.TransactionProcessed;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
+import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
-import it.gov.pagopa.reward.service.synchronous.op.recover.HandleSyncCounterUpdatingTrxService;
+import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,85 +42,112 @@ import java.util.Map;
 @Slf4j
 public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implements CancelTrxSynchronousService {
 
+    private static final BigDecimal BIG_DECIMAL_ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
     private final String refundOperationType;
-    private final TransactionProcessedRepository transactionProcessedRepository;
 
     public CancelTrxSynchronousServiceImpl(
             @Value("${app.operationType.refund") String refundOperationType,
 
-            TransactionProcessedRepository transactionProcessedRepository,
             UserInitiativeCountersRepository userInitiativeCountersRepository,
-            HandleSyncCounterUpdatingTrxService handleSyncCounterUpdatingTrxService,
             InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
-            TransactionProcessed2SyncTrxResponseDTOMapper syncTrxResponseDTOMapper, RewardContextHolderService rewardContextHolderService) {
-        super(transactionProcessedRepository, syncTrxResponseDTOMapper, userInitiativeCountersRepository, handleSyncCounterUpdatingTrxService, initiativesEvaluatorFacadeService, rewardTransaction2SynchronousTransactionResponseDTOMapper, rewardContextHolderService);
-
+            RewardContextHolderService rewardContextHolderService,
+            Transaction2RewardTransactionMapper rewardTransactionMapper,
+            UserInitiativeCountersUpdateService userInitiativeCountersUpdateService,
+            OnboardedInitiativesService onboardedInitiativesService,
+            SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper) {
+        super(
+                userInitiativeCountersRepository,
+                initiativesEvaluatorFacadeService,
+                rewardTransaction2SynchronousTransactionResponseDTOMapper,
+                rewardContextHolderService,
+                rewardTransactionMapper,
+                userInitiativeCountersUpdateService,
+                onboardedInitiativesService,
+                syncTrxRequest2TransactionDtoMapper);
         this.refundOperationType = refundOperationType;
-
-        this.transactionProcessedRepository = transactionProcessedRepository;
     }
 
     @Override
-    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(String trxId) {
-        return transactionProcessedRepository.findById(trxId)
-                .flatMap(trx -> {
-                    log.debug("[SYNC_CANCEL_TRANSACTION] Transaction to be refunded has been found: {}", trxId);
-                    if(trx.getRewards()==null || trx.getRewards().isEmpty()){
-                        return Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "REJECTED authorization"));
-                    }
-                    else if(trx.getRewards().size()>1){
-                        return Mono.error(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot cancel transaction: it was rewarded more than once!%s: %s".formatted(trxId, trx.getRewards().keySet())));
-                    }
+    public Mono<SynchronousTransactionResponseDTO> cancelTransaction(SynchronousTransactionAuthRequestDTO trxCancelRequest, String initiativeId) {
+        log.trace("[SYNC_CANCEL_TRANSACTION] Starting cancel transaction {} having reward {}", trxCancelRequest.getTransactionId(), trxCancelRequest.getRewardCents());
+        TransactionDTO trxDTO = syncTrxRequest2TransactionDtoMapper.apply(trxCancelRequest);
 
-                    Reward reward = trx.getRewards().values().iterator().next();
-
-                    return checkSyncTrxAlreadyProcessed(buildRefundId(trxId), null, reward.getInitiativeId())
-
-                            .switchIfEmpty(Mono.defer(() -> refundTransaction((TransactionProcessed) trx, reward)));
+        Mono<Pair<InitiativeConfig, OnboardingInfo>> trxChecks = checkInitiative(trxCancelRequest, initiativeId)
+                .flatMap(b -> checkOnboarded(trxCancelRequest, trxDTO, initiativeId))
+                .map(initiative2OnboardingInfo -> {
+                    transformIntoRefundTrx(trxDTO, initiativeId, initiative2OnboardingInfo.getFirst().getOrganizationId(), trxCancelRequest.getRewardCents());
+                    return initiative2OnboardingInfo;
                 });
+
+
+        return trxChecks
+                .flatMap(i2o -> findUserInitiativeCounter(initiativeId, i2o, trxDTO))
+                .switchIfEmpty(Mono.error(new InitiativeNotActiveException(String.format(RewardConstants.ExceptionMessage.INITIATIVE_NOT_ACTIVE_FOR_USER_MSG,initiativeId),syncTrxRequest2TransactionDtoMapper
+                        .apply(trxCancelRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)))))
+                .flatMap(counters -> checkCounterOrEvaluateThenUpdate(trxDTO, initiativeId, new UserInitiativeCountersWrapper(counters.getEntityId(), new HashMap<>(Map.of(initiativeId, counters))), trxCancelRequest.getRewardCents()))
+                .map(rewardTransaction -> mapper.apply(trxDTO.getId(), initiativeId, rewardTransaction));
     }
 
-    private String buildRefundId(String trxId) {
-        return trxId + RewardConstants.SYNC_TRX_REFUND_ID_SUFFIX;
-    }
 
-    private Mono<SynchronousTransactionResponseDTO> refundTransaction(TransactionProcessed trx, Reward reward) {
-        log.debug("[SYNC_CANCEL_TRANSACTION] Refunding transaction {}", trx.getId());
+    public void transformIntoRefundTrx(TransactionDTO trx, String initiativeId, String organizationId, long rewardCents) {
+        BigDecimal chargeRewardEur = CommonUtilities.centsToEuro(rewardCents);
 
-        TransactionDTO refundTrx = buildRefundTrx(trx, reward.getInitiativeId());
-
-        return lockCounterAndEvaluate(retrieveInitiative2OnboardingInfo(reward), refundTrx, reward.getInitiativeId());
-    }
-
-    public TransactionDTO buildRefundTrx(TransactionProcessed trx, String initiativeId) {
-        TransactionDTO refundTrx = new TransactionDTO();
-
-        refundTrx.setIdTrxAcquirer(trx.getIdTrxAcquirer());
-        refundTrx.setAcquirerCode(trx.getAcquirerCode());
-        refundTrx.setAcquirerId(trx.getAcquirerId());
-        refundTrx.setUserId(trx.getUserId());
-        refundTrx.setCorrelationId(trx.getCorrelationId());
-        refundTrx.setTrxChargeDate(trx.getTrxChargeDate().atZone(CommonConstants.ZONEID).toOffsetDateTime());
-        refundTrx.setRejectionReasons(trx.getRejectionReasons());
-        refundTrx.setChannel(trx.getChannel());
+        TransactionProcessed chargeTrx = trx2processed(trx, initiativeId, organizationId, chargeRewardEur);
 
         // refund info
-        refundTrx.setId(buildRefundId(trx.getId()));
-        refundTrx.setOperationType(refundOperationType);
-        refundTrx.setOperationTypeTranscoded(OperationType.REFUND);
-        refundTrx.setTrxDate(OffsetDateTime.now());
-        refundTrx.setAmountCents(trx.getAmountCents());
-        refundTrx.setAmount(trx.getAmount());
-        refundTrx.setEffectiveAmount(BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY));
+        trx.setOperationType(refundOperationType);
+        trx.setOperationTypeTranscoded(OperationType.REFUND);
+        trx.setTrxDate(OffsetDateTime.now());
+        trx.setEffectiveAmount(BIG_DECIMAL_ZERO);
 
-        Map<String, RefundInfo.PreviousReward> previousRewardMap = null;
-        Reward reward = trx.getRewards().get(initiativeId);
-        if(reward != null) {
-            previousRewardMap = Map.of(initiativeId, new RefundInfo.PreviousReward(reward.getInitiativeId(), reward.getOrganizationId(), reward.getAccruedReward()));
-        }
-        refundTrx.setRefundInfo(new RefundInfo(List.of(trx), previousRewardMap));
-        return refundTrx;
+        Map<String, RefundInfo.PreviousReward> previousRewardMap = Map.of(
+                initiativeId,
+                new RefundInfo.PreviousReward(initiativeId, organizationId, chargeRewardEur));
+
+        trx.setRefundInfo(new RefundInfo(List.of(chargeTrx), previousRewardMap));
+
     }
 
+    private Mono<RewardTransactionDTO> checkCounterOrEvaluateThenUpdate(TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long rewardCents) {
+        UserInitiativeCounters counter = counters.getInitiatives().get(initiativeId);
+
+        if(counter.getPendingTrx()!=null){
+            return Mono.error(new PendingCounterException());
+        } else {
+            return handleUnlockedCounter("SYNC_CANCEL_TRANSACTION", trxDTO, initiativeId, counters, -rewardCents)
+                    .flatMap(ctr2reward -> userInitiativeCountersRepository.save(counter)
+                            .map(x -> ctr2reward.getSecond())
+                    );
+        }
+    }
+
+    protected TransactionProcessed trx2processed(TransactionDTO trx, String initiativeId, String organizationId, BigDecimal rewardEur){
+        TransactionProcessed out = new TransactionProcessed();
+
+        out.setId(trx.getId());
+        out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
+        out.setAcquirerCode(trx.getAcquirerCode());
+        out.setTrxDate(trx.getTrxDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime());
+        out.setOperationType(trx.getOperationType());
+        out.setAcquirerId(trx.getAcquirerId());
+        out.setUserId(trx.getUserId());
+        out.setCorrelationId(trx.getCorrelationId());
+        out.setAmount(trx.getAmount());
+        out.setAmountCents(trx.getAmountCents());
+        out.setEffectiveAmount(trx.getEffectiveAmount());
+        out.setTrxChargeDate(trx.getTrxChargeDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime());
+        out.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
+        out.setRejectionReasons(trx.getRejectionReasons());
+        out.setRefundInfo(trx.getRefundInfo());
+        out.setChannel(trx.getChannel());
+        out.setRuleEngineTopicPartition(trx.getRuleEngineTopicPartition());
+        out.setRuleEngineTopicOffset(trx.getRuleEngineTopicOffset());
+        out.setInitiatives(List.of(initiativeId));
+        out.setRewards(Map.of(initiativeId, new Reward(initiativeId, organizationId, rewardEur)));
+        out.setInitiativeRejectionReasons(new HashMap<>());
+        out.setStatus(RewardConstants.REWARD_STATE_REWARDED);
+        out.setOperationTypeTranscoded(OperationType.CHARGE);
+        return  out;
+    }
 }

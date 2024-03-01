@@ -18,4 +18,9 @@ public class RewardCalculatorErrorManagerConfig {
     ErrorDTO tooManyRequestsErrorDTO() {
         return new ErrorDTO(ExceptionCode.TOO_MANY_REQUESTS, "Too Many Requests");
     }
+
+    @Bean
+    ErrorDTO templateValidationErrorDTO(){
+        return new ErrorDTO(ExceptionCode.INVALID_REQUEST, null);
+    }
 }

@@ -14,9 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import reactor.core.publisher.Flux;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @ExtendWith(MockitoExtension.class)
 class TrxRePublisherServiceTest {
@@ -52,5 +54,15 @@ class TrxRePublisherServiceTest {
         Assertions.assertEquals(Collections.emptyList(), republishedTrx.getRejectionReasons());
         Assertions.assertNull(republishedTrx.getEffectiveAmount());
         Assertions.assertNull(republishedTrx.getRefundInfo());
+    }
+
+    @Test
+    void trxRePublisherProducerConfigNotNull(){
+        TrxRePublisherServiceImpl.TrxRePublisherProducerConfig trxRePublisherProducerConfig = new TrxRePublisherServiceImpl.TrxRePublisherProducerConfig();
+
+        Supplier<Flux<Message<TransactionDTO>>> result = trxRePublisherProducerConfig.trxResubmitter();
+
+        Assertions.assertNotNull(result);
+
     }
 }

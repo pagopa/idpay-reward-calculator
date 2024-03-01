@@ -89,4 +89,20 @@ class CommonUtilitiesTest {
         );
     }
 
+    @Test
+    void getHeaderValue(){
+        Message<String> message = MessageBuilder.withPayload("DUMMY_PAYLOAD").setHeader("HEADER", 1L).build();
+        Object result = CommonUtilities.getHeaderValue(message, "HEADER");
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1L, result);
+    }
+
+    @Test
+    void centsToEuroString(){
+        String result = CommonUtilities.centsToEuroString(100L);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("1,00", result);
+    }
 }

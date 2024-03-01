@@ -381,4 +381,31 @@ class RewardCalculatorMediatorServiceImplTest {
         // Then
         Mockito.verifyNoInteractions(lockServiceMock, transactionProcessedServiceMock, operationTypeHandlerServiceMock, transactionValidatorServiceMock, onboardedInitiativesServiceMock, initiativesEvaluatorFacadeServiceMock,rewardNotifierServiceMock, rewardErrorNotifierServiceMock);
     }
+
+    @Test
+    void executeWithErrorToNtify() {
+        // Given
+        TransactionDTO trx = buildTrx(0);
+        trx.setChannel(null);
+        Pair<List<Acknowledgment>, Flux<Message<String>>> trxFluxAndAckMocks = buildTrxFlux(trx);
+
+        Mockito.doThrow(new RuntimeException("DUMMY_EXCEPTION"))
+                        .when(transactionValidatorServiceMock).validate(Mockito.any());
+
+        Mockito.when(lockServiceMock.getBuketSize()).thenReturn(LOCK_SERVICE_BUKET_SIZE);
+        Mockito.when(lockServiceMock.acquireLock(Mockito.anyInt())).thenAnswer(i -> Mono.just(i.getArgument(0)));
+
+        // When
+        rewardCalculatorMediatorService.execute(trxFluxAndAckMocks.getValue());
+
+        // Then
+        Mockito.verify(rewardErrorNotifierServiceMock, Mockito.only()).notifyTransactionEvaluation(Mockito.any(), Mockito.any(),Mockito.anyBoolean(), Mockito.any());
+        Mockito.verifyNoMoreInteractions(
+                transactionProcessedServiceMock,
+                operationTypeHandlerServiceMock,
+                onboardedInitiativesServiceMock,
+                initiativesEvaluatorFacadeServiceMock,
+                rewardNotifierServiceMock);
+    }
+
 }

@@ -1,9 +1,9 @@
 package it.gov.pagopa.reward.dto.synchronous;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.OffsetDateTime;
@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder(toBuilder = true)
+@SuperBuilder(toBuilder = true)
 public class SynchronousTransactionRequestDTO {
     private String transactionId;
     private String userId;
