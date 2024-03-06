@@ -51,6 +51,10 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
         return handleUnlockedRejectedType(trx);
     }
     private Mono<UserInitiativeCounters> handleUnlockedRejectedType(RewardTransactionDTO trx) {
+        if(null == trx.getAmountCents()){
+            return Mono.error(new IllegalStateException("The trx with id %s has amountCents not valid".formatted(trx.getId())));
+        }
+        trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
         return userInitiativeCountersRepository.findByPendingTrx(trx.getId())
                 .flatMap(userInitiativeCounters -> {
                     String initiativeId = trx.getInitiatives().get(0);
