@@ -99,10 +99,39 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
         Mockito.verifyNoMoreInteractions(userInitiativeCountersRepositoryMock);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {PAYMENT_STATE_REJECTED})
+    void execute_statusRejectedAmountCentsNull(String statusAccepted){
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setStatus(statusAccepted);
+        trx.setChannel(TRX_CHANNEL_QRCODE);
+        trx.setAmountCents(null);
+
+        String errorMessage = "The trx with id %s has amountCents not valid".formatted(trx.getId());
+
+        Mono<UserInitiativeCounters> execute = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx);
+        IllegalStateException exception = Assertions.assertThrows(IllegalStateException.class,execute::block);
+        Assertions.assertEquals(errorMessage,exception.getMessage());
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.never()).findByPendingTrx(any());
+
+    }
+
     @Test
-    void execute_statusNotAccepted(){
+    void execute_channelNotAccepted(){
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
         trx.setStatus(REWARD_STATE_REJECTED);
+        trx.setChannel(TRX_CHANNEL_RTD);
+
+        UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx).block();
+
+        Assertions.assertNull(result);
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.never()).unlockPendingTrx(any());
+    }
+
+    @Test
+    void execute_statusAndChannelNotAccepted(){
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setStatus("REFUND");
         trx.setChannel(TRX_CHANNEL_RTD);
 
         UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx).block();
