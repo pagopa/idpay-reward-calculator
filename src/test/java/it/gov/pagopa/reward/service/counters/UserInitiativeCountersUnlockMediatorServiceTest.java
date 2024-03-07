@@ -129,10 +129,10 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     }
 
     @Test
-    void execute_statusAndChannelNotAccepted(){
+    void execute_statusNotAccepted(){
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
         trx.setStatus("REFUND");
-        trx.setChannel(TRX_CHANNEL_RTD);
+        trx.setChannel(TRX_CHANNEL_QRCODE);
 
         UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx).block();
 
