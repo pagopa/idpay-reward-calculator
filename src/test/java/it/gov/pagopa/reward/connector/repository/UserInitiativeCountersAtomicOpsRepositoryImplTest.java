@@ -111,15 +111,13 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest {
 
         userInitiativeCounters.setPendingTrx(trx);
 
-        UserInitiativeCounters storedBefore = userInitiativeCountersRepository.save(userInitiativeCounters).block();
+        userInitiativeCountersRepository.save(userInitiativeCounters).block();
 
         // Where
         UserInitiativeCounters updateResult = userInitiativeCountersRepository.findByPendingTrx(trx.getId()).block();
 
         assertNotNull(updateResult);
         assertNotNull(updateResult.getPendingTrx());
-
-        assertNotNull(storedBefore);
 
     }
 }

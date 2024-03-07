@@ -88,7 +88,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
         Pair<UserInitiativeCountersWrapper,RewardTransactionDTO> pair = Pair.of(userInitiativeCountersWrapper,trx);
         Mono<Pair<UserInitiativeCountersWrapper,RewardTransactionDTO>> monoPair = Mono.just(pair);
 
-        Mockito.when(cancelTrxSynchronousService.handleUnlockedCounterForCancelTrx("USER_COUNTER_UNLOCK", trx, initiativeId, userInitiativeCountersWrapper, rewardCents)).thenReturn(monoPair);
+        Mockito.when(cancelTrxSynchronousService.handleUnlockedCounterForRefundTrx("USER_COUNTER_UNLOCK", trx, initiativeId, userInitiativeCountersWrapper, rewardCents)).thenReturn(monoPair);
 
         UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx).block();
 

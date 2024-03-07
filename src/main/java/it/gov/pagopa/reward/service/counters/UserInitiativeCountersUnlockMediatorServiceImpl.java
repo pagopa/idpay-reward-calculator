@@ -58,7 +58,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
         return userInitiativeCountersRepository.findByPendingTrx(trx.getId())
                 .flatMap(userInitiativeCounters -> {
                     String initiativeId = trx.getInitiatives().get(0);
-                    Reward rewardInitiative = trx.getRewards().get(trx.getInitiatives().get(0));
+                    Reward rewardInitiative = trx.getRewards().get(initiativeId);
                     Long rewardCents = CommonUtilities.euroToCents(rewardInitiative.getAccruedReward());
                     cancelTrxSynchronousService.transformIntoRefundTrx(
                             trx,
@@ -72,7 +72,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
                             new HashMap<>(Map.of(initiativeId,
                                     userInitiativeCounters)));
 
-                    return cancelTrxSynchronousService.handleUnlockedCounterForCancelTrx("USER_COUNTER_UNLOCK", trx, initiativeId, userInitiativeCountersWrapper, rewardCents)
+                    return cancelTrxSynchronousService.handleUnlockedCounterForRefundTrx("USER_COUNTER_UNLOCK", trx, initiativeId, userInitiativeCountersWrapper, rewardCents)
                             .flatMap(counter2rewardTrx -> userInitiativeCountersRepository.save(userInitiativeCounters));
 
                 });
