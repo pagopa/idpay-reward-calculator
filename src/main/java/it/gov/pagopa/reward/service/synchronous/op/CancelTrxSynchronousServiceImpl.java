@@ -109,17 +109,21 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     }
 
-    private Mono<RewardTransactionDTO> checkCounterOrEvaluateThenUpdate(TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long rewardCents) {
+    public Mono<RewardTransactionDTO> checkCounterOrEvaluateThenUpdate(TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long rewardCents) {
         UserInitiativeCounters counter = counters.getInitiatives().get(initiativeId);
 
         if(counter.getPendingTrx()!=null){
             return Mono.error(new PendingCounterException());
         } else {
-            return handleUnlockedCounter("SYNC_CANCEL_TRANSACTION", trxDTO, initiativeId, counters, -rewardCents)
+            return handleUnlockedCounterForRefundTrx("SYNC_CANCEL_TRANSACTION", trxDTO, initiativeId, counters, rewardCents)
                     .flatMap(ctr2reward -> userInitiativeCountersRepository.save(counter)
                             .map(x -> ctr2reward.getSecond())
                     );
         }
+    }
+
+    public Mono<Pair<UserInitiativeCountersWrapper,RewardTransactionDTO>> handleUnlockedCounterForRefundTrx(String flowName, TransactionDTO trxDTO, String initiativeId, UserInitiativeCountersWrapper counters, long rewardCents){
+        return handleUnlockedCounter(flowName, trxDTO, initiativeId, counters, -rewardCents);
     }
 
     protected TransactionProcessed trx2processed(TransactionDTO trx, String initiativeId, String organizationId, BigDecimal rewardEur){

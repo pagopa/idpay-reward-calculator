@@ -16,6 +16,8 @@ import reactor.core.publisher.Flux;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.REWARD_STATE_REJECTED;
+import static it.gov.pagopa.reward.utils.RewardConstants.TRX_CHANNEL_BARCODE;
 import static org.junit.jupiter.api.Assertions.*;
 
 @MongoTest
@@ -92,6 +94,30 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest {
         LocalDateTime updateDateBefore = storedBefore.getUpdateDate();
         assertNotNull(updateDateBefore);
         assertTrue(updateDateBefore.isBefore(updateResult.getUpdateDate()));
+
+    }
+
+    @Test
+    void findByPendingTrx(){
+        // When
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
+
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setInitiatives(List.of(initiativeId));
+        trx.setUserId(userId);
+        trx.setChannel(TRX_CHANNEL_BARCODE);
+        trx.setStatus(REWARD_STATE_REJECTED);
+
+        userInitiativeCounters.setPendingTrx(trx);
+
+        userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+        // Where
+        UserInitiativeCounters updateResult = userInitiativeCountersRepository.findByPendingTrx(trx.getId()).block();
+
+        assertNotNull(updateResult);
+        assertNotNull(updateResult.getPendingTrx());
 
     }
 }

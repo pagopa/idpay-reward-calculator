@@ -64,4 +64,10 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         UserInitiativeCounters.class
                 );
     }
+
+    @Override
+    public Mono<UserInitiativeCounters> findByPendingTrx(String trxId){
+        Query query = Query.query(Criteria.where(PENDING_TRX_ID_FIELD).is(trxId));
+        return mongoTemplate.findOne(query, UserInitiativeCounters.class);
+    }
 }
