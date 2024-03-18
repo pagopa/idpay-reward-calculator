@@ -11,4 +11,5 @@ public interface UserInitiativeCountersAtomicOpsRepository {
     Flux<UserInitiativeCounters> findByInitiativesWithBatch(String initiativeId, int batchSize);
     Mono<UserInitiativeCounters> unlockPendingTrx(String trxId);
     Mono<UserInitiativeCounters> findByPendingTrx(String trxId);
+    Mono<UserInitiativeCounters> saveIfVersionNotChanged(UserInitiativeCounters counters);
 }

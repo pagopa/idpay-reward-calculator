@@ -423,7 +423,7 @@ class CreateTrxSynchronousServiceImplTest {
     }
 
     private void mockUserInitiativeCountersRepositorySave(UserInitiativeCounters counter) {
-        Mockito.when(userInitiativeCountersRepositoryMock.save(counter)).thenReturn(Mono.just(counter));
+        Mockito.when(userInitiativeCountersRepositoryMock.saveIfVersionNotChanged(counter)).thenReturn(Mono.just(counter));
     }
 
     private void mockUserInitiativeCountersUpdateService(SynchronousTransactionRequestDTO transactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, BigDecimal reward) {

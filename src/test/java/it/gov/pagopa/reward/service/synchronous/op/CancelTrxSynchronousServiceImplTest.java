@@ -105,7 +105,7 @@ class CancelTrxSynchronousServiceImplTest{
         Mockito.when(userInitiativeCountersUpdateServiceMock.update(any(), any()))
                 .thenReturn(Mono.just(rewardTrx));
 
-        Mockito.when(userInitiativeCountersRepositoryMock.save(any())).thenReturn(Mono.just(getUserInitiativeCounters(trxCancelRequest)));
+        Mockito.when(userInitiativeCountersRepositoryMock.saveIfVersionNotChanged(any())).thenReturn(Mono.just(getUserInitiativeCounters(trxCancelRequest)));
 
         //When
         SynchronousTransactionResponseDTO result = cancelTrxSynchronousService.cancelTransaction(trxCancelRequest, INITIATIVEID).block();
@@ -118,7 +118,7 @@ class CancelTrxSynchronousServiceImplTest{
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getRewardRulesKieInitiativeIds();
         Mockito.verify(onboardedInitiativesServiceMock, Mockito.times(1)).isOnboarded(any(),any(),any());
         Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).findById(anyString());
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).save(any());
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).saveIfVersionNotChanged(any());
         Mockito.verify(userInitiativeCountersUpdateServiceMock, Mockito.times(1)).update(any(),any());
     }
 
