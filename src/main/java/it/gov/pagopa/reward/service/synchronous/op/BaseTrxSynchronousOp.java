@@ -122,7 +122,7 @@ abstract class BaseTrxSynchronousOp {
         return ctr2rewardMono
                 .flatMap(ctr2reward -> {
                             counter.setPendingTrx(trxDTO);
-                            return userInitiativeCountersRepository.save(counter)
+                            return userInitiativeCountersRepository.saveIfVersionNotChanged(counter)
                                     .map(x -> ctr2reward.getSecond());
                         }
                 );
