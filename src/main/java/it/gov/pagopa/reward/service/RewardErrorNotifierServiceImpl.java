@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service;
 
 import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
+import it.gov.pagopa.reward.model.SrcDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
@@ -46,7 +47,6 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private final String trxResponseTopic;
     private final String trxResponseGroup;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
 
                                           @Value("${spring.cloud.stream.binders.kafka-idpay-splitter.type}") String rewardRuleBuilderMessagingServiceType,
@@ -152,9 +152,9 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
 
     }
 
-
     @Override
     public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
-        return errorNotifierService.notify(srcType, srcServer, srcTopic, group, message, description, retryable,resendApplication, exception);
+        SrcDetails srcDetails = new SrcDetails(srcType, srcServer, srcTopic);
+        return errorNotifierService.notify(srcDetails, description, retryable,exception, group, resendApplication, message);
     }
 }

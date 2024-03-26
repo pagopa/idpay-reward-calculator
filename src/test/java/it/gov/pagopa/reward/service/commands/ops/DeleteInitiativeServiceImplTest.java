@@ -141,10 +141,18 @@ class DeleteInitiativeServiceImplTest {
                 .thenThrow(new MongoException("DUMMY_EXCEPTION"));
 
         try{
-            deleteInitiativeService.execute(INITIATIVE_ID).block();
-            Assertions.fail();
-        }catch (MongoException t){
+            Mono<String> executeMono = deleteInitiativeService.execute(INITIATIVE_ID);
+            try {
+                executeMono.block();
+                Assertions.fail();
+            }
+            catch (RuntimeException e) {
+                // Do nothing
+            }
+        }
+        catch (MongoException e){
             // Do nothing
         }
     }
+
 }

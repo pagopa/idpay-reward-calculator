@@ -53,7 +53,6 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
 
     private final AuditUtilities auditUtilities;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardCalculatorMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
             LockService lockService,

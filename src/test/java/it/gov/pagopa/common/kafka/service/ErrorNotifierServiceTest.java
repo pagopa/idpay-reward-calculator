@@ -3,6 +3,7 @@ package it.gov.pagopa.common.kafka.service;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.reward.model.SrcDetails;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -85,7 +86,8 @@ class ErrorNotifierServiceTest {
         ))).thenReturn(expectedResult);
 
         // When
-        boolean result = service.notify(SRC_TYPE, SRC_SERVER, SRC_TOPIC, GROUP, message, DESCRIPTION, expectedRetryable, expectedResend, expectedException);
+        SrcDetails srcDetails = new SrcDetails(SRC_TYPE, SRC_SERVER, SRC_TOPIC);
+        boolean result = service.notify( srcDetails, DESCRIPTION, expectedRetryable, expectedException,GROUP, expectedResend, message);
 
         // Then
         Assertions.assertEquals(expectedResult, result);

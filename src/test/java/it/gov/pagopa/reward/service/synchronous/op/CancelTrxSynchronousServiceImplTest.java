@@ -21,7 +21,6 @@ import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.reward.test.fakers.SynchronousTransactionAuthRequestDTOFaker;
@@ -57,8 +56,6 @@ class CancelTrxSynchronousServiceImplTest{
     @Mock
     private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
     @Mock
-    private InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeServiceMock;
-    @Mock
     private RewardContextHolderService rewardContextHolderServiceMock;
     @Mock
     private UserInitiativeCountersUpdateService userInitiativeCountersUpdateServiceMock;
@@ -72,7 +69,6 @@ class CancelTrxSynchronousServiceImplTest{
         cancelTrxSynchronousService =
                 new CancelTrxSynchronousServiceImpl("01",
                         userInitiativeCountersRepositoryMock,
-                        initiativesEvaluatorFacadeServiceMock,
                         new RewardTransaction2SynchronousTransactionResponseDTOMapper(),
                         rewardContextHolderServiceMock,
                         new Transaction2RewardTransactionMapper(),

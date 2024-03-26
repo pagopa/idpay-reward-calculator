@@ -1,10 +1,12 @@
 package it.gov.pagopa.reward.service;
 
 import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
+import it.gov.pagopa.reward.model.SrcDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +39,8 @@ class RewardErrorNotifierServiceTest {
     private ErrorNotifierService errorNotifierServiceMock;
 
     private RewardErrorNotifierService rewardErrorNotifierService;
+
+    private ArgumentCaptor<SrcDetails> srcDetailsCaptor;
 
     @BeforeEach
     void setUp() {
@@ -76,81 +80,136 @@ class RewardErrorNotifierServiceTest {
                 TRX_RESPONSE_TOPIC,
                 TRX_RESPONSE_GROUP
         );
+        srcDetailsCaptor = ArgumentCaptor.forClass(SrcDetails.class);
     }
 
     @Test
     void notifyRewardRuleBuilder() {
 
-        errorNotifyMock(REWARD_RULE_TOPIC, REWARD_RULE_GROUP, true, true );
+        errorNotifyMock(srcDetailsCaptor, REWARD_RULE_GROUP, true, true );
 
         boolean result = rewardErrorNotifierService.notifyRewardRuleBuilder(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
 
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(REWARD_RULE_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
         Assertions.assertTrue(result);
+
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
     void notifyTransactionEvaluation() {
 
-        errorNotifyMock(TRANSACTIONS_TOPIC, TRANSACTIONS_GROUP, true, true );
+        errorNotifyMock(srcDetailsCaptor, TRANSACTIONS_GROUP, true, true );
 
         boolean result = rewardErrorNotifierService.notifyTransactionEvaluation(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
 
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(TRANSACTIONS_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
         Assertions.assertTrue(result);
+
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
     void notifyRewardedTransaction() {
 
-        errorNotifyMock(TRANSACTION_REWARDED_TOPIC, null, false, false );
+        errorNotifyMock( srcDetailsCaptor, null, false, false );
 
         boolean result = rewardErrorNotifierService.notifyRewardedTransaction(dummyMessage, DUMMY_MESSAGE, false, new Throwable(DUMMY_MESSAGE));
 
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(TRANSACTION_REWARDED_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
+
         Assertions.assertTrue(result);
+
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
     void notifyTransactionResponse() {
 
-        errorNotifyMock(TRX_RESPONSE_TOPIC, TRX_RESPONSE_GROUP, true, true );
+        errorNotifyMock(srcDetailsCaptor, TRX_RESPONSE_GROUP, true, true );
+
 
         boolean result = rewardErrorNotifierService.notifyTransactionResponse(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
 
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(TRX_RESPONSE_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
         Assertions.assertTrue(result);
+
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
     void notifyRewardCommands() {
 
-        errorNotifyMock(COMMANDS_TOPIC, COMMANDS_GROUP, true, true);
+        errorNotifyMock( srcDetailsCaptor, COMMANDS_GROUP, true, true);
 
         rewardErrorNotifierService.notifyRewardCommands(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(COMMANDS_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
+
+
 
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
     void notifyHpanUpdateEvaluation() {
 
-        errorNotifyMock(HPAN_UPDATE_TOPIC, HPAN_UPDATE_GROUP, true, true );
+        errorNotifyMock(srcDetailsCaptor, HPAN_UPDATE_GROUP, true, true);
 
         boolean result = rewardErrorNotifierService.notifyHpanUpdateEvaluation(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
 
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(HPAN_UPDATE_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
+
         Assertions.assertTrue(result);
+
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
     @Test
     void notifyHpanUpdateOutcome() {
 
-        errorNotifyMock(HPAN_UPDATE_OUTCOME_TOPIC, null, true, false );
+        errorNotifyMock(srcDetailsCaptor, null, true, false );
 
         boolean result = rewardErrorNotifierService.notifyHpanUpdateOutcome(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
+
+        SrcDetails capturedSrcDetails = srcDetailsCaptor.getValue();
+
+        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getSrcType());
+        Assertions.assertEquals(HPAN_UPDATE_OUTCOME_TOPIC, capturedSrcDetails.getSrcTopic());
+        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getSrcServer());
 
         Assertions.assertTrue(result);
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
 
-    private void errorNotifyMock(String topic, String group, boolean retryable, boolean resendApplication ) {
-        Mockito.when(errorNotifierServiceMock.notify(eq(BINDER_KAFKA_TYPE), eq(BINDER_BROKER),
-                eq(topic), eq(group), eq(dummyMessage), eq(DUMMY_MESSAGE), eq(retryable), eq(resendApplication), any()))
-                .thenReturn(true);
+    private void errorNotifyMock(ArgumentCaptor<SrcDetails> srcDetailsCaptor, String group, boolean retryable, boolean resendApplication ) {
+        Mockito.when(errorNotifierServiceMock.notify(
+                        srcDetailsCaptor.capture(),
+                        eq(DUMMY_MESSAGE),
+                        eq(retryable),
+                        any(),
+                        eq(group),
+                        eq(resendApplication),
+                        eq(dummyMessage)
+                )
+        ).thenReturn(true);
     }
 }
