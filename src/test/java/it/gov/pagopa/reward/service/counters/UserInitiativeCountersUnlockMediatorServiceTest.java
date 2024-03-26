@@ -83,7 +83,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(userInitiativeCounters.getEntityId(),
                 new HashMap<>(Map.of(initiativeId,
                         userInitiativeCounters)));
-        Mockito.when(userInitiativeCountersRepositoryMock.save(userInitiativeCounters)).thenReturn(Mono.just(userInitiativeCounters));
+        Mockito.when(userInitiativeCountersRepositoryMock.saveIfVersionNotChanged(userInitiativeCounters)).thenReturn(Mono.just(userInitiativeCounters));
 
         Pair<UserInitiativeCountersWrapper,RewardTransactionDTO> pair = Pair.of(userInitiativeCountersWrapper,trx);
         Mono<Pair<UserInitiativeCountersWrapper,RewardTransactionDTO>> monoPair = Mono.just(pair);
