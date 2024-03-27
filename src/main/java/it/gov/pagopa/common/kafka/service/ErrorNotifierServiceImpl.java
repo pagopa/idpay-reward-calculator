@@ -1,7 +1,8 @@
 package it.gov.pagopa.common.kafka.service;
 
+
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
-import it.gov.pagopa.reward.model.SrcDetails;
+import it.gov.pagopa.reward.config.KafkaConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,12 +29,12 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
-    public boolean notify(SrcDetails srcDetails, String  description, boolean retryable, Throwable exception, String group, boolean resendApplication, Message<?> message){
+    public boolean notify(KafkaConfiguration.BaseKafkaInfoDTO baseKafkaInfoDTO, String  description, boolean retryable, Throwable exception, boolean resendApplication, Message<?> message){
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE, srcDetails.getSrcType())
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER, srcDetails.getSrcServer())
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC, srcDetails.getSrcTopic())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE, baseKafkaInfoDTO.getType())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER, baseKafkaInfoDTO.getBrokers())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC, baseKafkaInfoDTO.getDestination())
                 .setHeader(KafkaConstants.ERROR_MSG_HEADER_DESCRIPTION, description)
                 .setHeader(KafkaConstants.ERROR_MSG_HEADER_RETRYABLE, retryable)
                 .setHeader(KafkaConstants.ERROR_MSG_HEADER_STACKTRACE, ExceptionUtils.getStackTrace(exception));
@@ -48,7 +49,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
 
         if (resendApplication) {
             errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME,applicationName);
-            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_GROUP, group);
+            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_GROUP, baseKafkaInfoDTO.getGroup());
         }
 
         if (!errorPublisher.send(errorMessage.build())) {
