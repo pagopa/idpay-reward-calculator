@@ -73,7 +73,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
                                     userInitiativeCounters)));
 
                     return cancelTrxSynchronousService.handleUnlockedCounterForRefundTrx("USER_COUNTER_UNLOCK", trx, initiativeId, userInitiativeCountersWrapper, rewardCents)
-                            .flatMap(counter2rewardTrx -> userInitiativeCountersRepository.save(userInitiativeCounters));
+                            .flatMap(counter2rewardTrx -> userInitiativeCountersRepository.saveIfVersionNotChanged(userInitiativeCounters));
 
                 });
     }
