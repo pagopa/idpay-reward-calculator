@@ -21,7 +21,6 @@ public class KafkaConfiguration {
 
     @Data
     @SuperBuilder
-    @AllArgsConstructor
     @NoArgsConstructor
     public static class BaseKafkaInfoDTO {
         private String destination;
@@ -33,7 +32,6 @@ public class KafkaConfiguration {
     @Data
     @SuperBuilder
     @EqualsAndHashCode(callSuper = true)
-    @AllArgsConstructor
     @NoArgsConstructor
     public static class KafkaInfoDTO extends BaseKafkaInfoDTO{
         private String binder;
@@ -81,15 +79,6 @@ public class KafkaConfiguration {
         private String brokers;
     }
 
-    public String getTopicForBindings(String bindingsName) {
-        if (stream != null && stream.getBindings() != null) {
-            KafkaInfoDTO kafkaInfoDTO = stream.getBindings().get(bindingsName);
-            if (kafkaInfoDTO != null) {
-                return kafkaInfoDTO.getDestination();
-            }
-        }
-        return null;
-    }
     public String getTypeForBinder(String binderName) {
         if (stream != null && stream.getBinders() != null) {
             Binders binders = stream.getBinders().get(binderName);
