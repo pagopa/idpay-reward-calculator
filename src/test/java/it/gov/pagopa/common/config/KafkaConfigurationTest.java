@@ -15,14 +15,19 @@ import java.util.Map;
 @TestPropertySource( properties = {
         "spring.cloud.stream.binders.binder-test.type=kafka",
         "spring.cloud.stream.binders.binder-test.environment.spring.cloud.stream.kafka.binder.brokers=BROKERTEST",
+
+        "spring.cloud.stream.binders.binder-test-without-environment.type=kafka",
+
         "spring.cloud.stream.bindings.binding-test-in-0.destination=topic_test",
         "spring.cloud.stream.bindings.binding-test-in-0.binder=binder-test",
         "spring.cloud.stream.bindings.binding-test-in-0.group=group-test",
+
         "spring.cloud.stream.bindings.binding-test-without-binder-in-0.destination=topic_test-without-binder",
         "spring.cloud.stream.bindings.binding-test-without-binder-in-0.binder=unexpected-binder",
-        "spring.cloud.stream.binders.binder-test-without-environment.type=kafka",
+
         "spring.cloud.stream.bindings.binding-test-without-environment-in-0.destination=topic_test-without-environment",
         "spring.cloud.stream.bindings.binding-test-without-environment-in-0.binder=binder-test-without-environment"
+
 })
 @ExtendWith(SpringExtension.class)
 @EnableConfigurationProperties(value = KafkaConfiguration.class)
@@ -56,7 +61,7 @@ class KafkaConfigurationTest {
     @Test
     void getStream() {
         Map<String, KafkaConfiguration.KafkaInfoDTO> bindings = config.getStream().getBindings();
-        Assertions.assertEquals(2, bindings.size());
+        Assertions.assertEquals(3, bindings.size());
 
         KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = bindings.get("binding-test-in-0");
         Assertions.assertNotNull(kafkaInfoDTO);
@@ -67,7 +72,7 @@ class KafkaConfigurationTest {
         Assertions.assertEquals(binderTestName, kafkaInfoDTO.getBinder());
 
         Map<String, KafkaConfiguration.Binders> binders = config.getStream().getBinders();
-        Assertions.assertEquals(1, binders.size());
+        Assertions.assertEquals(2, binders.size());
         KafkaConfiguration.Binders binderDTO = binders.get(binderTestName);
         Assertions.assertEquals(binderTestType, binderDTO.getType());
         Assertions.assertEquals(binderTestBroker, binderDTO.getEnvironment().getSpring().getCloud().getStream().getKafka().getBinder().getBrokers());
@@ -76,7 +81,7 @@ class KafkaConfigurationTest {
     @Test
     void getStreamWithoutBinders() {
         Map<String, KafkaConfiguration.KafkaInfoDTO> bindings = config.getStream().getBindings();
-        Assertions.assertEquals(2, bindings.size());
+        Assertions.assertEquals(3, bindings.size());
 
         KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = bindings.get("binding-test-without-binder-in-0");
         Assertions.assertNotNull(kafkaInfoDTO);
@@ -87,7 +92,7 @@ class KafkaConfigurationTest {
         Assertions.assertNull(kafkaInfoDTO.getBrokers());
 
         Map<String, KafkaConfiguration.Binders> binders = config.getStream().getBinders();
-        Assertions.assertEquals(1, binders.size());
+        Assertions.assertEquals(2, binders.size());
         KafkaConfiguration.Binders binderDTO = binders.get(withoutBinderName);
         Assertions.assertNull(binderDTO);
     }
