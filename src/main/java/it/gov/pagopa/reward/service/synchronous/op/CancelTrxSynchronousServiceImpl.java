@@ -22,7 +22,6 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +48,6 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             @Value("${app.operationType.refund") String refundOperationType,
 
             UserInitiativeCountersRepository userInitiativeCountersRepository,
-            InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
             RewardContextHolderService rewardContextHolderService,
             Transaction2RewardTransactionMapper rewardTransactionMapper,
@@ -58,7 +56,6 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper) {
         super(
                 userInitiativeCountersRepository,
-                initiativesEvaluatorFacadeService,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
                 rewardContextHolderService,
                 rewardTransactionMapper,
@@ -116,7 +113,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             return Mono.error(new PendingCounterException());
         } else {
             return handleUnlockedCounterForRefundTrx("SYNC_CANCEL_TRANSACTION", trxDTO, initiativeId, counters, rewardCents)
-                    .flatMap(ctr2reward -> userInitiativeCountersRepository.save(counter)
+                    .flatMap(ctr2reward -> userInitiativeCountersRepository.saveIfVersionNotChanged(counter)
                             .map(x -> ctr2reward.getSecond())
                     );
         }

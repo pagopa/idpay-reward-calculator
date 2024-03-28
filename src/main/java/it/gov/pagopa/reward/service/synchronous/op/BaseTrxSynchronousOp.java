@@ -22,7 +22,6 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +37,6 @@ import java.util.function.Function;
 abstract class BaseTrxSynchronousOp {
 
     protected final UserInitiativeCountersRepository userInitiativeCountersRepository;
-    protected final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
     protected final RewardTransaction2SynchronousTransactionResponseDTOMapper mapper;
     protected final RewardContextHolderService rewardContextHolderService;
     protected final Transaction2RewardTransactionMapper rewardTransactionMapper;
@@ -46,10 +44,8 @@ abstract class BaseTrxSynchronousOp {
     private final OnboardedInitiativesService onboardedInitiativesService;
     protected final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     protected BaseTrxSynchronousOp(
             UserInitiativeCountersRepository userInitiativeCountersRepository,
-            InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
             RewardTransaction2SynchronousTransactionResponseDTOMapper mapper,
             RewardContextHolderService rewardContextHolderService,
             Transaction2RewardTransactionMapper rewardTransactionMapper,
@@ -57,7 +53,6 @@ abstract class BaseTrxSynchronousOp {
             OnboardedInitiativesService onboardedInitiativesService,
             SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper) {
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
-        this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
         this.mapper = mapper;
         this.rewardContextHolderService = rewardContextHolderService;
         this.rewardTransactionMapper = rewardTransactionMapper;
@@ -122,7 +117,7 @@ abstract class BaseTrxSynchronousOp {
         return ctr2rewardMono
                 .flatMap(ctr2reward -> {
                             counter.setPendingTrx(trxDTO);
-                            return userInitiativeCountersRepository.save(counter)
+                            return userInitiativeCountersRepository.saveIfVersionNotChanged(counter)
                                     .map(x -> ctr2reward.getSecond());
                         }
                 );

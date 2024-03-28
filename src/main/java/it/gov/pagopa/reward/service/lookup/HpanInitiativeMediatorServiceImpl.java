@@ -55,7 +55,6 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     private final RewardContextHolderService rewardContextHolderService;
     private final OnboardingFamiliesRepository onboardingFamiliesRepository;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public HpanInitiativeMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.hpanInitiativeConsumer-in-0.consumer.ackTime}") Long commitMillis,
@@ -67,7 +66,9 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
             RewardErrorNotifierService rewardErrorNotifierService,
             HpanUpdateEvaluateDTO2HpanInitiativeMapper hpanUpdateEvaluateDTO2HpanInitiativeMapper,
             HpanUpdateBulk2SingleMapper hpanUpdateBulk2SingleMapper,
-            HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper, RewardContextHolderService rewardContextHolderService, OnboardingFamiliesRepository onboardingFamiliesRepository) {
+            HpanList2HpanUpdateOutcomeDTOMapper hpanList2HpanUpdateOutcomeDTOMapper,
+            RewardContextHolderService rewardContextHolderService,
+            OnboardingFamiliesRepository onboardingFamiliesRepository) {
         super(applicationName);
         this.commitDelay = Duration.ofMillis(commitMillis);
 

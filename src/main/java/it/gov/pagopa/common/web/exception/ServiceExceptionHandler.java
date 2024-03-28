@@ -24,9 +24,8 @@ public class ServiceExceptionHandler {
         this.transcodeMap = transcodeMap;
     }
 
-    @SuppressWarnings("squid:S1452")
     @ExceptionHandler(ServiceException.class)
-    protected ResponseEntity<? extends ServiceExceptionPayload> handleException(ServiceException error, ServerWebExchange exchange) {
+    protected ResponseEntity<Object> handleException(ServiceException error, ServerWebExchange exchange) {
         if (null != error.getPayload()) {
             return handleBodyProvidedException(error, exchange);
         }
@@ -44,7 +43,7 @@ public class ServiceExceptionHandler {
         return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.isPrintStackTrace(), error);
     }
 
-    private ResponseEntity<? extends ServiceExceptionPayload> handleBodyProvidedException(ServiceException error, ServerWebExchange exchange) {
+    private ResponseEntity<Object> handleBodyProvidedException(ServiceException error, ServerWebExchange exchange) {
         ClientException clientException = transcodeException(error);
         ErrorManager.logClientException(clientException, exchange);
 

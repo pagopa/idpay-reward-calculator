@@ -6,6 +6,6 @@ import org.springframework.data.repository.NoRepositoryBean;
 import reactor.core.publisher.Mono;
 
 @NoRepositoryBean
-public interface ReactiveMongoRepositoryExt<T, ID> extends ReactiveMongoRepository<T, ID> {
-    Mono<DeleteResult> removeById(ID id);
+public interface ReactiveMongoRepositoryExt<T, I> extends ReactiveMongoRepository<T, I> {
+    Mono<DeleteResult> removeById(I id);
 }

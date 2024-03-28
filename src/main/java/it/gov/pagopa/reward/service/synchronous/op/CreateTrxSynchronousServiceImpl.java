@@ -31,7 +31,7 @@ import java.util.List;
 public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implements CreateTrxSynchronousService {
 
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
+    private final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
     public CreateTrxSynchronousServiceImpl(
             RewardContextHolderService rewardContextHolderService,
             OnboardedInitiativesService onboardedInitiativesService,
@@ -43,14 +43,13 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
         super(
                 userInitiativeCountersRepository,
-                initiativesEvaluatorFacadeService,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
                 rewardContextHolderService,
                 rewardTransactionMapper,
                 userInitiativeCountersUpdateService,
                 onboardedInitiativesService,
                 syncTrxRequest2TransactionDtoMapper);
-
+        this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
     }
 
     @Override
