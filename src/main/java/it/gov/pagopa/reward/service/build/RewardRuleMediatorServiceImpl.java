@@ -33,7 +33,7 @@ public class RewardRuleMediatorServiceImpl extends BaseKafkaConsumer<InitiativeR
 
     private final ObjectReader objectReader;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
+
     public RewardRuleMediatorServiceImpl(
             @Value("${spring.application.name}") String applicationName,
             @Value("${spring.cloud.stream.kafka.bindings.rewardRuleConsumer-in-0.consumer.ackTime}") Long commitMillis,

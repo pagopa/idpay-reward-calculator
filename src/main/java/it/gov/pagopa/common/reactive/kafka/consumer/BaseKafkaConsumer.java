@@ -59,7 +59,7 @@ public abstract class BaseKafkaConsumer<T, R> {
     record KafkaAcknowledgeResult<T> (Acknowledgment ack, Integer partition, Long offset, T result){
         public KafkaAcknowledgeResult(Message<?> message, T result) {
             this(
-                    CommonUtilities.getHeaderValue(message, KafkaHeaders.ACKNOWLEDGMENT),
+                    (Acknowledgment)CommonUtilities.getHeaderValue(message, KafkaHeaders.ACKNOWLEDGMENT),
                     getMessagePartitionId(message),
                     getMessageOffset(message),
                     result
@@ -68,11 +68,11 @@ public abstract class BaseKafkaConsumer<T, R> {
     }
 
     private static Integer getMessagePartitionId(Message<?> message) {
-        return CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION);
+        return (Integer )CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION);
     }
 
     private static Long getMessageOffset(Message<?> message) {
-        return CommonUtilities.getHeaderValue(message, KafkaHeaders.OFFSET);
+        return (Long) CommonUtilities.getHeaderValue(message, KafkaHeaders.OFFSET);
     }
 
     /** It will ask the superclass to handle the messages, then sequentially it will acknowledge them */
