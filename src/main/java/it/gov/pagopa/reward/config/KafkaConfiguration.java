@@ -35,7 +35,6 @@ public class KafkaConfiguration {
     @Getter
     @Setter
     @SuperBuilder
-    @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
     public static class KafkaInfoDTO extends BaseKafkaInfoDTO{
         private String binder;
