@@ -10,16 +10,19 @@ import java.util.Map;
 
 @Configuration
 @ConfigurationProperties(prefix = "spring.cloud")
-@Data
+@Getter
+@Setter
 public class KafkaConfiguration {
     private Stream stream;
-    @Data
+    @Getter
+    @Setter
     public static class Stream {
         private Map<String, KafkaInfoDTO> bindings;
         private Map<String,Binders> binders;
     }
 
-    @Data
+    @Getter
+    @Setter
     @SuperBuilder
     @NoArgsConstructor
     public static class BaseKafkaInfoDTO {
@@ -29,7 +32,8 @@ public class KafkaConfiguration {
         private String brokers;
     }
 
-    @Data
+    @Getter
+    @Setter
     @SuperBuilder
     @EqualsAndHashCode(callSuper = true)
     @NoArgsConstructor
@@ -44,37 +48,44 @@ public class KafkaConfiguration {
         });
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Binders{
         private String type;
         private Environment environment;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Environment {
         private Spring spring;
     }
-    @Data
+    @Getter
+    @Setter
     public static class Spring{
         private Cloud cloud;
     }
 
-    @Data
+    @Getter
+    @Setter
     public  static class Cloud{
         private StreamBinder stream;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class StreamBinder{
         private Kafka kafka;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Kafka{
         private Binder binder;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static  class Binder{
         private String brokers;
     }
