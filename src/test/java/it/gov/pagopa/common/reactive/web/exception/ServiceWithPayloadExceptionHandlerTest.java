@@ -3,10 +3,10 @@ package it.gov.pagopa.common.reactive.web.exception;
 
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.MemoryAppender;
-import it.gov.pagopa.common.web.exception.ErrorManager;
-import it.gov.pagopa.common.web.exception.ServiceException;
-import it.gov.pagopa.common.web.exception.ServiceExceptionHandler;
-import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
+import it.gov.pagopa.common.web.exception.*;
+import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
+import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,14 +25,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {ServiceExceptionHandler.class, ServiceExceptionHandlerTest.TestController.class, ErrorManager.class})
+@ContextConfiguration(classes = {ServiceWithPayloadExceptionHandler.class, ServiceWithPayloadExceptionHandlerTest.TestController.class})
 @WebFluxTest
-class ServiceExceptionHandlerTest {
+class ServiceWithPayloadExceptionHandlerTest {
     @Autowired
     private WebTestClient webTestClient;
     private static MemoryAppender memoryAppender;
 
+    @Autowired
+    private static SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper;
 
 
     @BeforeAll
@@ -56,13 +60,29 @@ class ServiceExceptionHandlerTest {
     static class TestController {
         @GetMapping("/test")
         Mono<String> test() {
-            throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE");
+            throw new ServiceWithPayloadException(
+                    "DUMMY_CODE",
+                    "DUMMY_MESSAGE",
+                    new ErrorPayloadTest("RESPONSE",0));
         }
 
         @GetMapping("/test/customBody")
         Mono<String> testCustomBody() {
-            throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE", true, null);
+            throw new ServiceWithPayloadException(
+                    "DUMMY_CODE",
+                    "DUMMY_MESSAGE",
+                    new ErrorPayloadTest("RESPONSE",0),
+                    true,
+                    null);
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    static class ErrorPayloadTest implements ServiceExceptionPayload {
+        private String stringCode;
+        private long longCode;
     }
 
     @Test
@@ -71,9 +91,9 @@ class ServiceExceptionHandlerTest {
                 .uri(uriBuilder -> uriBuilder.path("/test").build())
                 .exchange()
                 .expectStatus().is5xxServerError()
-                .expectBody().json("{\"code\":\"DUMMY_CODE\",\"message\":\"DUMMY_MESSAGE\"}", false);
+                .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
 
-        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "A ServiceException occurred handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE at it.gov.pagopa.common.reactive.web.exception.ServiceExceptionHandlerTest\\$TestController.test\\(ServiceExceptionHandlerTest.java:[0-9]+\\)");
+        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "A ServiceWithPayloadException occurred handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE at it.gov.pagopa.common.reactive.web.exception.ServiceWithPayloadExceptionHandlerTest\\$TestController.test\\(ServiceWithPayloadExceptionHandlerTest.java:[0-9]+\\)");
     }
 
     @Test
@@ -82,12 +102,12 @@ class ServiceExceptionHandlerTest {
                 .uri(uriBuilder -> uriBuilder.path("/test/customBody").build())
                 .exchange()
                 .expectStatus().is5xxServerError()
-                .expectBody().json("{\"code\":\"DUMMY_CODE\",\"message\":\"DUMMY_MESSAGE\"}", false);
+                .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
 
         ErrorManagerTest.checkLog(memoryAppender,
                 "Something went wrong handling request GET /test/customBody \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.web.exception.ServiceException: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.reactive.web.exception.ServiceExceptionHandlerTest$TestController.testCustomBody"
+                "it.gov.pagopa.common.web.exception.ServiceWithPayloadException: DUMMY_MESSAGE",
+                "it.gov.pagopa.common.reactive.web.exception.ServiceWithPayloadExceptionHandlerTest$TestController.testCustomBody"
 
         );
     }

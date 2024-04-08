@@ -182,7 +182,6 @@ class CancelTrxSynchronousServiceImplTest{
         Assertions.assertNotNull(exceptionResult);
         Assertions.assertEquals(PENDING_COUNTER, exceptionResult.getCode());
         Assertions.assertEquals(RewardConstants.ExceptionMessage.PENDING_COUNTER, exceptionResult.getMessage());
-        Assertions.assertNull(exceptionResult.getPayload());
 
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getInitiativeConfig(any());
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getRewardRulesKieInitiativeIds();

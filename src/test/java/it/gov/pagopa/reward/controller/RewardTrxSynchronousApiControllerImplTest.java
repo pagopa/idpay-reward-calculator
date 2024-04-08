@@ -138,8 +138,7 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .body(BodyInserters.fromValue(request))
                 .exchange()
                 .expectStatus().isNotFound()
-                .expectBody(ErrorDTO.class).isEqualTo(errorDTO);
-
+                .expectBody().isEmpty();
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).previewTransaction(Mockito.any(), Mockito.eq(initiativeId));
     }
     @Test
@@ -227,7 +226,8 @@ class RewardTrxSynchronousApiControllerImplTest {
                 .header(HttpHeaders.IF_MATCH, String.valueOf(counterVersion))
                 .exchange()
                 .expectStatus().isNotFound()
-                .expectBody(ErrorDTO.class).isEqualTo(errorDTO);
+                .expectBody().isEmpty();
+
 
         Mockito.verify(rewardTrxSynchronousServiceMock, Mockito.only()).authorizeTransaction(Mockito.any(), Mockito.eq(initiativeId), Mockito.eq(counterVersion));
     }

@@ -1,13 +1,14 @@
 package it.gov.pagopa.reward.controller;
 
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
 import it.gov.pagopa.reward.service.synchronous.RewardTrxSynchronousApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -37,7 +38,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
                             }
                             return ResponseEntity.ok().headers(headers).body(r);
                         })
-                        .switchIfEmpty(Mono.error(new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
                 trxPreviewRequest.toString());
     }
 
@@ -48,7 +49,7 @@ public class RewardTrxSynchronousApiControllerImpl implements RewardTrxSynchrono
         return PerformanceLogger.logTimingFinally("SYNC_AUTHORIZE_TRANSACTION",
                 rewardTrxSynchronousService.authorizeTransaction(trxAuthorizeRequest, initiativeId, counterVersion)
                         .doOnNext(r -> log.info("[SYNC_AUTHORIZE_TRANSACTION] The authorization requested by userId {} of a transaction having id {} on initiativeId {} resulted into status {} and rejections {}", trxAuthorizeRequest.getUserId(), trxAuthorizeRequest.getTransactionId(), initiativeId, r.getStatus(), r.getRejectionReasons()))
-                        .switchIfEmpty(Mono.error(new InitiativeNotFoundOrNotDiscountException(String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
+                        .switchIfEmpty(Mono.error(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG, initiativeId)))),
                 trxAuthorizeRequest.toString());
     }
 

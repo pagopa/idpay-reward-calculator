@@ -37,7 +37,7 @@ public class MongoExceptionHandler {
 
 
   @ExceptionHandler(DataAccessException.class)
-    protected ResponseEntity<Object> handleDataAccessException(
+    protected ResponseEntity<ErrorDTO> handleDataAccessException(
           DataAccessException ex, ServerWebExchange request) {
 
     if (MongoRequestRateTooLargeRetryer.isRequestRateTooLargeException(ex)) {
@@ -50,13 +50,13 @@ public class MongoExceptionHandler {
   }
 
   @ExceptionHandler(MongoRequestRateTooLargeRetryExpiredException.class)
-  protected ResponseEntity<Object> handleMongoRequestRateTooLargeRetryExpiredException(
+  protected ResponseEntity<ErrorDTO> handleMongoRequestRateTooLargeRetryExpiredException(
       MongoRequestRateTooLargeRetryExpiredException ex, ServerWebExchange request) {
 
     return getErrorDTOResponseEntity(ex, request, ex.getRetryAfterMs());
   }
 
-  private ResponseEntity<Object> getErrorDTOResponseEntity(Exception ex,
+  private ResponseEntity<ErrorDTO> getErrorDTOResponseEntity(Exception ex,
       ServerWebExchange request, Long retryAfterMs) {
     String message = ex.getMessage();
 
