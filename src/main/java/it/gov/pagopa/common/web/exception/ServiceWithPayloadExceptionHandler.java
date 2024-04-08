@@ -16,9 +16,9 @@ import java.util.Map;
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ServiceWithPayloadExceptionHandler {
-    private final Map<Class<? extends ServiceException>, HttpStatus> transcodeMap;
+    private final Map<Class<? extends ServiceWithPayloadException>, HttpStatus> transcodeMap;
 
-    public ServiceWithPayloadExceptionHandler(Map<Class<? extends ServiceException>, HttpStatus> transcodeMap) {
+    public ServiceWithPayloadExceptionHandler(Map<Class<? extends ServiceWithPayloadException>, HttpStatus> transcodeMap) {
         this.transcodeMap = transcodeMap;
     }
 

@@ -4,7 +4,6 @@ package it.gov.pagopa.common.reactive.web.exception;
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.common.web.exception.*;
-import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,10 +29,6 @@ class ServiceWithPayloadExceptionHandlerTest {
     @Autowired
     private WebTestClient webTestClient;
     private static MemoryAppender memoryAppender;
-
-    @Autowired
-    private static SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper;
-
 
     @BeforeAll
     static void configureMemoryAppender(){
@@ -89,7 +84,7 @@ class ServiceWithPayloadExceptionHandlerTest {
                 .expectStatus().is5xxServerError()
                 .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
 
-        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "A ServiceWithPayloadException occurred handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE at it.gov.pagopa.common.reactive.web.exception.ServiceWithPayloadExceptionHandlerTest\\$TestController.test\\(ServiceWithPayloadExceptionHandlerTest.java:[0-9]+\\)");
+        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "Something went wrong handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE");
     }
 
     @Test
@@ -102,8 +97,8 @@ class ServiceWithPayloadExceptionHandlerTest {
 
         ErrorManagerTest.checkLog(memoryAppender,
                 "Something went wrong handling request GET /test/customBody \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.web.exception.ServiceWithPayloadException: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.reactive.web.exception.ServiceWithPayloadExceptionHandlerTest$TestController.testCustomBody"
+                "it.gov.pagopa.common.web.exception.ClientExceptionWithBody: DUMMY_MESSAGE",
+                "it.gov.pagopa.common.web.exception.ServiceWithPayloadExceptionHandler.transcodeException"
 
         );
     }
