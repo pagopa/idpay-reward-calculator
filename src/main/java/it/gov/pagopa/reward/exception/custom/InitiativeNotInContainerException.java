@@ -5,7 +5,7 @@ import it.gov.pagopa.common.web.exception.ServiceWithPayloadException;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.INITIATIVE_NOT_READY;
 
-@SuppressWarnings("squid:S110")
+
 public class InitiativeNotInContainerException  extends ServiceWithPayloadException {
 
     public InitiativeNotInContainerException(String message, ServiceExceptionPayload payload) {

@@ -5,7 +5,7 @@ import it.gov.pagopa.common.web.exception.ServiceWithPayloadException;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.INITIATIVE_NOT_ACTIVE_FOR_USER;
 
-@SuppressWarnings("squid:S110")
+
 public class InitiativeNotActiveException extends ServiceWithPayloadException {
     public InitiativeNotActiveException(String message, ServiceExceptionPayload payload) {
         this(INITIATIVE_NOT_ACTIVE_FOR_USER, message,payload);

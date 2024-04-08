@@ -4,7 +4,7 @@ import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.common.web.exception.ServiceWithPayloadException;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT;
-@SuppressWarnings("squid:S110")
+
 public class InitiativeNotFoundOrNotDiscountException extends ServiceWithPayloadException {
 
     public InitiativeNotFoundOrNotDiscountException(String message, ServiceExceptionPayload payload) {
