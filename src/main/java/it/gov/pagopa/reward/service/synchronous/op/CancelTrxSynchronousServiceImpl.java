@@ -113,7 +113,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             return Mono.error(new PendingCounterException());
         } else {
             return handleUnlockedCounterForRefundTrx("SYNC_CANCEL_TRANSACTION", trxDTO, initiativeId, counters, rewardCents)
-                    .flatMap(ctr2reward -> userInitiativeCountersRepository.save(counter)
+                    .flatMap(ctr2reward -> userInitiativeCountersRepository.saveIfVersionNotChanged(counter)
                             .map(x -> ctr2reward.getSecond())
                     );
         }
