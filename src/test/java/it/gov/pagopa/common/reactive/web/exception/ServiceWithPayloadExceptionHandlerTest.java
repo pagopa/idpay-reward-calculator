@@ -5,8 +5,6 @@ import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.common.web.exception.*;
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
-import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
-import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,8 +22,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {ServiceWithPayloadExceptionHandler.class, ServiceWithPayloadExceptionHandlerTest.TestController.class})
