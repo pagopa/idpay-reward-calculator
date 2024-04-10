@@ -23,7 +23,7 @@ public class ErrorManager {
                 .orElse(new ErrorDTO("Error", "Something gone wrong"));
     }
     @ExceptionHandler(RuntimeException.class)
-    protected ResponseEntity<Object> handleException(RuntimeException error, ServerWebExchange exchange) {
+    protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerWebExchange exchange) {
         logClientException(error, exchange);
 
         if(error instanceof ClientExceptionNoBody clientExceptionNoBody){
