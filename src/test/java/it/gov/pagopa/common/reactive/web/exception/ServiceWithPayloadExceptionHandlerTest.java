@@ -78,7 +78,7 @@ class ServiceWithPayloadExceptionHandlerTest {
                 .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
 
         ErrorManagerTest.checkLog(memoryAppender,
-                "Something went wrong handling request GET /test/customBody \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
+                "Something went wrong handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
                 "it.gov.pagopa.common.web.exception.ClientExceptionWithBody: DUMMY_MESSAGE",
                 "it.gov.pagopa.common.web.exception.ServiceWithPayloadExceptionHandler.transcodeException"
 
