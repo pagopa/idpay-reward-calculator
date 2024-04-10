@@ -49,15 +49,8 @@ class ServiceWithPayloadExceptionHandlerTest {
     @RestController
     @Slf4j
     static class TestController {
-        @GetMapping("/test")
-        Mono<String> test() {
-            throw new ServiceWithPayloadException(
-                    "DUMMY_CODE",
-                    "DUMMY_MESSAGE",
-                    new ErrorPayloadTest("RESPONSE",0));
-        }
 
-        @GetMapping("/test/customBody")
+        @GetMapping("/test")
         Mono<String> testCustomBody() {
             throw new ServiceWithPayloadException(
                     "DUMMY_CODE",
@@ -77,20 +70,9 @@ class ServiceWithPayloadExceptionHandlerTest {
     }
 
     @Test
-    void testSimpleException() {
-        webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/test").build())
-                .exchange()
-                .expectStatus().is5xxServerError()
-                .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
-
-        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "Something went wrong handling request GET /test \\([^)]+\\): HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE");
-    }
-
-    @Test
     void testCustomBodyException() {
         webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/test/customBody").build())
+                .uri(uriBuilder -> uriBuilder.path("/test").build())
                 .exchange()
                 .expectStatus().is5xxServerError()
                 .expectBody().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
