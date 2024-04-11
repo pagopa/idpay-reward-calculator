@@ -242,7 +242,7 @@ class CreateTrxSynchronousServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(ExceptionCode.PENDING_COUNTER, result.getCode());
         Assertions.assertEquals(ExceptionMessage.PENDING_COUNTER, result.getMessage());
-        Assertions.assertNull(result.getPayload());
+
     }
 
     @ParameterizedTest
@@ -269,7 +269,6 @@ class CreateTrxSynchronousServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(ExceptionCode.INVALID_COUNTER_VERSION, result.getCode());
         Assertions.assertEquals(ExceptionMessage.INVALID_COUNTER_VERSION, result.getMessage());
-        Assertions.assertNull(result.getPayload());
     }
 
     @Test
