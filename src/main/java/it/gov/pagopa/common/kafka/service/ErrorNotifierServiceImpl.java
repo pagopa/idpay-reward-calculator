@@ -1,6 +1,8 @@
 package it.gov.pagopa.common.kafka.service;
 
+
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
+import it.gov.pagopa.reward.config.KafkaConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,12 +29,12 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
-    public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
+    public boolean notify(KafkaConfiguration.BaseKafkaInfoDTO baseKafkaInfoDTO, String  description, boolean retryable, Throwable exception, boolean resendApplication, Message<?> message){
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE, srcType)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER, srcServer)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC, srcTopic)
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE, baseKafkaInfoDTO.getType())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER, baseKafkaInfoDTO.getBrokers())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC, baseKafkaInfoDTO.getDestination())
                 .setHeader(KafkaConstants.ERROR_MSG_HEADER_DESCRIPTION, description)
                 .setHeader(KafkaConstants.ERROR_MSG_HEADER_RETRYABLE, retryable)
                 .setHeader(KafkaConstants.ERROR_MSG_HEADER_STACKTRACE, ExceptionUtils.getStackTrace(exception));
@@ -41,13 +43,13 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
         addExceptionInfo(errorMessage, "cause", exception.getCause());
 
         byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_KEY, byte[].class);
-        if(receivedKey!=null){
+        if (receivedKey != null) {
             errorMessage.setHeader(KafkaHeaders.KEY, new String(receivedKey, StandardCharsets.UTF_8));
         }
 
-        if (resendApplication){
-            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, applicationName);
-            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_GROUP, group);
+        if (resendApplication) {
+            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME,applicationName);
+            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_GROUP, baseKafkaInfoDTO.getGroup());
         }
 
         if (!errorPublisher.send(errorMessage.build())) {

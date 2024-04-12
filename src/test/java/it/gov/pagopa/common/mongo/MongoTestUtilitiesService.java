@@ -68,7 +68,7 @@ public class MongoTestUtilitiesService {
     public static void startMongoCommandListener(String desc) {
         mongoCommands = new ConcurrentLinkedQueue<>();
         mongoCommandsListenerDesc = desc;
-        if(mongoCommandsListenerDesc.length()>0){
+        if(!mongoCommandsListenerDesc.isEmpty()){
             mongoCommandsListenerDesc = ": " + mongoCommandsListenerDesc;
         }
     }
@@ -148,8 +148,7 @@ public class MongoTestUtilitiesService {
                 }
 
                 private void cleanUpsert(Document clone) {
-                    @SuppressWarnings("unchecked")
-                    List<Document> updatesNode = (List<Document>) clone.get("updates");
+                    List<Document> updatesNode =  clone.getList("updates", Document.class);
                     if (updatesNode != null) {
                         updatesNode.forEach(u -> {
                             clearDocumentValues(u, "q");

@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import org.bson.BsonString;
@@ -12,10 +13,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import static it.gov.pagopa.reward.utils.RewardConstants.REWARD_STATE_REJECTED;
+import static it.gov.pagopa.reward.utils.RewardConstants.TRX_CHANNEL_BARCODE;
 import static org.junit.jupiter.api.Assertions.*;
 
 @MongoTest
@@ -92,6 +98,71 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest {
         LocalDateTime updateDateBefore = storedBefore.getUpdateDate();
         assertNotNull(updateDateBefore);
         assertTrue(updateDateBefore.isBefore(updateResult.getUpdateDate()));
+
+    }
+
+    @Test
+    void findByPendingTrx(){
+        // When
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCounters.setUpdateDate(LocalDateTime.now().minusMinutes(5));
+
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setInitiatives(List.of(initiativeId));
+        trx.setUserId(userId);
+        trx.setChannel(TRX_CHANNEL_BARCODE);
+        trx.setStatus(REWARD_STATE_REJECTED);
+
+        userInitiativeCounters.setPendingTrx(trx);
+
+        userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+        // Where
+        UserInitiativeCounters updateResult = userInitiativeCountersRepository.findByPendingTrx(trx.getId()).block();
+
+        assertNotNull(updateResult);
+        assertNotNull(updateResult.getPendingTrx());
+
+    }
+
+    @Test
+    void saveIfVersionNotChanged(){
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCounters.setVersion(1L);
+
+        UserInitiativeCounters userInitiativeCountersUpdate = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCountersUpdate.setVersion(2L);
+        userInitiativeCountersUpdate.setTrxNumber(1L);
+        userInitiativeCountersUpdate.setTotalReward(BigDecimal.ONE);
+        userInitiativeCountersUpdate.setTotalAmount(BigDecimal.ONE);
+        userInitiativeCountersUpdate.setUpdateDate(userInitiativeCountersUpdate.getUpdateDate().truncatedTo(ChronoUnit.MILLIS));
+
+        userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+        //where
+        UserInitiativeCounters result = userInitiativeCountersRepository.saveIfVersionNotChanged(userInitiativeCountersUpdate).block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(userInitiativeCountersUpdate, result);
+
+    }
+
+    @Test
+    void saveIfVersionNotChangedError(){
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCounters.setVersion(2L);
+
+        UserInitiativeCounters userInitiativeCountersUpdate = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
+        userInitiativeCountersUpdate.setVersion(2L);
+        userInitiativeCounters.setTotalReward(BigDecimal.ONE);
+
+        userInitiativeCountersRepository.save(userInitiativeCounters).block();
+
+        //where
+        Mono<UserInitiativeCounters> serviceResult = userInitiativeCountersRepository.saveIfVersionNotChanged(userInitiativeCountersUpdate);
+        InvalidCounterVersionException result = assertThrows(InvalidCounterVersionException.class, serviceResult::block);
+
+        Assertions.assertNotNull(result);
 
     }
 }

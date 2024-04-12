@@ -16,7 +16,6 @@ public class RewardTrxSynchronousApiServiceImpl implements RewardTrxSynchronousA
     private final CreateTrxSynchronousService createTrxSynchronousService;
     private final CancelTrxSynchronousService cancelTrxSynchronousService;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public RewardTrxSynchronousApiServiceImpl(CreateTrxSynchronousService createTrxSynchronousService, CancelTrxSynchronousService cancelTrxSynchronousService) {
         this.createTrxSynchronousService = createTrxSynchronousService;
         this.cancelTrxSynchronousService = cancelTrxSynchronousService;

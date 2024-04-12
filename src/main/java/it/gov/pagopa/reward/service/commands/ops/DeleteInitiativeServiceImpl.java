@@ -29,7 +29,7 @@ public class DeleteInitiativeServiceImpl implements DeleteInitiativeService{
     private final Duration delayDuration;
     private final Mono<Long> monoDelay;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
+
     public DeleteInitiativeServiceImpl(DroolsRuleRepository droolsRuleRepository,
                                        HpanInitiativesRepository hpanInitiativesRepository,
                                        TransactionProcessedRepository transactionProcessedRepository,

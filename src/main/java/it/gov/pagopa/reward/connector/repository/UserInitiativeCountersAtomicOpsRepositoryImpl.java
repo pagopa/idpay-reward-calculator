@@ -3,9 +3,11 @@ package it.gov.pagopa.reward.connector.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -63,5 +65,24 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         FindAndModifyOptions.options().returnNew(true),
                         UserInitiativeCounters.class
                 );
+    }
+
+    @Override
+    public Mono<UserInitiativeCounters> findByPendingTrx(String trxId){
+        Query query = Query.query(Criteria.where(PENDING_TRX_ID_FIELD).is(trxId));
+        return mongoTemplate.findOne(query, UserInitiativeCounters.class);
+    }
+
+    @Override
+    public Mono<UserInitiativeCounters> saveIfVersionNotChanged(UserInitiativeCounters counters) {
+        return mongoTemplate
+                .findAndReplace(
+                        Query.query(Criteria.where(UserInitiativeCounters.Fields.id).is(counters.getId())
+                                .and(UserInitiativeCounters.Fields.version).is(counters.getVersion()-1L)),
+                        counters,
+                        FindAndReplaceOptions.options().returnNew(),
+                        UserInitiativeCounters.class,
+                        UserInitiativeCounters.class)
+                .switchIfEmpty(Mono.error(new InvalidCounterVersionException()));
     }
 }

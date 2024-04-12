@@ -90,7 +90,7 @@ public abstract class BaseKafkaBlockingPartitionConsumer<T, R> extends BaseKafka
         if (!StringUtils.isEmpty(messageKey)) {
             return messageKey.hashCode();
         } else {
-            Integer partitionId = CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION);
+            Integer partitionId = (Integer) CommonUtilities.getHeaderValue(message, KafkaHeaders.RECEIVED_PARTITION);
             return Objects.requireNonNullElseGet(partitionId, () -> message.getPayload().hashCode());
         }
     }

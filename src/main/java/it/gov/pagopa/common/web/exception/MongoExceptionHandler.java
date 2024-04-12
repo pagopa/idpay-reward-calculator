@@ -37,7 +37,7 @@ public class MongoExceptionHandler {
 
 
   @ExceptionHandler(DataAccessException.class)
-  protected ResponseEntity<ErrorDTO> handleDataAccessException(
+    protected ResponseEntity<ErrorDTO> handleDataAccessException(
           DataAccessException ex, ServerWebExchange request) {
 
     if (MongoRequestRateTooLargeRetryer.isRequestRateTooLargeException(ex)) {

@@ -29,14 +29,8 @@ public class RewardCountersMapper {
 
         return rewardCounters;
     }
-
-    @SuppressWarnings("squid:S1168")
     private Map<String, Counters> extractInvolved(Map<String, Counters> counters, String key) {
         Counters involvedCounter = counters.get(key);
-        if(involvedCounter !=null){
-            return Map.of(key, involvedCounter);
-        } else {
-            return null;
-        }
+        return involvedCounter !=null ? Map.of(key, involvedCounter) : null;
     }
 }

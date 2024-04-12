@@ -65,6 +65,7 @@ public final class RewardConstants {
     //region payment status
     public static final String PAYMENT_STATE_AUTHORIZED = "AUTHORIZED";
     public static final String PAYMENT_STATE_REWARDED = "REWARDED";
+    public static final String PAYMENT_STATE_REJECTED = "REJECTED";
     //endregion
 
     //region dateFormatters

@@ -45,9 +45,8 @@ public class CommonUtilities {
     }
 
     /** To read Message header value */
-    @SuppressWarnings("unchecked")
-    public static <T> T getHeaderValue(Message<?> message, String headerName) {
-        return  (T)message.getHeaders().get(headerName);
+    public static Object getHeaderValue(Message<?> message, String headerName) {
+        return  message.getHeaders().get(headerName);
     }
 
     /** To read {@link org.apache.kafka.common.header.Header} value */
