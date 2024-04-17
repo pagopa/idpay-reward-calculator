@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.dto.build;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,8 +29,8 @@ public class InitiativeGeneralDTO {
   @JsonProperty("name")
   private String name;
 
-  @JsonProperty("budget")
-  private BigDecimal budget;
+  @JsonProperty("budgetCents")
+  private Long budgetCents;
 
   /**
    * Gets or Sets beneficiaryType
@@ -71,8 +70,8 @@ public class InitiativeGeneralDTO {
   @JsonProperty("beneficiaryKnown")
   private Boolean beneficiaryKnown;
 
-  @JsonProperty("beneficiaryBudget")
-  private BigDecimal beneficiaryBudget;
+  @JsonProperty("beneficiaryBudgetCents")
+  private Long beneficiaryBudgetCents;
 
   @JsonProperty("startDate")
   private LocalDate startDate;

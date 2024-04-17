@@ -41,9 +41,9 @@ public class RewardLimitsTrxConsequence2DroolsRuleTransformer extends BaseInitia
                 %s
                    %s reward = $trx.getRewards().get("%s");
                    if(reward != null){
-                      java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward(%s);
-                      if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
+                      java.lang.Long oldAccruedRewardCents=reward.getAccruedRewardCents();
+                      reward.setAccruedRewardCents(%s);
+                      if(reward.getAccruedRewardCents().compareTo(oldAccruedRewardCents) != 0){
                          reward.set%sCapped(true);
                          %s
                       }

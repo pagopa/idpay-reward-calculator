@@ -7,10 +7,10 @@ import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
 public class RewardLimitsTrxConsequence2DroolsExpressionTransformer implements InitiativeTrxConsequence2DroolsExpressionTransformer<RewardLimitsDTO> {
     @Override
     public String apply(String initiativeId, RewardLimitsDTO trxConsequence) {
-        return "$trx.getRewards().get(\"%s\").getAccruedReward().min(java.math.BigDecimal.ZERO.max(%s.subtract(%s.getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get(\"%s\")!=null ? $trx.getRefundInfo().getPreviousRewards().get(\"%s\").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN)"
+        return "java.lang.Long.min($trx.getRewards().get(\"%s\").getAccruedRewardCents(), java.lang.Long.max(0L, %s - (%s.getTotalRewardCents() - ($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get(\"%s\")!=null ? $trx.getRefundInfo().getPreviousRewards().get(\"%s\").getAccruedRewardCents() : 0L ))))"
                 .formatted(
                         initiativeId,
-                        DroolsTemplateRuleUtils.toTemplateParam(trxConsequence.getRewardLimit()),
+                        DroolsTemplateRuleUtils.toTemplateParam(trxConsequence.getRewardLimitCents()),
                         RewardLimitsTrxCondition2DroolsConditionTransformer.buildFrequencyCounterExpression(trxConsequence.getFrequency()),
                         initiativeId,
                         initiativeId
