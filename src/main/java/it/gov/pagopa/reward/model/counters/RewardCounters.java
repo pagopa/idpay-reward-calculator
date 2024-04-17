@@ -3,7 +3,6 @@ package it.gov.pagopa.reward.model.counters;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 @Data
@@ -14,7 +13,7 @@ import java.util.Map;
 @ToString(callSuper = true)
 public class RewardCounters extends Counters {
     private boolean exhaustedBudget;
-    private BigDecimal initiativeBudget;
+    private Long initiativeBudgetCents;
     private long version;
 
     private Map<String, Counters> dailyCounters;

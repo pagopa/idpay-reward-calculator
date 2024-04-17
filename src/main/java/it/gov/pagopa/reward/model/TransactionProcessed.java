@@ -47,7 +47,7 @@ public class TransactionProcessed implements BaseTransactionProcessed {
     private String correlationId;
 
     @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
-    private BigDecimal amount;
+    private BigDecimal amount; //TODO IDP-2502 check cancel?
 
     private Map<String, Reward> rewards;
     private String status;
@@ -59,7 +59,7 @@ public class TransactionProcessed implements BaseTransactionProcessed {
 
     private List<String> initiatives;
 
-    private BigDecimal effectiveAmount;
+    private Long effectiveAmountCents;
     private Long amountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime trxChargeDate;

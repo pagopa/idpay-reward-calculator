@@ -22,8 +22,8 @@ public class SynchronousTransactionResponseDTO implements ServiceExceptionPayloa
     private String userId;
     private OperationType operationType;
     private Long amountCents;
-    private BigDecimal amount;
-    private BigDecimal effectiveAmount;
+    private BigDecimal amount; //TODO IDP-2502 check cancel?
+    private Long effectiveAmountCents;
     private String status;
     private Reward reward;
     //TODO counterVersion?
