@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -34,7 +33,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
     @Override
     public Flux<InitiativeConfig> getInitiatives(TransactionDTO trx) {
-        if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmount())){
+        if(OperationType.CHARGE.equals(trx.getOperationTypeTranscoded()) || isPositive(trx.getEffectiveAmountCents())){
             return getInitiatives(trx.getHpan(), trx.getTrxChargeDate(), null)
                     .map(Pair::getFirst); // Async trx support just physical person initiatives (not families)
         } else {
@@ -56,8 +55,8 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     }
 
     /** true if > 0 */
-    private boolean isPositive(BigDecimal value) {
-        return BigDecimal.ZERO.compareTo(value) < 0;
+    private boolean isPositive(Long value) {
+        return 0L < value;
     }
 
     private Flux<Pair<InitiativeConfig, OnboardingInfo>> getInitiatives(String hpan, OffsetDateTime trxDate, Set<String> initiatives) {

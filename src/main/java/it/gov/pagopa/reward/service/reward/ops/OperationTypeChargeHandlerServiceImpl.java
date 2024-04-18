@@ -14,7 +14,7 @@ public class OperationTypeChargeHandlerServiceImpl implements OperationTypeCharg
         log.debug("[REWARD] Recognized a CHARGE operation {}", trx.getId());
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
-        trx.setEffectiveAmount(trx.getAmount());
+        trx.setEffectiveAmountCents(trx.getAmountCents());
 
         return Mono.just(trx);
     }
