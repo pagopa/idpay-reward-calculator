@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
+public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest { //TODO IDP-2502 check
 
     @Test
     void applyChargeOperationTest(){
@@ -49,7 +49,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getVat(), result.getVat());
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
-        Assertions.assertEquals(expectedAmountEur, result.getEffectiveAmount());
+        Assertions.assertEquals(CommonUtilities.euroToCents(expectedAmountEur), result.getEffectiveAmountCents());
         Assertions.assertEquals(previewRequest.getTransactionId(), result.getCorrelationId());
         Assertions.assertEquals(previewRequest.getTrxChargeDate(),result.getTrxChargeDate());
         Assertions.assertEquals(previewRequest.getChannel(),result.getChannel());
@@ -81,7 +81,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getUserId(), result.getUserId());
         Assertions.assertEquals(previewRequest.getAmountCents(), result.getAmountCents());
         Assertions.assertEquals(CommonUtilities.centsToEuro(previewRequest.getAmountCents()), result.getAmount());
-        Assertions.assertEquals(CommonUtilities.centsToEuro(previewRequest.getAmountCents()), result.getEffectiveAmount());
+        Assertions.assertEquals(previewRequest.getAmountCents(), result.getEffectiveAmountCents());
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(discardCause, result.getRejectionReasons());
         Assertions.assertNull(result.getReward());

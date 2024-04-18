@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.service.counters;
 
 import com.mongodb.MongoException;
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -73,7 +72,7 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
 
         String initiativeId = trx.getInitiatives().get(0);
         Reward rewardInitiative = trx.getRewards().get(trx.getInitiatives().get(0));
-        Long rewardCents = CommonUtilities.euroToCents(rewardInitiative.getAccruedReward());
+        Long rewardCents = rewardInitiative.getAccruedRewardCents();
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters(trx.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
 
         userInitiativeCounters.setPendingTrx(trx);

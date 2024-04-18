@@ -174,7 +174,7 @@ class CreateTrxSynchronousServiceImplTest {
                 .operationType(OperationType.CHARGE)
                 .amountCents(rewardTransactionDTO.getAmountCents())
                 .amount(CommonUtilities.centsToEuro(rewardTransactionDTO.getAmountCents()))
-                .effectiveAmount(CommonUtilities.centsToEuro(rewardTransactionDTO.getAmountCents()))
+                .effectiveAmountCents(rewardTransactionDTO.getAmountCents())
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .build();
 
@@ -258,7 +258,7 @@ class CreateTrxSynchronousServiceImplTest {
         UserInitiativeCounters counter = mockUserInitiativeCountersRepositoryFind(authorizeRequest, initiativeId, counterVersion, null);
         mockInitiativesEvaluatorFacadeService(authorizeRequest, initiativeConfig, counter,
                 stillRewarded
-                        ? CommonUtilities.centsToEuro(authorizeRequest.getRewardCents() - 10)
+                        ? authorizeRequest.getRewardCents() - 10
                         : null);
 
         // When
@@ -311,9 +311,9 @@ class CreateTrxSynchronousServiceImplTest {
         UserInitiativeCounters counter = mockUserInitiativeCountersRepositoryFind(authorizeRequest, initiativeId, foundCounterVersion, null);
 
         if(!counterVersionMatch){
-            mockInitiativesEvaluatorFacadeService(authorizeRequest, initiativeConfig, counter, CommonUtilities.centsToEuro(authorizeRequest.getRewardCents()));
+            mockInitiativesEvaluatorFacadeService(authorizeRequest, initiativeConfig, counter, authorizeRequest.getRewardCents());
         } else {
-            mockUserInitiativeCountersUpdateService(authorizeRequest, initiativeConfig, counter, CommonUtilities.centsToEuro(authorizeRequest.getRewardCents()));
+            mockUserInitiativeCountersUpdateService(authorizeRequest, initiativeConfig, counter, authorizeRequest.getRewardCents());
         }
 
         mockUserInitiativeCountersRepositorySave(counter);
@@ -387,7 +387,7 @@ class CreateTrxSynchronousServiceImplTest {
         return userInitiativeCounters;
     }
 
-    private void mockInitiativesEvaluatorFacadeService(SynchronousTransactionRequestDTO syncTransactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, BigDecimal reward) {
+    private void mockInitiativesEvaluatorFacadeService(SynchronousTransactionRequestDTO syncTransactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, Long reward) {
         RewardTransactionDTO rewardTransaction = buildExpectedRewardedTrx(syncTransactionRequest, initiativeConfig, counter, reward);
         UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper(
                 syncTransactionRequest.getUserId(),
@@ -400,7 +400,7 @@ class CreateTrxSynchronousServiceImplTest {
                 .thenReturn(Mono.just(Pair.of(counters,rewardTransaction)));
     }
 
-    private RewardTransactionDTO buildExpectedRewardedTrx(SynchronousTransactionRequestDTO syncTransactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, BigDecimal reward) {
+    private RewardTransactionDTO buildExpectedRewardedTrx(SynchronousTransactionRequestDTO syncTransactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, Long reward) {
         RewardTransactionDTO rewardTransaction =
                 rewardTransactionMapper.apply(
                         synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(syncTransactionRequest)
@@ -425,7 +425,7 @@ class CreateTrxSynchronousServiceImplTest {
         Mockito.when(userInitiativeCountersRepositoryMock.saveIfVersionNotChanged(counter)).thenReturn(Mono.just(counter));
     }
 
-    private void mockUserInitiativeCountersUpdateService(SynchronousTransactionRequestDTO transactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, BigDecimal reward) {
+    private void mockUserInitiativeCountersUpdateService(SynchronousTransactionRequestDTO transactionRequest, InitiativeConfig initiativeConfig, UserInitiativeCounters counter, Long reward) {
         RewardTransactionDTO rewardTransaction = buildExpectedRewardedTrx(transactionRequest, initiativeConfig, counter, reward);
         UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper(
                 transactionRequest.getUserId(),
@@ -446,9 +446,9 @@ class CreateTrxSynchronousServiceImplTest {
                 .operationType(OperationType.CHARGE)
                 .amountCents(authorizeRequest.getAmountCents())
                 .amount(CommonUtilities.centsToEuro(authorizeRequest.getAmountCents()))
-                .effectiveAmount(CommonUtilities.centsToEuro(authorizeRequest.getAmountCents()))
+                .effectiveAmountCents(authorizeRequest.getAmountCents())
                 .status(RewardConstants.REWARD_STATE_REWARDED)
-                .reward(new Reward(initiativeId, initiativeConfig.getOrganizationId(), CommonUtilities.centsToEuro(authorizeRequest.getRewardCents())))
+                .reward(new Reward(initiativeId, initiativeConfig.getOrganizationId(), authorizeRequest.getRewardCents()))
                 .build();
     }
 }

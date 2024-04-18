@@ -22,7 +22,7 @@ public class RewardTransaction2SynchronousTransactionResponseDTOMapper implement
         out.setOperationType(rewardTransactionDTO.getOperationTypeTranscoded());
         out.setAmountCents(rewardTransactionDTO.getAmountCents());
         out.setAmount(rewardTransactionDTO.getAmount());
-        out.setEffectiveAmount(rewardTransactionDTO.getEffectiveAmount());
+        out.setEffectiveAmountCents(rewardTransactionDTO.getEffectiveAmountCents());
         out.setStatus(rewardTransactionDTO.getStatus());
         if(rewardTransactionDTO.getStatus().equals(RewardConstants.REWARD_STATE_REWARDED)) {
             out.setReward(rewardTransactionDTO.getRewards().get(initiativeId));

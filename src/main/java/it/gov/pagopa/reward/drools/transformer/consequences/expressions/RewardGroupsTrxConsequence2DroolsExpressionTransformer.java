@@ -16,8 +16,8 @@ public class RewardGroupsTrxConsequence2DroolsExpressionTransformer implements I
         String rewardValue = "%s:java.math.BigDecimal.ZERO".formatted(
                 trxConsequence.getRewardGroups().stream()
                         .map(rg -> "($trx.getEffectiveAmount().compareTo(%s)>=0 && $trx.getEffectiveAmount().compareTo(%s)<=0)?%s".formatted(
-                                        DroolsTemplateRuleUtils.toTemplateParam(rg.getFrom()),
-                                        DroolsTemplateRuleUtils.toTemplateParam(rg.getTo()),
+                                        DroolsTemplateRuleUtils.toTemplateParam(rg.getFromCents()), //TODO IDP-2502 check
+                                        DroolsTemplateRuleUtils.toTemplateParam(rg.getToCents()),
                                         isAllPercentage
                                                 ? RewardValueTrxConsequence2DroolsExpressionTransformer.rewardPercentValue2TemplateParam(rg.getRewardValue())
                                                 : RewardValueTrxConsequence2DroolsExpressionTransformer.applyRewardValue(rg)

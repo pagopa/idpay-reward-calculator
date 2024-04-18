@@ -11,8 +11,8 @@ public class RewardGroupsTrxCondition2DroolsConditionTransformer implements Init
         return "(%s)".formatted(rewardGroups.getRewardGroups().stream()
                 .map(rg ->
                         "(effectiveAmount >= %s && effectiveAmount <= %s)".formatted(
-                                DroolsTemplateRuleUtils.toTemplateParam(rg.getFrom()).getParam(),
-                                DroolsTemplateRuleUtils.toTemplateParam(rg.getTo()).getParam()
+                                DroolsTemplateRuleUtils.toTemplateParam(rg.getFromCents()).getParam(), //TODO IDP-2502 check
+                                DroolsTemplateRuleUtils.toTemplateParam(rg.getToCents()).getParam()
                         )
                 ).collect(Collectors.joining(" || ")));
     }

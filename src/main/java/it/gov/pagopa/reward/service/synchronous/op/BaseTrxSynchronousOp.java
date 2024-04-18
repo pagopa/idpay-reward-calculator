@@ -109,7 +109,7 @@ abstract class BaseTrxSynchronousOp {
     private RewardTransactionDTO buildRewardedTrxHavingRewardCents(TransactionDTO trxDTO, String initiativeId, long rewardCents, InitiativeConfig i) {
         RewardTransactionDTO rewardedTrx = rewardTransactionMapper.apply(trxDTO);
         rewardedTrx.setInitiatives(List.of(initiativeId));
-        rewardedTrx.getRewards().put(initiativeId, new Reward(initiativeId, i.getOrganizationId(), CommonUtilities.centsToEuro(rewardCents)));
+        rewardedTrx.getRewards().put(initiativeId, new Reward(initiativeId, i.getOrganizationId(), rewardCents));
         return rewardedTrx;
     }
 

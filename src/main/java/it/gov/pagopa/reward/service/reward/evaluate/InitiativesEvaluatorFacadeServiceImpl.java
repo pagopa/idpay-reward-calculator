@@ -21,7 +21,6 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
@@ -83,7 +82,7 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
         RewardTransactionDTO trxRewarded;
         boolean isRefund = OperationType.REFUND.equals(trx.getOperationTypeTranscoded());
 
-        if (BigDecimal.ZERO.compareTo(trx.getEffectiveAmount()) < 0) {
+        if (0L < trx.getEffectiveAmountCents()) {
             trxRewarded = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
             if (isRefund) {
                 handlePartialRefund(trxRewarded);
@@ -119,10 +118,10 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         } else {
             trxRewarded.setRewards(trx.getRefundInfo().getPreviousRewards().entrySet().stream()
-                    .map(e -> Pair.of(e.getKey(), new Reward(e.getKey(), e.getValue().getOrganizationId(), e.getValue().getAccruedReward().negate(), true)))
+                    .map(e -> Pair.of(e.getKey(), new Reward(e.getKey(), e.getValue().getOrganizationId(), -e.getValue().getAccruedRewardCents(), true)))
                     .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
 
-            boolean isRejected = trx.getRefundInfo().getPreviousRewards().values().stream().noneMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0);
+            boolean isRejected = trx.getRefundInfo().getPreviousRewards().values().stream().noneMatch(r -> 0L != r.getAccruedRewardCents());
 
             if (isRejected) {
                 trxRewarded.setRejectionReasons(lastTrx == null
@@ -142,12 +141,12 @@ public class InitiativesEvaluatorFacadeServiceImpl implements InitiativesEvaluat
         trxRewarded.getRewards().forEach((initiativeId, r) -> {
             RefundInfo.PreviousReward pastReward = pastRewards.remove(initiativeId);
             if (pastReward != null) {
-                r.setAccruedReward(r.getAccruedReward().subtract(pastReward.getAccruedReward()));
+                r.setAccruedRewardCents(r.getAccruedRewardCents() - pastReward.getAccruedRewardCents());
             }
             r.setRefund(true);
         });
-        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), reward2Reverse.getAccruedReward().negate(), true)));
-        if (trxRewarded.getRewards().values().stream().anyMatch(r -> BigDecimal.ZERO.compareTo(r.getAccruedReward()) != 0)) {
+        pastRewards.forEach((initiativeId, reward2Reverse) -> trxRewarded.getRewards().put(initiativeId, new Reward(initiativeId, reward2Reverse.getOrganizationId(), -reward2Reverse.getAccruedRewardCents(), true)));
+        if (trxRewarded.getRewards().values().stream().anyMatch(r -> 0L != r.getAccruedRewardCents())) {
             trxRewarded.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         } else {
             trxRewarded.setInitiativeRejectionReasons(
