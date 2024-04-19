@@ -13,10 +13,10 @@ public class RewardGroupsTrxConsequence2DroolsExpressionTransformer implements I
     public String apply(String initiativeId, RewardGroupsDTO trxConsequence) {
         boolean isAllPercentage = trxConsequence.getRewardGroups().stream().map(BaseRewardValue::getRewardValueType).allMatch(RewardValueType.PERCENTAGE::equals);
 
-        String rewardValue = "%s:java.math.BigDecimal.ZERO".formatted(
+        String rewardValue = "%s:0L".formatted(
                 trxConsequence.getRewardGroups().stream()
-                        .map(rg -> "($trx.getEffectiveAmount().compareTo(%s)>=0 && $trx.getEffectiveAmount().compareTo(%s)<=0)?%s".formatted(
-                                        DroolsTemplateRuleUtils.toTemplateParam(rg.getFromCents()), //TODO IDP-2502 check
+                        .map(rg -> "($trx.getEffectiveAmountCents().compareTo(%s)>=0 && $trx.getEffectiveAmountCents().compareTo(%s)<=0)?%s".formatted(
+                                        DroolsTemplateRuleUtils.toTemplateParam(rg.getFromCents()),
                                         DroolsTemplateRuleUtils.toTemplateParam(rg.getToCents()),
                                         isAllPercentage
                                                 ? RewardValueTrxConsequence2DroolsExpressionTransformer.rewardPercentValue2TemplateParam(rg.getRewardValue())

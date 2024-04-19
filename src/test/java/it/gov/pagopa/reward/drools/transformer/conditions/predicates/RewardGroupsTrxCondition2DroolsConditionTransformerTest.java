@@ -5,8 +5,6 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 
 class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
@@ -14,29 +12,29 @@ class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Initiative
     private final String initiativeId = "RewardGroups";
     private final RewardGroupsTrxCondition2DroolsConditionTransformer transformer = new RewardGroupsTrxCondition2DroolsConditionTransformer();
 
-    private final BigDecimal lowerBound = BigDecimal.ZERO;
-    private final BigDecimal upperBound = BigDecimal.valueOf(10.37);
+    private final Long lowerBound = 0L;
+    private final Long upperBound = 10_37L;
 
     @Test
     void testRewardGroupsGreaterThan(){
         RewardGroupsDTO initiativeTrxCondition = new RewardGroupsDTO();
         initiativeTrxCondition.setRewardGroups(List.of(
                 RewardGroupsDTO.RewardGroupDTO.builder()
-                        .from(lowerBound.subtract(BigDecimal.TEN))
-                        .to(lowerBound.subtract(BigDecimal.ONE))
+                        .fromCents(lowerBound - 10_00)
+                        .toCents(lowerBound - 1_00)
                         .build(),
                 RewardGroupsDTO.RewardGroupDTO.builder()
-                        .from(lowerBound)
-                        .to(upperBound)
+                        .fromCents(lowerBound)
+                        .toCents(upperBound)
                         .build(),
                 RewardGroupsDTO.RewardGroupDTO.builder()
-                        .from(upperBound.add(BigDecimal.ONE))
-                        .to(upperBound.add(BigDecimal.TEN))
+                        .fromCents(upperBound + 1_00L)
+                        .toCents(upperBound + 10_00L)
                         .build()
         ));
         String RewardGroupsCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("((effectiveAmount >= new java.math.BigDecimal(\"-10\") && effectiveAmount <= new java.math.BigDecimal(\"-1\")) || (effectiveAmount >= new java.math.BigDecimal(\"0\") && effectiveAmount <= new java.math.BigDecimal(\"10.37\")) || (effectiveAmount >= new java.math.BigDecimal(\"11.37\") && effectiveAmount <= new java.math.BigDecimal(\"20.37\")))", RewardGroupsCondition);
+        Assertions.assertEquals("((effectiveAmountCents >= new java.lang.Long(\"-1000\") && effectiveAmountCents <= new java.lang.Long(\"-100\")) || (effectiveAmountCents >= new java.lang.Long(\"0\") && effectiveAmountCents <= new java.lang.Long(\"1037\")) || (effectiveAmountCents >= new java.lang.Long(\"1137\") && effectiveAmountCents <= new java.lang.Long(\"2037\")))", RewardGroupsCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -45,24 +43,24 @@ class RewardGroupsTrxCondition2DroolsConditionTransformerTest extends Initiative
     }
 
     private void testLowerBound(String RewardGroupsCondition, TransactionDroolsDTO transaction) {
-        transaction.setEffectiveAmount(bigDecimalValue(-0.01));
+        transaction.setEffectiveAmountCents(-1L);
         testRule(initiativeId, RewardGroupsCondition, transaction, false);
 
-        transaction.setEffectiveAmount(lowerBound.setScale(2, RoundingMode.UNNECESSARY));
+        transaction.setEffectiveAmountCents(lowerBound);
         testRule(initiativeId, RewardGroupsCondition, transaction, true);
 
-        transaction.setEffectiveAmount(bigDecimalValue(5.25));
+        transaction.setEffectiveAmountCents(525L);
         testRule(initiativeId, RewardGroupsCondition, transaction, true);
     }
 
     private void testUpperBound(String RewardGroupsCondition, TransactionDroolsDTO transaction) {
-        transaction.setEffectiveAmount(bigDecimalValue(7.8));
+        transaction.setEffectiveAmountCents(780L);
         testRule(initiativeId, RewardGroupsCondition, transaction, true);
 
-        transaction.setEffectiveAmount(upperBound.setScale(2, RoundingMode.UNNECESSARY));
+        transaction.setEffectiveAmountCents(upperBound);
         testRule(initiativeId, RewardGroupsCondition, transaction, true);
 
-        transaction.setEffectiveAmount(bigDecimalValue(10.38));
+        transaction.setEffectiveAmountCents(1038L);
         testRule(initiativeId, RewardGroupsCondition, transaction, false);
     }
 

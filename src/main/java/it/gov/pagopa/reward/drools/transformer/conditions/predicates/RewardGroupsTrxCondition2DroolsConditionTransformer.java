@@ -10,8 +10,8 @@ public class RewardGroupsTrxCondition2DroolsConditionTransformer implements Init
     public String apply(String initiativeId, RewardGroupsDTO rewardGroups) {
         return "(%s)".formatted(rewardGroups.getRewardGroups().stream()
                 .map(rg ->
-                        "(effectiveAmount >= %s && effectiveAmount <= %s)".formatted(
-                                DroolsTemplateRuleUtils.toTemplateParam(rg.getFromCents()).getParam(), //TODO IDP-2502 check
+                        "(effectiveAmountCents >= %s && effectiveAmountCents <= %s)".formatted(
+                                DroolsTemplateRuleUtils.toTemplateParam(rg.getFromCents()).getParam(),
                                 DroolsTemplateRuleUtils.toTemplateParam(rg.getToCents()).getParam()
                         )
                 ).collect(Collectors.joining(" || ")));
