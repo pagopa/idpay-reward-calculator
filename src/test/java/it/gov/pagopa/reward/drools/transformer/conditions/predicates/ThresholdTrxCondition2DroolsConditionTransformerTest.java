@@ -5,48 +5,45 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     private final String initiativeId = "Threshold";
     private final ThresholdTrxCondition2DroolsConditionTransformer transformer = new ThresholdTrxCondition2DroolsConditionTransformer();
 
-    private final BigDecimal lowerBound = BigDecimal.ZERO;
-    private final BigDecimal upperBound = BigDecimal.valueOf(10.37);
+    private final Long lowerBound = 0L;
+    private final Long upperBound = 10_37L;
 
 
     private void testLowerBound(String thresholdCondition, TransactionDroolsDTO transaction, boolean expectedBefore, boolean expectedEqual) {
-        transaction.setEffectiveAmount(bigDecimalValue(-0.01));
+        transaction.setEffectiveAmountCents(-1L);
         testRule(initiativeId, thresholdCondition, transaction, expectedBefore);
 
-        transaction.setEffectiveAmount(lowerBound.setScale(2, RoundingMode.UNNECESSARY));
+        transaction.setEffectiveAmountCents(lowerBound);
         testRule(initiativeId, thresholdCondition, transaction, expectedEqual);
 
-        transaction.setEffectiveAmount(bigDecimalValue(5.25));
+        transaction.setEffectiveAmountCents(5_25L);
         testRule(initiativeId, thresholdCondition, transaction, true);
     }
 
     private void testUpperBound(String thresholdCondition, TransactionDroolsDTO transaction, boolean expectedEqual, boolean expectedGreater) {
-        transaction.setEffectiveAmount(bigDecimalValue(7.8));
+        transaction.setEffectiveAmountCents(7_80L);
         testRule(initiativeId, thresholdCondition, transaction, true);
 
-        transaction.setEffectiveAmount(upperBound.setScale(2, RoundingMode.UNNECESSARY));
+        transaction.setEffectiveAmountCents(upperBound);
         testRule(initiativeId, thresholdCondition, transaction, expectedEqual);
 
-        transaction.setEffectiveAmount(bigDecimalValue(10.38));
+        transaction.setEffectiveAmountCents(10_38L);
         testRule(initiativeId, thresholdCondition, transaction, expectedGreater);
     }
 
     @Test
     void testThresholdGreaterThan(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
-        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromCents(lowerBound);
         initiativeTrxCondition.setFromIncluded(false);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("effectiveAmount > new java.math.BigDecimal(\"0\")", thresholdCondition);
+        Assertions.assertEquals("effectiveAmountCents > new java.lang.Long(\"0\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -57,11 +54,11 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     @Test
     void testThresholdGreaterOrEqual(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
-        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromCents(lowerBound);
         initiativeTrxCondition.setFromIncluded(true);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("effectiveAmount >= new java.math.BigDecimal(\"0\")", thresholdCondition);
+        Assertions.assertEquals("effectiveAmountCents >= new java.lang.Long(\"0\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -72,11 +69,11 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     @Test
     void testThresholdLowerThan(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
-        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToCents(upperBound);
         initiativeTrxCondition.setToIncluded(false);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("effectiveAmount < new java.math.BigDecimal(\"10.37\")", thresholdCondition);
+        Assertions.assertEquals("effectiveAmountCents < new java.lang.Long(\"1037\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -87,11 +84,11 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     @Test
     void testThresholdLowerOrEqual(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
-        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToCents(upperBound);
         initiativeTrxCondition.setToIncluded(true);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("effectiveAmount <= new java.math.BigDecimal(\"10.37\")", thresholdCondition);
+        Assertions.assertEquals("effectiveAmountCents <= new java.lang.Long(\"1037\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -102,13 +99,13 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     @Test
     void testThresholdBetweenClosed(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
-        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromCents(lowerBound);
         initiativeTrxCondition.setFromIncluded(true);
-        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToCents(upperBound);
         initiativeTrxCondition.setToIncluded(true);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("effectiveAmount >= new java.math.BigDecimal(\"0\") && effectiveAmount <= new java.math.BigDecimal(\"10.37\")", thresholdCondition);
+        Assertions.assertEquals("effectiveAmountCents >= new java.lang.Long(\"0\") && effectiveAmountCents <= new java.lang.Long(\"1037\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
@@ -119,13 +116,13 @@ class ThresholdTrxCondition2DroolsConditionTransformerTest extends InitiativeTrx
     @Test
     void testThresholdBetweenOpen(){
         ThresholdDTO initiativeTrxCondition = new ThresholdDTO();
-        initiativeTrxCondition.setFrom(lowerBound);
+        initiativeTrxCondition.setFromCents(lowerBound);
         initiativeTrxCondition.setFromIncluded(false);
-        initiativeTrxCondition.setTo(upperBound);
+        initiativeTrxCondition.setToCents(upperBound);
         initiativeTrxCondition.setToIncluded(false);
         String thresholdCondition = transformer.apply(initiativeId, initiativeTrxCondition);
 
-        Assertions.assertEquals("effectiveAmount > new java.math.BigDecimal(\"0\") && effectiveAmount < new java.math.BigDecimal(\"10.37\")", thresholdCondition);
+        Assertions.assertEquals("effectiveAmountCents > new java.lang.Long(\"0\") && effectiveAmountCents < new java.lang.Long(\"1037\")", thresholdCondition);
 
         TransactionDroolsDTO transaction = new TransactionDroolsDTO();
 
