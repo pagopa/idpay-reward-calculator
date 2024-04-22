@@ -27,7 +27,7 @@ public class RewardValueTrxConsequence2DroolsExpressionTransformer implements In
     }
 
     public static String applyAbsoluteReward(BigDecimal rewardValueAbsolute) {
-        return DroolsTemplateRuleUtils.toTemplateParam(rewardValueAbsolute).getParam()+".setScale(2, java.math.RoundingMode.HALF_DOWN)";
+        return DroolsTemplateRuleUtils.toTemplateParam(rewardValueAbsolute).getParam()+".longValue()";
     }
 
     public static DroolsRuleTemplateParam rewardPercentValue2TemplateParam(BigDecimal rewardPercentValue) {
@@ -35,6 +35,6 @@ public class RewardValueTrxConsequence2DroolsExpressionTransformer implements In
     }
 
     public static String applyPercentageReward(DroolsRuleTemplateParam rewardPercentValueTemplateParam) {
-        return "$trx.getEffectiveAmount().multiply(%s).setScale(2, java.math.RoundingMode.HALF_DOWN)".formatted(rewardPercentValueTemplateParam.getParam());
+        return "new java.math.BigDecimal($trx.getEffectiveAmountCents()).multiply(%s).setScale(0, java.math.RoundingMode.HALF_DOWN).longValue()".formatted(rewardPercentValueTemplateParam.getParam());
     }
 }
