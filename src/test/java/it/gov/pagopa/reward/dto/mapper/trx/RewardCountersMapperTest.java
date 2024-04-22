@@ -10,7 +10,6 @@ import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -23,10 +22,10 @@ class RewardCountersMapperTest {
 
     @Test
     void test() {
-        Counters expectedInvolvedDaily = new Counters(1L, BigDecimal.ONE, BigDecimal.TEN);
-        Counters expectedInvolvedWeekly = new Counters(2L, BigDecimal.TEN, BigDecimal.ONE);
-        Counters expectedInvolvedMonthly = new Counters(3L, BigDecimal.ZERO, BigDecimal.ONE);
-        Counters expectedInvolvedYearly = new Counters(4L, BigDecimal.TEN, BigDecimal.ZERO);
+        Counters expectedInvolvedDaily = new Counters(1L, 1_00L, 10_00L);
+        Counters expectedInvolvedWeekly = new Counters(2L, 10_00L, 1_00L);
+        Counters expectedInvolvedMonthly = new Counters(3L, 0L, 1_00L);
+        Counters expectedInvolvedYearly = new Counters(4L, 10_00L, 0L);
 
         test(expectedInvolvedDaily, expectedInvolvedWeekly, expectedInvolvedMonthly, expectedInvolvedYearly);
     }
@@ -48,8 +47,8 @@ class RewardCountersMapperTest {
         userInitiativeCounters.setVersion(11L);
         userInitiativeCounters.setExhaustedBudget(true);
         userInitiativeCounters.setTrxNumber(3L);
-        userInitiativeCounters.setTotalReward(BigDecimal.ONE);
-        userInitiativeCounters.setTotalAmount(BigDecimal.TEN);
+        userInitiativeCounters.setTotalRewardCents(1_00L);
+        userInitiativeCounters.setTotalAmountCents(10_00L);
         userInitiativeCounters.setDailyCounters(buildTemporalCounter(expectedInvolvedDaily, dayKey));
         userInitiativeCounters.setWeeklyCounters(buildTemporalCounter(expectedInvolvedWeekly, weekKey));
         userInitiativeCounters.setMonthlyCounters(buildTemporalCounter(expectedInvolvedMonthly, monthKey));
@@ -59,7 +58,7 @@ class RewardCountersMapperTest {
         reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, 7, 20), LocalTime.NOON, ZoneOffset.UTC));
 
         InitiativeConfig initiative = new InitiativeConfig();
-        initiative.setBeneficiaryBudget(BigDecimal.TEN);
+        initiative.setBeneficiaryBudgetCents(10_00L);
 
         // When
         RewardCounters result = mapper.apply(userInitiativeCounters, reward, initiative);
@@ -68,12 +67,12 @@ class RewardCountersMapperTest {
         Assertions.assertNotNull(result);
         Assertions.assertSame(userInitiativeCounters.getVersion(), result.getVersion());
 
-        Assertions.assertSame(initiative.getBeneficiaryBudget(), result.getInitiativeBudget());
+        Assertions.assertSame(initiative.getBeneficiaryBudgetCents(), result.getInitiativeBudgetCents());
         Assertions.assertSame(userInitiativeCounters.isExhaustedBudget(), result.isExhaustedBudget());
 
         Assertions.assertSame(userInitiativeCounters.getTrxNumber(), result.getTrxNumber());
-        Assertions.assertSame(userInitiativeCounters.getTotalReward(), result.getTotalReward());
-        Assertions.assertSame(userInitiativeCounters.getTotalAmount(), result.getTotalAmount());
+        Assertions.assertSame(userInitiativeCounters.getTotalRewardCents(), result.getTotalRewardCents());
+        Assertions.assertSame(userInitiativeCounters.getTotalAmountCents(), result.getTotalAmountCents());
 
         Assertions.assertEquals(expectedInvolvedDaily!=null ? Map.of(dayKey, expectedInvolvedDaily) : null, result.getDailyCounters());
         Assertions.assertEquals(expectedInvolvedWeekly!=null ? Map.of(weekKey, expectedInvolvedWeekly) : null, result.getWeeklyCounters());

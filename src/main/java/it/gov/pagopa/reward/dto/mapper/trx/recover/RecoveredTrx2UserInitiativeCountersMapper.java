@@ -19,8 +19,8 @@ public class RecoveredTrx2UserInitiativeCountersMapper {
                 .updateDate(trxStored.getElaborationDateTime())
                 .exhaustedBudget(r.getCounters().isExhaustedBudget())
                 .trxNumber(r.getCounters().getTrxNumber())
-                .totalReward(r.getCounters().getTotalReward())
-                .totalAmount(r.getCounters().getTotalAmount())
+                .totalRewardCents(r.getCounters().getTotalRewardCents())
+                .totalAmountCents(r.getCounters().getTotalAmountCents())
 
                 .dailyCounters(applyDelta(previous != null? previous.getDailyCounters() : new HashMap<>(), r.getCounters().getDailyCounters()))
                 .weeklyCounters(applyDelta(previous != null? previous.getWeeklyCounters() : new HashMap<>(), r.getCounters().getWeeklyCounters()))

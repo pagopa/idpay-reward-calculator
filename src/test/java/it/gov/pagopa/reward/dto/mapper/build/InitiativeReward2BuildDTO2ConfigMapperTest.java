@@ -10,7 +10,6 @@ import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -34,7 +33,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertEquals(initiative.getOrganizationId(), result.getOrganizationId());
         Assertions.assertEquals(initiative.getGeneral().getStartDate(), result.getStartDate());
         Assertions.assertEquals(initiative.getGeneral().getEndDate(), result.getEndDate());
-        Assertions.assertEquals(initiative.getGeneral().getBeneficiaryBudget(), result.getBeneficiaryBudget());
+        Assertions.assertEquals(initiative.getGeneral().getBeneficiaryBudgetCents(), result.getBeneficiaryBudgetCents());
         Assertions.assertSame(initiative.getTrxRule(), result.getTrxRule());
         Assertions.assertSame(initiative.getRewardRule(), result.getRewardRule());
         Assertions.assertSame(initiative.getInitiativeRewardType(), result.getInitiativeRewardType());
@@ -173,7 +172,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         initiative.getTrxRule().setRewardLimits(List.of(
                 RewardLimitsDTO.builder().frequency(null)
-                        .rewardLimit(new BigDecimal("100.00")).build()
+                        .rewardLimitCents(100_00L).build()
         ));
 
         InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();

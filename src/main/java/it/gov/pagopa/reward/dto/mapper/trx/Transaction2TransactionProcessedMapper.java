@@ -27,7 +27,7 @@ public class Transaction2TransactionProcessedMapper implements Function<RewardTr
             trxProcessed.setCorrelationId(trx.getCorrelationId());
             trxProcessed.setAmount(trx.getAmount());
             trxProcessed.setAmountCents(trx.getAmountCents());
-            trxProcessed.setEffectiveAmount(trx.getEffectiveAmount());
+            trxProcessed.setEffectiveAmountCents(trx.getEffectiveAmountCents());
             trxProcessed.setRewards(trx.getRewards());
             trxProcessed.setTrxChargeDate(trx.getTrxChargeDate() != null ? trx.getTrxChargeDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime() : null);
             trxProcessed.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
