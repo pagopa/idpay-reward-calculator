@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +81,7 @@ class AuditLoggerTest {
                 "INITIATIVE1", List.of("REJECTIONREASON2", "REJECTIONREASON3")
         ));
         trx.setRewards(Map.of(
-                "INITIATIVE3", new Reward("INITIATIVE3", "ORGID", BigDecimal.ONE)
+                "INITIATIVE3", new Reward("INITIATIVE3", "ORGID", 1_00L)
         ));
         return trx;
     }
