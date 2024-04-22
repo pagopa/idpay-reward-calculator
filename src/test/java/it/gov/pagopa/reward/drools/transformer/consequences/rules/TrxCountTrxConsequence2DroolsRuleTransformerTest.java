@@ -5,7 +5,6 @@ import it.gov.pagopa.reward.dto.rule.trx.TrxCountDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,7 +33,7 @@ class TrxCountTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxCons
                 when
                    $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO()
                    eval(java.util.List.of("TRX_RULE_TRXCOUNT_FAIL").equals($trx.getInitiativeRejectionReasons().get("initiativeId")))
-                then $trx.getRewards().put("initiativeId", new it.gov.pagopa.reward.dto.trx.Reward("initiativeId","organizationId",java.math.BigDecimal.ZERO.setScale(2, java.math.RoundingMode.UNNECESSARY)));
+                then $trx.getRewards().put("initiativeId", new it.gov.pagopa.reward.dto.trx.Reward("initiativeId","organizationId",0L));
                 end
                 """;
     }
@@ -45,7 +44,7 @@ class TrxCountTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxCons
     }
 
     @Override
-    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
+    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, Long expectReward) {
         List<String> testedRejectedReasons = trx.getInitiativeRejectionReasons().get("initiativeId");
         if(testedRejectedReasons ==null){
             trx.setInitiativeRejectionReasons(new HashMap<>(trx.getInitiativeRejectionReasons()));
@@ -55,7 +54,7 @@ class TrxCountTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxCons
     }
 
     @Override
-    protected BigDecimal getExpectedReward() {
-        return bigDecimalValue(0);
+    protected Long getExpectedReward() {
+        return 0L;
     }
 }
