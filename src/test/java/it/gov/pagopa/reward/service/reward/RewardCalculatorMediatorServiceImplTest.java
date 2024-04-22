@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.service.reward;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -197,7 +198,7 @@ class RewardCalculatorMediatorServiceImplTest {
             final TransactionDTO trx = i.getArgument(0);
             trx.setOperationTypeTranscoded(OperationType.CHARGE);
             trx.setTrxChargeDate(trx.getTrxDate());
-            trx.setEffectiveAmount(trx.getAmount());
+            trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
             return Mono.just(trx);
         });
 
@@ -230,18 +231,18 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxPartialReverse)).thenAnswer(i -> {
             final TransactionDTO t = i.getArgument(0);
             t.setOperationTypeTranscoded(OperationType.REFUND);
-            t.setEffectiveAmount(t.getAmount());
+            t.setEffectiveAmountCents(CommonUtilities.euroToCents(t.getAmount()));
             t.setRefundInfo(new RefundInfo());
-            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
+            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", 1_00L)));
             return Mono.just(t);
         });
 
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxTotalRefund)).thenAnswer(i -> {
             final TransactionDTO t = i.getArgument(0);
             t.setOperationTypeTranscoded(OperationType.REFUND);
-            t.setEffectiveAmount(BigDecimal.ZERO);
+            t.setEffectiveAmountCents(0L);
             t.setRefundInfo(new RefundInfo());
-            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
+            t.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", 1_00L)));
             return Mono.just(t);
         });
 

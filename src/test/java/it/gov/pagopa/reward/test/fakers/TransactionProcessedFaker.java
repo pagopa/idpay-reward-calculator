@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
@@ -53,7 +54,7 @@ public class TransactionProcessedFaker {
         String initiativeId = "INITIATIVEID%s".formatted(bias);
         Map<String, Reward> rewards = Map.of(
                 initiativeId,
-                new Reward(initiativeId,"ORGANIZATION_"+initiativeId, BigDecimal.valueOf(getRandomPositiveNumber(bias, 200)))
+                new Reward(initiativeId,"ORGANIZATION_"+initiativeId, (long) getRandomPositiveNumber(bias, 200))
         );
 
 
@@ -69,7 +70,7 @@ public class TransactionProcessedFaker {
                 .correlationId("CORRELATIONID%s".formatted(bias))
                 .amount(amountEuro)
                 .amountCents(amountEuro.longValue()*100)
-                .effectiveAmount(amountEuro)
+                .effectiveAmountCents(CommonUtilities.euroToCents(amountEuro))
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .rewards(rewards)

@@ -36,8 +36,8 @@ public class RewardGroupsDTOFaker {
         return RewardGroupsDTO.builder().rewardGroups(
                 IntStream.rangeClosed(0, bias%3)
                         .mapToObj(i-> RewardGroupsDTO.RewardGroupDTO.builder()
-                                .from(BigDecimal.valueOf(i*10L))
-                                .to(BigDecimal.valueOf(i*10L+5))
+                                .fromCents(i*10_00L)
+                                .toCents(i*10_00L+500L)
                                 .rewardValue(BigDecimal.valueOf(((i+1) * 10L)%100))
                                 .build())
                         .collect(Collectors.toList())
