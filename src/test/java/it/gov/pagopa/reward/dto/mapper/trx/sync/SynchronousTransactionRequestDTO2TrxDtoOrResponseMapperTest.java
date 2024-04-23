@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest { //TODO IDP-2502 check
+public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
 
     @Test
     void applyChargeOperationTest(){

@@ -42,7 +42,7 @@ public class TransactionDTO {
 
     /** if {@link #amountCents} is null, this field will contain cents, otherwise it will contain euro */
     @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
-    private BigDecimal amount; //TODO IDP-2502 check cancel?
+    private BigDecimal amount;
 
     private String amountCurrency;
 

@@ -47,7 +47,7 @@ public class TransactionProcessed implements BaseTransactionProcessed {
     private String correlationId;
 
     @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
-    private BigDecimal amount; //TODO IDP-2502 check cancel?
+    private BigDecimal amount;
 
     private Map<String, Reward> rewards;
     private String status;
