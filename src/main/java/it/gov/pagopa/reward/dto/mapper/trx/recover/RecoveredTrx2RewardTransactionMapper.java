@@ -23,7 +23,7 @@ public class RecoveredTrx2RewardTransactionMapper {
         rewardedTrx.setTrxChargeDate(trxStored.getTrxChargeDate().atZone(CommonConstants.ZONEID).toOffsetDateTime());
         rewardedTrx.setAmountCents(trxStored.getAmountCents());
         rewardedTrx.setAmount(trxStored.getAmount());
-        rewardedTrx.setEffectiveAmount(trxStored.getEffectiveAmount());
+        rewardedTrx.setEffectiveAmountCents(trxStored.getEffectiveAmountCents());
         rewardedTrx.setOperationTypeTranscoded(trxStored.getOperationTypeTranscoded());
 //endregion
 

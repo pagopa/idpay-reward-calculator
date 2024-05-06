@@ -19,9 +19,9 @@ public class Counters {
     @Builder.Default
     private Long trxNumber = 0L;
     @Builder.Default
-    private BigDecimal totalReward = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+    private Long totalRewardCents = 0L;
     @Builder.Default
-    private BigDecimal totalAmount = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+    private Long totalAmountCents = 0L;
 
     public abstract static class CountersBuilder<C extends Counters, B extends CountersBuilder<C, B>> {
         protected C hiddenBuild(){

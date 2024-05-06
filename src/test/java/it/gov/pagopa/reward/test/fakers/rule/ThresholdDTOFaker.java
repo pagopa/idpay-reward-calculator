@@ -5,7 +5,6 @@ import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.rule.trx.ThresholdDTO;
 import org.apache.commons.lang3.ObjectUtils;
 
-import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.Random;
 
@@ -32,9 +31,9 @@ public class ThresholdDTOFaker {
     public static ThresholdDTO mockInstance(Integer bias){
         bias = ObjectUtils.firstNonNull(bias, getRandomPositiveNumber(null));
         return ThresholdDTO.builder()
-                .from(BigDecimal.valueOf(bias))
+                .fromCents(bias*100L)
                 .fromIncluded(bias % 2 == 0)
-                .to(BigDecimal.valueOf(bias+10))
+                .toCents((bias*100L)+1000)
                 .toIncluded(bias % 3 == 0)
                 .build();
     }

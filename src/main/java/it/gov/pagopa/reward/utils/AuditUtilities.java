@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.utils;
 
 
 import it.gov.pagopa.common.utils.AuditLogger;
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import lombok.AllArgsConstructor;
@@ -43,7 +42,7 @@ public class AuditUtilities {
     public void logExecute(RewardTransactionDTO trx) {
         String rewards = "["+trx.getRewards().values().stream()
                 .map(r -> "initiativeId=%s rewardCents=%s".formatted(
-                        r.getInitiativeId(), CommonUtilities.euroToCents(r.getAccruedReward())
+                        r.getInitiativeId(), r.getAccruedRewardCents()
                 ))
                 .collect(Collectors.joining(","))+"]";
 

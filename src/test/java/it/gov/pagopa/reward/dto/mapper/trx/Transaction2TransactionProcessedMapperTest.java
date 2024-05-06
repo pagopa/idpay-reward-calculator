@@ -13,7 +13,6 @@ import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -41,7 +40,7 @@ class Transaction2TransactionProcessedMapperTest {
         OffsetDateTime trxDate = OffsetDateTime.of(dateTime, CommonConstants.ZONEID.getRules().getOffset(dateTime));
         Map<String, Reward> rewards = Map.of(
                 "REWARDS0",
-                new Reward("REWARDS0", "ORGANIZATION0", BigDecimal.valueOf(100))
+                new Reward("REWARDS0", "ORGANIZATION0", 100_00L)
         );
 
         RewardTransactionDTO trx = transaction2RewardTransactionMapper.apply(TransactionDTOFaker.mockInstance(0));
@@ -49,7 +48,7 @@ class Transaction2TransactionProcessedMapperTest {
         trx.setTrxChargeDate(trxDate);
         trx.setAmountCents(trx.getAmount().longValue());
         trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
-        trx.setEffectiveAmount(trx.getAmount());
+        trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setRewards(rewards);
         trx.setId(TransactionDTO.computeTrxId(trx));
@@ -84,7 +83,7 @@ class Transaction2TransactionProcessedMapperTest {
         Assertions.assertSame(trx.getAcquirerId(), result.getAcquirerId());
         Assertions.assertEquals(trx.getRewards(), result.getRewards());
         Assertions.assertEquals(trx.getUserId(), result.getUserId());
-        Assertions.assertEquals(trx.getEffectiveAmount(), result.getEffectiveAmount());
+        Assertions.assertEquals(trx.getEffectiveAmountCents(), result.getEffectiveAmountCents());
         Assertions.assertEquals(trxChargeDate, result.getTrxChargeDate());
         Assertions.assertEquals(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
         Assertions.assertEquals(trx.getStatus(), result.getStatus());

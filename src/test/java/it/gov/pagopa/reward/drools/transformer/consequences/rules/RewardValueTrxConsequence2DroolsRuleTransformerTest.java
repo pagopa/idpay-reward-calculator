@@ -28,7 +28,7 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
 
     private RewardValueDTO rewardValueDTO;
     private String expectedRule;
-    private BigDecimal expectedReward;
+    private Long expectedReward;
 
     @Override
     protected InitiativeTrxConsequence2DroolsRuleTransformer<RewardValueDTO> getTransformer() {
@@ -48,12 +48,12 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
     @Override
     protected TransactionDroolsDTO getTransaction() {
         TransactionDroolsDTO trx =new TransactionDroolsDTO();
-        trx.setEffectiveAmount(BigDecimal.valueOf(11.25));
+        trx.setEffectiveAmountCents(11_25L);
         return trx;
     }
 
     @Override
-    protected BigDecimal getExpectedReward() {
+    protected Long getExpectedReward() {
         return expectedReward;
     }
 
@@ -82,8 +82,8 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
     private void configurePercentageUseCase() {
         rewardValueDTO = RewardValueDTO.builder().rewardValue(BigDecimal.valueOf(12.25)).build();
         expectedRule = BASE_EXPECTED_RULE.replace("%REWARD%",
-                "$trx.getEffectiveAmount().multiply(new java.math.BigDecimal(\"0.1225\")).setScale(2, java.math.RoundingMode.HALF_DOWN)");
-        expectedReward = bigDecimalValue(1.38);
+                "new java.math.BigDecimal($trx.getEffectiveAmountCents()).multiply(new java.math.BigDecimal(\"0.1225\")).setScale(0, java.math.RoundingMode.HALF_DOWN).longValue()");
+        expectedReward = 1_38L;
     }
 
     @Test
@@ -94,9 +94,9 @@ class RewardValueTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxC
     }
 
     private void configureAbsoluteUseCase() {
-        rewardValueDTO = RewardValueDTO.builder().rewardValue(BigDecimal.valueOf(12.25)).rewardValueType(RewardValueType.ABSOLUTE).build();
+        rewardValueDTO = RewardValueDTO.builder().rewardValue(BigDecimal.valueOf(1225)).rewardValueType(RewardValueType.ABSOLUTE).build();
         expectedRule = BASE_EXPECTED_RULE.replace("%REWARD%",
-                "new java.math.BigDecimal(\"12.25\").setScale(2, java.math.RoundingMode.HALF_DOWN)");
-        expectedReward = bigDecimalValue(12.25);
+                "new java.math.BigDecimal(\"1225\").longValue()");
+        expectedReward = 1225L;
     }
 }

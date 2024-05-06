@@ -73,7 +73,7 @@ public class TransactionDTO {
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
     private Long amountCents;
-    private BigDecimal effectiveAmount;
+    private Long effectiveAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private RefundInfo refundInfo;

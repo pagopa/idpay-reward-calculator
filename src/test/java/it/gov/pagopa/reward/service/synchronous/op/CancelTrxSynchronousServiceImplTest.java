@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -36,8 +35,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -96,7 +93,7 @@ class CancelTrxSynchronousServiceImplTest{
         RewardTransactionDTO rewardTrx = RewardTransactionDTOFaker.mockInstance(1);
         rewardTrx.setInitiatives(List.of(INITIATIVEID));
         rewardTrx.setUserId(trxCancelRequest.getUserId());
-        rewardTrx.setRewards(Map.of(INITIATIVEID, new Reward(INITIATIVEID, ORGANIZATIONID, CommonUtilities.centsToEuro(trxCancelRequest.getRewardCents()))));
+        rewardTrx.setRewards(Map.of(INITIATIVEID, new Reward(INITIATIVEID, ORGANIZATIONID, trxCancelRequest.getRewardCents())));
 
         Mockito.when(userInitiativeCountersUpdateServiceMock.update(any(), any()))
                 .thenReturn(Mono.just(rewardTrx));
@@ -196,10 +193,10 @@ class CancelTrxSynchronousServiceImplTest{
     void trx2processedTest() {
         TransactionDTO trxDto = TransactionDTOFaker.mockInstance(1);
         trxDto.setTrxChargeDate(trxDto.getTrxDate());
-        trxDto.setEffectiveAmount(BigDecimal.TEN);
+        trxDto.setEffectiveAmountCents(10_00L);
         trxDto.setAmountCents(10_00L);
 
-        TransactionProcessed resultTrxProcessed = cancelTrxSynchronousService.trx2processed(trxDto, "INITIATIVEID", "ORGANIZATIONID", BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_DOWN));
+        TransactionProcessed resultTrxProcessed = cancelTrxSynchronousService.trx2processed(trxDto, "INITIATIVEID", "ORGANIZATIONID", 100_00L);
 
         Assertions.assertNotNull(resultTrxProcessed);
         TestUtils.checkNotNullFields(resultTrxProcessed,
@@ -221,7 +218,7 @@ class CancelTrxSynchronousServiceImplTest{
                 .weeklyThreshold(false)
                 .monthlyThreshold(false)
                 .yearlyThreshold(false)
-                .beneficiaryBudget(BigDecimal.valueOf(300L))
+                .beneficiaryBudgetCents(300_00L)
                 .build();
     }
 
@@ -232,7 +229,7 @@ class CancelTrxSynchronousServiceImplTest{
                 .updateDate(LocalDateTime.now().minusDays(10L))
                 .exhaustedBudget(false)
                 .trxNumber(3L)
-                .totalReward(BigDecimal.valueOf(100L))
-                .totalAmount(BigDecimal.valueOf(100L)).build();
+                .totalRewardCents(100_00L)
+                .totalAmountCents(100_00L).build();
     }
 }

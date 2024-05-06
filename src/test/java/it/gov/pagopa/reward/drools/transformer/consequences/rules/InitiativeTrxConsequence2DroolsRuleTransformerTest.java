@@ -19,8 +19,6 @@ import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +33,6 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         ((Logger) LoggerFactory.getLogger("org.drools.compiler.kie.builder.impl")).setLevel(Level.WARN);
     }
 
-    protected BigDecimal bigDecimalValue(double value) {
-        return toExpectedScale(BigDecimal.valueOf(value));
-    }
-
-    protected BigDecimal toExpectedScale(BigDecimal value) {
-        return value.setScale(2, RoundingMode.UNNECESSARY);
-    }
-
     protected abstract InitiativeTrxConsequence2DroolsRuleTransformer<T> getTransformer();
 
     protected abstract T getInitiativeTrxConsequence();
@@ -51,7 +41,7 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
 
     protected abstract TransactionDroolsDTO getTransaction();
 
-    protected abstract BigDecimal getExpectedReward();
+    protected abstract Long getExpectedReward();
 
     @Test
     void testReward() {
@@ -77,16 +67,16 @@ public abstract class InitiativeTrxConsequence2DroolsRuleTransformerTest<T exten
         testRule(rule, trx, null);
     }
 
-    private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward("DUMMYINITIATIVE", "DUMMYINITIATIVEORGANIZATION", BigDecimal.TEN, BigDecimal.TEN));
+    private final Map<String, Reward> dummyReward = Map.of("DUMMYINITIATIVE", new Reward("DUMMYINITIATIVE", "DUMMYINITIATIVEORGANIZATION", 10_00L, 10_00L));
 
-    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
+    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, Long expectReward) {
         cleanRewards(trx);
         KieBase kieBase = buildRule(rule);
         executeRule(trx, kieBase);
         Assertions.assertEquals(dummyReward.get("DUMMYINITIATIVE"), trx.getRewards().get("DUMMYINITIATIVE"));
         Assertions.assertEquals(
                 expectReward
-                , Optional.ofNullable(trx.getRewards().get("initiativeId")).map(Reward::getAccruedReward).orElse(null));
+                , Optional.ofNullable(trx.getRewards().get("initiativeId")).map(Reward::getAccruedRewardCents).orElse(null));
 
         return trx;
     }

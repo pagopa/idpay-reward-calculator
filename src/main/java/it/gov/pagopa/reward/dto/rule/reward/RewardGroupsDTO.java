@@ -21,20 +21,20 @@ public class RewardGroupsDTO implements InitiativeRewardRule, InitiativeTrxCondi
     @SuperBuilder
     @EqualsAndHashCode(callSuper = true)
     @JsonPropertyOrder({
-            "from",
-            "to",
+            "fromCents",
+            "toCents",
             "rewardValue",
             "rewardValueType"
     })
     @ToString(callSuper = true)
     public static class RewardGroupDTO extends BaseRewardValue {
-        private BigDecimal from;
-        private BigDecimal to;
+        private Long fromCents;
+        private Long toCents;
 
-        public RewardGroupDTO(BigDecimal from, BigDecimal to, BigDecimal rewardValue){
+        public RewardGroupDTO(Long fromCents, Long toCents, BigDecimal rewardValue){
             super(rewardValue);
-            this.from=from;
-            this.to=to;
+            this.fromCents=fromCents;
+            this.toCents=toCents;
         }
     }
 }

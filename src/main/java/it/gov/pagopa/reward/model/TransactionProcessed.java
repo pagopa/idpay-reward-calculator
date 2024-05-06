@@ -59,7 +59,7 @@ public class TransactionProcessed implements BaseTransactionProcessed {
 
     private List<String> initiatives;
 
-    private BigDecimal effectiveAmount;
+    private Long effectiveAmountCents;
     private Long amountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime trxChargeDate;

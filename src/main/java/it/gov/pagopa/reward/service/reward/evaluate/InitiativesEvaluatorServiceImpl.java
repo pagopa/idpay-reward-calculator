@@ -9,7 +9,6 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +49,7 @@ public class InitiativesEvaluatorServiceImpl implements InitiativesEvaluatorServ
                 trx.getRefundInfo() != null &&
                 trx.getRefundInfo().getPreviousRewards().get(initiativeId) != null &&
                 (
-                        BigDecimal.ZERO.compareTo(trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedReward()) < 0
+                        0L < trx.getRefundInfo().getPreviousRewards().get(initiativeId).getAccruedRewardCents()
                                 || (
                                 !CollectionUtils.isEmpty(trx.getRefundInfo().getPreviousTrxs()) &&
                                         List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()).equals(trx.getRefundInfo().getPreviousTrxs().get(0).getInitiativeRejectionReasons().get(initiativeId))

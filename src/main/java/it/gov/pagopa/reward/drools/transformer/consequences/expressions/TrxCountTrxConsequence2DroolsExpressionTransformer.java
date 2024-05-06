@@ -6,7 +6,7 @@ public class TrxCountTrxConsequence2DroolsExpressionTransformer implements Initi
 
     @Override
     public String apply(String initiativeId, TrxCountDTO trxConsequence) {
-        return "java.math.BigDecimal.ZERO.setScale(2, java.math.RoundingMode.UNNECESSARY)";
+        return "0L";
     }
 
 }

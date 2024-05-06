@@ -28,17 +28,17 @@ public class RewardLimitsTrxCondition2DroolsConditionTransformer implements Init
 
     @Override
     public String apply(String initiativeId, RewardLimitsDTO rewardLimitsDTO) {
-        return "(%s.equals($trx.getOperationTypeTranscoded()) || %s.totalReward.compareTo(%s) < 0)".formatted(
+        return "(%s.equals($trx.getOperationTypeTranscoded()) || %s.totalRewardCents.compareTo(%s) < 0)".formatted(
                 DroolsTemplateRuleUtils.toTemplateParam(OperationType.REFUND),
                 buildFrequencyCounterExpression(rewardLimitsDTO.getFrequency()),
-                DroolsTemplateRuleUtils.toTemplateParam(rewardLimitsDTO.getRewardLimit())
+                DroolsTemplateRuleUtils.toTemplateParam(rewardLimitsDTO.getRewardLimitCents())
         );
     }
 
     public static String buildFrequencyCounterExpression(RewardLimitsDTO.RewardLimitFrequency frequency) {
         final Pair<String, String> frequencyConfig = getRewardLimitFrequencyConfig(frequency);
         // using constructor with parameters when creating Counters because drools give a warning when using a constructor without parameters (due to a bug on Drools https://issues.redhat.com/browse/DROOLS-7095)
-        return "$userInitiativeCounters.%s.getOrDefault(%s.%s.format($trx.getTrxChargeDate()), new %s(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO))".formatted(
+        return "$userInitiativeCounters.%s.getOrDefault(%s.%s.format($trx.getTrxChargeDate()), new %s(0L, 0L, 0L))".formatted(
                 frequencyConfig.getFirst(),
                 UserInitiativeCountersUpdateServiceImpl.class.getName(),
                 frequencyConfig.getSecond(),

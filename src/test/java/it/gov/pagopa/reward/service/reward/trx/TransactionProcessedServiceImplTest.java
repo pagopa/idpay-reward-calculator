@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionProcessedMapper;
@@ -216,7 +217,7 @@ class TransactionProcessedServiceImplTest {
         refund.setAcquirerId(trx.getAcquirerId());
         refund.setCorrelationId(trx.getCorrelationId());
         refund.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
-        refund.setEffectiveAmount(trx.getAmount().negate());
+        refund.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount().negate()));
         return transaction2RewardTransactionMapper.apply(refund);
     }
 

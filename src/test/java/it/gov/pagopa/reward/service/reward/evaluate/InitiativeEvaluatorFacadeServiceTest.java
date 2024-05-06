@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.common.utils.CommonConstants;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
@@ -76,9 +77,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         TransactionDTO trxTotalRefundNoCharge = buildTrx(5);
         List<TransactionDTO> trxs = List.of(trx, invalidTrx, trxPartialRefund, trxTotalRefund, trxTotalRefundNoCharge);
 
-        invalidTrx.setEffectiveAmount(invalidTrx.getAmount().negate());
-
-        List<InitiativeConfig> initiativeConfigs = List.of(InitiativeConfig.builder().initiativeId("INITIATIVE").beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF).build());
+        invalidTrx.setEffectiveAmountCents(CommonUtilities.euroToCents(invalidTrx.getAmount().negate()));
 
         List<String> initiatives = List.of("INITIATIVE");
 
@@ -124,7 +123,7 @@ class InitiativeEvaluatorFacadeServiceTest {
         trx.setAmount(BigDecimal.valueOf(i + 1));
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setTrxChargeDate(trx.getTrxDate());
-        trx.setEffectiveAmount(trx.getAmount());
+        trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         return trx;
     }
 
@@ -146,25 +145,25 @@ class InitiativeEvaluatorFacadeServiceTest {
         Mockito.when(initiativesEvaluatorServiceMock.evaluateInitiativesBudgetAndRules(Mockito.eq(trxPartialReverse), Mockito.any(), Mockito.any()))
                 .thenAnswer(i -> {
                     RewardTransactionDTO reward = rewardTransactionMapper.apply(i.getArgument(0));
-                    reward.setRewards(new HashMap<>(Map.of("INITIATIVE2PARTIALREVERSE", new Reward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", BigDecimal.valueOf(9)))));
+                    reward.setRewards(new HashMap<>(Map.of("INITIATIVE2PARTIALREVERSE", new Reward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", 9_00L))));
                     reward.setInitiativeRejectionReasons(new HashMap<>(Map.of("INITIATIVE2REVERSE", List.of("NOT_MORE_REWARDED_FOR_SOME_REASON"))));
                     return reward;
                 });
 
         trxPartialReverse.setOperationTypeTranscoded(OperationType.REFUND);
-        trxPartialReverse.setEffectiveAmount(trxPartialReverse.getAmount());
+        trxPartialReverse.setEffectiveAmountCents(CommonUtilities.euroToCents(trxPartialReverse.getAmount()));
         trxPartialReverse.setRefundInfo(new RefundInfo());
         trxPartialReverse.getRefundInfo().setPreviousRewards(Map.of(
-                "INITIATIVE2PARTIALREVERSE", new RefundInfo.PreviousReward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", BigDecimal.TEN),
-                "INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
+                "INITIATIVE2PARTIALREVERSE", new RefundInfo.PreviousReward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", 10_00L),
+                "INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", 1_00L)));
 
         trxTotalRefundNoCharge.setOperationTypeTranscoded(OperationType.REFUND);
-        trxTotalRefundNoCharge.setEffectiveAmount(BigDecimal.ZERO);
+        trxTotalRefundNoCharge.setEffectiveAmountCents(0L);
 
         trxTotalRefund.setOperationTypeTranscoded(OperationType.REFUND);
-        trxTotalRefund.setEffectiveAmount(BigDecimal.ZERO);
+        trxTotalRefund.setEffectiveAmountCents(0L);
         trxTotalRefund.setRefundInfo(new RefundInfo());
-        trxTotalRefund.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
+        trxTotalRefund.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", 1_00L)));
     }
 
     private void verifyUserInitiativeCounterFindByIdCalls(List<String> initiativeIds, TransactionDTO... expectedTrxs) {
@@ -196,12 +195,12 @@ class InitiativeEvaluatorFacadeServiceTest {
     }
 
     private void checkPartialRefundResult(RewardTransactionDTO rewardTransactionDTO) {
-        Assertions.assertEquals(new Reward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", BigDecimal.valueOf(9), BigDecimal.valueOf(-1), false, true), rewardTransactionDTO.getRewards().get("INITIATIVE2PARTIALREVERSE"));
-        Assertions.assertEquals(new Reward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.valueOf(-1), true), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
+        Assertions.assertEquals(new Reward("INITIATIVE2PARTIALREVERSE", "ORGANIZATION", 9_00L, -1_00L, false, true), rewardTransactionDTO.getRewards().get("INITIATIVE2PARTIALREVERSE"));
+        Assertions.assertEquals(new Reward("INITIATIVE2REVERSE", "ORGANIZATION", -1_00L, true), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
         Assertions.assertEquals(Map.of("INITIATIVE2REVERSE", List.of("NOT_MORE_REWARDED_FOR_SOME_REASON")), rewardTransactionDTO.getInitiativeRejectionReasons());
     }
 
     private void checkTotalRefundResult(RewardTransactionDTO rewardTransactionDTO) {
-        Assertions.assertEquals(new Reward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.valueOf(-1), true), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
+        Assertions.assertEquals(new Reward("INITIATIVE2REVERSE", "ORGANIZATION",-1_00L, true), rewardTransactionDTO.getRewards().get("INITIATIVE2REVERSE"));
     }
 }

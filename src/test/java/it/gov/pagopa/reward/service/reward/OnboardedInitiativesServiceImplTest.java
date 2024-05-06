@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
@@ -23,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -129,7 +129,7 @@ class OnboardedInitiativesServiceImplTest {
     private TransactionDTO buildTrx(OffsetDateTime trxDateTime, String hpan) {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
-        trx.setEffectiveAmount(trx.getAmount());
+        trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setTrxChargeDate(trxDateTime);
         trx.setHpan(hpan);
         return trx;
@@ -199,7 +199,7 @@ class OnboardedInitiativesServiceImplTest {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
-        trx.setEffectiveAmount(BigDecimal.ZERO);
+        trx.setEffectiveAmountCents(0L);
 
         // When
         List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
@@ -214,9 +214,9 @@ class OnboardedInitiativesServiceImplTest {
         // Given
         TransactionDTO trx = buildTrx(trxDate, hpan);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
-        trx.setEffectiveAmount(BigDecimal.ZERO);
+        trx.setEffectiveAmountCents(0L);
         trx.setRefundInfo(new RefundInfo());
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", BigDecimal.ONE)));
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", 1_00L)));
 
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE2REVERSE")).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId("INITIATIVE2REVERSE").build()));
 

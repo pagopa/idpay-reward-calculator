@@ -59,7 +59,7 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
                 .flatMap(userInitiativeCounters -> {
                     String initiativeId = trx.getInitiatives().get(0);
                     Reward rewardInitiative = trx.getRewards().get(initiativeId);
-                    Long rewardCents = CommonUtilities.euroToCents(rewardInitiative.getAccruedReward());
+                    Long rewardCents = rewardInitiative.getAccruedRewardCents();
                     cancelTrxSynchronousService.transformIntoRefundTrx(
                             trx,
                             initiativeId,

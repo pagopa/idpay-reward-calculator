@@ -24,7 +24,7 @@ public interface BaseTransactionProcessed {
     Temporal getTrxChargeDate();
     BigDecimal getAmount();
     Long getAmountCents();
-    BigDecimal getEffectiveAmount();
+    Long getEffectiveAmountCents();
     String getChannel();
     List<String> getRejectionReasons();
     Map<String, List<String>> getInitiativeRejectionReasons();
