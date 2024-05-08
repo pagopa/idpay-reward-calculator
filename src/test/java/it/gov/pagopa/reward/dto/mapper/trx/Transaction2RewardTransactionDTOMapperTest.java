@@ -33,7 +33,7 @@ class Transaction2RewardTransactionDTOMapperTest {
         trx.setTrxChargeDate(trx.getTrxDate());
         trx.setAmountCents(trx.getAmount().longValue());
         trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
-        trx.setEffectiveAmount(trx.getAmount());
+        trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setRefundInfo(new RefundInfo());
 
         // When
@@ -57,7 +57,7 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
         Assertions.assertSame(trx.getCorrelationId(), result.getCorrelationId());
         Assertions.assertSame(trx.getAmount(), result.getAmount());
-        Assertions.assertSame(trx.getEffectiveAmount(), result.getEffectiveAmount());
+        Assertions.assertSame(trx.getEffectiveAmountCents(), result.getEffectiveAmountCents());
         Assertions.assertSame(trx.getAmountCents(), result.getAmountCents());
         Assertions.assertSame(trx.getAmountCurrency(), result.getAmountCurrency());
         Assertions.assertSame(trx.getMcc(), result.getMcc());

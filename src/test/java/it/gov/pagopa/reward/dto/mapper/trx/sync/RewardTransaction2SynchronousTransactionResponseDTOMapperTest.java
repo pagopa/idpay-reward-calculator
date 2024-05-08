@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper.trx.sync;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -22,8 +24,8 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
     private final String channel = "CHANNEL";
     private final OperationType operationType = OperationType.CHARGE;
     private final long amountCents = 100L;
-    private final BigDecimal amount = BigDecimal.ONE;
-    private final BigDecimal effectiveAmount = BigDecimal.ONE;
+    private final BigDecimal amount = BigDecimal.ONE.setScale(2, RoundingMode.HALF_DOWN);
+    private final Long effectiveAmountCents = 100L;
 
     @Test
     void applyRewardedTest(){
@@ -32,8 +34,8 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
                 .organizationId("ORGANIZATIONID")
-                .providedReward(BigDecimal.ONE)
-                .accruedReward(BigDecimal.TEN)
+                .providedRewardCents(1_00L)
+                .accruedRewardCents(10_00L)
                 .build();
         Map<String, Reward> rewards = new HashMap<>();
         rewards.put(initiativeId, reward);
@@ -44,7 +46,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
                 .operationTypeTranscoded(operationType)
                 .amountCents(amountCents)
                 .amount(amount)
-                .effectiveAmount(effectiveAmount)
+                .effectiveAmountCents(effectiveAmountCents)
                 .rewards(rewards)
                 .elaborationDateTime(LocalDateTime.now())
                 .build();
@@ -70,8 +72,8 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
                 .channel(channel)
                 .operationTypeTranscoded(operationType)
                 .amountCents(amountCents)
-                .amount(effectiveAmount)
-                .effectiveAmount(effectiveAmount)
+                .amount(CommonUtilities.centsToEuro(effectiveAmountCents))
+                .effectiveAmountCents(effectiveAmountCents)
                 .status(RewardConstants.REWARD_STATE_REJECTED)
                 .rejectionReasons(rejectionReasons)
                 .elaborationDateTime(LocalDateTime.now())
@@ -97,6 +99,6 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
         Assertions.assertEquals(operationType, result.getOperationType());
         Assertions.assertEquals(amountCents, result.getAmountCents());
         Assertions.assertEquals(amount, result.getAmount());
-        Assertions.assertEquals(effectiveAmount, result.getEffectiveAmount());
+        Assertions.assertEquals(effectiveAmountCents, result.getEffectiveAmountCents());
     }
 }

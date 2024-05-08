@@ -36,7 +36,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -141,7 +140,7 @@ class RuleEngineServiceImplTest {
 
         // when
         TransactionDTO trx = TransactionDTOFaker.mockInstanceBuilder(1)
-                .effectiveAmount(BigDecimal.valueOf(11))
+                .effectiveAmountCents(11_00L)
                 .mcc("MCC_0")
                 .build();
         List<String> evaluatingInitiativeIds = Stream.concat(
@@ -159,7 +158,7 @@ class RuleEngineServiceImplTest {
         Assertions.assertEquals("REWARDED", result.getStatus());
 
         Assertions.assertEquals(Map.of(
-                "ID_2_sga", new Reward("ID_2_sga", "ORGANIZATIONID_2", BigDecimal.valueOf(0.08))
+                "ID_2_sga", new Reward("ID_2_sga", "ORGANIZATIONID_2", 8L)
         ), result.getRewards());
     }
 
@@ -175,7 +174,7 @@ class RuleEngineServiceImplTest {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
         List<String> initiatives =  List.of("Initiative1");
         trx.setOperationTypeTranscoded(OperationType.REFUND);
-        RefundInfo refundInfo = new RefundInfo(List.of(TransactionProcessedFaker.mockInstance(1)), Map.of("Initiative1", new RefundInfo.PreviousReward("Initiative1", "OrganizationId1", BigDecimal.ONE)));
+        RefundInfo refundInfo = new RefundInfo(List.of(TransactionProcessedFaker.mockInstance(1)), Map.of("Initiative1", new RefundInfo.PreviousReward("Initiative1", "OrganizationId1", 1_00L)));
         trx.setRefundInfo(refundInfo);
         UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", Map.of("Initiative1", new UserInitiativeCounters("userId", "Initiative1")));
 

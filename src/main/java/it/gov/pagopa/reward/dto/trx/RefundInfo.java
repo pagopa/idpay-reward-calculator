@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +21,6 @@ public class RefundInfo {
     public static class PreviousReward {
         private String initiativeId;
         private String organizationId;
-        private BigDecimal accruedReward;
+        private Long accruedRewardCents;
     }
 }

@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ class InitiativesEvaluatorServiceImplTest {
                 )
                 .build();
 
-        Reward reward = new Reward("INITIATIVE2", "ORGANIZATION", new BigDecimal("200"));
+        Reward reward = new Reward("INITIATIVE2", "ORGANIZATION", 200_00L);
         Mockito.when(ruleEngineService.applyRules(Mockito.eq(trx), Mockito.any(), Mockito.eq(userCounters))).thenAnswer(i->
             RewardTransactionDTO.builder()
                     .rewards(Map.of("INITIATIVE2", reward)).build()
@@ -71,7 +70,7 @@ class InitiativesEvaluatorServiceImplTest {
 
         // Given refund having rewarded charge equal to 0
         trx.setRefundInfo(new RefundInfo());
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", BigDecimal.ZERO)));
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", 0L)));
         // When
         result = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);
 
@@ -81,7 +80,7 @@ class InitiativesEvaluatorServiceImplTest {
         Mockito.verify(ruleEngineService, Mockito.times(3)).applyRules(trx, List.of("INITIATIVE2"), userCounters);
 
         // Given refund having rewarded charge
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", BigDecimal.ONE)));
+        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE1", new RefundInfo.PreviousReward("INITIATIVE1", "ORGANIZATION", 1_00L)));
 
         // When
         result = initiativesEvaluatorService.evaluateInitiativesBudgetAndRules(trx, initiatives, userCounters);

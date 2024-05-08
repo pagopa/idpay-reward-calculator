@@ -19,7 +19,7 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
         String initiativeId = "INITIATIVEID";
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
-                .providedReward(BigDecimal.ONE)
+                .providedRewardCents(1_00L)
                 .build();
         TransactionProcessed transactionProcessed = TransactionProcessed.builder()
                 .id("TRXID")
@@ -28,7 +28,7 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .amount(CommonUtilities.centsToEuro(100L))
                 .amountCents(100L)
-                .effectiveAmount(CommonUtilities.centsToEuro(100L))
+                .effectiveAmountCents(100L)
                 .status("STATUS")
                 .rewards(Map.of(initiativeId,reward))
                 .build();
@@ -44,7 +44,7 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
         Assertions.assertEquals(transactionProcessed.getUserId(), result.getUserId());
         Assertions.assertEquals(transactionProcessed.getAmountCents(), result.getAmountCents());
         Assertions.assertEquals(transactionProcessed.getAmount(), result.getAmount());
-        Assertions.assertEquals(transactionProcessed.getEffectiveAmount(), result.getEffectiveAmount());
+        Assertions.assertEquals(transactionProcessed.getEffectiveAmountCents(), result.getEffectiveAmountCents());
         Assertions.assertEquals(transactionProcessed.getStatus(), result.getStatus());
         Assertions.assertEquals(reward, result.getReward());
         TestUtils.checkNotNullFields(result, "rejectionReasons");

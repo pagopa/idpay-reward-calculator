@@ -7,8 +7,6 @@ import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.fakers.rule.RewardGroupsDTOFaker;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
 class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardGroupsDTO> {
 
     public final static String BASE_EXPECTED_RULE = """
@@ -28,7 +26,7 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     private final RewardGroupsTrxConsequence2DroolsRuleTransformer transformer = new RewardGroupsTrxConsequence2DroolsRuleTransformer(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl());
     private RewardGroupsDTO rewardGroupsDTO;
     private String expectedRule;
-    private BigDecimal expectedReward;
+    private Long expectedReward;
 
     @Override
     protected InitiativeTrxConsequence2DroolsRuleTransformer<RewardGroupsDTO> getTransformer() {
@@ -48,12 +46,12 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     @Override
     protected TransactionDroolsDTO getTransaction() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setEffectiveAmount(BigDecimal.valueOf(11.25));
+        trx.setEffectiveAmountCents(11_25L);
         return trx;
     }
 
     @Override
-    protected BigDecimal getExpectedReward() {
+    protected Long getExpectedReward() {
         return expectedReward;
     }
 
@@ -81,8 +79,8 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     private void configurePercentageUseCase() {
         rewardGroupsDTO = RewardGroupsDTOFaker.mockInstance(1);
         expectedRule = BASE_EXPECTED_RULE.replace("%REWARD%",
-                "$trx.getEffectiveAmount().multiply(($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"0\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"5\"))<=0)?new java.math.BigDecimal(\"0.1000\"):($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"10\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"15\"))<=0)?new java.math.BigDecimal(\"0.2000\"):java.math.BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_DOWN))");
-        expectedReward = bigDecimalValue(2.25);
+                "new java.math.BigDecimal($trx.getEffectiveAmountCents()).multiply(($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"0\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"500\"))<=0)?new java.math.BigDecimal(\"0.1000\"):($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1000\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1500\"))<=0)?new java.math.BigDecimal(\"0.2000\"):java.math.BigDecimal.ZERO).setScale(0, java.math.RoundingMode.HALF_DOWN).longValue())");
+        expectedReward = 225L;
     }
 
     @Test
@@ -97,8 +95,8 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
         rewardGroupsDTO.getRewardGroups().forEach(r->r.setRewardValueType(RewardValueType.ABSOLUTE));
 
         expectedRule = BASE_EXPECTED_RULE.replace("%REWARD%",
-                "($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"0\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"5\"))<=0)?new java.math.BigDecimal(\"10\").setScale(2, java.math.RoundingMode.HALF_DOWN):($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"10\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"15\"))<=0)?new java.math.BigDecimal(\"20\").setScale(2, java.math.RoundingMode.HALF_DOWN):java.math.BigDecimal.ZERO)");
-        expectedReward = bigDecimalValue(20);
+                "($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"0\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"500\"))<=0)?new java.math.BigDecimal(\"10\").longValue():($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1000\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1500\"))<=0)?new java.math.BigDecimal(\"20\").longValue():0L)");
+        expectedReward = 20L;
     }
 
     @Test
@@ -107,7 +105,7 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
 
         rewardGroupsDTO.getRewardGroups().get(0).setRewardValueType(RewardValueType.ABSOLUTE);
         expectedRule = BASE_EXPECTED_RULE.replace("%REWARD%",
-                "($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"0\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"5\"))<=0)?new java.math.BigDecimal(\"10\").setScale(2, java.math.RoundingMode.HALF_DOWN):($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"10\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"15\"))<=0)?$trx.getEffectiveAmount().multiply(new java.math.BigDecimal(\"0.2000\")).setScale(2, java.math.RoundingMode.HALF_DOWN):java.math.BigDecimal.ZERO)");
+                "($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"0\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"500\"))<=0)?new java.math.BigDecimal(\"10\").longValue():($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1000\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1500\"))<=0)?new java.math.BigDecimal($trx.getEffectiveAmountCents()).multiply(new java.math.BigDecimal(\"0.2000\")).setScale(0, java.math.RoundingMode.HALF_DOWN).longValue():0L)");
 
         testReward();
     }
@@ -118,7 +116,7 @@ class RewardGroupsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
 
         rewardGroupsDTO.getRewardGroups().get(0).setRewardValueType(RewardValueType.PERCENTAGE);
         expectedRule = BASE_EXPECTED_RULE.replace("%REWARD%",
-                "($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"0\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"5\"))<=0)?$trx.getEffectiveAmount().multiply(new java.math.BigDecimal(\"0.1000\")).setScale(2, java.math.RoundingMode.HALF_DOWN):($trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"10\"))>=0 && $trx.getEffectiveAmount().compareTo(new java.math.BigDecimal(\"15\"))<=0)?new java.math.BigDecimal(\"20\").setScale(2, java.math.RoundingMode.HALF_DOWN):java.math.BigDecimal.ZERO)");
+                "($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"0\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"500\"))<=0)?new java.math.BigDecimal($trx.getEffectiveAmountCents()).multiply(new java.math.BigDecimal(\"0.1000\")).setScale(0, java.math.RoundingMode.HALF_DOWN).longValue():($trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1000\"))>=0 && $trx.getEffectiveAmountCents().compareTo(new java.lang.Long(\"1500\"))<=0)?new java.math.BigDecimal(\"20\").longValue():0L)");
 
         testReward();
     }

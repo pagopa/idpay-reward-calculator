@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +34,9 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
         trx.setRefundInfo(new RefundInfo());
 
-        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", BigDecimal.ZERO, BigDecimal.ZERO, false, false)));
-        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", BigDecimal.TEN, BigDecimal.ZERO, true, false)));
-        trx.setRewards(Map.of("INITIATIVE3", new Reward("INITIATIVE3", "ORGANIZATION3", BigDecimal.TEN, BigDecimal.ONE, true, false)));
+        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", 0L, 0L, false, false)));
+        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", 10_00L, 0L, true, false)));
+        trx.setRewards(Map.of("INITIATIVE3", new Reward("INITIATIVE3", "ORGANIZATION3", 10_00L, 1_00L, true, false)));
 
         trx.setInitiatives(new ArrayList<>());
 
@@ -58,8 +57,8 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     void testWithNoRewards() {
         // Given
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
-        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", BigDecimal.ZERO, BigDecimal.ZERO, false, false)));
-        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", BigDecimal.TEN, BigDecimal.ZERO, true, false)));
+        trx.setRewards(Map.of("INITIATIVE1", new Reward("INITIATIVE1", "ORGANIZATION1", 0L, 0L, false, false)));
+        trx.setRewards(Map.of("INITIATIVE2", new Reward("INITIATIVE2", "ORGANIZATION2", 10_00L, 0L, true, false)));
 
         // When
         RewardTransactionDTO result = transactionDroolsDTO2RewardTransactionMapper.apply(trx);
@@ -73,7 +72,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
     void testWithRejectionReasons() {
         // Given
         TransactionDroolsDTO trx = TransactionDroolsDtoFaker.mockInstance(0);
-        trx.setRewards(Map.of("INITIATIVE", new Reward("INITIATIVE", "ORGANIZATION", BigDecimal.TEN, BigDecimal.ONE, true, false)));
+        trx.setRewards(Map.of("INITIATIVE", new Reward("INITIATIVE", "ORGANIZATION", 10_00L, 1_00L, true, false)));
         trx.setRejectionReasons(List.of("REJECTION"));
 
         // When

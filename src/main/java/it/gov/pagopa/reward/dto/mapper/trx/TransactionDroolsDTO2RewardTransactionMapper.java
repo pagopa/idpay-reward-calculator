@@ -6,7 +6,6 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.math.BigDecimal;
 import java.util.function.Function;
 
 @Service
@@ -24,7 +23,7 @@ public class TransactionDroolsDTO2RewardTransactionMapper implements Function<Tr
 
             trxDto.setStatus(
                     CollectionUtils.isEmpty(rewardTrx.getRejectionReasons()) &&
-                            rewardTrx.getRewards().values().stream().anyMatch(r->r.getAccruedReward().compareTo(BigDecimal.ZERO)!=0)
+                            rewardTrx.getRewards().values().stream().anyMatch(r->r.getAccruedRewardCents().compareTo(0L)!=0)
                             ? RewardConstants.REWARD_STATE_REWARDED
                             : RewardConstants.REWARD_STATE_REJECTED
             );

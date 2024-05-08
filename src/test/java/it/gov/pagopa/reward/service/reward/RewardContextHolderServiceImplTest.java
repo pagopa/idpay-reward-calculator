@@ -28,7 +28,6 @@ import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 
@@ -134,7 +133,7 @@ class RewardContextHolderServiceImplTest {
                 .initiativeId(initiativeId)
                 .initiativeName("NAME")
                 .organizationId("ORGANIZATIONID")
-                .beneficiaryBudget(BigDecimal.valueOf(100))
+                .beneficiaryBudgetCents(100_00L)
                 .startDate(LocalDate.MIN)
                 .endDate(LocalDate.MAX)
                 .dailyThreshold(true)
