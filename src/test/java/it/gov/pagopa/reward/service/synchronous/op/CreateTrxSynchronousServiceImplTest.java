@@ -44,11 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
@@ -355,6 +351,34 @@ class CreateTrxSynchronousServiceImplTest {
         SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest.errorResponseCommonAssertions(authorizeRequest, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_RULE_ENGINE_NOT_READY), (SynchronousTransactionResponseDTO) resultResponse);
 
     }
+
+    @Test
+    void authorizeTransactionAlreadyAuthorized(){
+        //Given
+        SynchronousTransactionAuthRequestDTO authorizeRequest = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
+        String initiativeId = "INITIATIVEID";
+        long counterVersion = 3L;
+
+        InitiativeConfig initiativeConfig = mockRewardContextHolderService(initiativeId);
+
+        UserInitiativeCounters initiativeCountersMock = getInitiativeCountersMock(authorizeRequest, initiativeId, counterVersion, null);
+        TransactionDTO trx = synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(authorizeRequest);
+
+        initiativeCountersMock.setLastTrx(Collections.singletonList(rewardTransactionMapper.apply(trx)));
+        mockOnboardedInitiativeService(authorizeRequest, initiativeConfig);
+
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(authorizeRequest.getUserId(), initiativeId))).thenReturn(Mono.just(initiativeCountersMock));
+
+
+        // When
+        Mono<SynchronousTransactionResponseDTO> mono = service.authorizeTransaction(authorizeRequest, initiativeId, counterVersion);
+        TransactionAlreadyProcessedException result = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono::block);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(ExceptionCode.TRANSACTION_ALREADY_AUTHORIZED, result.getCode());
+        Assertions.assertEquals(ExceptionMessage.TRANSACTION_ALREADY_PROCESSED_MSG.formatted(authorizeRequest.getTransactionId()), result.getMessage());
+    }
 //end region
 
     private InitiativeConfig mockRewardContextHolderService(String initiativeId) {
@@ -377,13 +401,18 @@ class CreateTrxSynchronousServiceImplTest {
     }
 
     private UserInitiativeCounters mockUserInitiativeCountersRepositoryFind(SynchronousTransactionAuthRequestDTO authorizeRequest, String initiativeId, long counterVersion, TransactionDTO pendingTrx) {
+        UserInitiativeCounters userInitiativeCounters = getInitiativeCountersMock(authorizeRequest, initiativeId, counterVersion, pendingTrx);
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(userInitiativeCounters.getId())).thenReturn(Mono.just(userInitiativeCounters));
+        return userInitiativeCounters;
+    }
+
+    private UserInitiativeCounters getInitiativeCountersMock(SynchronousTransactionAuthRequestDTO authorizeRequest, String initiativeId, long counterVersion, TransactionDTO pendingTrx) {
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
         userInitiativeCounters.setId(UserInitiativeCounters.buildId(authorizeRequest.getUserId(), initiativeId));
         userInitiativeCounters.setEntityId(authorizeRequest.getUserId());
         userInitiativeCounters.setInitiativeId(initiativeId);
         userInitiativeCounters.setVersion(counterVersion);
         userInitiativeCounters.setPendingTrx(pendingTrx);
-        Mockito.when(userInitiativeCountersRepositoryMock.findById(userInitiativeCounters.getId())).thenReturn(Mono.just(userInitiativeCounters));
         return userInitiativeCounters;
     }
 

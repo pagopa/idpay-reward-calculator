@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -24,14 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,7 +61,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
 
-        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper());
+        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(),"PT1H");
     }
 
     @Test
@@ -685,6 +680,47 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkCounters(userInitiativeCountersWrapper.getInitiatives().get("INITIATIVEID1").getYearlyCounters().get(TRX_DATE_YEAR), 1L, 10_00L, 10_00L);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 1L, false, 10_00L, 10000_00L, 10_00L);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
+    }
+
+    @Test
+    void testUpdateLastTrx(){
+        // Given
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", 50_00L, 50_00L, false, false));
+        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(0);
+        rewardTransactionDTO.setUserId("USERID");
+        rewardTransactionDTO.setOperationTypeTranscoded(OperationType.CHARGE);
+        rewardTransactionDTO.setTrxChargeDate(TRX_DATE);
+        rewardTransactionDTO.setAmount(BigDecimal.valueOf(100));
+        rewardTransactionDTO.setEffectiveAmountCents(100_00L);
+        rewardTransactionDTO.setRewards(rewardMock);
+
+
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 200_00L);
+
+        setTemporalCounters(userInitiativeCounters, 11L, 100_00L, 70_00L);
+
+        //set initial lastTrx
+        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        RewardTransactionDTO trxAlreadyProcessedExpired = RewardTransactionDTOFaker.mockInstance(1);
+        trxAlreadyProcessedExpired.setUserId("USERID");
+        trxAlreadyProcessedExpired.setElaborationDateTime(localDateTimeNow.minusHours(2));
+        RewardTransactionDTO trxAlreadyProcessedNotExpired = RewardTransactionDTOFaker.mockInstance(2);
+        trxAlreadyProcessedNotExpired.setUserId("USERID");
+        trxAlreadyProcessedNotExpired.setElaborationDateTime(localDateTimeNow);
+        userInitiativeCounters.setLastTrx(Arrays.asList(trxAlreadyProcessedExpired, trxAlreadyProcessedNotExpired));
+
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
+                "USERID",
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
+        );
+
+        // When
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
+
+        // Then
+        List<BaseTransactionProcessed> resultLastTrx = userInitiativeCounters.getLastTrx();
+        Assertions.assertEquals(2, resultLastTrx.size());
+        Assertions.assertEquals(Arrays.asList(trxAlreadyProcessedNotExpired, rewardTransactionDTO), resultLastTrx);
     }
 
 }
