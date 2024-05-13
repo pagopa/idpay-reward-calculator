@@ -11,6 +11,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -24,6 +25,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.TRANSACTION_ALREADY_AUTHORIZED;
+import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_PROCESSED_MSG;
 
 @Service
 @Slf4j
@@ -114,4 +118,8 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                 });
     }
 
+    @Override
+    protected TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId) {
+        return new TransactionAlreadyProcessedException(TRANSACTION_ALREADY_AUTHORIZED,TRANSACTION_ALREADY_PROCESSED_MSG.formatted(trxId));
+    }
 }

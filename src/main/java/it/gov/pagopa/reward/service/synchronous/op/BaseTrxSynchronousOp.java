@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
@@ -13,10 +12,7 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotFoundOrNotDiscountException;
-import it.gov.pagopa.reward.exception.custom.InitiativeNotInContainerException;
-import it.gov.pagopa.reward.exception.custom.PendingCounterException;
+import it.gov.pagopa.reward.exception.custom.*;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -124,7 +120,21 @@ abstract class BaseTrxSynchronousOp {
     }
 
     protected Mono<UserInitiativeCounters> findUserInitiativeCounter(String initiativeId, Pair<InitiativeConfig, OnboardingInfo> i2o, TransactionDTO trxDTO) {
-        return userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxDTO), initiativeId));
+        return userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxDTO), initiativeId))
+                .map(counter -> checkTrxAlreadyProcessed(trxDTO, counter));
+    }
+
+    private UserInitiativeCounters checkTrxAlreadyProcessed(TransactionDTO trxDTO, UserInitiativeCounters counter) {
+        boolean trxIsPresent = counter.getLastTrx()
+                .stream()
+                .anyMatch(trxProcessed ->
+                        trxProcessed.getId().equals(trxDTO.getId())
+                                && trxProcessed.getOperationTypeTranscoded().equals(trxDTO.getOperationTypeTranscoded()));
+
+        if(trxIsPresent){
+            throw getTransactionAlreadyProcessedException(trxDTO.getId());
+        }
+        return counter;
     }
 
     protected Mono<Boolean> checkInitiative(SynchronousTransactionRequestDTO request, String initiativeId) {
@@ -154,5 +164,7 @@ abstract class BaseTrxSynchronousOp {
             }
         }
     }
+
+    protected abstract TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId);
 
 }

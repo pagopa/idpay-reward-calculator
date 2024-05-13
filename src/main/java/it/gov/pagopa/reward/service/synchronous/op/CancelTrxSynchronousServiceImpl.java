@@ -15,6 +15,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.PendingCounterException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -145,5 +146,10 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         out.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         out.setOperationTypeTranscoded(OperationType.CHARGE);
         return  out;
+    }
+
+    @Override
+    protected TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId) {
+        return null; //TODO it will resolve by IDP-2514
     }
 }

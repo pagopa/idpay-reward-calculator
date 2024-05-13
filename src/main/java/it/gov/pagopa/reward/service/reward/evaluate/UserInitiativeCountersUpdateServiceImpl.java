@@ -7,23 +7,25 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -53,12 +55,16 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private final RewardContextHolderService rewardContextHolderService;
     private final RewardCountersMapper rewardCountersMapper;
+    private final Duration lastTrxExpired;
 
     private final List<String> justTrxCountRejectionReason = List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason());
 
-    public UserInitiativeCountersUpdateServiceImpl(RewardContextHolderService rewardContextHolderService, RewardCountersMapper rewardCountersMapper) {
+    public UserInitiativeCountersUpdateServiceImpl(RewardContextHolderService rewardContextHolderService,
+                                                   RewardCountersMapper rewardCountersMapper,
+                                                    @Value("${app.trx-counters.lastTrxExpired}") String lastTrxExpired) {
         this.rewardContextHolderService = rewardContextHolderService;
         this.rewardCountersMapper = rewardCountersMapper;
+        this.lastTrxExpired = Duration.parse(lastTrxExpired);
     }
 
     @Override
@@ -82,6 +88,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                             initiativeCounter.setUpdateDate(LocalDateTime.now());
                                             updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
                                             updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
+                                            updateLastTrxCounters(initiativeCounter, ruleEngineResult);
                                         }
 
                                         /* set RewardCounters in RewardTransactionDTO object */
@@ -185,6 +192,21 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
     private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, OperationType operationType, Long previousRewardsCents, Reward initiativeReward, boolean justTrxCountRejection) {
         updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), operationType, initiativeReward, previousRewardsCents, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
+    }
+
+    private void updateLastTrxCounters(UserInitiativeCounters initiativeCounter, RewardTransactionDTO ruleEngineResult) {
+        LocalDateTime expiredTime = LocalDateTime.now().minus(lastTrxExpired);
+
+        //delete transactions expired
+        List<BaseTransactionProcessed> listUpdated = initiativeCounter.getLastTrx()
+                .stream()
+                .filter(trx -> trx.getElaborationDateTime().isAfter(expiredTime))
+                .collect(Collectors.toList());
+
+        //add new processed transaction
+        listUpdated.add(ruleEngineResult);
+
+        initiativeCounter.setLastTrx(listUpdated);
     }
 
 }
