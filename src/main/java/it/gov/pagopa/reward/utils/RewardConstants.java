@@ -97,6 +97,6 @@ public final class RewardConstants {
         public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
         public static final String INVALID_COUNTER_VERSION = "Invalid counter version provided";
         public static final String PENDING_COUNTER = "The counter is actually locked";
-        public static final String TRANSACTION_ALREADY_PROCESSED_MSG = "The transaction with id [%s] is already authorized";
+        public static final String TRANSACTION_ALREADY_AUTHORIZED_MSG = "The transaction with id [%s] is already authorized";
     }
 }

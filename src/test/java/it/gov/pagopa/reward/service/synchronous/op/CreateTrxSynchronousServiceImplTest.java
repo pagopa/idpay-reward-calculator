@@ -377,7 +377,7 @@ class CreateTrxSynchronousServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(ExceptionCode.TRANSACTION_ALREADY_AUTHORIZED, result.getCode());
-        Assertions.assertEquals(ExceptionMessage.TRANSACTION_ALREADY_PROCESSED_MSG.formatted(authorizeRequest.getTransactionId()), result.getMessage());
+        Assertions.assertEquals(ExceptionMessage.TRANSACTION_ALREADY_AUTHORIZED_MSG.formatted(authorizeRequest.getTransactionId()), result.getMessage());
     }
 //end region
 

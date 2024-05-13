@@ -19,15 +19,13 @@ import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-
-import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.TRANSACTION_ALREADY_AUTHORIZED;
-import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_PROCESSED_MSG;
 
 @Service
 @Slf4j
@@ -120,6 +118,6 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     @Override
     protected TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId) {
-        return new TransactionAlreadyProcessedException(TRANSACTION_ALREADY_AUTHORIZED,TRANSACTION_ALREADY_PROCESSED_MSG.formatted(trxId));
+        return new TransactionAlreadyProcessedException(RewardConstants.ExceptionCode.TRANSACTION_ALREADY_AUTHORIZED, RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_AUTHORIZED_MSG.formatted(trxId));
     }
 }
