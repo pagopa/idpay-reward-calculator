@@ -13,8 +13,10 @@ import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
+import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.PendingCounterException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -37,9 +39,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.INITIATIVE_NOT_ACTIVE_FOR_USER;
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.PENDING_COUNTER;
@@ -59,6 +59,10 @@ class CancelTrxSynchronousServiceImplTest{
     @Mock
     private OnboardedInitiativesService onboardedInitiativesServiceMock;
 
+    private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper("00");
+    private final Transaction2RewardTransactionMapper rewardTransactionMapper = new Transaction2RewardTransactionMapper();
+
+
     private CancelTrxSynchronousServiceImpl cancelTrxSynchronousService;
 
     @BeforeEach
@@ -68,10 +72,10 @@ class CancelTrxSynchronousServiceImplTest{
                         userInitiativeCountersRepositoryMock,
                         new RewardTransaction2SynchronousTransactionResponseDTOMapper(),
                         rewardContextHolderServiceMock,
-                        new Transaction2RewardTransactionMapper(),
+                        rewardTransactionMapper,
                         userInitiativeCountersUpdateServiceMock,
                         onboardedInitiativesServiceMock,
-                        new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper("00"));
+                        synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper);
     }
 
     @Test
@@ -105,14 +109,7 @@ class CancelTrxSynchronousServiceImplTest{
 
         //Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "rejectionReasons");
-
-        Mockito.verify(rewardContextHolderServiceMock, Mockito.times(2)).getInitiativeConfig(any());
-        Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getRewardRulesKieInitiativeIds();
-        Mockito.verify(onboardedInitiativesServiceMock, Mockito.times(1)).isOnboarded(any(),any(),any());
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).findById(anyString());
-        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).saveIfVersionNotChanged(any());
-        Mockito.verify(userInitiativeCountersUpdateServiceMock, Mockito.times(1)).update(any(),any());
+        assertionsCancelCommonOk(result);
     }
 
     @Test
@@ -188,7 +185,6 @@ class CancelTrxSynchronousServiceImplTest{
         Mockito.verify(userInitiativeCountersUpdateServiceMock, Mockito.never()).update(any(),any());
     }
 
-
     @Test
     void trx2processedTest() {
         TransactionDTO trxDto = TransactionDTOFaker.mockInstance(1);
@@ -203,6 +199,96 @@ class CancelTrxSynchronousServiceImplTest{
                 "refundInfo",
                 "elaborationDateTime");
 
+    }
+
+    @Test
+    void cancelTrx_alreadyCancelledError(){
+        // Given
+        SynchronousTransactionAuthRequestDTO trxCancelRequest = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
+
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(INITIATIVEID))
+                .thenReturn(Mono.just(getInitiativeConfig()));
+
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(INITIATIVEID));
+
+        OnboardedInitiative onboardingInitiative = OnboardedInitiative.builder().initiativeId(INITIATIVEID).familyId("FAMILYID").build();
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(any(),any(),eq(INITIATIVEID))).thenReturn(Mono.just(Pair.of(getInitiativeConfig(), onboardingInitiative)));
+
+        UserInitiativeCounters userInitiativeCounters = getUserInitiativeCounters(trxCancelRequest);
+        TransactionDTO trx = synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(trxCancelRequest);
+        RewardTransactionDTO rewardTrx = rewardTransactionMapper.apply(trx);
+        rewardTrx.setOperationTypeTranscoded(OperationType.REFUND);
+        rewardTrx.setOperationType("01");
+        userInitiativeCounters.setLastTrx(Collections.singletonList(rewardTrx));
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trxCancelRequest.getUserId(), INITIATIVEID)))
+                .thenReturn(Mono.just(userInitiativeCounters));
+
+        //When
+        Mono<SynchronousTransactionResponseDTO> mono = cancelTrxSynchronousService.cancelTransaction(trxCancelRequest, INITIATIVEID);
+        TransactionAlreadyProcessedException result = Assertions.assertThrows(TransactionAlreadyProcessedException.class, mono::block);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(RewardConstants.ExceptionCode.TRANSACTION_ALREADY_CANCELLED, result.getCode());
+        Assertions.assertEquals(RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_CANCELLED_MSG.formatted(trxCancelRequest.getTransactionId()), result.getMessage());
+    }
+
+    @Test
+    void cancelTrx_checkAlreadyCancelledOk(){
+        // Given
+        SynchronousTransactionAuthRequestDTO trxCancelRequest = SynchronousTransactionAuthRequestDTOFaker.mockInstance(1);
+
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(INITIATIVEID))
+                .thenReturn(Mono.just(getInitiativeConfig()));
+
+        Mockito.when(rewardContextHolderServiceMock.getRewardRulesKieInitiativeIds()).thenReturn(Set.of(INITIATIVEID));
+
+        OnboardedInitiative onboardingInitiative = OnboardedInitiative.builder().initiativeId(INITIATIVEID).familyId("FAMILYID").build();
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(any(),any(),eq(INITIATIVEID))).thenReturn(Mono.just(Pair.of(getInitiativeConfig(), onboardingInitiative)));
+
+        UserInitiativeCounters userInitiativeCounters = getUserInitiativeCounters(trxCancelRequest);
+        RewardTransactionDTO trxAlreadyProcessedNotMismatchOperationType = RewardTransactionDTOFaker.mockInstance(2);
+        trxAlreadyProcessedNotMismatchOperationType.setId(trxCancelRequest.getTransactionId());
+        trxAlreadyProcessedNotMismatchOperationType.setOperationType("00");
+        trxAlreadyProcessedNotMismatchOperationType.setOperationTypeTranscoded(OperationType.CHARGE);
+        trxAlreadyProcessedNotMismatchOperationType.setUserId("USERID");
+
+        RewardTransactionDTO trxAlreadyProcessedNotMismatchTrxIdAndOperationType = RewardTransactionDTOFaker.mockInstance(3);
+        trxAlreadyProcessedNotMismatchTrxIdAndOperationType.setOperationType("00");
+        trxAlreadyProcessedNotMismatchTrxIdAndOperationType.setOperationTypeTranscoded(OperationType.CHARGE);
+        trxAlreadyProcessedNotMismatchTrxIdAndOperationType.setUserId("USERID");
+        userInitiativeCounters.setLastTrx(Arrays.asList(trxAlreadyProcessedNotMismatchOperationType, trxAlreadyProcessedNotMismatchTrxIdAndOperationType));
+
+        Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trxCancelRequest.getUserId(), INITIATIVEID)))
+                .thenReturn(Mono.just(userInitiativeCounters));
+
+        RewardTransactionDTO rewardTrx = RewardTransactionDTOFaker.mockInstance(1);
+        rewardTrx.setInitiatives(List.of(INITIATIVEID));
+        rewardTrx.setUserId(trxCancelRequest.getUserId());
+        rewardTrx.setRewards(Map.of(INITIATIVEID, new Reward(INITIATIVEID, ORGANIZATIONID, trxCancelRequest.getRewardCents())));
+
+        Mockito.when(userInitiativeCountersUpdateServiceMock.update(any(), any()))
+                .thenReturn(Mono.just(rewardTrx));
+
+        Mockito.when(userInitiativeCountersRepositoryMock.saveIfVersionNotChanged(any())).thenReturn(Mono.just(userInitiativeCounters));
+
+        //When
+        SynchronousTransactionResponseDTO result = cancelTrxSynchronousService.cancelTransaction(trxCancelRequest, INITIATIVEID).block();
+
+        //Then
+        Assertions.assertNotNull(result);
+        assertionsCancelCommonOk(result);
+    }
+
+    private void assertionsCancelCommonOk(SynchronousTransactionResponseDTO result) {
+        TestUtils.checkNotNullFields(result, "rejectionReasons");
+
+        Mockito.verify(rewardContextHolderServiceMock, Mockito.times(2)).getInitiativeConfig(any());
+        Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getRewardRulesKieInitiativeIds();
+        Mockito.verify(onboardedInitiativesServiceMock, Mockito.times(1)).isOnboarded(any(),any(),any());
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).findById(anyString());
+        Mockito.verify(userInitiativeCountersRepositoryMock, Mockito.times(1)).saveIfVersionNotChanged(any());
+        Mockito.verify(userInitiativeCountersUpdateServiceMock, Mockito.times(1)).update(any(),any());
     }
 
     private static InitiativeConfig getInitiativeConfig() {
