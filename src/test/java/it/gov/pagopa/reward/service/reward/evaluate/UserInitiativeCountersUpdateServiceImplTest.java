@@ -2,12 +2,13 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.mapper.trx.BaseTransactionProcessed2LastTrxInfoDTOMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.RewardCountersMapper;
+import it.gov.pagopa.reward.dto.trx.LastTrxInfoDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -43,6 +44,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
     @Mock
     private RewardContextHolderService rewardContextHolderServiceMock;
+    private final BaseTransactionProcessed2LastTrxInfoDTOMapper baseTransactionProcessed2LastTrxInfoDTOMapper = new BaseTransactionProcessed2LastTrxInfoDTOMapper();
 
     private UserInitiativeCountersUpdateServiceImpl userInitiativeCountersUpdateService;
 
@@ -61,7 +63,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
 
-        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(),"PT1H");
+        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(), baseTransactionProcessed2LastTrxInfoDTOMapper, "PT1H");
     }
 
     @Test
@@ -89,7 +91,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(100_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         // When
         userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
@@ -132,7 +135,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(100_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 200_00L);
 
@@ -163,7 +167,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(10000))
                 .effectiveAmountCents(10000_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 200_00L);
 
@@ -197,6 +202,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(100_00L)
                 .rewards(rewardMock)
+                .id("TRXID")
                 .build();
 
         UserInitiativeCounters userInitiativeCounters1 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "1", 20L, 4000_00L, 200_00L);
@@ -245,7 +251,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .amountCents(100_00L)
                 .effectiveAmountCents(100_00L)
                 .rewards(rewardMock)
-                .initiativeRejectionReasons(Map.of("1", List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason()))).build();
+                .initiativeRejectionReasons(Map.of("1", List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason())))
+                .id("TRXID").build();
 
         UserInitiativeCounters userInitiativeCounters1 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "1", 20L, 4000_00L, 200_00L);
         UserInitiativeCounters userInitiativeCounters2 = createInitiativeCounter(rewardTransactionDTO.getUserId(), "2", 20L, 4000_00L, 200_00L);
@@ -330,7 +337,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .amount(BigDecimal.valueOf(100))
                 .amountCents(100_00L)
                 .effectiveAmountCents(100_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         // When
         userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
@@ -362,7 +370,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(100_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         // When
         userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
@@ -394,7 +403,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(100_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         // When
         userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
@@ -426,7 +436,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(100_00L)
-                .rewards(rewardMock).build();
+                .rewards(rewardMock)
+                .id("TRXID").build();
 
         // When
         userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
@@ -451,7 +462,8 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .effectiveAmountCents(2100_00L)
-                .rewards(Map.of("INITIATIVEID1", reward)).build();
+                .rewards(Map.of("INITIATIVEID1", reward))
+                .id("TRXID").build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 9000_00L);
 
@@ -492,6 +504,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .amount(BigDecimal.valueOf(99))
                 .effectiveAmountCents(1001_00L)
                 .rewards(Map.of("INITIATIVEID1", reward1))
+                .id("TRXID")
                 .build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 9000_00L);
@@ -532,6 +545,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                                 "INITIATIVEID1", new RefundInfo.PreviousReward("INITIATIVEID1", "ORGANIZATION", 2000_00L),
                                 "INITIATIVEID3", new RefundInfo.PreviousReward("INITIATIVEID3", "ORGANIZATION", 2000_00L)))
                         .build())
+                .id("TRXID")
                 .build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 9000_00L);
@@ -593,6 +607,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .refundInfo(RefundInfo.builder()
                         .previousRewards(Map.of("INITIATIVEID1", new RefundInfo.PreviousReward("INITIATIVEID1", "ORGANIZATION", 1000_00L)))
                         .build())
+                .id("TRXID")
                 .build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 9000_00L);
@@ -631,6 +646,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .refundInfo(RefundInfo.builder()
                         .previousRewards(Map.of("INITIATIVEID1", new RefundInfo.PreviousReward("INITIATIVEID1", "ORGANIZATION", 1000_00L)))
                         .build())
+                .id("TRXID")
                 .build();
 
         UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 4000_00L, 9000_00L);
@@ -687,6 +703,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         // Given
         Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", 50_00L, 50_00L, false, false));
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTOFaker.mockInstance(0);
+        rewardTransactionDTO.setId("TRXID");
         rewardTransactionDTO.setUserId("USERID");
         rewardTransactionDTO.setOperationTypeTranscoded(OperationType.CHARGE);
         rewardTransactionDTO.setTrxChargeDate(TRX_DATE);
@@ -701,12 +718,16 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
         //set initial lastTrx
         LocalDateTime localDateTimeNow = LocalDateTime.now();
-        RewardTransactionDTO trxAlreadyProcessedExpired = RewardTransactionDTOFaker.mockInstance(1);
-        trxAlreadyProcessedExpired.setUserId("USERID");
-        trxAlreadyProcessedExpired.setElaborationDateTime(localDateTimeNow.minusHours(2));
-        RewardTransactionDTO trxAlreadyProcessedNotExpired = RewardTransactionDTOFaker.mockInstance(2);
-        trxAlreadyProcessedNotExpired.setUserId("USERID");
-        trxAlreadyProcessedNotExpired.setElaborationDateTime(localDateTimeNow);
+        LastTrxInfoDTO trxAlreadyProcessedExpired = LastTrxInfoDTO.builder()
+                .trxId("TRXPROCESSEDID1")
+                .elaborationDateTime(localDateTimeNow.minusHours(2))
+                .build();
+
+        LastTrxInfoDTO trxAlreadyProcessedNotExpired = LastTrxInfoDTO.builder()
+                .trxId("TRXPROCESSEDID2")
+                .elaborationDateTime(localDateTimeNow)
+                .build();
+
         userInitiativeCounters.setLastTrx(Arrays.asList(trxAlreadyProcessedExpired, trxAlreadyProcessedNotExpired));
 
         UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
@@ -718,9 +739,9 @@ class UserInitiativeCountersUpdateServiceImplTest {
         userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
 
         // Then
-        List<BaseTransactionProcessed> resultLastTrx = userInitiativeCounters.getLastTrx();
+        List<LastTrxInfoDTO> resultLastTrx = userInitiativeCounters.getLastTrx();
         Assertions.assertEquals(2, resultLastTrx.size());
-        Assertions.assertEquals(Arrays.asList(trxAlreadyProcessedNotExpired, rewardTransactionDTO), resultLastTrx);
+        Assertions.assertEquals(Arrays.asList(trxAlreadyProcessedNotExpired, baseTransactionProcessed2LastTrxInfoDTOMapper.apply(rewardTransactionDTO) ), resultLastTrx);
     }
 
 }

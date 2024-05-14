@@ -128,7 +128,7 @@ abstract class BaseTrxSynchronousOp {
         boolean trxIsPresent = counter.getLastTrx()
                 .stream()
                 .anyMatch(trxProcessed ->
-                        trxProcessed.getId().equals(trxDTO.getId())
+                        trxProcessed.getTrxId().equals(trxDTO.getId())
                                 && trxProcessed.getOperationTypeTranscoded().equals(trxDTO.getOperationTypeTranscoded()));
 
         if(trxIsPresent){
