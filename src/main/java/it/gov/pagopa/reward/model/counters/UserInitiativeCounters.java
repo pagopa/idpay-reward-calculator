@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.model.counters;
 
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.trx.LastTrxInfoDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -43,7 +43,7 @@ public class UserInitiativeCounters extends Counters {
     private LocalDateTime updateDate;
     private TransactionDTO pendingTrx;
     @Builder.Default
-    private List<BaseTransactionProcessed> lastTrx = new ArrayList<>();
+    private List<LastTrxInfoDTO> lastTrx = new ArrayList<>();
 
     private boolean exhaustedBudget;
 
