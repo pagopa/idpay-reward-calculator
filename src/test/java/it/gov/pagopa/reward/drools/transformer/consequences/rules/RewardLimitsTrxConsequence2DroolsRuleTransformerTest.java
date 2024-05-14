@@ -259,14 +259,14 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     }
 
     @Test
-    void testRewardMontlyCapped_overflow() {
+    void testRewardMonthlyCapped_overflow() {
         configureUseCase(USECASES.MONTHLY_CAP);
         super.testReward();
     }
 
     @Test
-    void testRewardMontlyNoCapped() {
-        configureUseCase(USECASES.MONTHLY_CAP);
+    void testRewardMonthlyNoCapped() {
+        configureUseCase(USECASES.MONTHLY_NO_CAP);
         super.testReward();
     }
 
@@ -278,7 +278,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
 
     @Test
     void testRewardYearlyNoCapped() {
-        configureUseCase(USECASES.YEARLY_CAP);
+        configureUseCase(USECASES.YEARLY_NO_CAP);
         super.testReward();
     }
 
