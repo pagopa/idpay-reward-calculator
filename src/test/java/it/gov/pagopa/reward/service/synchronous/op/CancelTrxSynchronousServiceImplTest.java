@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.dto.mapper.trx.sync.RewardTransaction2SynchronousTra
 import it.gov.pagopa.reward.dto.mapper.trx.sync.SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import it.gov.pagopa.reward.dto.trx.LastTrxInfoDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -215,11 +216,14 @@ class CancelTrxSynchronousServiceImplTest{
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(any(),any(),eq(INITIATIVEID))).thenReturn(Mono.just(Pair.of(getInitiativeConfig(), onboardingInitiative)));
 
         UserInitiativeCounters userInitiativeCounters = getUserInitiativeCounters(trxCancelRequest);
-        TransactionDTO trx = synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.apply(trxCancelRequest);
-        RewardTransactionDTO rewardTrx = rewardTransactionMapper.apply(trx);
-        rewardTrx.setOperationTypeTranscoded(OperationType.REFUND);
-        rewardTrx.setOperationType("01");
-        userInitiativeCounters.setLastTrx(Collections.singletonList(rewardTrx));
+        userInitiativeCounters.setLastTrx(Collections.singletonList(
+                LastTrxInfoDTO.builder()
+                        .trxId(trxCancelRequest.getTransactionId())
+                        .operationTypeTranscoded(OperationType.REFUND)
+                        .accruedReward(Map.of(INITIATIVEID, trxCancelRequest.getRewardCents()))
+                        .elaborationDateTime(LocalDateTime.now())
+                        .build()
+        ));
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trxCancelRequest.getUserId(), INITIATIVEID)))
                 .thenReturn(Mono.just(userInitiativeCounters));
 
@@ -247,17 +251,19 @@ class CancelTrxSynchronousServiceImplTest{
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(any(),any(),eq(INITIATIVEID))).thenReturn(Mono.just(Pair.of(getInitiativeConfig(), onboardingInitiative)));
 
         UserInitiativeCounters userInitiativeCounters = getUserInitiativeCounters(trxCancelRequest);
-        RewardTransactionDTO trxAlreadyProcessedNotMismatchOperationType = RewardTransactionDTOFaker.mockInstance(2);
-        trxAlreadyProcessedNotMismatchOperationType.setId(trxCancelRequest.getTransactionId());
-        trxAlreadyProcessedNotMismatchOperationType.setOperationType("00");
-        trxAlreadyProcessedNotMismatchOperationType.setOperationTypeTranscoded(OperationType.CHARGE);
-        trxAlreadyProcessedNotMismatchOperationType.setUserId("USERID");
 
-        RewardTransactionDTO trxAlreadyProcessedNotMismatchTrxIdAndOperationType = RewardTransactionDTOFaker.mockInstance(3);
-        trxAlreadyProcessedNotMismatchTrxIdAndOperationType.setOperationType("00");
-        trxAlreadyProcessedNotMismatchTrxIdAndOperationType.setOperationTypeTranscoded(OperationType.CHARGE);
-        trxAlreadyProcessedNotMismatchTrxIdAndOperationType.setUserId("USERID");
-        userInitiativeCounters.setLastTrx(Arrays.asList(trxAlreadyProcessedNotMismatchOperationType, trxAlreadyProcessedNotMismatchTrxIdAndOperationType));
+        LastTrxInfoDTO trxAlreadyProcessedMismatchOperationType = LastTrxInfoDTO.builder()
+                .trxId(trxCancelRequest.getTransactionId())
+                .operationTypeTranscoded(OperationType.CHARGE)
+                .build();
+
+        LastTrxInfoDTO trxAlreadyProcessedMismatchTrxIdAndOperationType = LastTrxInfoDTO.builder()
+                .trxId("ANOTHER_TRX_ID")
+                .operationTypeTranscoded(OperationType.CHARGE)
+                .build();
+
+
+        userInitiativeCounters.setLastTrx(Arrays.asList(trxAlreadyProcessedMismatchOperationType, trxAlreadyProcessedMismatchTrxIdAndOperationType));
 
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trxCancelRequest.getUserId(), INITIATIVEID)))
                 .thenReturn(Mono.just(userInitiativeCounters));
