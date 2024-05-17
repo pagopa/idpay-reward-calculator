@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.model.counters;
 
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.trx.LastTrxInfoDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
@@ -9,7 +10,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -39,8 +42,11 @@ public class UserInitiativeCounters extends Counters {
 
     private LocalDateTime updateDate;
     private TransactionDTO pendingTrx;
+    @Builder.Default
+    private List<LastTrxInfoDTO> lastTrx = new ArrayList<>();
 
     private boolean exhaustedBudget;
+
     @Builder.Default
     private Map<String, Counters> dailyCounters = new HashMap<>();
     @Builder.Default
@@ -62,6 +68,7 @@ public class UserInitiativeCounters extends Counters {
         this.weeklyCounters = new HashMap<>();
         this.monthlyCounters = new HashMap<>();
         this.yearlyCounters = new HashMap<>();
+        this.lastTrx = new ArrayList<>();
     }
     public UserInitiativeCounters(@NonNull String entityId, @NonNull String initiativeId){
         this(entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, initiativeId);

@@ -373,3 +373,6 @@ app:
   delete:
     paginationSize: ${DELETE_PAGINATION_SIZE:50}
     delayTime: ${DELETE_DELAY_TIME:1000}
+  trx-counters:
+    # the expired period after which the trx is expired into counters
+    lastTrxExpired: ${COUNTERS_LAST_TRX_EXPIRED:PT1H} #one hour

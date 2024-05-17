@@ -86,6 +86,7 @@ public final class RewardConstants {
         public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
         public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
         public static final String INVALID_REQUEST= "REWARD_CALCULATOR_INVALID_REQUEST";
+        public static final String TRANSACTION_ALREADY_AUTHORIZED = "REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED";
     }
 
     public static final class ExceptionMessage {
@@ -96,5 +97,6 @@ public final class RewardConstants {
         public static final String INITIATIVE_NOT_READY_MSG = "The initiative with id [%s] is not ready";
         public static final String INVALID_COUNTER_VERSION = "Invalid counter version provided";
         public static final String PENDING_COUNTER = "The counter is actually locked";
+        public static final String TRANSACTION_ALREADY_AUTHORIZED_MSG = "The transaction with id [%s] is already authorized";
     }
 }

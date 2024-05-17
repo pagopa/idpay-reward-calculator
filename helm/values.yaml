@@ -65,6 +65,8 @@ microservice-chart:
     KAFKA_REWARD_RESPONSE_GROUP_ID: "idpay-reward-calculator-consumer-group"
     DELETE_PAGINATION_SIZE: "50"
     DELETE_DELAY_TIME: "1000"
+    COUNTERS_LAST_TRX_EXPIRED: "PT1H"
+
 
   externalConfigMapValues:
     idpay-common:
