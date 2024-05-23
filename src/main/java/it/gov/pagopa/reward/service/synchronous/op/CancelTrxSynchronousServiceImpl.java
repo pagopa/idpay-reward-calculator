@@ -150,6 +150,6 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
     @Override
     protected TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId) {
-        return null; //TODO it will resolve by IDP-2514
+        return new TransactionAlreadyProcessedException(RewardConstants.ExceptionCode.TRANSACTION_ALREADY_CANCELLED, RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_CANCELLED_MSG.formatted(trxId));
     }
 }

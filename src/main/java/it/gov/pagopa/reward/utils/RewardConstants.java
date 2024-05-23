@@ -87,6 +87,7 @@ public final class RewardConstants {
         public static final String GENERIC_ERROR = "REWARD_CALCULATOR_GENERIC_ERROR";
         public static final String INVALID_REQUEST= "REWARD_CALCULATOR_INVALID_REQUEST";
         public static final String TRANSACTION_ALREADY_AUTHORIZED = "REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED";
+        public static final String TRANSACTION_ALREADY_CANCELLED = "REWARD_CALCULATOR_TRX_ALREADY_CANCELLED";
     }
 
     public static final class ExceptionMessage {
@@ -98,5 +99,6 @@ public final class RewardConstants {
         public static final String INVALID_COUNTER_VERSION = "Invalid counter version provided";
         public static final String PENDING_COUNTER = "The counter is actually locked";
         public static final String TRANSACTION_ALREADY_AUTHORIZED_MSG = "The transaction with id [%s] is already authorized";
+        public static final String TRANSACTION_ALREADY_CANCELLED_MSG = "The transaction with id [%s] is already cancelled";
     }
 }
