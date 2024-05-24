@@ -85,7 +85,7 @@ channels:
           topic: idpay-transaction
       tags:
         - name: "trxResponseConsumer"
-  group-delete-initiative:
+  reward-delete-initiative:
     subscribe:
       message:
         $ref: '#/components/messages/QueueCommandOperationDTO'
@@ -157,6 +157,8 @@ components:
       description: >-
         Event consumed from application when a delete initiative command has published
       summary: Delete documents of the initiative
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
         $ref: "#/components/schemas/QueueCommandOperationDTO"
 
