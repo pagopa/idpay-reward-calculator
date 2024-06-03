@@ -9,23 +9,31 @@ tags:
     description: "capture rtd transactions"
   - name: "trxProcessorOut"
     description: "returns the result of the transaction evaluation"
+  - name: "trxProcessorOutNotifyError"
+    description: "send information about transaction evaluation error"
   - name: "rewardRuleConsumer"
     description: "captures the initiative creation event"
+  - name: "rewardRuleNotifyError"
+    description: "captures the initiative creation event error"
   - name: "hpanInitiativeConsumer"
     description: "Captures the payment instrument number"
+  - name: "hpanInitiativeNotifyError"
+    description: "captures the evaluation of the HPAN update initiative error"
   - name: "hpanUpdateOutcome"
     description: "Returns the status after registering the payment instruments"
   - name: "trxResubmitter"
     description: "Reevaluate chargeback transactions that arrived before debit transactions"
   - name: "trxResponseConsumer"
     description: "Retrieve the publication from Payment to unlock the counter"
+  - name: "trxResponseNotifyError"
+    description: "Captures publication from Payment to unlock the counter error"
   - name: "deleteInitiative"
     description: "Delete the initiative"
 channels:
   reward-calculator-trx-processor:
     subscribe:
       message:
-        $ref: '#/components/messages/RewardTransactionEvaluationError'
+        $ref: '#/components/messages/RewardTransactionEvaluation'
       bindings:
         kafka:
           topic: idpay-transaction-user-id-splitter
@@ -34,34 +42,61 @@ channels:
   reward-calculator-trx-processor-out:
     publish:
       message:
-        $ref: '#/components/messages/RewardTransactionNotifyError'
+        $ref: '#/components/messages/RewardTransactionNotify'
       bindings:
         kafka:
           topic: idpay-transaction
       tags:
         - name: "trxProcessorOut"
+  reward-calculator-trx-processor-out-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardTransactionNotifyError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "trxProcessorOutNotifyError"
   reward-calculator-reward-rule-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/RewardRuleBuilderError'
+        $ref: '#/components/messages/RewardRuleBuilder'
       bindings:
         kafka:
           topic: idpay-rule-update
       tags:
         - name: "rewardRuleConsumer"
+  reward-calculator-reward-rule-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardRuleBuilderError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "rewardRuleNotifyError"
   reward-calculator-hpan-initiative-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/HpanUpdateEvaluationError'
+        $ref: '#/components/messages/HpanUpdateEvaluation'
       bindings:
         kafka:
           topic: idpay-hpan-update
       tags:
         - name: "hpanInitiativeConsumer"
+  reward-calculator-hpan-initiative-error:
+    publish:
+      message:
+        $ref: '#/components/messages/HpanUpdateEvaluationError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "hpanInitiativeNotifyError"
   reward-calculator-hpan-update-outcome:
     publish:
       message:
-        $ref: '#/components/messages/HpanInitiativeExecutionError'
+        $ref: '#/components/messages/HpanInitiativeExecution'
       bindings:
         kafka:
           topic: idpay-hpan-update-outcome
@@ -70,7 +105,7 @@ channels:
   reward-calculator-trx-resubmitter:
     publish:
       message:
-        $ref: '#/components/messages/TrxResubmitterError'
+        $ref: '#/components/messages/TrxResubmitter'
       bindings:
         kafka:
           topic: idpay-transaction-user-id-splitter
@@ -79,16 +114,25 @@ channels:
   reward-calculator-trx-response-consumer:
     subscribe:
       message:
-        $ref: '#/components/messages/UserCounterUnlockEvaluationError'
+        $ref: '#/components/messages/UserCounterUnlockEvaluation'
       bindings:
         kafka:
           topic: idpay-transaction
       tags:
         - name: "trxResponseConsumer"
+  reward-calculator-trx-response-error:
+    publish:
+      message:
+        $ref: '#/components/messages/UserCounterUnlockEvaluationError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "trxResponseNotifyError"
   reward-delete-initiative:
     subscribe:
       message:
-        $ref: '#/components/messages/QueueCommandOperationDTO'
+        $ref: '#/components/messages/DeleteInitiative'
       bindings:
         kafka:
           topic: idpay-commands
@@ -96,6 +140,13 @@ channels:
         - name: "deleteInitiative"
 components:
   messages:
+    RewardRuleBuilder:
+      contentType: application/json
+      description: >-
+        Receive reward rule builder initiative information
+      summary: Information of reward rule build
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
     RewardRuleBuilderError:
       contentType: application/json
       description: >-
@@ -103,13 +154,22 @@ components:
       summary: Informs of reward rule builder error
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
-    RewardTransactionEvaluationError:
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+    RewardTransactionEvaluation:
       contentType: application/json
       description: >-
-        An error occurred during the evaluation of the reward transaction
-      summary: Informs of reward transaction evaluation error
-      headers:
-        $ref: "#/components/schemas/ErrorQueueHeader"
+        Receive message for the evaluation of reward transaction
+      summary: Receive information on reward transaction evaluation
+      payload:
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO'
+    RewardTransactionNotify:
+      contentType: application/json
+      description: >-
+        Send reward transaction information
+      summary: Informs of reward transaction notification
+      payload:
+        $ref: "#/components/schemas/TransactionProcessed"
     RewardTransactionNotifyError:
       contentType: application/json
       description: >-
@@ -117,6 +177,17 @@ components:
       summary: Informs of reward transaction notification error
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        oneOf:
+          - $ref: "#/components/schemas/TransactionProcessed"
+          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO"
+    HpanUpdateEvaluation:
+      contentType: application/json
+      description: >-
+        Receive information about HPAN update initiative evaluation
+      summary: Information about HPAN update evaluation
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/release-dev/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
     HpanUpdateEvaluationError:
       contentType: application/json
       description: >-
@@ -124,18 +195,21 @@ components:
       summary: Informs of HPAN update evaluation error
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
-    HpanInitiativeExecutionError:
+      payload:
+        oneOf:
+          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/release-dev/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
+          - $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
+    HpanInitiativeExecution:
       contentType: application/json
       description: >-
-        An error occurred during the execution of the HPAN initiative
-      summary: Informs of HPAN initiative execution error
-      headers:
-        $ref: "#/components/schemas/ErrorQueueHeader"
-    TrxResubmitterError:
+        Send result of execution of the HPAN initiative
+      summary: Informs of HPAN initiative execution
+      payload:
+        $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
+    TrxResubmitter:
       contentType: application/json
-      description: >-
-        Rivaluta le transazioni di storno arrivate prima di quelle dell'addebito
-      summary: Rivaluta transazioni di storno
+      description: Reevaluate chargeback transactions that arrived before debit transactions
+      summary: Reevaluate chargeback transactions
       headers:
         type: object
         properties:
@@ -145,14 +219,23 @@ components:
             example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
       payload:
         $ref: "#/components/schemas/TransactionDTO"
+    UserCounterUnlockEvaluation:
+      contentType: application/json
+      description: >-
+        Receive information about synchronous transaction
+      summary: Information about synchronous transaction
+      payload:
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
     UserCounterUnlockEvaluationError:
       contentType: application/json
       description: >-
-        An error occurred during the evaluation of the user counter unlock transaction
-      summary: Informs of user counter unlock evaluation error
+        Send error information about synchronous transaction
+      summary: Informs about synchronous transaction error
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
-    QueueCommandOperationDTO:
+      payload:
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+    DeleteInitiative:
       contentType: application/json
       description: >-
         Event consumed from application when a delete initiative command has published
@@ -160,7 +243,7 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "#/components/schemas/QueueCommandOperationDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
 
 
   schemas:
@@ -468,53 +551,6 @@ components:
           type: integer
           description: Accrued reward in cents
 
-    InitiativeReward2BuildDTO:
-      type: object
-      properties:
-        initiativeId:
-          type: string
-          description: Constant that define operation type
-          example: DELETE_INITIATIVE
-        initiativeName:
-          type: string
-          description: The name of the initiative
-          example: "initiativeTest"
-        organizationId:
-          type: string
-          description: The id of the organization
-          example: ""
-        general:
-          $ref: "#/components/schemas/InitiativeGeneralDTO"
-        rewardRule:
-          $ref: "#/components/schemas/InitiativeRewardRule"
-        trxRule:
-          $ref: "#/components/schemas/InitiativeTrxConditions"
-        initiativeRewardType:
-          $ref: "#/components/schemas/InitiativeRewardType"
-    HpanInitiativeBulkDTO:
-      type: object
-      properties:
-        userId:
-          type: string
-          description: User ID
-        initiativeId:
-          type: string
-          description: Initiative ID
-        infoList:
-          type: array
-          items:
-            $ref: "#/components/schemas/PaymentMethodInfoDTO"
-          description: List of payment method information
-        operationType:
-          type: string
-          description: Type of operation
-        operationDate:
-          type: string
-          format: date-time
-          description: Date and time of the operation
-        channel:
-          type: string
-          description: Channel of the operation
     HpanUpdateOutcomeDTO:
       type: object
       properties:
@@ -541,280 +577,7 @@ components:
           type: string
           format: date-time
           description: Timestamp of the operation
-    RewardTransactionDTO:
-      allOf:
-        - $ref: "#/components/schemas/TransactionDTO"
-      type: object
-      properties:
-        status:
-          type: string
-          description: Transaction status
-        initiativeRejectionReasons:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              type: string
-          description: Map of initiative rejection reasons
-        rewards:
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/Reward"
-          description: Map of rewards
-        initiatives:
-          type: array
-          items:
-            type: string
-          description: List of initiatives
-        elaborationDateTime:
-          type: string
-          format: date-time
-          description: Date and time of transaction elaboration
-    PaymentMethodInfoDTO:
-      type: object
-      properties:
-        hpan:
-          type: string
-          description: HPAN (Hashed PAN)
-        maskedPan:
-          type: string
-          description: Masked PAN
-        brandLogo:
-          type: string
-          description: Brand logo
-        brand:
-          type: string
-          description: Brand
-    InitiativeGeneralDTO:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the initiative
-        budgetCents:
-          type: integer
-          description: Budget of the initiative in cents
-          example: 5000000
-        beneficiaryType:
-          type: string
-          enum:
-            - PF
-            - PG
-            - NF
-          description: Type of beneficiary of the initiative
-        beneficiaryKnown:
-          type: boolean
-          description: Indicates whether the beneficiary is known
-          example: true
-        beneficiaryBudgetCents:
-          type: integer
-          description: Budget of the beneficiary in cents
-          example: 2000000
-        startDate:
-          type: string
-          format: date
-          description: Start date of the initiative
-          example: "2024-05-01"
-        endDate:
-          type: string
-          format: date
-          description: End date of the initiative
-          example: "2024-12-31"
-        rankingStartDate:
-          type: string
-          format: date
-          description: Start date of the ranking
-          example: "2024-06-01"
-        rankingEndDate:
-          type: string
-          format: date
-          description: End date of the ranking
-          example: "2024-06-30"
-    InitiativeRewardRule:
-      oneOf:
-        - $ref: '#/components/schemas/RewardGroupsDTO'
-        - $ref: '#/components/schemas/RewardValueDTO'
-    RewardGroupsDTO:
-      type: object
-      description: DTO to define reward rule groups
-      properties:
-        rewardGroups:
-          type: array
-          description: List of reward rule groups
-          items:
-            $ref: '#/components/schemas/RewardGroupDTO'
-    RewardGroupDTO:
-      allOf:
-        - $ref: '#/components/schemas/BaseRewardValue'
-      type: object
-      description: DTO for a single reward rule group
-      properties:
-        fromCents:
-          type: integer
-          description: Minimum value in cents
-          example: 100
-        toCents:
-          type: integer
-          description: Maximum value in cents
-          example: 1000
-        rewardValue:
-          type: number
-          description: Reward value
-          example: 10
-        rewardValueType:
-          type: string
-          description: Type of reward value
-          example: PERCENTAGE
-    RewardValueDTO:
-      type: object
-      description: DTO for a single reward value
-      allOf:
-        - $ref: '#/components/schemas/BaseRewardValue'
-      properties:
-        rewardValue:
-          type: number
-          description: Reward value
-          example: 10
-    BaseRewardValue:
-      type: object
-      description: Base class for reward value
-      properties:
-        rewardValue:
-          type: number
-          description: Reward value
-          example: 10
-        rewardValueType:
-          type: string
-          description: Type of reward value
-          $ref: '#/components/schemas/RewardValueType'
-    RewardValueType:
-      type: string
-      description: Indicates if the reward represents a fixed value or a percentage
-      enum:
-        - PERCENTAGE
-        - ABSOLUTE
-      example: PERCENTAGE
-    InitiativeTrxConditions:
-      type: object
-      properties:
-        daysOfWeek:
-          $ref: "#/components/schemas/DayOfWeekDTO"
-          description: Days of the week
-        threshold:
-          $ref: "#/components/schemas/ThresholdDTO"
-          description: Threshold for transactions
-        mccFilter:
-          $ref: "#/components/schemas/MccFilterDTO"
-          description: Merchant Category Code filter
-        trxCount:
-          $ref: "#/components/schemas/TrxCountDTO"
-          description: Transaction count
-        rewardLimits:
-          type: array
-          items:
-            $ref: "#/components/schemas/RewardLimitsDTO"
-          description: List of reward limits
-    DayOfWeekDTO:
-      type: array
-      items:
-        $ref: "#/components/schemas/DayOfWeekDTO.DayConfig"
-      description: List of day configurations
-    DayOfWeekDTO.DayConfig:
-      type: object
-      properties:
-        daysOfWeek:
-          type: array
-          items:
-            type: string
-            enum: [ MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY ]
-          description: Days of the week
-        intervals:
-          type: array
-          items:
-            $ref: "#/components/schemas/DayOfWeekDTO.Interval"
-          description: List of intervals
-    DayOfWeekDTO.Interval:
-      type: object
-      properties:
-        startTime:
-          type: string
-          format: time
-          description: Start time of the interval
-        endTime:
-          type: string
-          format: time
-          description: End time of the interval
-    ThresholdDTO:
-      type: object
-      properties:
-        fromCents:
-          type: integer
-          description: Minimum threshold in cents
-        fromIncluded:
-          type: boolean
-          description: Indicates if the minimum threshold is inclusive
-        toCents:
-          type: integer
-          description: Maximum threshold in cents
-        toIncluded:
-          type: boolean
-          description: Indicates if the maximum threshold is inclusive
-    MccFilterDTO:
-      type: object
-      properties:
-        allowedList:
-          type: boolean
-          description: Indicates if the MCC filter represents an allowed list
-        values:
-          type: array
-          items:
-            type: string
-          description: Set of MCC values
-    TrxCountDTO:
-      type: object
-      properties:
-        from:
-          type: integer
-          description: Minimum transaction count
-        fromIncluded:
-          type: boolean
-          description: Indicates if the minimum transaction count is inclusive
-        to:
-          type: integer
-          description: Maximum transaction count
-        toIncluded:
-          type: boolean
-          description: Indicates if the maximum transaction count is inclusive
-    RewardLimitsDTO:
-      type: object
-      properties:
-        frequency:
-          type: string
-          enum: [ DAILY, WEEKLY, MONTHLY, YEARLY ]
-          description: Frequency of reward limit
-        rewardLimitCents:
-          type: integer
-          description: Reward limit in cents
-    InitiativeRewardType:
-      type: string
-      enum: [ DISCOUNT, REFUND ]
-      description: Type of initiative reward
-    QueueCommandOperationDTO:
-      type: object
-      properties:
-        operationType:
-          type: string
-          description: Constant that define operation type
-          example: DELETE_INITIATIVE
-        entityId:
-          type: string
-          description: Entity to be handled with operationType
-          example: 661626073785876cb5aa7601
-        operationTime:
-          type: string
-          format: date-time
-          description: operation time
-          example: "2024-04-11T07:23:08.874869466"
+
     ErrorQueueHeader:
       type: object
       properties:
