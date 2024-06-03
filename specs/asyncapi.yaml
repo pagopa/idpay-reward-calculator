@@ -146,7 +146,7 @@ components:
         Receive reward rule builder initiative information
       summary: Information of reward rule build
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/RuleUpdate"
     RewardRuleBuilderError:
       contentType: application/json
       description: >-
@@ -155,14 +155,14 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/RuleUpdate"
     RewardTransactionEvaluation:
       contentType: application/json
       description: >-
         Receive message for the evaluation of reward transaction
       summary: Receive information on reward transaction evaluation
       payload:
-        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO'
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO'
     RewardTransactionNotify:
       contentType: application/json
       description: >-
@@ -180,14 +180,14 @@ components:
       payload:
         oneOf:
           - $ref: "#/components/schemas/TransactionProcessed"
-          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/IDP-2487-async-documentation/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO"
+          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO"
     HpanUpdateEvaluation:
       contentType: application/json
       description: >-
         Receive information about HPAN update initiative evaluation
       summary: Information about HPAN update evaluation
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/release-dev/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/main/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
     HpanUpdateEvaluationError:
       contentType: application/json
       description: >-
@@ -197,7 +197,7 @@ components:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
         oneOf:
-          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/release-dev/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
+          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/main/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
           - $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
     HpanInitiativeExecution:
       contentType: application/json
@@ -225,7 +225,7 @@ components:
         Receive information about synchronous transaction
       summary: Information about synchronous transaction
       payload:
-        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/main/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
     UserCounterUnlockEvaluationError:
       contentType: application/json
       description: >-
@@ -234,7 +234,7 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/release-dev/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/main/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
     DeleteInitiative:
       contentType: application/json
       description: >-
@@ -243,7 +243,7 @@ components:
       headers:
         $ref: "#/components/schemas/ErrorQueueHeader"
       payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/IDP-2524-censimento-async-idpay-portal-welfare-backend-initiative/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
 
 
   schemas:
