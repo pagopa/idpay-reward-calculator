@@ -43,7 +43,7 @@ class RewardErrorNotifierServiceTest {
     private final static String HPAN_INITIATIVE_CONSUMER_IN_0 = "hpanInitiativeConsumer-in-0";
     private final static String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
     private final static String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
-    private final static String HPAN_UPDATE_OUTCOME_IN_0 = "hpanUpdateOutcome-out-0-in-0";
+    private final static String HPAN_UPDATE_OUTCOME_OUT_0 = "hpanUpdateOutcome-out-0";
 
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
@@ -244,7 +244,7 @@ class RewardErrorNotifierServiceTest {
         Mockito.when(kafkaConfigurationMock.getStream()).thenReturn(Mockito.mock(KafkaConfiguration.Stream.class));
         Mockito.when(kafkaConfigurationMock.getStream().getBindings()).thenReturn(
                 Map.of(
-                        HPAN_UPDATE_OUTCOME_IN_0,
+                        HPAN_UPDATE_OUTCOME_OUT_0,
                         KafkaConfiguration.KafkaInfoDTO.builder()
                                 .group(null)
                                 .type(BINDER_KAFKA_TYPE)
