@@ -18,9 +18,9 @@ public class RewardCountersMapper {
         rewardCounters.setVersion(userInitiativeCounters.getVersion());
         rewardCounters.setExhaustedBudget(userInitiativeCounters.isExhaustedBudget());
         rewardCounters.setTrxNumber(userInitiativeCounters.getTrxNumber());
-        rewardCounters.setTotalReward(userInitiativeCounters.getTotalReward());
-        rewardCounters.setInitiativeBudget(initiativeConfig.getBeneficiaryBudget());
-        rewardCounters.setTotalAmount(userInitiativeCounters.getTotalAmount());
+        rewardCounters.setTotalRewardCents(userInitiativeCounters.getTotalRewardCents());
+        rewardCounters.setInitiativeBudgetCents(initiativeConfig.getBeneficiaryBudgetCents());
+        rewardCounters.setTotalAmountCents(userInitiativeCounters.getTotalAmountCents());
 
         rewardCounters.setDailyCounters(extractInvolved(userInitiativeCounters.getDailyCounters(), RewardConstants.dayDateFormatter.format(ruleEngineResult.getTrxChargeDate())));
         rewardCounters.setWeeklyCounters(extractInvolved(userInitiativeCounters.getWeeklyCounters(), RewardConstants.weekDateFormatter.format(ruleEngineResult.getTrxChargeDate())));

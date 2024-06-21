@@ -26,7 +26,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,7 +59,7 @@ class RewardRuleMediatorServiceImplTest {
             return new DroolsRule(i.getInitiativeId(), i.getInitiativeName(),"RULE","RULEVERSION",
                     InitiativeConfig.builder()
                             .initiativeId(i.getInitiativeId())
-                            .beneficiaryBudget(new BigDecimal("1000.00"))
+                            .beneficiaryBudgetCents(1000_00L)
                             .endDate(LocalDate.now())
                             .dailyThreshold(true)
                             .weeklyThreshold(true)

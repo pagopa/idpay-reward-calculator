@@ -19,6 +19,7 @@ public class ServiceExceptionConfig {
 
         // ClientError
         exceptionMap.put(InvalidCounterVersionException.class, HttpStatus.PRECONDITION_FAILED);
+        exceptionMap.put(TransactionAlreadyProcessedException.class, HttpStatus.PRECONDITION_FAILED);
 
         //Locked
         exceptionMap.put(PendingCounterException.class, HttpStatus.LOCKED);

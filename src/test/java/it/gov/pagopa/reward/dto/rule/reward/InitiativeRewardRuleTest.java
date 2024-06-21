@@ -21,27 +21,27 @@ class InitiativeRewardRuleTest {
     @Test
     void testRewardGroups() throws JsonProcessingException {
         String content = """
-                {"_type":"rewardGroups","rewardGroups":[{"from":0.00,"to":2.00,"rewardValue":10},{"from":3.00,"to":4.55,"rewardValue":12.5,"rewardValueType":"PERCENTAGE"},{"from":5.00,"to":7.89,"rewardValue":3.5,"rewardValueType":"ABSOLUTE"}]}
+                {"_type":"rewardGroups","rewardGroups":[{"fromCents":0,"toCents":200,"rewardValue":10},{"fromCents":300,"toCents":455,"rewardValue":12.5,"rewardValueType":"PERCENTAGE"},{"fromCents":500,"toCents":789,"rewardValue":350,"rewardValueType":"ABSOLUTE"}]}
                 """;
 
         RewardGroupsDTO expected = RewardGroupsDTO.builder()
                 .rewardGroups(List.of(
                         RewardGroupsDTO.RewardGroupDTO.builder()
-                                .from(BigDecimal.valueOf(0).setScale(2, RoundingMode.UNNECESSARY))
-                                .to(BigDecimal.valueOf(2).setScale(2, RoundingMode.UNNECESSARY))
+                                .fromCents(0L)
+                                .toCents(2_00L)
                                 .rewardValue(BigDecimal.valueOf(10))
                                 .rewardValueType(RewardValueType.PERCENTAGE)
                                 .build(),
                         RewardGroupsDTO.RewardGroupDTO.builder()
-                                .from(BigDecimal.valueOf(3).setScale(2, RoundingMode.UNNECESSARY))
-                                .to(BigDecimal.valueOf(4.55))
+                                .fromCents(3_00L)
+                                .toCents(4_55L)
                                 .rewardValue(BigDecimal.valueOf(12.5))
                                 .rewardValueType(RewardValueType.PERCENTAGE)
                                 .build(),
                         RewardGroupsDTO.RewardGroupDTO.builder()
-                                .from(BigDecimal.valueOf(5).setScale(2, RoundingMode.UNNECESSARY))
-                                .to(BigDecimal.valueOf(7.89))
-                                .rewardValue(BigDecimal.valueOf(3.5))
+                                .fromCents(5_00L)
+                                .toCents(7_89L)
+                                .rewardValue(BigDecimal.valueOf(350))
                                 .rewardValueType(RewardValueType.ABSOLUTE)
                                 .build()
                 ))

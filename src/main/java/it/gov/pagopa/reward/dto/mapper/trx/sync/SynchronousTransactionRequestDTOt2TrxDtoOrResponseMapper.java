@@ -43,7 +43,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setVat(trx.getVat());
         out.setOperationTypeTranscoded(OperationType.CHARGE);
         out.setAmountCents(trx.getAmountCents());
-        out.setEffectiveAmount(amount);
+        out.setEffectiveAmountCents(trx.getAmountCents());
         out.setTrxChargeDate(trx.getTrxChargeDate());
         out.setUserId(trx.getUserId());
         out.setChannel(trx.getChannel());
@@ -60,7 +60,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setOperationType(OperationType.CHARGE);
         out.setAmountCents(request.getAmountCents());
         out.setAmount(CommonUtilities.centsToEuro(request.getAmountCents()));
-        out.setEffectiveAmount(CommonUtilities.centsToEuro(request.getAmountCents()));
+        out.setEffectiveAmountCents(request.getAmountCents());
         out.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         out.setRejectionReasons(discardCause);
         return out;

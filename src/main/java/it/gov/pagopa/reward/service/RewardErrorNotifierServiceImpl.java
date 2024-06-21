@@ -17,7 +17,7 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private static final  String TRX_PROCESSOR_IN_0 = "trxProcessor-in-0";
     private static final  String TRX_PROCESSOR_OUT_0 = "trxProcessorOut-out-0";
     private static final String HPAN_INITIATIVE_CONSUMER_IN_0 = "hpanInitiativeConsumer-in-0";
-    private static final String HPAN_UPDATE_OUTCOME_IN_0 = "hpanUpdateOutcome-out-0-in-0";
+    private static final String HPAN_UPDATE_OUTCOME_OUT_0 = "hpanUpdateOutcome-out-0";
     private static final String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
     private static final String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
 
@@ -50,7 +50,7 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
 
     @Override
     public boolean notifyHpanUpdateOutcome(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(kafkaConfiguration.getStream().getBindings().get(HPAN_UPDATE_OUTCOME_IN_0), message, description, retryable, false, exception);
+        return notify(kafkaConfiguration.getStream().getBindings().get(HPAN_UPDATE_OUTCOME_OUT_0), message, description, retryable, false, exception);
     }
 
     @Override

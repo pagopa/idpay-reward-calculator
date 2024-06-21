@@ -1,7 +1,6 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
 import it.gov.pagopa.common.utils.CommonConstants;
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -16,6 +15,7 @@ import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.exception.custom.InitiativeNotActiveException;
 import it.gov.pagopa.reward.exception.custom.PendingCounterException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -30,8 +30,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +39,7 @@ import java.util.Map;
 @Slf4j
 public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implements CancelTrxSynchronousService {
 
-    private static final BigDecimal BIG_DECIMAL_ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
+    private static final Long LONG_ZERO = 0L;
     private final String refundOperationType;
 
     public CancelTrxSynchronousServiceImpl(
@@ -88,19 +86,17 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
 
 
     public void transformIntoRefundTrx(TransactionDTO trx, String initiativeId, String organizationId, long rewardCents) {
-        BigDecimal chargeRewardEur = CommonUtilities.centsToEuro(rewardCents);
-
-        TransactionProcessed chargeTrx = trx2processed(trx, initiativeId, organizationId, chargeRewardEur);
+        TransactionProcessed chargeTrx = trx2processed(trx, initiativeId, organizationId, rewardCents);
 
         // refund info
         trx.setOperationType(refundOperationType);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setTrxDate(OffsetDateTime.now());
-        trx.setEffectiveAmount(BIG_DECIMAL_ZERO);
+        trx.setEffectiveAmountCents(LONG_ZERO);
 
         Map<String, RefundInfo.PreviousReward> previousRewardMap = Map.of(
                 initiativeId,
-                new RefundInfo.PreviousReward(initiativeId, organizationId, chargeRewardEur));
+                new RefundInfo.PreviousReward(initiativeId, organizationId, rewardCents));
 
         trx.setRefundInfo(new RefundInfo(List.of(chargeTrx), previousRewardMap));
 
@@ -123,7 +119,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return handleUnlockedCounter(flowName, trxDTO, initiativeId, counters, -rewardCents);
     }
 
-    protected TransactionProcessed trx2processed(TransactionDTO trx, String initiativeId, String organizationId, BigDecimal rewardEur){
+    protected TransactionProcessed trx2processed(TransactionDTO trx, String initiativeId, String organizationId, Long rewardEur){
         TransactionProcessed out = new TransactionProcessed();
 
         out.setId(trx.getId());
@@ -136,7 +132,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         out.setCorrelationId(trx.getCorrelationId());
         out.setAmount(trx.getAmount());
         out.setAmountCents(trx.getAmountCents());
-        out.setEffectiveAmount(trx.getEffectiveAmount());
+        out.setEffectiveAmountCents(trx.getEffectiveAmountCents());
         out.setTrxChargeDate(trx.getTrxChargeDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime());
         out.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
         out.setRejectionReasons(trx.getRejectionReasons());
@@ -150,5 +146,10 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         out.setStatus(RewardConstants.REWARD_STATE_REWARDED);
         out.setOperationTypeTranscoded(OperationType.CHARGE);
         return  out;
+    }
+
+    @Override
+    protected TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId) {
+        return new TransactionAlreadyProcessedException(RewardConstants.ExceptionCode.TRANSACTION_ALREADY_CANCELLED, RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_CANCELLED_MSG.formatted(trxId));
     }
 }

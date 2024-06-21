@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -12,6 +11,7 @@ import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
+import it.gov.pagopa.reward.exception.custom.TransactionAlreadyProcessedException;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
@@ -19,6 +19,7 @@ import it.gov.pagopa.reward.service.reward.OnboardedInitiativesService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateService;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -101,7 +102,7 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         return initiativesEvaluatorFacadeService.evaluateInitiativesBudgetAndRules(trxDTO, List.of(initiativeId), counters)
                 .doOnNext(ctr2reward -> {
                     if(ctr2reward.getSecond().getRewards().get(initiativeId)==null ||
-                            !CommonUtilities.euroToCents(ctr2reward.getSecond().getRewards().get(initiativeId).getAccruedReward())
+                            !ctr2reward.getSecond().getRewards().get(initiativeId).getAccruedRewardCents()
                             .equals(rewardCents)){
                         log.info("[SYNC_AUTHORIZE_TRANSACTION] Cannot authorize transaction {} of userId {} on initiative {}: counter ({}) version mismatch ({} actual {}) and reward is not more valid (requested {} actual {})",
                                 trxDTO.getId(), trxDTO.getUserId(), initiativeId,
@@ -115,4 +116,8 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                 });
     }
 
+    @Override
+    protected TransactionAlreadyProcessedException getTransactionAlreadyProcessedException(String trxId) {
+        return new TransactionAlreadyProcessedException(RewardConstants.ExceptionCode.TRANSACTION_ALREADY_AUTHORIZED, RewardConstants.ExceptionMessage.TRANSACTION_ALREADY_AUTHORIZED_MSG.formatted(trxId));
+    }
 }

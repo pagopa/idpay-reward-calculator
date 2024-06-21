@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +56,7 @@ public class KieContainerBuilderServiceImpl implements KieContainerBuilderServic
             log.info("[DROOLS_CONTAINER_COMPILE] Starting KieContainer compile");
             long startTime = System.currentTimeMillis();
             TransactionDroolsDTO trx = new TransactionDroolsDTO();
-            trx.setEffectiveAmount(BigDecimal.ONE);
+            trx.setEffectiveAmountCents(1_00L);
             trx.setTrxChargeDate(OffsetDateTime.now());
             UserInitiativeCountersWrapper userCounters = new UserInitiativeCountersWrapper();
             userCounters.setInitiatives(new HashMap<>());

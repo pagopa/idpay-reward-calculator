@@ -1,0 +1,626 @@
+asyncapi: 2.0.0
+info:
+  title: Reward Calculator Service
+  version: 1.0.0
+  description: >-
+    Its purpose is to notify allowed citizen notification and cancellation of an initiative
+tags:
+  - name: "trxProcessor"
+    description: "capture rtd transactions"
+  - name: "trxProcessorOut"
+    description: "returns the result of the transaction evaluation"
+  - name: "trxProcessorOutNotifyError"
+    description: "send information about transaction evaluation error"
+  - name: "rewardRuleConsumer"
+    description: "captures the initiative creation event"
+  - name: "rewardRuleNotifyError"
+    description: "captures the initiative creation event error"
+  - name: "hpanInitiativeConsumer"
+    description: "Captures the payment instrument number"
+  - name: "hpanInitiativeNotifyError"
+    description: "captures the evaluation of the HPAN update initiative error"
+  - name: "hpanUpdateOutcome"
+    description: "Returns the status after registering the payment instruments"
+  - name: "trxResubmitter"
+    description: "Reevaluate chargeback transactions that arrived before debit transactions"
+  - name: "trxResponseConsumer"
+    description: "Retrieve the publication from Payment to unlock the counter"
+  - name: "trxResponseNotifyError"
+    description: "Captures publication from Payment to unlock the counter error"
+  - name: "deleteInitiative"
+    description: "Delete the initiative"
+channels:
+  reward-calculator-trx-processor:
+    subscribe:
+      message:
+        $ref: '#/components/messages/RewardTransactionEvaluation'
+      bindings:
+        kafka:
+          topic: idpay-transaction-user-id-splitter
+      tags:
+        - name: "trxProcessor"
+  reward-calculator-trx-processor-out:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardTransactionNotify'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "trxProcessorOut"
+  reward-calculator-trx-processor-out-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardTransactionNotifyError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "trxProcessorOutNotifyError"
+  reward-calculator-reward-rule-consumer:
+    subscribe:
+      message:
+        $ref: '#/components/messages/RewardRuleBuilder'
+      bindings:
+        kafka:
+          topic: idpay-rule-update
+      tags:
+        - name: "rewardRuleConsumer"
+  reward-calculator-reward-rule-error:
+    publish:
+      message:
+        $ref: '#/components/messages/RewardRuleBuilderError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "rewardRuleNotifyError"
+  reward-calculator-hpan-initiative-consumer:
+    subscribe:
+      message:
+        $ref: '#/components/messages/HpanUpdateEvaluation'
+      bindings:
+        kafka:
+          topic: idpay-hpan-update
+      tags:
+        - name: "hpanInitiativeConsumer"
+  reward-calculator-hpan-initiative-error:
+    publish:
+      message:
+        $ref: '#/components/messages/HpanUpdateEvaluationError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "hpanInitiativeNotifyError"
+  reward-calculator-hpan-update-outcome:
+    publish:
+      message:
+        $ref: '#/components/messages/HpanInitiativeExecution'
+      bindings:
+        kafka:
+          topic: idpay-hpan-update-outcome
+      tags:
+        - name: "hpanUpdateOutcome"
+  reward-calculator-trx-resubmitter:
+    publish:
+      message:
+        $ref: '#/components/messages/TrxResubmitter'
+      bindings:
+        kafka:
+          topic: idpay-transaction-user-id-splitter
+      tags:
+        - name: "trxResubmitter"
+  reward-calculator-trx-response-consumer:
+    subscribe:
+      message:
+        $ref: '#/components/messages/UserCounterUnlockEvaluation'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "trxResponseConsumer"
+  reward-calculator-trx-response-error:
+    publish:
+      message:
+        $ref: '#/components/messages/UserCounterUnlockEvaluationError'
+      bindings:
+        kafka:
+          topic: idpay-error
+      tags:
+        - name: "trxResponseNotifyError"
+  reward-delete-initiative:
+    subscribe:
+      message:
+        $ref: '#/components/messages/DeleteInitiative'
+      bindings:
+        kafka:
+          topic: idpay-commands
+      tags:
+        - name: "deleteInitiative"
+components:
+  messages:
+    RewardRuleBuilder:
+      contentType: application/json
+      description: >-
+        Receive reward rule builder initiative information
+      summary: Information of reward rule build
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+    RewardRuleBuilderError:
+      contentType: application/json
+      description: >-
+        An error occurred during the handling of the reward rule builder initiative
+      summary: Informs of reward rule builder error
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/RuleUpdate"
+    RewardTransactionEvaluation:
+      contentType: application/json
+      description: >-
+        Receive message for the evaluation of reward transaction
+      summary: Receive information on reward transaction evaluation
+      payload:
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO'
+    RewardTransactionNotify:
+      contentType: application/json
+      description: >-
+        Send reward transaction information
+      summary: Informs of reward transaction notification
+      payload:
+        $ref: "#/components/schemas/TransactionProcessed"
+    RewardTransactionNotifyError:
+      contentType: application/json
+      description: >-
+        An error occurred during the notification of the reward transaction
+      summary: Informs of reward transaction notification error
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        oneOf:
+          - $ref: "#/components/schemas/TransactionProcessed"
+          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO"
+    HpanUpdateEvaluation:
+      contentType: application/json
+      description: >-
+        Receive information about HPAN update initiative evaluation
+      summary: Information about HPAN update evaluation
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/main/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
+    HpanUpdateEvaluationError:
+      contentType: application/json
+      description: >-
+        An error occurred during the evaluation of the HPAN update initiative
+      summary: Informs of HPAN update evaluation error
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        oneOf:
+          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/main/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
+          - $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
+    HpanInitiativeExecution:
+      contentType: application/json
+      description: >-
+        Send result of execution of the HPAN initiative
+      summary: Informs of HPAN initiative execution
+      payload:
+        $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
+    TrxResubmitter:
+      contentType: application/json
+      description: Reevaluate chargeback transactions that arrived before debit transactions
+      summary: Reevaluate chargeback transactions
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "user id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+      payload:
+        $ref: "#/components/schemas/TransactionDTO"
+    UserCounterUnlockEvaluation:
+      contentType: application/json
+      description: >-
+        Receive information about synchronous transaction
+      summary: Information about synchronous transaction
+      payload:
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/main/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+    UserCounterUnlockEvaluationError:
+      contentType: application/json
+      description: >-
+        Send error information about synchronous transaction
+      summary: Informs about synchronous transaction error
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: 'https://raw.githubusercontent.com/pagopa/idpay-payment/main/specs/asyncapi.yml#/components/schemas/TransactionInProgress'
+    DeleteInitiative:
+      contentType: application/json
+      description: >-
+        Event consumed from application when a delete initiative command has published
+      summary: Delete documents of the initiative
+      headers:
+        $ref: "#/components/schemas/ErrorQueueHeader"
+      payload:
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
+
+
+  schemas:
+    Reward:
+      type: object
+      properties:
+        initiativeId:
+          type: string
+          description: Id of the initiative
+          example: 661626073785876cb5aa7601
+        organizationId:
+          type: string
+          description: Identifier of the organization associated with the initiative
+          example: c326cac6-a38c-416c-a3c3-f6a407b77950
+        providedRewardCents:
+          type: integer
+          format: int64
+          description: reward calculated by rule engine
+          example: 30000
+        accruedRewardCents:
+          type: integer
+          format: int64
+          description: reward updated after evaluation of any limits (budget, ecc...)
+          example: 30000
+        capped:
+          type: boolean
+          description: If the premium has been limited due to the beneficiary's budget
+          example: false
+        dailyCapped:
+          type: boolean
+          description: If the premium has been reached, it causes a daily limit
+          example: false
+        monthlyCapped:
+          type: boolean
+          description: If the premium has been reached, it causes a monthly limit
+          example: false
+        yearlyCapped:
+          type: boolean
+          description: If the premium has been reached, it causes an annual limit
+          example: false
+        weeklyCapped:
+          type: boolean
+          description: If the premium has been reached due to weekly limit
+          example: false
+        refund:
+          type: boolean
+          description: If the user has been refunded
+          example: false
+        completeRefund:
+          type: boolean
+          description: If the user has been fully refunded
+          example: false
+        counters:
+          $ref: "#/components/schemas/Counter"
+
+    Counter:
+      type: object
+      properties:
+        trxNumber:
+          type: integer
+          format: int64
+          description: transaction number
+          example: 1
+        totalRewardCents:
+          type: integer
+          format: int64
+          description: total reward
+          example: 30000
+        totalAmountCents:
+          type: integer
+          format: int64
+          description: total amount
+          example: 900000
+        exhaustedBudget:
+          type: boolean
+          description: if the budget is exhausted
+        initiativeBudgetCents:
+          type: integer
+          format: int64
+          description: initiative budget
+          example: 30000
+        version:
+          type: integer
+          format: int64
+          description: sequence operation number
+          example: 1
+
+    TransactionDTO:
+      type: object
+      properties:
+        idTrxAcquirer:
+          type: string
+          description: ID of the transaction from the acquirer
+        acquirerCode:
+          type: string
+          description: Code of the acquirer
+        trxDate:
+          type: string
+          format: date-time
+          description: Date and time of the transaction
+        hpan:
+          type: string
+          description: HPAN (Hashed PAN)
+        operationType:
+          type: string
+          description: Type of operation
+        circuitType:
+          type: string
+          description: Type of circuit
+        idTrxIssuer:
+          type: string
+          description: ID of the transaction issuer
+        correlationId:
+          type: string
+          description: Correlation ID
+        amount:
+          type: number
+          description: Amount of the transaction
+        amountCurrency:
+          type: string
+          description: Currency of the transaction amount
+        mcc:
+          type: string
+          description: Merchant Category Code
+        acquirerId:
+          type: string
+          description: ID of the acquirer
+        merchantId:
+          type: string
+          description: ID of the merchant
+        terminalId:
+          type: string
+          description: ID of the terminal
+        bin:
+          type: string
+          description: Bank Identification Number
+        senderCode:
+          type: string
+          description: Sender code
+        fiscalCode:
+          type: string
+          description: Fiscal code
+        vat:
+          type: string
+          description: VAT (Value Added Tax) number
+        posType:
+          type: string
+          description: Type of point of sale
+        par:
+          type: string
+          description: PAR (Parameter) value
+        id:
+          type: string
+          description: ID of the transaction
+        operationTypeTranscoded:
+          type: string
+          description: Transcoded type of operation
+        rejectionReasons:
+          type: array
+          items:
+            type: string
+          description: List of rejection reasons
+        amountCents:
+          type: integer
+          description: Amount of the transaction in cents
+        effectiveAmountCents:
+          type: integer
+          description: Effective amount of the transaction in cents
+        trxChargeDate:
+          type: string
+          format: date-time
+          description: Date and time of the transaction charge
+        refundInfo:
+          $ref: "#/components/schemas/RefundInfo"
+          description: Information about refund
+        channel:
+          type: string
+          description: Channel of the transaction
+        ruleEngineTopicPartition:
+          type: integer
+          description: Partition of the rule engine topic
+        ruleEngineTopicOffset:
+          type: integer
+          description: Offset of the rule engine topic
+        userId:
+          type: string
+          description: User ID
+        brandLogo:
+          type: string
+          description: Brand logo
+        brand:
+          type: string
+          description: Brand
+        maskedPan:
+          type: string
+          description: Masked PAN
+    TransactionProcessed:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the transaction
+        idTrxAcquirer:
+          type: string
+          description: ID of the transaction from the acquirer
+        acquirerCode:
+          type: string
+          description: Code of the acquirer
+        trxDate:
+          type: string
+          format: date-time
+          description: Date and time of the transaction
+        operationType:
+          type: string
+          description: Type of operation
+        acquirerId:
+          type: string
+          description: ID of the acquirer
+        userId:
+          type: string
+          description: User ID
+        correlationId:
+          type: string
+          description: Correlation ID
+        amount:
+          type: number
+          description: Amount of the transaction
+        rewards:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Reward"
+          description: Map of rewards
+        status:
+          type: string
+          description: Status of the transaction
+        rejectionReasons:
+          type: array
+          items:
+            type: string
+          description: List of rejection reasons
+        initiativeRejectionReasons:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Map of initiative rejection reasons
+        refundInfo:
+          $ref: "#/components/schemas/RefundInfo"
+          description: Information about refund
+        initiatives:
+          type: array
+          items:
+            type: string
+          description: List of initiatives
+        effectiveAmountCents:
+          type: integer
+          description: Effective amount of the transaction in cents
+        amountCents:
+          type: integer
+          description: Amount of the transaction in cents
+        trxChargeDate:
+          type: string
+          format: date-time
+          description: Date and time of the transaction charge
+        operationTypeTranscoded:
+          type: string
+          description: Transcoded type of operation
+        elaborationDateTime:
+          type: string
+          format: date-time
+          description: Date and time of transaction elaboration
+        channel:
+          type: string
+          description: Channel of the transaction
+        ruleEngineTopicPartition:
+          type: integer
+          description: Partition of the rule engine topic
+        ruleEngineTopicOffset:
+          type: integer
+          description: Offset of the rule engine topic
+    RefundInfo:
+      type: object
+      properties:
+        previousTrxs:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionProcessed"
+          description: List of previous transactions
+        previousRewards:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/RefundInfo.PreviousReward"
+          description: Map of previous rewards
+    RefundInfo.PreviousReward:
+      type: object
+      properties:
+        initiativeId:
+          type: string
+          description: ID of the initiative
+        organizationId:
+          type: string
+          description: ID of the organization
+        accruedRewardCents:
+          type: integer
+          description: Accrued reward in cents
+
+    HpanUpdateOutcomeDTO:
+      type: object
+      properties:
+        initiativeId:
+          type: string
+          description: Initiative ID
+        userId:
+          type: string
+          description: User ID
+        hpanList:
+          type: array
+          items:
+            type: string
+          description: List of HPANs (Hashed PANs)
+        rejectedHpanList:
+          type: array
+          items:
+            type: string
+          description: List of rejected HPANs
+        operationType:
+          type: string
+          description: Type of operation
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the operation
+
+    ErrorQueueHeader:
+      type: object
+      properties:
+        key:
+          type: string
+          description: "user id"
+          example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+        applicationName:
+          type: string
+          description: The name of the application that generated the error.
+          example: "reward-service"
+        group:
+          type: string
+          description: The Kafka group to which the error message belongs.
+          example: "reward-rule-builder"
+        srcType:
+          type: string
+          description: The type of the source of the error message.
+          example: "kafka"
+        srcServer:
+          type: string
+          description: The source server of the error message.
+          example: "kafka-broker-1.example.com:9092"
+        srcTopic:
+          type: string
+          description: The Kafka topic of the source of the error message.
+          example: "reward-rule-builder-topic"
+        description:
+          type: string
+          description: Description of the error.
+          example: "An error occurred during the handling of the reward rule builder initiative"
+        retryable:
+          type: boolean
+          description: Indicates whether the error is retryable or not.
+        stacktrace:
+          type: string
+          description: The stack trace of the error.
+          example: "RewardRuleBuilderException -> Error occurred during handling of reward rule builder initiative"
+        rootCauseClass:
+          type: string
+          description: Cause of the error.
+          example: "com.example.RewardRuleBuilderException"
+        rootCauseMessage:
+          type: string
+          description: Message of the error.
+          example: "Error occurred during handling of reward rule builder initiative"

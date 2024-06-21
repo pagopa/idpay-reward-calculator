@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -54,7 +52,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         log.trace("[REWARD] Retrieved correlated trxs {} {}", pastTrxs.size(), trx.getId());
 
         TransactionProcessed trxCharge = null;
-        BigDecimal effectiveAmount = trx.getAmount().negate();
+        Long effectiveAmountCents = - trx.getAmountCents();
         Map<String, RefundInfo.PreviousReward> pastRewards = new HashMap<>();
 
         List<TransactionProcessed> pastElabTrxs = null;
@@ -67,9 +65,9 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
                 if(pt instanceof TransactionProcessed pastProcessed) {
                     if (pastProcessed.getOperationTypeTranscoded().equals(OperationType.CHARGE)) {
                         trxCharge = pastProcessed;
-                        effectiveAmount = effectiveAmount.add(pastProcessed.getAmount());
+                        effectiveAmountCents = effectiveAmountCents + pastProcessed.getAmountCents();
                     } else {
-                        effectiveAmount = effectiveAmount.subtract(pastProcessed.getAmount());
+                        effectiveAmountCents = effectiveAmountCents - pastProcessed.getAmountCents();
                     }
 
                     reduceRewards(pastRewards, pastProcessed);
@@ -84,7 +82,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
             trx.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
         } else {
             trx.setTrxChargeDate(readChargeDate(trxCharge));
-            trx.setEffectiveAmount(effectiveAmount);
+            trx.setEffectiveAmountCents(effectiveAmountCents);
             trx.setRefundInfo(new RefundInfo());
             trx.getRefundInfo().setPreviousTrxs(pastElabTrxs);
             trx.getRefundInfo().setPreviousRewards(pastRewards);
@@ -101,11 +99,11 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
     private void reduceRewards(Map<String, RefundInfo.PreviousReward> pastRewards, BaseTransactionProcessed pt) {
         pt.getRewards().forEach((initiativeId, r) -> pastRewards.compute(initiativeId, (k, acc) -> {
             if (acc != null) {
-                final BigDecimal sum = r.getAccruedReward().add(acc.getAccruedReward());
-                acc.setAccruedReward(sum);
+                final Long sum = r.getAccruedRewardCents() + acc.getAccruedRewardCents();
+                acc.setAccruedRewardCents(sum);
                 return acc;
             } else {
-                return new RefundInfo.PreviousReward(r.getInitiativeId(), r.getOrganizationId(), r.getAccruedReward().setScale(2, RoundingMode.UNNECESSARY));
+                return new RefundInfo.PreviousReward(r.getInitiativeId(), r.getOrganizationId(), r.getAccruedRewardCents());
             }
         }));
     }

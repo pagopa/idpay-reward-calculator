@@ -11,7 +11,6 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -30,7 +29,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
     private String useCase;
     private final RewardLimitsDTO rewardLimitRule = RewardLimitsDTO.builder()
             .frequency(RewardLimitsDTO.RewardLimitFrequency.DAILY)
-            .rewardLimit(BigDecimal.TEN)
+            .rewardLimitCents(10_00L)
             .build();
 
     private TransactionDroolsDTO buildTrx() {
@@ -60,7 +59,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                    $config: it.gov.pagopa.reward.config.RuleEngineConfig()
                    $userCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper()
                    $userInitiativeCounters: it.gov.pagopa.reward.model.counters.UserInitiativeCounters() from $userCounters.initiatives.getOrDefault("agendaGroup", new it.gov.pagopa.reward.model.counters.UserInitiativeCounters("DUMMYUSERID", "agendaGroup"))
-                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !((it.gov.pagopa.reward.enums.OperationType.valueOf("REFUND").equals($trx.getOperationTypeTranscoded()) || $userInitiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).totalReward.compareTo(new java.math.BigDecimal("10")) < 0)))
+                   $trx: it.gov.pagopa.reward.model.TransactionDroolsDTO(!$config.shortCircuitConditions || initiativeRejectionReasons.get("agendaGroup") == null, !((it.gov.pagopa.reward.enums.OperationType.valueOf("REFUND").equals($trx.getOperationTypeTranscoded()) || $userInitiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, 0L, 0L)).totalRewardCents.compareTo(new java.lang.Long("1000")) < 0)))
                 then $trx.getInitiativeRejectionReasons().computeIfAbsent("agendaGroup",k->new java.util.ArrayList<>()).add("TRX_RULE_REWARDLIMITS_%s_FAIL");
                 end
                 """.formatted(
@@ -78,7 +77,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setDailyCounters(new HashMap<>(Map.of(
-                            "2022-03-15", new Counters(0L, BigDecimal.ZERO, BigDecimal.ZERO)
+                            "2022-03-15", new Counters(0L, 0L, 0L)
                     )));
                     useCase="";
                     return buildTrx();
@@ -87,7 +86,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setWeeklyCounters(new HashMap<>(Map.of(
-                            "2022-03-3", new Counters(1L, BigDecimal.valueOf(5), BigDecimal.valueOf(5))
+                            "2022-03-3", new Counters(1L, 5_00L, 5_00L)
                     )));
                     useCase="";
                     return buildTrx();
@@ -96,7 +95,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setMonthlyCounters(new HashMap<>(Map.of(
-                            "2022-03", new Counters(1L, BigDecimal.valueOf(9), BigDecimal.valueOf(5))
+                            "2022-03", new Counters(1L, 9_00L, 5_00L)
                     )));
                     useCase="";
                     return buildTrx();
@@ -123,7 +122,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setDailyCounters(new HashMap<>(Map.of(
-                            "2022-03-15", new Counters(0L, BigDecimal.TEN, BigDecimal.ZERO)
+                            "2022-03-15", new Counters(0L, 10_00L,0L)
                     )));
                     useCase="";
                     return buildTrx();
@@ -132,7 +131,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setWeeklyCounters(new HashMap<>(Map.of(
-                            "2022-03-3", new Counters(1L, BigDecimal.valueOf(10), BigDecimal.ONE)
+                            "2022-03-3", new Counters(1L, 10_00L, 1_00L)
                     )));
                     useCase="";
                     return buildTrx();
@@ -141,7 +140,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setMonthlyCounters(new HashMap<>(Map.of(
-                            "2022-03", new Counters(1L, BigDecimal.valueOf(11), BigDecimal.valueOf(5))
+                            "2022-03", new Counters(1L, 11_00L, 5_00L)
                     )));
                     useCase="";
                     return buildTrx();
@@ -150,7 +149,7 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
                     rewardLimitRule.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
                     counters = new UserInitiativeCounters("USERID", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,"agendaGroup");
                     counters.setYearlyCounters(new HashMap<>(Map.of(
-                            "2022", new Counters(1L, BigDecimal.valueOf(12), BigDecimal.ONE)
+                            "2022", new Counters(1L, 12_00L, 1_00L)
                     )));
                     useCase="";
                     return buildTrx();

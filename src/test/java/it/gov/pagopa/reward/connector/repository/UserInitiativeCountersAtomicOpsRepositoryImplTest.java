@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -133,8 +132,8 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest {
         UserInitiativeCounters userInitiativeCountersUpdate = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
         userInitiativeCountersUpdate.setVersion(2L);
         userInitiativeCountersUpdate.setTrxNumber(1L);
-        userInitiativeCountersUpdate.setTotalReward(BigDecimal.ONE);
-        userInitiativeCountersUpdate.setTotalAmount(BigDecimal.ONE);
+        userInitiativeCountersUpdate.setTotalRewardCents(1_00L);
+        userInitiativeCountersUpdate.setTotalAmountCents(1_00L);
         userInitiativeCountersUpdate.setUpdateDate(userInitiativeCountersUpdate.getUpdateDate().truncatedTo(ChronoUnit.MILLIS));
 
         userInitiativeCountersRepository.save(userInitiativeCounters).block();
@@ -154,7 +153,7 @@ class UserInitiativeCountersAtomicOpsRepositoryImplTest {
 
         UserInitiativeCounters userInitiativeCountersUpdate = new UserInitiativeCounters(userId, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,initiativeId);
         userInitiativeCountersUpdate.setVersion(2L);
-        userInitiativeCounters.setTotalReward(BigDecimal.ONE);
+        userInitiativeCounters.setTotalRewardCents(1_00L);
 
         userInitiativeCountersRepository.save(userInitiativeCounters).block();
 

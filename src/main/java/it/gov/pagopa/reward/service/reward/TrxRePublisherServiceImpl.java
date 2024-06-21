@@ -39,7 +39,7 @@ public class TrxRePublisherServiceImpl implements TrxRePublisherService {
     }
 
     private void clearStatus(TransactionDTO trx) {
-        trx.setEffectiveAmount(null);
+        trx.setEffectiveAmountCents(null);
         trx.setRejectionReasons(new ArrayList<>());
         trx.setRefundInfo(null);
     }

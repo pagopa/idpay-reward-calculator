@@ -18,8 +18,6 @@ import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,10 +31,6 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
         KieContainerBuilderServiceImplTest.configDroolsLogs();
         ((Logger) LoggerFactory.getLogger("it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl")).setLevel(Level.WARN);
         ((Logger) LoggerFactory.getLogger("org.drools.compiler.kie.builder.impl")).setLevel(Level.WARN);
-    }
-
-    protected BigDecimal bigDecimalValue(double value) {
-        return BigDecimal.valueOf(value).setScale(2, RoundingMode.UNNECESSARY);
     }
 
     protected void testRule(String testName, String rewardCondition, TransactionDroolsDTO trx, boolean expectTrueCondition){

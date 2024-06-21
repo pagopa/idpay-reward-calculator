@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
@@ -35,7 +36,7 @@ class TrxRePublisherServiceTest {
     void test(){
         // Given
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
-        trx.setEffectiveAmount(trx.getAmount().negate());
+        trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount().negate()));
         trx.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
         trx.setRefundInfo(new RefundInfo());
 
@@ -52,7 +53,7 @@ class TrxRePublisherServiceTest {
 
     private static void assertClearedBody(TransactionDTO republishedTrx) {
         Assertions.assertEquals(Collections.emptyList(), republishedTrx.getRejectionReasons());
-        Assertions.assertNull(republishedTrx.getEffectiveAmount());
+        Assertions.assertNull(republishedTrx.getEffectiveAmountCents());
         Assertions.assertNull(republishedTrx.getRefundInfo());
     }
 

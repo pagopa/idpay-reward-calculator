@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -21,7 +20,7 @@ public class InitiativeConfig {
     private String initiativeId;
     private String initiativeName;
     private String organizationId;
-    private BigDecimal beneficiaryBudget;
+    private Long beneficiaryBudgetCents;
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean dailyThreshold;

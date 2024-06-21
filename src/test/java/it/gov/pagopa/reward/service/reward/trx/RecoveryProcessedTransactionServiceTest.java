@@ -28,7 +28,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -68,10 +67,10 @@ class RecoveryProcessedTransactionServiceTest {
         trx = TransactionDTOFaker.mockInstance(0);
         trxStored = transactionProcessedMapper.apply(RewardTransactionDTOFaker.mockInstance(0));
 
-        r1 = new Reward("INITIATIVEID1", "ORGANIZATIONID", BigDecimal.ONE);
+        r1 = new Reward("INITIATIVEID1", "ORGANIZATIONID", 1_00L);
         r1.setCounters(new RewardCounters());
         r1.getCounters().setVersion(1L);
-        r2 = new Reward("INITIATIVEID2", "ORGANIZATIONID", BigDecimal.TEN);
+        r2 = new Reward("INITIATIVEID2", "ORGANIZATIONID", 10_00L);
         r2.setCounters(new RewardCounters());
         r2.getCounters().setVersion(5L);
 

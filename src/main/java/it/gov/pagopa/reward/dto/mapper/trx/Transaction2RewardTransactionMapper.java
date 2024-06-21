@@ -56,7 +56,7 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setPar(src.getPar());
         dest.setRejectionReasons(src.getRejectionReasons());
         dest.setUserId(src.getUserId());
-        dest.setEffectiveAmount(src.getEffectiveAmount());
+        dest.setEffectiveAmountCents(src.getEffectiveAmountCents());
         dest.setAmountCents(src.getAmountCents());
         dest.setTrxChargeDate(src.getTrxChargeDate());
         dest.setRefundInfo(src.getRefundInfo());

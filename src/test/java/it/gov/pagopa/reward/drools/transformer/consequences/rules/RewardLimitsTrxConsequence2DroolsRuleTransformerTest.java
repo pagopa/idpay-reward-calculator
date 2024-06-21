@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 
 class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrxConsequence2DroolsRuleTransformerTest<RewardLimitsDTO> {
 
-    private final BigDecimal PREVIOUS_REWARD = toExpectedScale(BigDecimal.ONE);
+    private final Long PREVIOUS_REWARD = 1_00L;
 
     private final RewardLimitsTrxConsequence2DroolsRuleTransformer transformer = new RewardLimitsTrxConsequence2DroolsRuleTransformer(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl());
 
@@ -58,70 +57,70 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
         REFUNDED_WITH_PREVIOUS
     }
 
-    public static final BigDecimal TRANSACTION_REWARD = BigDecimal.TEN;
-    public static final BigDecimal TOTAL_REWARD = BigDecimal.valueOf(8);
+    public static final Long TRANSACTION_REWARD = 10_00L;
+    public static final Long TOTAL_REWARD = 8_00L;
 
     private USECASES useCase;
-    private BigDecimal expectedReward;
+    private Long expectedReward;
 
     private void configureUseCase(USECASES useCase){
         this.useCase=useCase;
         switch (useCase){
             case DISCARDED, NO_COUNTER -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                rewardLimitsDTO.setRewardLimit(TRANSACTION_REWARD);
-                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+                rewardLimitsDTO.setRewardLimitCents(TRANSACTION_REWARD);
+                expectedReward=TRANSACTION_REWARD;
             }
             case DAILY_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                rewardLimitsDTO.setRewardLimit(TRANSACTION_REWARD);
-                expectedReward=bigDecimalValue(2);
+                rewardLimitsDTO.setRewardLimitCents(TRANSACTION_REWARD);
+                expectedReward=2_00L;
             }
             case DAILY_NO_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.DAILY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(18.01));
-                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+                rewardLimitsDTO.setRewardLimitCents(18_01L);
+                expectedReward=TRANSACTION_REWARD;
             }
             case WEEKLY_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(17.99));
-                expectedReward=bigDecimalValue(9.99);
+                rewardLimitsDTO.setRewardLimitCents(17_99L);
+                expectedReward=9_99L;
             }
             case WEEKLY_NO_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.WEEKLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(18));
-                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+                rewardLimitsDTO.setRewardLimitCents(18_00L);
+                expectedReward=TRANSACTION_REWARD;
             }
             case MONTHLY_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.ONE);
-                expectedReward=bigDecimalValue(0);
+                rewardLimitsDTO.setRewardLimitCents(1_00L);
+                expectedReward=0L;
             }
             case MONTHLY_NO_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.MONTHLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(19));
-                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+                rewardLimitsDTO.setRewardLimitCents(19_00L);
+                expectedReward=TRANSACTION_REWARD;
             }
             case YEARLY_CAP, REFUNDED_NO_PREVIOUS -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.ZERO);
-                expectedReward=bigDecimalValue(0);
+                rewardLimitsDTO.setRewardLimitCents(0L);
+                expectedReward=0L;
             }
             case REFUNDED_WITH_PREVIOUS -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.ZERO);
+                rewardLimitsDTO.setRewardLimitCents(0L);
                 expectedReward=PREVIOUS_REWARD;
             }
             case YEARLY_NO_CAP -> {
                 rewardLimitsDTO.setFrequency(RewardLimitsDTO.RewardLimitFrequency.YEARLY);
-                rewardLimitsDTO.setRewardLimit(BigDecimal.valueOf(100));
-                expectedReward=toExpectedScale(TRANSACTION_REWARD);
+                rewardLimitsDTO.setRewardLimitCents(100_00L);
+                expectedReward=TRANSACTION_REWARD;
             }
         }
     }
 
     @Override
-    public BigDecimal getExpectedReward() {
+    public Long getExpectedReward() {
         return expectedReward;
     }
 
@@ -140,9 +139,9 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 then\s
                    it.gov.pagopa.reward.dto.trx.Reward reward = $trx.getRewards().get("initiativeId");
                    if(reward != null){
-                      java.math.BigDecimal oldAccruedReward=reward.getAccruedReward();
-                      reward.setAccruedReward($trx.getRewards().get("initiativeId").getAccruedReward().min(java.math.BigDecimal.ZERO.max(new java.math.BigDecimal("%s").subtract($userInitiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO)).getTotalReward().subtract($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("initiativeId")!=null ? $trx.getRefundInfo().getPreviousRewards().get("initiativeId").getAccruedReward() : java.math.BigDecimal.ZERO)))).setScale(2, java.math.RoundingMode.HALF_DOWN));
-                      if(reward.getAccruedReward().compareTo(oldAccruedReward) != 0){
+                      java.lang.Long oldAccruedRewardCents=reward.getAccruedRewardCents();
+                      reward.setAccruedRewardCents(java.lang.Long.min($trx.getRewards().get("initiativeId").getAccruedRewardCents(), java.lang.Long.max(0L, new java.lang.Long("%s") - ($userInitiativeCounters.get%sCounters().getOrDefault(it.gov.pagopa.reward.service.reward.evaluate.UserInitiativeCountersUpdateServiceImpl.get%sDateFormatter().format($trx.getTrxChargeDate()), new it.gov.pagopa.reward.model.counters.Counters(0L, 0L, 0L)).getTotalRewardCents() - ($trx.getRefundInfo()!=null && $trx.getRefundInfo().getPreviousRewards()!=null && $trx.getRefundInfo().getPreviousRewards().get("initiativeId")!=null ? $trx.getRefundInfo().getPreviousRewards().get("initiativeId").getAccruedRewardCents() : 0L )))));
+                      if(reward.getAccruedRewardCents().compareTo(oldAccruedRewardCents) != 0){
                          reward.set%sCapped(true);
                          %s
                       }
@@ -150,7 +149,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                 end
                 """.formatted(
                 rewardLimitsDTO.getFrequency().name(),
-                rewardLimitsDTO.getRewardLimit(),
+                rewardLimitsDTO.getRewardLimitCents(),
                 StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase()),
                 rewardLimitsDTO.getFrequency() == RewardLimitsDTO.RewardLimitFrequency.DAILY ? "Day" : StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase()).replace("ly", ""),
                 StringUtils.capitalize(rewardLimitsDTO.getFrequency().name().toLowerCase()),
@@ -195,19 +194,19 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
                     .dailyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03-15", Counters.builder()
-                                            .totalReward(TOTAL_REWARD)
+                                            .totalRewardCents(TOTAL_REWARD)
                                             .build()))
                     )
                     .weeklyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03-3", Counters.builder()
-                                            .totalReward(TOTAL_REWARD)
+                                            .totalRewardCents(TOTAL_REWARD)
                                             .build()))
                     )
                     .monthlyCounters(
                             new HashMap<>(Map.of(
                                     "2022-03", Counters.builder()
-                                            .totalReward(TOTAL_REWARD)
+                                            .totalRewardCents(TOTAL_REWARD)
                                             .build()))
                     )
                     .build()
@@ -260,14 +259,14 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     }
 
     @Test
-    void testRewardMontlyCapped_overflow() {
+    void testRewardMonthlyCapped_overflow() {
         configureUseCase(USECASES.MONTHLY_CAP);
         super.testReward();
     }
 
     @Test
-    void testRewardMontlyNoCapped() {
-        configureUseCase(USECASES.MONTHLY_CAP);
+    void testRewardMonthlyNoCapped() {
+        configureUseCase(USECASES.MONTHLY_NO_CAP);
         super.testReward();
     }
 
@@ -279,7 +278,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
 
     @Test
     void testRewardYearlyNoCapped() {
-        configureUseCase(USECASES.YEARLY_CAP);
+        configureUseCase(USECASES.YEARLY_NO_CAP);
         super.testReward();
     }
 
@@ -296,7 +295,7 @@ class RewardLimitsTrxConsequence2DroolsRuleTransformerTest extends InitiativeTrx
     }
 
     @Override
-    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, BigDecimal expectReward) {
+    protected TransactionDroolsDTO testRule(String rule, TransactionDroolsDTO trx, Long expectReward) {
         super.testRule(rule, trx, expectReward);
         if(!useCase.equals(USECASES.DISCARDED)){
             boolean expectedDailyCapped = useCase.name().contains("DAILY") && !useCase.name().contains("NO_CAP");

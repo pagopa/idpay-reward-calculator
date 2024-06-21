@@ -21,7 +21,7 @@ class OperationTypeChargeHandlerServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
         Assertions.assertEquals(result.getTrxDate(), result.getTrxChargeDate());
-        Assertions.assertEquals(result.getAmount(), result.getEffectiveAmount());
+        Assertions.assertEquals(result.getAmountCents(), result.getEffectiveAmountCents());
         Assertions.assertNull(result.getRefundInfo());
         Assertions.assertEquals(Collections.emptyList(), result.getRejectionReasons());
     }

@@ -17,7 +17,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,13 +52,13 @@ class TransactionProcessedAtomicOpsRepositoryImplTest{
 
         Reward reward = Reward.builder()
                 .initiativeId(initiativeId)
-                .providedReward(BigDecimal.TEN)
-                .accruedReward(BigDecimal.TEN)
+                .providedRewardCents(10_00L)
+                .accruedRewardCents(10_00L)
                 .build();
         Reward reward2 = Reward.builder()
                 .initiativeId(initiativeRemain)
-                .providedReward(BigDecimal.TEN)
-                .accruedReward(BigDecimal.TEN)
+                .providedRewardCents(10_00L)
+                .accruedRewardCents(10_00L)
                 .build();
 
         TransactionProcessed trxRewarded = TransactionProcessedFaker.mockInstance(1);

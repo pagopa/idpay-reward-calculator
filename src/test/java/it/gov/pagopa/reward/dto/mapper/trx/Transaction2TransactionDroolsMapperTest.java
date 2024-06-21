@@ -34,7 +34,7 @@ class Transaction2TransactionDroolsMapperTest {
         trx.setTrxChargeDate(trx.getTrxDate());
         trx.setAmountCents(trx.getAmount().longValue());
         trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
-        trx.setEffectiveAmount(trx.getAmount());
+        trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setRefundInfo(new RefundInfo());
 
         // When
