@@ -16,3 +16,4 @@ ignore:
   - vulnerability: CVE-2022-41881 # solved in netty 4.1.86
   - vulnerability: CVE-2023-34462 # solved in netty 4.1.94
   - vulnerability: CVE-2023-44487 # solved in netty 4.1.100
+  - vulnerability: GHSA-j4r7-p9fp-w3f3  # solved in spring-cloud-function-context 4.1.2
