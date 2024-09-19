@@ -10,7 +10,7 @@ microservice-chart:
   resources:
     requests:
       memory: "768Mi"
-      cpu: "150m"
+      cpu: "500m"
     limits:
       memory: "768Mi"
       cpu: "600m"
