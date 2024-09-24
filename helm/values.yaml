@@ -66,6 +66,7 @@ microservice-chart:
     DELETE_PAGINATION_SIZE: "50"
     DELETE_DELAY_TIME: "1000"
     COUNTERS_LAST_TRX_EXPIRED: "PT1H"
+    HEALTH_MONGO_ENABLED: "false"
 
 
   externalConfigMapValues:

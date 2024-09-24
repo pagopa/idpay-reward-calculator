@@ -8,6 +8,7 @@ import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.common.utils.TestUtils;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.RecordsToDelete;
 import org.apache.kafka.clients.admin.TopicListing;
@@ -83,28 +84,30 @@ public class KafkaTestUtilitiesService {
 
     @AfterTestClass
     void clearTopics() {
-        kafkaBroker.doWithAdmin(admin -> {
-            try {
-                Collection<TopicListing> topics = admin.listTopics().listings().get();
-                admin.deleteRecords(
-                                admin.listOffsets(
-                                                topics.stream()
-                                                        .filter(topicListing -> !topicListing.isInternal())
-                                                        .flatMap(t -> IntStream.range(0, kafkaBroker.getPartitionsPerTopic())
-                                                                .boxed()
-                                                                .map(p -> new TopicPartition(t.name(), p)))
-                                                        .collect(Collectors.toMap(tp -> tp,
-                                                                tp -> OffsetSpec.latest()))
-                                        ).all().get().entrySet().stream()
-                                        .filter(e -> e.getValue().offset() > 0)
-                                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                                e -> RecordsToDelete.beforeOffset(e.getValue().offset()))))
-                        .all().get();
+        Map<String, Object> brokerConfig = Map.of(
+                "bootstrap.servers", kafkaBroker.getBrokersAsString()
+        );
 
-            } catch (InterruptedException | ExecutionException e) {
-                throw new IllegalStateException("Something gone wrong while emptying topics", e);
-            }
-        });
+        try (AdminClient admin = AdminClient.create(brokerConfig)) {
+            Collection<TopicListing> topics = admin.listTopics().listings().get();
+            admin.deleteRecords(
+                            admin.listOffsets(
+                                            topics.stream()
+                                                    .filter(topicListing -> !topicListing.isInternal())
+                                                    .flatMap(t -> IntStream.range(0, kafkaBroker.getPartitionsPerTopic())
+                                                            .boxed()
+                                                            .map(p -> new TopicPartition(t.name(), p)))
+                                                    .collect(Collectors.toMap(tp -> tp,
+                                                            tp -> OffsetSpec.latest()))
+                                    ).all().get().entrySet().stream()
+                                    .filter(e -> e.getValue().offset() > 0)
+                                    .collect(Collectors.toMap(Map.Entry::getKey,
+                                            e -> RecordsToDelete.beforeOffset(e.getValue().offset()))))
+                    .all().get();
+
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("Something went wrong while clearing topics", e);
+        }
     }
 
     /** It will return usefull URLs related to embedded kafka */
@@ -223,10 +226,10 @@ public class KafkaTestUtilitiesService {
             headers = Stream.concat(
                             Arrays.stream(additionalHeaders),
                             StreamSupport.stream(headers.spliterator(), false))
-                    .collect(Collectors.toList());
+                    .toList();
         }
-        ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
-        template.send(record);
+        ProducerRecord<byte[], byte[]> rec = new ProducerRecord<>(topic, partition, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
+        template.send(rec);
     }
 //endregion
 
@@ -321,13 +324,13 @@ public class KafkaTestUtilitiesService {
 //region error topic
     public void checkErrorsPublished(String topicErrors, Pattern errorUseCaseIdPatternMatch, int expectedErrorMessagesNumber, long maxWaitingMs, List<Pair<Supplier<String>, java.util.function.Consumer<ConsumerRecord<String, String>>>> errorUseCases) {
         final List<ConsumerRecord<String, String>> errors = consumeMessages(topicErrors, expectedErrorMessagesNumber, maxWaitingMs);
-        for (final ConsumerRecord<String, String> record : errors) {
-            final Matcher matcher = errorUseCaseIdPatternMatch.matcher(record.value());
+        for (final ConsumerRecord<String, String> rec : errors) {
+            final Matcher matcher = errorUseCaseIdPatternMatch.matcher(rec.value());
             int useCaseId = matcher.find() ? Integer.parseInt(matcher.group(1)) : -1;
             if (useCaseId == -1) {
-                throw new IllegalStateException("UseCaseId not recognized! " + record.value());
+                throw new IllegalStateException("UseCaseId not recognized! " + rec.value());
             }
-            errorUseCases.get(useCaseId).getSecond().accept(record);
+            errorUseCases.get(useCaseId).getSecond().accept(rec);
         }
     }
 
