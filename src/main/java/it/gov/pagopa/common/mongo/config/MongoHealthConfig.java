@@ -8,8 +8,8 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 @Configuration
 public class MongoHealthConfig {
     @Bean
-    public CustomMongoHealthIndicator customMongoHealthIndicator(ReactiveMongoTemplate mongoTemplate) {
-        return new CustomMongoHealthIndicator(mongoTemplate);
+    public CustomMongoHealthIndicator customMongoHealthIndicator(ReactiveMongoTemplate reactiveMongoTemplate) {
+        return new CustomMongoHealthIndicator(reactiveMongoTemplate);
     }
 }
 

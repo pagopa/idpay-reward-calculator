@@ -1,23 +1,25 @@
 package it.gov.pagopa.common.config;
 
 import org.bson.Document;
-import org.springframework.boot.actuate.data.mongo.MongoReactiveHealthIndicator;
+import org.springframework.boot.actuate.health.AbstractReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 
-public class CustomMongoHealthIndicator extends MongoReactiveHealthIndicator {
+public class CustomMongoHealthIndicator extends AbstractReactiveHealthIndicator {
 
-    private final ReactiveMongoTemplate mongoTemplate;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
-    public CustomMongoHealthIndicator(ReactiveMongoTemplate mongoTemplate) {
-        super(mongoTemplate);
-        this.mongoTemplate = mongoTemplate;
+    public CustomMongoHealthIndicator(ReactiveMongoTemplate reactiveMongoTemplate) {
+        super("Mongo health check failed");
+        Assert.notNull(reactiveMongoTemplate, "ReactiveMongoTemplate must not be null");
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
     @Override
     protected Mono<Health> doHealthCheck(Health.Builder builder)  {
-        Mono<Document> buildInfo = this.mongoTemplate.executeCommand("{ isMaster: 1 }");
+        Mono<Document> buildInfo = this.reactiveMongoTemplate.executeCommand("{ isMaster: 1 }");
         return buildInfo.map(document -> builderUp(builder, document));
     }
     private Health builderUp(Health.Builder builder, Document document) {
