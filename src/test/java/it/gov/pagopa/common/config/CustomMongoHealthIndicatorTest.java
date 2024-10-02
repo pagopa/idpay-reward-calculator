@@ -23,10 +23,10 @@ class CustomMongoHealthIndicatorTest {
         given(buildInfo.getInteger("maxWireVersion")).willReturn(10);
         ReactiveMongoTemplate reactiveMongoTemplate = mock(ReactiveMongoTemplate.class);
         given(reactiveMongoTemplate.executeCommand("{ isMaster: 1 }")).willReturn(Mono.just(buildInfo));
-        CustomReactiveMongoHealthIndicator CustomReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
+        CustomReactiveMongoHealthIndicator customReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
                 reactiveMongoTemplate);
-        Mono<Health> health = CustomReactiveMongoHealthIndicator.health();
-        StepVerifier.create(health).consumeNextWith((h) -> {
+        Mono<Health> health = customReactiveMongoHealthIndicator.health();
+        StepVerifier.create(health).consumeNextWith(h -> {
             assertThat(h.getStatus()).isEqualTo(Status.UP);
             assertThat(h.getDetails()).containsOnlyKeys("maxWireVersion");
             assertThat(h.getDetails()).containsEntry("maxWireVersion", 10);
@@ -37,10 +37,10 @@ class CustomMongoHealthIndicatorTest {
     void testMongoIsDown() {
         ReactiveMongoTemplate reactiveMongoTemplate = mock(ReactiveMongoTemplate.class);
         given(reactiveMongoTemplate.executeCommand("{ isMaster: 1 }")).willThrow(new MongoException("Connection failed"));
-        CustomReactiveMongoHealthIndicator CustomReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
+        CustomReactiveMongoHealthIndicator customReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
                 reactiveMongoTemplate);
-        Mono<Health> health = CustomReactiveMongoHealthIndicator.health();
-        StepVerifier.create(health).consumeNextWith((h) -> {
+        Mono<Health> health = customReactiveMongoHealthIndicator.health();
+        StepVerifier.create(health).consumeNextWith(h -> {
             assertThat(h.getStatus()).isEqualTo(Status.DOWN);
             assertThat(h.getDetails()).containsOnlyKeys("error");
             assertThat(h.getDetails()).containsEntry("error", MongoException.class.getName() + ": Connection failed");
