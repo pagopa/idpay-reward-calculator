@@ -23,9 +23,9 @@ class CustomMongoHealthIndicatorTest {
         given(buildInfo.getInteger("maxWireVersion")).willReturn(10);
         ReactiveMongoTemplate reactiveMongoTemplate = mock(ReactiveMongoTemplate.class);
         given(reactiveMongoTemplate.executeCommand("{ isMaster: 1 }")).willReturn(Mono.just(buildInfo));
-        CustomMongoHealthIndicator CustomMongoHealthIndicator = new CustomMongoHealthIndicator(
+        CustomReactiveMongoHealthIndicator CustomReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
                 reactiveMongoTemplate);
-        Mono<Health> health = CustomMongoHealthIndicator.health();
+        Mono<Health> health = CustomReactiveMongoHealthIndicator.health();
         StepVerifier.create(health).consumeNextWith((h) -> {
             assertThat(h.getStatus()).isEqualTo(Status.UP);
             assertThat(h.getDetails()).containsOnlyKeys("maxWireVersion");
@@ -37,9 +37,9 @@ class CustomMongoHealthIndicatorTest {
     void testMongoIsDown() {
         ReactiveMongoTemplate reactiveMongoTemplate = mock(ReactiveMongoTemplate.class);
         given(reactiveMongoTemplate.executeCommand("{ isMaster: 1 }")).willThrow(new MongoException("Connection failed"));
-        CustomMongoHealthIndicator CustomMongoHealthIndicator = new CustomMongoHealthIndicator(
+        CustomReactiveMongoHealthIndicator CustomReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
                 reactiveMongoTemplate);
-        Mono<Health> health = CustomMongoHealthIndicator.health();
+        Mono<Health> health = CustomReactiveMongoHealthIndicator.health();
         StepVerifier.create(health).consumeNextWith((h) -> {
             assertThat(h.getStatus()).isEqualTo(Status.DOWN);
             assertThat(h.getDetails()).containsOnlyKeys("error");
