@@ -50,7 +50,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
 
         Assertions.assertEquals("REWARDED", result.getStatus());
 
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result,"businessName");
     }
 
     @Test

@@ -54,7 +54,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getTrxChargeDate(),result.getTrxChargeDate());
         Assertions.assertEquals(previewRequest.getChannel(),result.getChannel());
 
-        TestUtils.checkNotNullFields(result, "circuitType", "terminalId", "bin", "senderCode",
+        TestUtils.checkNotNullFields(result, "businessName","circuitType", "terminalId", "bin", "senderCode",
                 "posType","par", "refundInfo", "brandLogo", "brand", "maskedPan", "ruleEngineTopicPartition", "ruleEngineTopicOffset");
     }
 
