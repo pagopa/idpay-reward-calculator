@@ -68,5 +68,6 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setChannel(src.getChannel());
         dest.setRuleEngineTopicPartition(src.getRuleEngineTopicPartition());
         dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());
+        dest.setBusinessName(src.getBusinessName());
     }
 }
