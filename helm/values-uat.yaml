@@ -42,7 +42,7 @@ microservice-chart:
   # affinity: {}
 
   envConfig:
-    JAVA_TOOL_OPTIONS: ->
+    JAVA_TOOL_OPTIONS: >-
       -XX:InitialRAMPercentage=75.0
       -XX:MaxRAMPercentage=85.0
       -XX:+UseG1GC
