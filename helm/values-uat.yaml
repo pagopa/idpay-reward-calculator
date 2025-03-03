@@ -7,13 +7,13 @@ microservice-chart:
   ingress:
     host: "uat01.idpay.internal.uat.cstar.pagopa.it"
 
-  resources:
     requests:
       memory: "1Gi"
       cpu: "500m"
     limits:
-      memory: "1Gi"
-      cpu: "600m"
+      memory: "1.5Gi"
+      cpu: "750m"
+
 
   autoscaling:
     enable: true
