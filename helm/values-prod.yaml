@@ -7,13 +7,14 @@ microservice-chart:
   ingress:
     host: "prod01.idpay.internal.cstar.pagopa.it"
 
+
   resources:
     requests:
       memory: "1Gi"
       cpu: "500m"
     limits:
-      memory: "1Gi"
-      cpu: "600m"
+      memory: "2Gi"
+      cpu: "1"
 
   autoscaling:
     enable: false
@@ -42,6 +43,14 @@ microservice-chart:
   # affinity: {}
 
   envConfig:
-    JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -Djava.util.concurrent.ForkJoinPool.common.parallelism=7 -Dio.netty.eventLoopThreads=100 -javaagent:/app/applicationinsights-agent.jar -Dapplicationinsights.configuration.file=/mnt/file-config-external/appinsights-config/applicationinsights.json"
+    JAVA_TOOL_OPTIONS: >-
+      -XX:InitialRAMPercentage=75.0
+      -XX:MaxRAMPercentage=85.0
+      -XX:+UseG1GC
+      -XX:+UseContainerSupport
+      -Djava.security.egd=file:/dev/./urandom
+      -Djava.util.concurrent.ForkJoinPool.common.parallelism=7 
+      -Dio.netty.eventLoopThreads=100 -javaagent:/app/applicationinsights-agent.jar 
+      -Dapplicationinsights.configuration.file=/mnt/file-config-external/appinsights-config/applicationinsights.json
     CACHE_REFRESH_MS_RATE: "60000"
     REDIS_CACHE_ENABLED: "true"

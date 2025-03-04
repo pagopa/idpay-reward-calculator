@@ -12,8 +12,8 @@ microservice-chart:
       memory: "1Gi"
       cpu: "500m"
     limits:
-      memory: "1Gi"
-      cpu: "600m"
+      memory: "2Gi"
+      cpu: "1"
 
   autoscaling:
     enable: true
@@ -42,6 +42,13 @@ microservice-chart:
   # affinity: {}
 
   envConfig:
-    JAVA_TOOL_OPTIONS: '-Xms256m -Xmx512m -javaagent:/app/applicationinsights-agent.jar -Dapplicationinsights.configuration.file=/mnt/file-config-external/appinsights-config/applicationinsights.json'
+    JAVA_TOOL_OPTIONS: >-
+      -XX:InitialRAMPercentage=75.0
+      -XX:MaxRAMPercentage=85.0
+      -XX:+UseG1GC
+      -XX:+UseContainerSupport
+      -Djava.security.egd=file:/dev/./urandom
+      -javaagent:/app/applicationinsights-agent.jar 
+      -Dapplicationinsights.configuration.file=/mnt/file-config-external/appinsights-config/applicationinsights.json
     CACHE_REFRESH_MS_RATE: "60000"
     REDIS_CACHE_ENABLED: "true"

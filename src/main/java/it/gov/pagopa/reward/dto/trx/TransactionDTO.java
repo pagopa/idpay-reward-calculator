@@ -90,6 +90,9 @@ public class TransactionDTO {
     private String maskedPan;
     //endregion
 
+    //region fields added by self-expense
+    private String businessName;
+
 
     public String getId() {
         if(this.id == null){
