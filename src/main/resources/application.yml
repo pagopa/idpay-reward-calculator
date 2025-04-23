@@ -324,7 +324,7 @@ logging:
     org.springframework.hateoas: ${LOG_LEVEL_SPRING_HATEOAS:INFO}
     org.springframework.boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
     org.springframework.boot.availability: ${LOG_LEVEL_SPRING_BOOT_AVAILABILITY:DEBUG}
-    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:INFO}
+    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:WARN}
     org.springframework.batch: ${LOG_LEVEL_SPRING_BATCH:INFO}
     io.swagger: ${LOG_LEVEL_IO_SWAGGER:WARN}
     javax.persistence: ${LOG_LEVEL_JAVAX_PERSISTENCE:INFO}
