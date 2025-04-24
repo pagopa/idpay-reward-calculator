@@ -333,6 +333,7 @@ logging:
     org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
     org.drools.mvel.MVELConstraint: ${LOG_LEVEL_ORG_DROOLS_COMPILE:ERROR}
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
+    org.apache.kafka.clients.consumer.internals.ConsumerCoordinator: WARN
 
 app:
   reward-rule:
