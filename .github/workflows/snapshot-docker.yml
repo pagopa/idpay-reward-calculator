@@ -1,0 +1,46 @@
+name: Snapshot docker build and push
+
+on:
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches-ignore:
+      - 'main'
+    paths-ignore:
+      - 'CODEOWNERS'
+      - '**.md'
+      - '.**'
+
+env:
+  # branch choosed by workflow_dispatch or by push event
+  CURRENT_BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  checkout:
+    name: 🔖 Checkout Repository
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871
+        with:
+          ref: ${{ env.CURRENT_BRANCH }}
+
+  docker-build:
+    name: 📦 Docker Build and Push
+    needs: checkout
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name == 'push' || github.event.inputs.docker_build_enabled == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871
+        with:
+          ref: ${{ env.CURRENT_BRANCH }}
+
+      - name: Run Snapshot Docker Build/Push
+        # https://github.com/pagopa/github-actions-template/releases/tag/v2.1.1
+        uses: pagopa/github-actions-template/payments-flow-docker-snapshot@e67e0ec4bb01d6cb5065e311ba0e1c92c49966a7
+        with:
+          current_branch: ${{ github.ref_name }}
