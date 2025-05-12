@@ -13,5 +13,6 @@ public class KafkaConstants {
     public static final String ERROR_MSG_HEADER_RETRY = "retry";
     public static final String ERROR_MSG_HEADER_RETRYABLE = "retryable";
     public static final String ERROR_MSG_HEADER_STACKTRACE = "stacktrace";
+
 //endregion
 }
