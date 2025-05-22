@@ -3,8 +3,6 @@ name: 📦 Flow Snapshot Docker
 on:
   push:
     branches-ignore:
-      - 'release-dev'
-      - 'release-uat'
       - 'main'
     paths-ignore:
       - 'CODEOWNERS'
