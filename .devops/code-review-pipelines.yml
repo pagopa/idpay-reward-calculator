@@ -50,7 +50,7 @@ steps:
       publishJUnitResults: true
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
       javaHomeOption: 'JDKVersion'
-      jdkVersionOption: '1.17'
+      jdkVersionOption: '1.21'
       mavenVersionOption: 'Default'
       mavenAuthenticateFeed: false
       effectivePomSkip: false
@@ -67,7 +67,7 @@ steps:
       options: '-B -Dsonar.coverage.jacoco.xmlReportPaths=$(xmlReportPaths)'
       publishJUnitResults: false
       javaHomeOption: 'JDKVersion'
-      jdkVersionOption: '1.17'
+      jdkVersionOption: '1.21'
       mavenVersionOption: 'Default'
       mavenAuthenticateFeed: false
       effectivePomSkip: false
