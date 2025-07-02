@@ -15,9 +15,7 @@ import java.util.function.Supplier;
 
 @Service
 public class TrxRePublisherServiceImpl implements TrxRePublisherService {
-
     private final StreamBridge streamBridge;
-
     public TrxRePublisherServiceImpl(StreamBridge streamBridge) {
         this.streamBridge = streamBridge;
     }
