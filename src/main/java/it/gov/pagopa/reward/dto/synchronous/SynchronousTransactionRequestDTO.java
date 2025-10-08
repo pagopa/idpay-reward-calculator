@@ -31,4 +31,5 @@ public class SynchronousTransactionRequestDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxChargeDate;
     private String channel;
+    private Long voucherAmountCents;
 }

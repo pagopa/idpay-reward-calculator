@@ -85,7 +85,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                                 .computeIfAbsent(initiativeId, k -> UserInitiativeCounters.builder(ruleEngineResult.getUserId(),initiativeConfig.getBeneficiaryType(), k).build());
 
                                         if (isRefundedReward(initiativeId, ruleEngineResult) || isRewardedInitiative(reward) || justTrxCountRejection) {
-                                            evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter);
+                                            evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter, ruleEngineResult);
                                             final Long previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedRewardCents).orElse(null) : null;
                                             initiativeCounter.setVersion(initiativeCounter.getVersion()+1L);
                                             initiativeCounter.setUpdateDate(LocalDateTime.now());
@@ -114,10 +114,11 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
         }
     }
 
-    private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, UserInitiativeCounters initiativeCounter) {
-        initiativeCounter.setExhaustedBudget(initiativeConfig.getBeneficiaryBudgetCents() != null && ((initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents())>=(initiativeConfig.getBeneficiaryBudgetCents())));
+    private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, UserInitiativeCounters initiativeCounter, RewardTransactionDTO trx) {
+        Long budgetCents = trx.getVoucherAmountCents() != null ? trx.getVoucherAmountCents() : initiativeConfig.getBeneficiaryBudgetCents();
+        initiativeCounter.setExhaustedBudget(budgetCents != null && ((initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents())>=(budgetCents)));
         if (initiativeCounter.isExhaustedBudget()) {
-            Long newAccruedRewardCents = initiativeConfig.getBeneficiaryBudgetCents() - (initiativeCounter.getTotalRewardCents());
+            Long newAccruedRewardCents = budgetCents - (initiativeCounter.getTotalRewardCents());
             reward.setCapped(newAccruedRewardCents.compareTo(reward.getAccruedRewardCents()) != 0);
             reward.setAccruedRewardCents(newAccruedRewardCents);
         }
