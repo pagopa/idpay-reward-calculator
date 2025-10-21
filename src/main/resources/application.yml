@@ -316,7 +316,7 @@ logging:
     it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
     it.gov.pagopa.common.reactive.kafka.consumer: ${LOG_LEVEL_BASE_KAFKA_CONSUMER:INFO}
     it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
-    org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
+    org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:WARN}
     org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
     org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}
     org.springframework.cloud: ${LOG_LEVEL_SPRING_CLOUD:WARN}
@@ -324,7 +324,7 @@ logging:
     org.springframework.hateoas: ${LOG_LEVEL_SPRING_HATEOAS:INFO}
     org.springframework.boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
     org.springframework.boot.availability: ${LOG_LEVEL_SPRING_BOOT_AVAILABILITY:DEBUG}
-    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:INFO}
+    org.springframework.kafka: ${LOG_LEVEL_SPRING_KAFKA:WARN}
     org.springframework.batch: ${LOG_LEVEL_SPRING_BATCH:INFO}
     io.swagger: ${LOG_LEVEL_IO_SWAGGER:WARN}
     javax.persistence: ${LOG_LEVEL_JAVAX_PERSISTENCE:INFO}
@@ -333,6 +333,8 @@ logging:
     org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
     org.drools.mvel.MVELConstraint: ${LOG_LEVEL_ORG_DROOLS_COMPILE:ERROR}
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
+    org.apache.kafka: WARN
+    org.springframework.boot.autoconfigure: WARN
 
 app:
   reward-rule:
