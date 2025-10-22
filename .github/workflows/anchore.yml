@@ -50,7 +50,7 @@ jobs:
           output-format: "sarif"
           output-file: "results.sarif"
       - name: Upload Anchore Scan Report
-        uses: github/codeql-action/upload-sarif@e4262713b504983e61c7728f5452be240d9385a7 #v2.14.3
+        uses: github/codeql-action/upload-sarif@16df4fbc19aea13d921737861d6c622bf3cefe23 #v2.23.0
         if: always()
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
