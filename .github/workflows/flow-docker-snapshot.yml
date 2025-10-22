@@ -19,13 +19,16 @@ on:
         required: false
         default: 'true'
       argocd_target_branch:
-          description: 'argocd target branch name'
-          required: false
-          default: 'main'
+        description: 'argocd target branch name'
+        required: false
+        default: 'main'
       postman_branch:
         description: postman branch name'
         required: false
         default: 'release-dev'
+
+permissions:
+  contents: read
 
 env:
   # branch choosed by workflow_dispatch or by push event
@@ -37,7 +40,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: ${{ env.CURRENT_BRANCH }}
 
@@ -48,7 +51,7 @@ jobs:
     if: ${{ github.event_name == 'push' || github.event.inputs.docker_build_enabled == 'true' }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: ${{ env.CURRENT_BRANCH }}
 
@@ -84,5 +87,3 @@ jobs:
               "POSTMAN_BRANCH": "${{ github.event.inputs.postman_branch }}",
               "TRIGGER_MESSAGE": "idpay-reward-calculator"
             }
-
-

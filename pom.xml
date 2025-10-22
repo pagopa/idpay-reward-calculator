@@ -5,8 +5,9 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.3</version>
+        <version>3.5.6</version>
     </parent>
+
 
     <groupId>it.gov.pagopa</groupId>
     <artifactId>idpay-reward-calculator</artifactId>
@@ -15,6 +16,7 @@
 
     <properties>
         <java.version>21</java.version>
+        <argLine>-Duser.timezone=Europe/Rome</argLine> <!-- placeholder to make works both the remote pipeline with sonar cloud and locally -->
     </properties>
 
     <dependencies>
@@ -74,7 +76,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -84,7 +85,6 @@
         <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
-            <version>3.1.11</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -92,20 +92,6 @@
             <version>3.14.0</version>
         </dependency>
 
-        <!-- Security fixes -->
-        <dependency>
-            <groupId>org.xerial.snappy</groupId>
-            <artifactId>snappy-java</artifactId>
-            <!-- Forced to > 1.1.10.3 due to https://nvd.nist.gov/vuln/detail/CVE-2023-34453 -->
-            <version>1.1.10.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <!-- Forced to > 2.0 due to https://nvd.nist.gov/vuln/detail/CVE-2022-1471 -->
-            <version>2.2</version>
-        </dependency>
 
 
         <!--TEST-->
@@ -173,16 +159,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2023.0.2</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-bom</artifactId>
-                <!-- Forced to >= 4.1.100 due to https://nvd.nist.gov/vuln/detail/CVE-2023-44487 -->
-                <version>4.1.104.Final</version>
+                <version>2025.0.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -211,7 +188,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.3</version>
                 <configuration>
                     <argLine>@{argLine} -Duser.timezone=Europe/Rome</argLine>
                 </configuration>
