@@ -29,6 +29,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   # branch choosed by workflow_dispatch or by push event
