@@ -40,7 +40,7 @@ class RecoveredTrx2RewardTransactionMapperTest {
 
         TransactionDTO trx = TransactionDTOFaker.mockInstance(0);
         trx.setAmount(expected.getAmount());
-
+        trx.setVoucherAmountCents(100L);
         // When
         RewardTransactionDTO result = mapper.apply(trx, trxProcessed);
 
