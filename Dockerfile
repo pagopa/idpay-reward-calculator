@@ -3,7 +3,6 @@
 #
 FROM maven:3.9.9-amazoncorretto-21-al2023@sha256:281aeb7254dde09226bde36c2ce236ead71c6451298986a79fa542bc26444225 AS buildtime
 
-
 WORKDIR /build
 COPY . .
 
@@ -14,8 +13,8 @@ RUN mvn clean package -DskipTests
 #
 FROM amazoncorretto:21-alpine3.22@sha256:fda60fd7965970ce7ed7ce789b18418647b56ac6112fc17df006337bdc6355c4 AS runtime
 
-RUN apk --no-cache add shadow
-RUN useradd --uid 10000 runner
+RUN apk --no-cache add shadow \
+&& useradd --uid 10000 runner
 
 VOLUME /tmp
 WORKDIR /app
