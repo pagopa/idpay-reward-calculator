@@ -1,14 +1,10 @@
-package it.gov.pagopa.common.mongo.config;
+package it.gov.pagopa.common.reactive.mongo.config;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import it.gov.pagopa.common.config.CustomReactiveMongoHealthIndicator;
-import it.gov.pagopa.common.reactive.mongo.ReactiveMongoRepositoryImpl;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.connector.repository.OnboardingFamiliesRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,9 +25,8 @@ import org.springframework.util.StringUtils;
 @Configuration
 @ConditionalOnProperty(prefix = "spring.data.mongodb.secondary", name = "enabled", havingValue = "true")
 @EnableReactiveMongoRepositories(
-        basePackageClasses = {DroolsRuleRepository.class, HpanInitiativesRepository.class, OnboardingFamiliesRepository.class},
-        reactiveMongoTemplateRef = "secondaryReactiveMongoTemplate",
-        repositoryBaseClass = ReactiveMongoRepositoryImpl.class
+    basePackages = "it.gov.pagopa.reward.connector.repository.secondary",
+    reactiveMongoTemplateRef = "secondaryReactiveMongoTemplate"
 )
 @Slf4j
 public class SecondaryReactiveMongoConfig {

@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.connector.repository;
+package it.gov.pagopa.reward.connector.repository.primary;
 
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;

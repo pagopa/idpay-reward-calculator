@@ -3,7 +3,7 @@ package it.gov.pagopa.common.mongo;
 import io.micrometer.core.instrument.binder.mongodb.MongoMetricsCommandListener;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import it.gov.pagopa.common.mongo.config.MongoConfig;
-import it.gov.pagopa.common.mongo.config.SecondaryReactiveMongoConfig;
+import it.gov.pagopa.common.reactive.mongo.config.SecondaryReactiveMongoConfig;
 import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import org.junit.jupiter.api.extension.ExtendWith;

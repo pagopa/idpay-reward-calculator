@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.connector.repository;
+package it.gov.pagopa.reward.connector.repository.primary;
 
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;

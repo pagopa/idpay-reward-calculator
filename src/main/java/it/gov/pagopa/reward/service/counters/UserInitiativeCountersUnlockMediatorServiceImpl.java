@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.counters;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;

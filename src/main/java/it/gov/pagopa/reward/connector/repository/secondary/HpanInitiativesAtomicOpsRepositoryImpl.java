@@ -1,4 +1,4 @@
-package it.gov.pagopa.reward.connector.repository;
+package it.gov.pagopa.reward.connector.repository.secondary;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.result.UpdateResult;

@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.service.build;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;

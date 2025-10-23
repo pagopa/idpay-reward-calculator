@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.recess;
 
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
