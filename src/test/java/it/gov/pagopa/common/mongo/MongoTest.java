@@ -3,6 +3,7 @@ package it.gov.pagopa.common.mongo;
 import io.micrometer.core.instrument.binder.mongodb.MongoMetricsCommandListener;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.mongo.config.SecondaryReactiveMongoConfig;
 import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,10 +31,14 @@ import java.lang.annotation.*;
                 "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
                 "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
                 "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
+                "spring.data.mongodb.secondary.uri=mongodb://localhost:${spring.data.mongodb.port}",
+                "spring.data.mongodb.secondary.database=idpay2",
+                "spring.data.mongodb.secondary.enabled=true",
         })
 @AutoConfigureSingleInstanceMongodb
 @Import({MongoTestUtilitiesService.TestMongoConfiguration.class,
         ReactiveMongoConfig.class,
+        SecondaryReactiveMongoConfig.class,
         SimpleMeterRegistry.class,
         MongoTest.MongoTestConfiguration.class})
 public @interface MongoTest {
