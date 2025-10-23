@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.connector.repository.primary;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -11,7 +12,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
 
     private final ReactiveMongoTemplate mongoTemplate;
 
-    public TransactionRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
+    public TransactionRepositoryImpl(@Qualifier("reactiveMongoTemplate") ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 
