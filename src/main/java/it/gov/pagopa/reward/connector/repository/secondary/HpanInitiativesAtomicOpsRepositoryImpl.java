@@ -5,6 +5,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -19,7 +20,7 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     public static final String FIELD_INTERNAL_UPDATE_DATE = "%s.$.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.updateDate);
     private final ReactiveMongoTemplate mongoTemplate;
 
-    public HpanInitiativesAtomicOpsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
+    public HpanInitiativesAtomicOpsRepositoryImpl(@Qualifier("secondaryReactiveMongoTemplate") ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 
