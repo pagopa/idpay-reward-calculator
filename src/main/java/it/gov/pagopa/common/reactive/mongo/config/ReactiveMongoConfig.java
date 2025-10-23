@@ -11,9 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.util.StringUtils;
 
@@ -30,6 +30,7 @@ public class ReactiveMongoConfig {
   @Value("${spring.data.mongodb.primary.database:}")
   private String database;
 
+  @Primary
   @Bean(name = "reactiveMongoClient")
   public MongoClient mongoClient(@Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
     if(!StringUtils.hasText(uri) || !StringUtils.hasText(database)) {
@@ -47,7 +48,7 @@ public class ReactiveMongoConfig {
 
   @Bean(name = "reactiveMongoTemplate")
   public ReactiveMongoTemplate reactiveMongoTemplate(@Qualifier("secondaryMongoClient") MongoClient mongoClient) {
-    log.info("Creating secondaryReactiveMongoTemplate for database {}", database);
+    log.info("Creating ReactiveMongoTemplate for database {}", database);
     return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(mongoClient, database));
   }
 }
