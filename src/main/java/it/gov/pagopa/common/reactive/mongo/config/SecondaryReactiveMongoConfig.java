@@ -68,7 +68,30 @@ public class SecondaryReactiveMongoConfig {
               (MongoConverter) mongoCustomConversions);
   }
 
-  @Bean(name = "secondaryMongoHealthIndicator")
+    @Bean(name = "secondaryReactiveMongoTemplate")
+    public ReactiveMongoTemplate secondaryReactiveMongoTemplate(
+            @Qualifier("secondaryMongoClient") MongoClient mongoClient,
+            MongoCustomConversions customConversions) {
+        log.info("Creating secondaryReactiveMongoTemplate for database {}", mongoConfig.database());
+
+        SimpleReactiveMongoDatabaseFactory factory =
+                new SimpleReactiveMongoDatabaseFactory(mongoClient, mongoConfig.database());
+
+        MongoMappingContext mappingContext = new MongoMappingContext();
+        mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
+
+        DefaultReactiveDbRefResolver dbRefResolver = new DefaultReactiveDbRefResolver(factory);
+        MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+        converter.setCustomConversions(customConversions);
+        try {
+            converter.afterPropertiesSet();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to initialize MappingMongoConverter for secondary DB", e);
+        }
+
+
+
+        @Bean(name = "secondaryMongoHealthIndicator")
   public CustomReactiveMongoHealthIndicator secondaryMongoHealthIndicator(
       @Qualifier("secondaryReactiveMongoTemplate") ReactiveMongoTemplate reactiveMongoTemplate) {
     return new CustomReactiveMongoHealthIndicator(reactiveMongoTemplate);

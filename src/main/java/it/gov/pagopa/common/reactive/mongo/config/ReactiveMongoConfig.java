@@ -51,14 +51,29 @@ public class ReactiveMongoConfig {
     return MongoClients.create(builder.build());
   }
 
-  @Bean(name = "reactiveMongoTemplate")
-  public ReactiveMongoTemplate reactiveMongoTemplate(
-      @Qualifier("reactiveMongoClient") MongoClient mongoClient) {
-    log.info("Creating ReactiveMongoTemplate for database {}", properties.database());
-      return new ReactiveMongoTemplate(
-              new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()),
-              (MongoConverter) mongoCustomConversions);
-  }
+    @Bean(name = "reactiveMongoTemplate")
+    public ReactiveMongoTemplate reactiveMongoTemplate(
+            @Qualifier("reactiveMongoClient") MongoClient mongoClient,
+            MongoCustomConversions customConversions) {
+        log.info("Creating ReactiveMongoTemplate for database {}", properties.database());
+
+        SimpleReactiveMongoDatabaseFactory factory =
+                new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database());
+
+        MongoMappingContext mappingContext = new MongoMappingContext();
+        mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
+
+        DefaultReactiveDbRefResolver dbRefResolver = new DefaultReactiveDbRefResolver(factory);
+        MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+        converter.setCustomConversions(customConversions);
+        try {
+            converter.afterPropertiesSet();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to initialize MappingMongoConverter", e);
+        }
+
+        return new ReactiveMongoTemplate(factory, (MongoConverter) converter);
+    }
 
   private String maskConnString(String uri) {
     if (uri == null) {
