@@ -42,12 +42,12 @@ public class SecondaryReactiveMongoConfig {
     @Bean(name = "secondaryMongoClient")
     public MongoClient secondaryMongoClient(@Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
         if(!StringUtils.hasText(secondaryUri) || !StringUtils.hasText(secondaryDatabase)) {
-            throw new IllegalStateException("Secondary MongoDB abilitato ma uri/database non configurati (spring.data.mongodb.secondary.uri / .database)");
+            throw new IllegalStateException("Secondary MongoDB enabled but uri/database not configured (spring.data.mongodb.secondary.uri / .database)");
         }
         log.info("Initializing secondary MongoClient for database {} at uri {}", secondaryDatabase, maskConnString(secondaryUri));
         MongoClientSettings.Builder builder = MongoClientSettings.builder()
                 .applyConnectionString(new ConnectionString(secondaryUri));
-        // riuso customizzazioni pool (stesse impostazioni del primario)
+
         if (customizer != null) {
             customizer.customize(builder);
         }
