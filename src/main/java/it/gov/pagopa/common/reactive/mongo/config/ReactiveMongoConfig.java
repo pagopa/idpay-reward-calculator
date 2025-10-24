@@ -67,7 +67,7 @@ public class ReactiveMongoConfig {
     @Bean(name = "mappingMongoConverter")
     public MappingMongoConverter mappingMongoConverter(
             @Qualifier("reactiveMongoDbFactory") ReactiveMongoDatabaseFactory factory,
-            MongoCustomConversions conversions) throws Exception {
+            MongoCustomConversions conversions) {
 
         DbRefResolver dbRefResolver = NoOpDbRefResolver.INSTANCE;
 
