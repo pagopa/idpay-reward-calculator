@@ -20,30 +20,6 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 @Configuration
 public class MongoConfig {
 
-  @ConfigurationProperties(prefix = "spring.data.mongodb.primary")
-  public record PrimaryMongoProperties(
-      String uri,
-      String database,
-      Config config
-  ) {
-
-    public record Config(
-        ConnectionPoolSettings connectionPool
-    ) {
-
-      public record ConnectionPoolSettings(
-          int maxSize,
-          int minSize,
-          long maxWaitTimeMS,
-          long maxConnectionLifeTimeMS,
-          long maxConnectionIdleTimeMS,
-          int maxConnecting
-      ) {
-
-      }
-    }
-  }
-
   @ConfigurationProperties(prefix = "spring.data.mongodb.secondary")
   public record SecondaryMongoProperties(
       String uri,
@@ -57,17 +33,17 @@ public class MongoConfig {
       PrimaryMongoProperties primaryMongoProperties) {
     return builder -> builder.applyToConnectionPoolSettings(
         connectionPool -> {
-          connectionPool.maxSize(primaryMongoProperties.config.connectionPool.maxSize);
-          connectionPool.minSize(primaryMongoProperties.config.connectionPool.minSize);
-          connectionPool.maxWaitTime(primaryMongoProperties.config.connectionPool.maxWaitTimeMS,
+          connectionPool.maxSize(primaryMongoProperties.config().connectionPool().maxSize());
+          connectionPool.minSize(primaryMongoProperties.config().connectionPool().minSize());
+          connectionPool.maxWaitTime(primaryMongoProperties.config().connectionPool().maxWaitTimeMS(),
               TimeUnit.MILLISECONDS);
           connectionPool.maxConnectionLifeTime(
-              primaryMongoProperties.config.connectionPool.maxConnectionLifeTimeMS,
+              primaryMongoProperties.config().connectionPool().maxConnectionLifeTimeMS(),
               TimeUnit.MILLISECONDS);
           connectionPool.maxConnectionIdleTime(
-              primaryMongoProperties.config.connectionPool.maxConnectionIdleTimeMS,
+              primaryMongoProperties.config().connectionPool().maxConnectionIdleTimeMS(),
               TimeUnit.MILLISECONDS);
-          connectionPool.maxConnecting(primaryMongoProperties.config.connectionPool.maxConnecting);
+          connectionPool.maxConnecting(primaryMongoProperties.config().connectionPool().maxConnecting());
         });
   }
 
