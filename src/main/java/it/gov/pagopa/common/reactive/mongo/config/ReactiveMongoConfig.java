@@ -4,13 +4,11 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
-import it.gov.pagopa.common.mongo.config.MongoConfig;
-import lombok.Data;
+import it.gov.pagopa.common.mongo.config.MongoConfig.PrimaryMongoProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,8 +27,7 @@ public class ReactiveMongoConfig {
 
   private final PrimaryMongoProperties properties;
 
-  public ReactiveMongoConfig(PrimaryMongoProperties properties,
-      MongoConfig.PrimaryMongoProperties prop) {
+  public ReactiveMongoConfig(PrimaryMongoProperties properties) {
     this.properties = properties;
   }
 
@@ -38,15 +35,15 @@ public class ReactiveMongoConfig {
   @Bean(name = "reactiveMongoClient")
   public MongoClient mongoClient(
       @Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
-    if (!StringUtils.hasText(properties.getUri()) || !StringUtils.hasText(
-        properties.getDatabase())) {
+    if (!StringUtils.hasText(properties.uri()) || !StringUtils.hasText(
+        properties.database())) {
       throw new IllegalStateException(
           "MongoDB enabled but uri/database not configured (spring.data.mongodb.primary.uri / .database)");
     }
-    log.info("Initializing MongoClient for database {} at uri {}", properties.getDatabase(),
-        maskConnString(properties.getUri()));
+    log.info("Initializing MongoClient for database {} at uri {}", properties.database(),
+        maskConnString(properties.uri()));
     MongoClientSettings.Builder builder = MongoClientSettings.builder()
-        .applyConnectionString(new ConnectionString(properties.getUri()));
+        .applyConnectionString(new ConnectionString(properties.uri()));
     if (customizer != null) {
       customizer.customize(builder);
     }
@@ -56,9 +53,9 @@ public class ReactiveMongoConfig {
   @Bean(name = "reactiveMongoTemplate")
   public ReactiveMongoTemplate reactiveMongoTemplate(
       @Qualifier("reactiveMongoClient") MongoClient mongoClient) {
-    log.info("Creating ReactiveMongoTemplate for database {}", properties.getDatabase());
+    log.info("Creating ReactiveMongoTemplate for database {}", properties.database());
     return new ReactiveMongoTemplate(
-        new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.getDatabase()));
+        new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()));
   }
 
   private String maskConnString(String uri) {
@@ -75,14 +72,5 @@ public class ReactiveMongoConfig {
     } catch (Exception e) {
       return uri;
     }
-  }
-
-  @Data
-  @Configuration
-  @ConfigurationProperties(prefix = "spring.data.mongodb.primary")
-  public static class PrimaryMongoProperties {
-
-    private String uri;
-    private String database;
   }
 }
