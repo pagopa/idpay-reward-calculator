@@ -34,12 +34,12 @@ public class ReactiveMongoConfig {
   @Bean(name = "reactiveMongoClient")
   public MongoClient mongoClient(@Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
     if(!StringUtils.hasText(uri) || !StringUtils.hasText(database)) {
-      throw new IllegalStateException("Secondary MongoDB abilitato ma uri/database non configurati (spring.data.mongodb.secondary.uri / .database)");
+      throw new IllegalStateException("MongoDB enabled but uri/database not configured (spring.data.mongodb.primary.uri / .database)");
     }
-//    log.info("Initializing secondary MongoClient for database {} at uri {}", database, maskConnString(secondaryUri));
+    log.info("Initializing MongoClient for database {} at uri {}", database, maskConnString(uri));
     MongoClientSettings.Builder builder = MongoClientSettings.builder()
         .applyConnectionString(new ConnectionString(uri));
-    // riuso customizzazioni pool (stesse impostazioni del primario)
+
     if (customizer != null) {
       customizer.customize(builder);
     }
@@ -47,8 +47,20 @@ public class ReactiveMongoConfig {
   }
 
   @Bean(name = "reactiveMongoTemplate")
-  public ReactiveMongoTemplate reactiveMongoTemplate(@Qualifier("secondaryMongoClient") MongoClient mongoClient) {
+  public ReactiveMongoTemplate reactiveMongoTemplate(@Qualifier("reactiveMongoClient") MongoClient mongoClient) {
     log.info("Creating ReactiveMongoTemplate for database {}", database);
     return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(mongoClient, database));
+  }
+
+  private String maskConnString(String uri) {
+    if (uri == null) return null;
+    try {
+      ConnectionString cs = new ConnectionString(uri);
+      String user = cs.getUsername();
+      if (user == null) return uri;
+      return uri.replaceFirst(user + ":.*?@", user + ":***@");
+    } catch (Exception e) {
+      return uri; // fallback
+    }
   }
 }
