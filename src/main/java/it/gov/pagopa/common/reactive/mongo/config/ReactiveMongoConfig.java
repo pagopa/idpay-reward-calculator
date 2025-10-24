@@ -55,8 +55,9 @@ public class ReactiveMongoConfig {
   public ReactiveMongoTemplate reactiveMongoTemplate(
       @Qualifier("reactiveMongoClient") MongoClient mongoClient) {
     log.info("Creating ReactiveMongoTemplate for database {}", properties.database());
-    return new ReactiveMongoTemplate(
-        new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()));
+      return new ReactiveMongoTemplate(
+              new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()),
+              (MongoConverter) mongoCustomConversions);
   }
 
   private String maskConnString(String uri) {
