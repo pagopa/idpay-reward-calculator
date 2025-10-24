@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.counters;
 
 import com.mongodb.MongoException;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;

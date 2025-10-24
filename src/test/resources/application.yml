@@ -1,0 +1,7 @@
+spring:
+  data:
+    mongodb:
+      secondary:
+        enabled: true
+        uri: mongodb://localhost:${spring.data.mongodb.port}
+        database: idpay

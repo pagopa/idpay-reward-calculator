@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import org.springframework.beans.factory.annotation.Value;

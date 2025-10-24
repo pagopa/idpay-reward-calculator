@@ -1,13 +1,109 @@
 package it.gov.pagopa.common.reactive.mongo.config;
 
-import it.gov.pagopa.common.reactive.mongo.ReactiveMongoRepositoryImpl;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+import it.gov.pagopa.common.mongo.config.PrimaryMongoProperties;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.util.StringUtils;
 
-@Configuration
 @EnableReactiveMongoRepositories(
-        basePackages = "it.gov.pagopa",
-        repositoryBaseClass = ReactiveMongoRepositoryImpl.class
+        basePackages = "it.gov.pagopa.reward.connector.repository.primary",
+        reactiveMongoTemplateRef = "reactiveMongoTemplate"
 )
+@Configuration
+@Slf4j
 public class ReactiveMongoConfig {
+
+    private final PrimaryMongoProperties properties;
+
+    public ReactiveMongoConfig(PrimaryMongoProperties properties) {
+        this.properties = properties;
+    }
+
+    @Primary
+    @Bean(name = "reactiveMongoClient")
+    public MongoClient mongoClient(
+            @Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
+        if (!StringUtils.hasText(properties.uri()) || !StringUtils.hasText(properties.database())) {
+            throw new IllegalStateException(
+                    "MongoDB enabled but uri/database not configured (spring.data.mongodb.primary.uri / .database)");
+        }
+        log.info("Initializing MongoClient for database {} at uri {}", properties.database(),
+                maskConnString(properties.uri()));
+
+        MongoClientSettings.Builder builder = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(properties.uri()));
+        if (customizer != null) {
+            customizer.customize(builder);
+        }
+        return MongoClients.create(builder.build());
+    }
+
+    @Primary
+    @Bean(name = "reactiveMongoDbFactory")
+    public ReactiveMongoDatabaseFactory reactiveMongoDbFactory(
+            @Qualifier("reactiveMongoClient") MongoClient mongoClient) {
+        return new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database());
+    }
+
+    @Primary
+    @Bean(name = "mappingMongoConverter")
+    public MappingMongoConverter mappingMongoConverter(
+            @Qualifier("reactiveMongoDbFactory") ReactiveMongoDatabaseFactory factory,
+            MongoCustomConversions conversions) {
+
+        DbRefResolver dbRefResolver = NoOpDbRefResolver.INSTANCE;
+
+        MongoMappingContext mappingContext = new MongoMappingContext();
+        mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+        mappingContext.afterPropertiesSet();
+
+        MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+        converter.setCodecRegistryProvider(factory);
+        converter.setCustomConversions(conversions);
+        converter.afterPropertiesSet();
+        return converter;
+    }
+
+    @Primary
+    @Bean(name = "reactiveMongoTemplate")
+    public ReactiveMongoTemplate reactiveMongoTemplate(
+            @Qualifier("reactiveMongoDbFactory") ReactiveMongoDatabaseFactory factory,
+            @Qualifier("mappingMongoConverter") MappingMongoConverter converter) {
+        log.info("Creating ReactiveMongoTemplate for database {}", properties.database());
+        return new ReactiveMongoTemplate(factory, converter);
+    }
+
+    private String maskConnString(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        try {
+            ConnectionString cs = new ConnectionString(uri);
+            String user = cs.getUsername();
+            if (user == null) {
+                return uri;
+            }
+            return uri.replaceFirst(user + ":.*?@", user + ":***@");
+        } catch (Exception e) {
+            return uri;
+        }
+    }
 }

@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.reward.config.RuleEngineConfig;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionDroolsMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.TransactionDroolsDTO2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.rule.trx.MccFilterDTO;

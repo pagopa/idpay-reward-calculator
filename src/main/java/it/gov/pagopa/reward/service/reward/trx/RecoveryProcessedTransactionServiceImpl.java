@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward.trx;
 
-import it.gov.pagopa.reward.connector.repository.TransactionRepository;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.connector.repository.primary.TransactionRepository;
+import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.mapper.trx.recover.RecoveredTrx2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.recover.RecoveredTrx2UserInitiativeCountersMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
