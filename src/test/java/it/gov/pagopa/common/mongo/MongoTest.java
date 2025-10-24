@@ -48,9 +48,10 @@ public @interface MongoTest {
         private MongoMetricsCommandListener mongoMetricsCommandListener;
 
         @Override
-        public MongoClientSettingsBuilderCustomizer customizer(MongoDbCustomProperties mongoDbCustomProperties) {
+        public MongoClientSettingsBuilderCustomizer customizer(
+            PrimaryMongoProperties primaryMongoProperties) {
             return builder -> {
-                super.customizer(mongoDbCustomProperties).customize(builder);
+                super.customizer(primaryMongoProperties).customize(builder);
                 builder.addCommandListener(mongoMetricsCommandListener);
             };
         }

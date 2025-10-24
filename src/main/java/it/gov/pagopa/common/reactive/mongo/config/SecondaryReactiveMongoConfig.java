@@ -5,10 +5,10 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import it.gov.pagopa.common.config.CustomReactiveMongoHealthIndicator;
+import it.gov.pagopa.common.mongo.config.MongoConfig.SecondaryMongoProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -19,8 +19,8 @@ import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRep
 import org.springframework.util.StringUtils;
 
 /**
- * Configurazione per un secondo database Mongo reattivo.
- * Abilitata se la property spring.data.mongodb.secondary.enabled=true
+ * Configurazione per un secondo database Mongo reattivo. Abilitata se la property
+ * spring.data.mongodb.secondary.enabled=true
  */
 @Configuration
 @ConditionalOnProperty(prefix = "spring.data.mongodb.secondary", name = "enabled", havingValue = "true")
@@ -31,49 +31,60 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class SecondaryReactiveMongoConfig {
 
-    @Value("${spring.data.mongodb.secondary.uri:}")
-    private String secondaryUri;
-    @Value("${spring.data.mongodb.secondary.database:}")
-    private String secondaryDatabase;
+  private final SecondaryMongoProperties mongoConfig;
 
-    /**
-     * Crea un {@link MongoClient} separato per il database secondario.
-     */
-    @Bean(name = "secondaryMongoClient")
-    public MongoClient secondaryMongoClient(@Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
-        if(!StringUtils.hasText(secondaryUri) || !StringUtils.hasText(secondaryDatabase)) {
-            throw new IllegalStateException("Secondary MongoDB enabled but uri/database not configured (spring.data.mongodb.secondary.uri / .database)");
-        }
-        log.info("Initializing secondary MongoClient for database {} at uri {}", secondaryDatabase, maskConnString(secondaryUri));
-        MongoClientSettings.Builder builder = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(secondaryUri));
+  public SecondaryReactiveMongoConfig(SecondaryMongoProperties mongoConfig) {
+    this.mongoConfig = mongoConfig;
+  }
 
-        if (customizer != null) {
-            customizer.customize(builder);
-        }
-        return MongoClients.create(builder.build());
+  /**
+   * Crea un {@link MongoClient} separato per il database secondario.
+   */
+  @Bean(name = "secondaryMongoClient")
+  public MongoClient secondaryMongoClient(
+      @Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
+    if (!StringUtils.hasText(mongoConfig.uri()) || !StringUtils.hasText(mongoConfig.database())) {
+      throw new IllegalStateException(
+          "Secondary MongoDB enabled but uri/database not configured (spring.data.mongodb.secondary.uri / .database)");
     }
+    log.info("Initializing secondary MongoClient for database {} at uri {}", mongoConfig.database(),
+        maskConnString(mongoConfig.uri()));
+    MongoClientSettings.Builder builder = MongoClientSettings.builder()
+        .applyConnectionString(new ConnectionString(mongoConfig.uri()));
 
-    @Bean(name = "secondaryReactiveMongoTemplate")
-    public ReactiveMongoTemplate secondaryReactiveMongoTemplate(@Qualifier("secondaryMongoClient") MongoClient mongoClient) {
-        log.info("Creating secondaryReactiveMongoTemplate for database {}", secondaryDatabase);
-        return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(mongoClient, secondaryDatabase));
+    if (customizer != null) {
+      customizer.customize(builder);
     }
+    return MongoClients.create(builder.build());
+  }
 
-    @Bean(name = "secondaryMongoHealthIndicator")
-    public CustomReactiveMongoHealthIndicator secondaryMongoHealthIndicator(@Qualifier("secondaryReactiveMongoTemplate") ReactiveMongoTemplate reactiveMongoTemplate) {
-        return new CustomReactiveMongoHealthIndicator(reactiveMongoTemplate);
-    }
+  @Bean(name = "secondaryReactiveMongoTemplate")
+  public ReactiveMongoTemplate secondaryReactiveMongoTemplate(
+      @Qualifier("secondaryMongoClient") MongoClient mongoClient) {
+    log.info("Creating secondaryReactiveMongoTemplate for database {}", mongoConfig.database());
+    return new ReactiveMongoTemplate(
+        new SimpleReactiveMongoDatabaseFactory(mongoClient, mongoConfig.database()));
+  }
 
-    private String maskConnString(String uri) {
-        if (uri == null) return null;
-        try {
-            ConnectionString cs = new ConnectionString(uri);
-            String user = cs.getUsername();
-            if (user == null) return uri;
-            return uri.replaceFirst(user + ":.*?@", user + ":***@");
-        } catch (Exception e) {
-            return uri; // fallback
-        }
+  @Bean(name = "secondaryMongoHealthIndicator")
+  public CustomReactiveMongoHealthIndicator secondaryMongoHealthIndicator(
+      @Qualifier("secondaryReactiveMongoTemplate") ReactiveMongoTemplate reactiveMongoTemplate) {
+    return new CustomReactiveMongoHealthIndicator(reactiveMongoTemplate);
+  }
+
+  private String maskConnString(String uri) {
+    if (uri == null) {
+      return null;
     }
+    try {
+      ConnectionString cs = new ConnectionString(uri);
+      String user = cs.getUsername();
+      if (user == null) {
+        return uri;
+      }
+      return uri.replaceFirst(user + ":.*?@", user + ":***@");
+    } catch (Exception e) {
+      return uri; // fallback
+    }
+  }
 }
