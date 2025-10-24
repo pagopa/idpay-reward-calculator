@@ -18,7 +18,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 @Configuration
-@EnableConfigurationProperties(PrimaryMongoProperties.class)
+@EnableConfigurationProperties({PrimaryMongoProperties.class, SecondaryMongoProperties.class})
 public class MongoConfig {
 
   @Bean

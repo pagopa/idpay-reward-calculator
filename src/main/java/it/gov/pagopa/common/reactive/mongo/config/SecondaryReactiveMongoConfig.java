@@ -29,7 +29,6 @@ import org.springframework.util.StringUtils;
     basePackages = "it.gov.pagopa.reward.connector.repository.secondary",
     reactiveMongoTemplateRef = "secondaryReactiveMongoTemplate"
 )
-@EnableConfigurationProperties(SecondaryReactiveMongoConfig.class)
 @Slf4j
 public class SecondaryReactiveMongoConfig {
 
