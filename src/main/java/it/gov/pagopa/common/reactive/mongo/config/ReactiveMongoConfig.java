@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -21,6 +22,7 @@ import org.springframework.util.StringUtils;
     basePackages = "it.gov.pagopa.reward.connector.repository.primary",
     reactiveMongoTemplateRef = "reactiveMongoTemplate"
 )
+@EnableConfigurationProperties(PrimaryMongoProperties.class)
 @Configuration
 @Slf4j
 public class ReactiveMongoConfig {

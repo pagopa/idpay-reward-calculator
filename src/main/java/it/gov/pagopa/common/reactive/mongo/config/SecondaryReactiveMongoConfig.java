@@ -5,12 +5,13 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import it.gov.pagopa.common.config.CustomReactiveMongoHealthIndicator;
-import it.gov.pagopa.common.mongo.config.MongoConfig.SecondaryMongoProperties;
+import it.gov.pagopa.common.mongo.config.SecondaryMongoProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -28,6 +29,7 @@ import org.springframework.util.StringUtils;
     basePackages = "it.gov.pagopa.reward.connector.repository.secondary",
     reactiveMongoTemplateRef = "secondaryReactiveMongoTemplate"
 )
+@EnableConfigurationProperties(SecondaryReactiveMongoConfig.class)
 @Slf4j
 public class SecondaryReactiveMongoConfig {
 

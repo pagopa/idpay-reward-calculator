@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.bson.types.Decimal128;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -18,15 +18,8 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 @Configuration
+@EnableConfigurationProperties(PrimaryMongoProperties.class)
 public class MongoConfig {
-
-  @ConfigurationProperties(prefix = "spring.data.mongodb.secondary")
-  public record SecondaryMongoProperties(
-      String uri,
-      String database
-  ) {
-
-  }
 
   @Bean
   public MongoClientSettingsBuilderCustomizer customizer(

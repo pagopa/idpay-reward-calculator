@@ -1,9 +1,7 @@
 package it.gov.pagopa.common.mongo.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
 @ConfigurationProperties(prefix = "spring.data.mongodb.primary")
 public record PrimaryMongoProperties(
     String uri,
