@@ -63,8 +63,9 @@ public class SecondaryReactiveMongoConfig {
   public ReactiveMongoTemplate secondaryReactiveMongoTemplate(
       @Qualifier("secondaryMongoClient") MongoClient mongoClient) {
     log.info("Creating secondaryReactiveMongoTemplate for database {}", mongoConfig.database());
-    return new ReactiveMongoTemplate(
-        new SimpleReactiveMongoDatabaseFactory(mongoClient, mongoConfig.database()));
+      return new ReactiveMongoTemplate(
+              new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()),
+              (MongoConverter) mongoCustomConversions);
   }
 
   @Bean(name = "secondaryMongoHealthIndicator")
