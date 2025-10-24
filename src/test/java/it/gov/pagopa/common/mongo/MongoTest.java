@@ -3,8 +3,15 @@ package it.gov.pagopa.common.mongo;
 import io.micrometer.core.instrument.binder.mongodb.MongoMetricsCommandListener;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.mongo.config.PrimaryMongoProperties;
 import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.reactive.mongo.config.ReactiveMongoConfig;
+import it.gov.pagopa.common.reactive.mongo.config.SecondaryReactiveMongoConfig;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
@@ -12,8 +19,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.lang.annotation.*;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -30,10 +35,14 @@ import java.lang.annotation.*;
                 "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
                 "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
                 "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
+                "spring.data.mongodb.secondary.uri=mongodb://localhost:${spring.data.mongodb.port}",
+                "spring.data.mongodb.secondary.database=idpay2",
+                "spring.data.mongodb.secondary.enabled=true",
         })
 @AutoConfigureSingleInstanceMongodb
 @Import({MongoTestUtilitiesService.TestMongoConfiguration.class,
         ReactiveMongoConfig.class,
+        SecondaryReactiveMongoConfig.class,
         SimpleMeterRegistry.class,
         MongoTest.MongoTestConfiguration.class})
 public @interface MongoTest {
@@ -43,9 +52,10 @@ public @interface MongoTest {
         private MongoMetricsCommandListener mongoMetricsCommandListener;
 
         @Override
-        public MongoClientSettingsBuilderCustomizer customizer(MongoDbCustomProperties mongoDbCustomProperties) {
+        public MongoClientSettingsBuilderCustomizer customizer(
+            PrimaryMongoProperties primaryMongoProperties) {
             return builder -> {
-                super.customizer(mongoDbCustomProperties).customize(builder);
+                super.customizer(primaryMongoProperties).customize(builder);
                 builder.addCommandListener(mongoMetricsCommandListener);
             };
         }

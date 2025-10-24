@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.CommonConstants;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;

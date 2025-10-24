@@ -1,10 +1,10 @@
 package it.gov.pagopa.reward.service.commands.ops;
 
 import it.gov.pagopa.common.reactive.utils.PerformanceLogger;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
-import it.gov.pagopa.reward.connector.repository.TransactionProcessedRepository;
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.primary.TransactionProcessedRepository;
+import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;

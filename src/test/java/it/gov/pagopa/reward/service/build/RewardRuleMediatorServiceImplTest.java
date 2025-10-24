@@ -2,7 +2,7 @@ package it.gov.pagopa.reward.service.build;
 
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.connector.repository.DroolsRuleRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
 import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
