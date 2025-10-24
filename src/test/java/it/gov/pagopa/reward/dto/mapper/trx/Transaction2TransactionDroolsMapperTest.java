@@ -36,6 +36,7 @@ class Transaction2TransactionDroolsMapperTest {
         trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
         trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setRefundInfo(new RefundInfo());
+        trx.setVoucherAmountCents(100L);
 
         // When
         TransactionDroolsDTO result = transaction2TransactionDroolsMapper.apply(trx);

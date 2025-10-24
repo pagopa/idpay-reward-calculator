@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
-import it.gov.pagopa.reward.connector.repository.UserInitiativeCountersRepository;
+import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;

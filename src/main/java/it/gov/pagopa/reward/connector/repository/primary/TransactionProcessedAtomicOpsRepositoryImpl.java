@@ -1,6 +1,7 @@
-package it.gov.pagopa.reward.connector.repository;
+package it.gov.pagopa.reward.connector.repository.primary;
 
 import it.gov.pagopa.reward.model.TransactionProcessed;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -11,7 +12,7 @@ import reactor.core.publisher.Mono;
 public class TransactionProcessedAtomicOpsRepositoryImpl implements TransactionProcessedAtomicOpsRepository {
     private final ReactiveMongoTemplate mongoTemplate;
 
-    public TransactionProcessedAtomicOpsRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
+    public TransactionProcessedAtomicOpsRepositoryImpl(@Qualifier("reactiveMongoTemplate") ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 

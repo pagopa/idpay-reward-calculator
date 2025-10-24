@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.recess;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.reward.connector.repository.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
 import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

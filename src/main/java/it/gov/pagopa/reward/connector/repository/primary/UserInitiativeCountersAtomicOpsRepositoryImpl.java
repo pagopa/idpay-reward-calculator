@@ -1,10 +1,11 @@
-package it.gov.pagopa.reward.connector.repository;
+package it.gov.pagopa.reward.connector.repository.primary;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.FindAndReplaceOptions;
@@ -20,7 +21,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     private static final String PENDING_TRX_ID_FIELD = String.format("%s.%s", UserInitiativeCounters.Fields.pendingTrx, TransactionDTO.Fields.id);
     private final ReactiveMongoTemplate mongoTemplate;
 
-    public UserInitiativeCountersAtomicOpsRepositoryImpl(
+    public UserInitiativeCountersAtomicOpsRepositoryImpl(@Qualifier("reactiveMongoTemplate")
             ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }

@@ -35,6 +35,7 @@ class Transaction2RewardTransactionDTOMapperTest {
         trx.setAmount(CommonUtilities.centsToEuro(trx.getAmountCents()));
         trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setRefundInfo(new RefundInfo());
+        trx.setVoucherAmountCents(100L);
 
         // When
         RewardTransactionDTO result = transactionDTO2RewardTransactionMapper.apply(trx);

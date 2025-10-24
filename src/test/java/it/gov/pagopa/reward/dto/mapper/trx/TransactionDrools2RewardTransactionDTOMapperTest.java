@@ -39,6 +39,7 @@ class TransactionDrools2RewardTransactionDTOMapperTest {
         trx.setRewards(Map.of("INITIATIVE3", new Reward("INITIATIVE3", "ORGANIZATION3", 10_00L, 1_00L, true, false)));
 
         trx.setInitiatives(new ArrayList<>());
+        trx.setVoucherAmountCents(100L);
 
         // When
         RewardTransactionDTO result = transactionDroolsDTO2RewardTransactionMapper.apply(trx);
