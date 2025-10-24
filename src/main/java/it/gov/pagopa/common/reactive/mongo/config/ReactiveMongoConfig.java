@@ -9,12 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.util.StringUtils;
 
@@ -53,26 +54,11 @@ public class ReactiveMongoConfig {
 
     @Bean(name = "reactiveMongoTemplate")
     public ReactiveMongoTemplate reactiveMongoTemplate(
-            @Qualifier("reactiveMongoClient") MongoClient mongoClient,
-            MongoCustomConversions customConversions) {
+            @Qualifier("reactiveMongoClient") MongoClient mongoClient, MongoCustomConversions mongoCustomConversions) {
         log.info("Creating ReactiveMongoTemplate for database {}", properties.database());
-
-        SimpleReactiveMongoDatabaseFactory factory =
-                new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database());
-
-        MongoMappingContext mappingContext = new MongoMappingContext();
-        mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
-
-        DefaultReactiveDbRefResolver dbRefResolver = new DefaultReactiveDbRefResolver(factory);
-        MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
-        converter.setCustomConversions(customConversions);
-        try {
-            converter.afterPropertiesSet();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to initialize MappingMongoConverter", e);
-        }
-
-        return new ReactiveMongoTemplate(factory, (MongoConverter) converter);
+        return new ReactiveMongoTemplate(
+                new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()),
+                (MongoConverter) mongoCustomConversions);
     }
 
   private String maskConnString(String uri) {

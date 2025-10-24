@@ -11,11 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.util.StringUtils;
 
@@ -61,34 +62,12 @@ public class SecondaryReactiveMongoConfig {
 
   @Bean(name = "secondaryReactiveMongoTemplate")
   public ReactiveMongoTemplate secondaryReactiveMongoTemplate(
-      @Qualifier("secondaryMongoClient") MongoClient mongoClient) {
+      @Qualifier("secondaryMongoClient") MongoClient mongoClient, MongoCustomConversions mongoCustomConversions) {
     log.info("Creating secondaryReactiveMongoTemplate for database {}", mongoConfig.database());
       return new ReactiveMongoTemplate(
-              new SimpleReactiveMongoDatabaseFactory(mongoClient, properties.database()),
+              new SimpleReactiveMongoDatabaseFactory(mongoClient, mongoConfig.database()),
               (MongoConverter) mongoCustomConversions);
   }
-
-    @Bean(name = "secondaryReactiveMongoTemplate")
-    public ReactiveMongoTemplate secondaryReactiveMongoTemplate(
-            @Qualifier("secondaryMongoClient") MongoClient mongoClient,
-            MongoCustomConversions customConversions) {
-        log.info("Creating secondaryReactiveMongoTemplate for database {}", mongoConfig.database());
-
-        SimpleReactiveMongoDatabaseFactory factory =
-                new SimpleReactiveMongoDatabaseFactory(mongoClient, mongoConfig.database());
-
-        MongoMappingContext mappingContext = new MongoMappingContext();
-        mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
-
-        DefaultReactiveDbRefResolver dbRefResolver = new DefaultReactiveDbRefResolver(factory);
-        MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
-        converter.setCustomConversions(customConversions);
-        try {
-            converter.afterPropertiesSet();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to initialize MappingMongoConverter for secondary DB", e);
-        }
-
 
 
         @Bean(name = "secondaryMongoHealthIndicator")
