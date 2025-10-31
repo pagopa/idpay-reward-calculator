@@ -38,8 +38,7 @@ public class AddHpanServiceImpl implements AddHpanService {
                 .filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
             if(HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus())){
-                log.error("Unexpected use case, the user unsubscribe from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
-                return null;
+                log.warn("Reactivating user unsubscribed from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
             }
             List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
             LocalDateTime startInterval = hpanUpdateEvaluateDTO.getEvaluationDate();

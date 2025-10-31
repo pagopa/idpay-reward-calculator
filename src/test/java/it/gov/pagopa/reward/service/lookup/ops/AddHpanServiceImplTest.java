@@ -287,41 +287,41 @@ class AddHpanServiceImplTest {
         Assertions.assertEquals(activeIntervalsListResult, List.of(initialActiveInterval, newActiveIntervalExpected));
     }
 
-    @Test
-    void unexpectedStatus(){
-        // Given
-        AddHpanService addHpanService = new AddHpanServiceImpl();
-
-        LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
-
-        ActiveTimeInterval initialActiveInterval = ActiveTimeInterval.builder().startInterval(now.minusMonths(5L)).endInterval(now.minusDays(1L)).build();
-        List<ActiveTimeInterval> activeList = new ArrayList<>();
-        activeList.add(initialActiveInterval);
-
-        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
-                .status(HpanInitiativeStatus.INACTIVE)
-                .activeTimeIntervals(activeList).build();
-
-        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
-                .userId("USERID")
-                .hpan("HPAN")
-                .onboardedInitiatives(List.of(onboarded)).build();
-
-        HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanUpdateEvaluateDTO.builder()
-                .hpan(hpanInitiatives.getHpan())
-                .maskedPan(hpanInitiatives.getMaskedPan())
-                .brandLogo(hpanInitiatives.getBrandLogo())
-                .brand(hpanInitiatives.getBrand())
-                .initiativeId("INITIATIVEID")
-                .userId(hpanInitiatives.getUserId())
-                .evaluationDate(now)
-                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
-                .build();
-
-        // When
-        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
-
-        // Then
-        Assertions.assertNull(result);
-    }
+//    @Test
+//    void unexpectedStatus(){
+//        // Given
+//        AddHpanService addHpanService = new AddHpanServiceImpl();
+//
+//        LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
+//
+//        ActiveTimeInterval initialActiveInterval = ActiveTimeInterval.builder().startInterval(now.minusMonths(5L)).endInterval(now.minusDays(1L)).build();
+//        List<ActiveTimeInterval> activeList = new ArrayList<>();
+//        activeList.add(initialActiveInterval);
+//
+//        OnboardedInitiative onboarded = OnboardedInitiative.builder().initiativeId("INITIATIVEID")
+//                .status(HpanInitiativeStatus.INACTIVE)
+//                .activeTimeIntervals(activeList).build();
+//
+//        HpanInitiatives hpanInitiatives = HpanInitiatives.builder()
+//                .userId("USERID")
+//                .hpan("HPAN")
+//                .onboardedInitiatives(List.of(onboarded)).build();
+//
+//        HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO = HpanUpdateEvaluateDTO.builder()
+//                .hpan(hpanInitiatives.getHpan())
+//                .maskedPan(hpanInitiatives.getMaskedPan())
+//                .brandLogo(hpanInitiatives.getBrandLogo())
+//                .brand(hpanInitiatives.getBrand())
+//                .initiativeId("INITIATIVEID")
+//                .userId(hpanInitiatives.getUserId())
+//                .evaluationDate(now)
+//                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
+//                .build();
+//
+//        // When
+//        OnboardedInitiative result = addHpanService.execute(hpanInitiatives, hpanUpdateEvaluateDTO);
+//
+//        // Then
+//        Assertions.assertNull(result);
+//    }
 }
