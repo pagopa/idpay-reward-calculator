@@ -23,8 +23,7 @@ public class DeleteHpanServiceImpl implements DeleteHpanService {
                OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream().filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
                 if (onboardedInitiative!=null) {
                     if(HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus())){
-                        log.error("Unexpected use case, the user unsubscribe from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
-                        return null;
+                        log.warn("Reactivating user unsubscribed from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
                     }
                     return evaluateHpanWithInitiativePresent(hpanUpdateEvaluateDTO, onboardedInitiative);
                 } else{
