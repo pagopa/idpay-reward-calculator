@@ -4,12 +4,11 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
+import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.FindAndReplaceOptions;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -17,6 +16,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository {
     private static final String PENDING_TRX_ID_FIELD = String.format("%s.%s", UserInitiativeCounters.Fields.pendingTrx, TransactionDTO.Fields.id);
     private final ReactiveMongoTemplate mongoTemplate;
@@ -85,5 +86,25 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                         UserInitiativeCounters.class,
                         UserInitiativeCounters.class)
                 .switchIfEmpty(Mono.error(new InvalidCounterVersionException()));
+    }
+
+    @Override
+    public Flux<UserInitiativeCounters> updateEntityIdByInitiativeIdAndEntityId(String initiativeId, String entityId, String newEntityId) {
+
+        ReactiveBulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
+                UserInitiativeCounters.class);
+        Query query = Query.query(Criteria.where(UserInitiativeCounters.Fields.entityId).is(entityId)
+                .and(UserInitiativeCounters.Fields.initiativeId).is(initiativeId));
+        return mongoTemplate.find(
+                query, UserInitiativeCounters.class).map(item -> {
+                    bulkOperations.updateOne(Query.query(Criteria.where(UserInitiativeCounters.Fields.id).is(
+                            Objects.requireNonNull(item).getId())),
+                            new Update()
+                                    .set(UserInitiativeCounters.Fields.entityId, newEntityId));
+                    return item;
+                }
+        ).doFinally(signal -> bulkOperations.execute());
+
+
     }
 }

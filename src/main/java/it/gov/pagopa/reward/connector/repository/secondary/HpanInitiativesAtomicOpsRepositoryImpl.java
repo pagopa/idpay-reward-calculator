@@ -7,12 +7,16 @@ import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.BulkOperations;
+import org.springframework.data.mongodb.core.ReactiveBulkOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAtomicOpsRepository {
     public static final String FIELD_INITIATIVE_ID = "%s.%s".formatted(HpanInitiatives.Fields.onboardedInitiatives, OnboardedInitiative.Fields.initiativeId);
@@ -80,16 +84,21 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
-        return mongoTemplate
-                .updateMulti(
-                        Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
-                                .and(FIELD_INITIATIVE_ID).is(initiativeId)),
-                        new Update()
-                                .set(FIELD_INTERNAL_STATUS, status)
-                                .currentDate(FIELD_INTERNAL_UPDATE_DATE),
-                        HpanInitiatives.class
-                );
+    public Flux<HpanInitiatives> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+
+        ReactiveBulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
+                HpanInitiatives.class);
+        Query query = Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
+                        .and(FIELD_INITIATIVE_ID).is(initiativeId));
+        return mongoTemplate.find(
+                query, HpanInitiatives.class).map(item -> {
+                    bulkOperations.updateOne(Query.query(Criteria.where(HpanInitiatives.Fields.hpan).is(
+                        Objects.requireNonNull(item).getHpan())),new Update()
+                        .set(FIELD_INTERNAL_STATUS, status)
+                        .currentDate(FIELD_INTERNAL_UPDATE_DATE));
+                    return item;
+                }
+            ).doFinally(signal -> bulkOperations.execute());
     }
 
     @Override
