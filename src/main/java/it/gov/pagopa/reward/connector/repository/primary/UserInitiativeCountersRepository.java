@@ -10,4 +10,7 @@ public interface UserInitiativeCountersRepository extends ReactiveMongoRepositor
     Flux<UserInitiativeCounters> findByEntityId(String entityId);
     Flux<UserInitiativeCounters> findByEntityIdAndInitiativeIdIn(String entityId, Collection<String> initiativeIds);
     Flux<UserInitiativeCounters> deleteByInitiativeId(String initiativeId);
+    Flux<UserInitiativeCounters> deleteByInitiativeIdAndEntityId(String initiativeId, String s);
+
+    Flux<UserInitiativeCounters> findByInitiativeIdAndEntityId(String initiativeId, String s);
 }

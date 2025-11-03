@@ -160,7 +160,7 @@ public class HpanInitiativeMediatorServiceImpl extends BaseKafkaConsumer<HpanIni
     }
 
     private Mono<OnboardedInitiative> initializeCounterAndRetrieveFamily(HpanUpdateEvaluateDTO hpanUpdateEvaluateDTO, OnboardedInitiative oi) {
-        if(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT.equals(hpanUpdateEvaluateDTO.getOperationType()) && oi.getActiveTimeIntervals().size() == 1){
+        if(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT.equals(hpanUpdateEvaluateDTO.getOperationType())){
             return retrieveAndEvaluateInitiative(hpanUpdateEvaluateDTO)
                     .map(f2t -> {
                         if (f2t.getKey() != null) {
