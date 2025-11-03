@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
+import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository {
     private static final String PENDING_TRX_ID_FIELD = String.format("%s.%s", UserInitiativeCounters.Fields.pendingTrx, TransactionDTO.Fields.id);
@@ -36,9 +38,15 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                                     .setOnInsert(UserInitiativeCounters.Fields.entityId, entityId)
                                     .setOnInsert(UserInitiativeCounters.Fields.entityType, entityType)
                                     .setOnInsert(UserInitiativeCounters.Fields.initiativeId, initiativeId)
-                                    .setOnInsert(UserInitiativeCounters.Fields.version, 0L)
-                                    .setOnInsert(UserInitiativeCounters.Fields.exhaustedBudget, false)
-                                    .setOnInsert(UserInitiativeCounters.Fields.updateDate, LocalDateTime.now()),
+                                    .set(UserInitiativeCounters.Fields.version, 0L)
+                                    .set(UserInitiativeCounters.Fields.exhaustedBudget, false)
+                                    .set(UserInitiativeCounters.Fields.pendingTrx, null)
+                                    .set(UserInitiativeCounters.Fields.dailyCounters, null)
+                                    .set(UserInitiativeCounters.Fields.monthlyCounters, null)
+                                    .set(UserInitiativeCounters.Fields.yearlyCounters, null)
+                                    .set(Counters.Fields.trxNumber, null)
+                                    .set(Counters.Fields.totalAmountCents, null)
+                                    .set(Counters.Fields.totalRewardCents, null),
                             UserInitiativeCounters.class).onErrorResume(e -> {
                         if (e instanceof DuplicateKeyException) {
                             return Mono.just(UpdateResult.acknowledged(1, 0L, null));

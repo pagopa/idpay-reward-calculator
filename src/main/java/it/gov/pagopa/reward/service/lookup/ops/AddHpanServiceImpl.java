@@ -37,7 +37,8 @@ public class AddHpanServiceImpl implements AddHpanService {
         OnboardedInitiative onboardedInitiative = onboardedInitiatives.stream()//.map(OnboardedInitiative::getInitiativeId)
                 .filter(o -> o.getInitiativeId().equals(hpanUpdateEvaluateDTO.getInitiativeId())).findFirst().orElse(null);
         if(onboardedInitiative!=null){
-            if(HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus())){
+            boolean isStatusInactive = HpanInitiativeStatus.INACTIVE.equals(onboardedInitiative.getStatus());
+            if(isStatusInactive){
                 log.warn("Reactivating user unsubscribed from the initiative. Source message: {} ", hpanUpdateEvaluateDTO);
             }
             List<ActiveTimeInterval> activeTimeIntervalsList = onboardedInitiative.getActiveTimeIntervals();
@@ -48,6 +49,15 @@ public class AddHpanServiceImpl implements AddHpanService {
                 ActiveTimeInterval lastActiveInterval = activeTimeIntervalsList.stream().max(Comparator.comparing(ActiveTimeInterval::getStartInterval)).orElse(null);
 
                 if (lastActiveInterval != null) {
+
+                    if (startInterval.isEqual(lastActiveInterval.getStartInterval())) {
+                        log.error("Unexpected use case, the hpan cannot be reactivated with the same start" +
+                                " interval as the previous last one. Source message: {}", hpanUpdateEvaluateDTO);
+                        return null;
+                    }
+
+                    onboardedInitiative.setStatus(HpanInitiativeStatus.ACTIVE);
+
                     if(lastActiveInterval.getEndInterval()==null){
                         lastActiveInterval.setEndInterval(startInterval);
                         activeTimeIntervalsList.add(initializeInterval(startInterval));
