@@ -26,35 +26,41 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
     @Override
     public Mono<Void> disableUserInitiativeInstruments(String userId, String initiativeId) {
 
-        return hpanInitiativesRepository.setUserInitiativeStatus(userId, initiativeId, HpanInitiativeStatus.INACTIVE)
-                .map(hpanInitiative -> {
-                    hpanInitiative.getOnboardedInitiatives().stream()
-                            .filter(onboardedInitiative ->
-                                    initiativeId.equals(onboardedInitiative.getInitiativeId()))
-                            .forEach(filteredInitiative -> {
-                                String entityId = filteredInitiative.getFamilyId() != null ?
-                                        filteredInitiative.getFamilyId() : userId;
-                                userInitiativeCountersRepository.updateEntityIdByInitiativeIdAndEntityId(
-                                        initiativeId, entityId, "HISTORY_" + entityId).blockLast();
-                            });
-                    return hpanInitiative;
-                }).then();
+        return hpanInitiativesRepository.setUserInitiativeStatus(
+                userId, initiativeId, HpanInitiativeStatus.INACTIVE).doOnNext(
+                        hpanInitiative ->
+                            hpanInitiative.getOnboardedInitiatives().stream()
+                                                .filter(onboardedInitiative ->
+                                                        initiativeId.equals(onboardedInitiative.getInitiativeId()))
+                                                .forEach(filteredInitiative -> {
+                                                    String entityId = filteredInitiative.getFamilyId() != null ?
+                                                            filteredInitiative.getFamilyId() : userId;
+                                                    userInitiativeCountersRepository
+                                                            .updateEntityIdByInitiativeIdAndEntityId(
+                                                                    initiativeId, entityId,
+                                                                    "HISTORY_" + entityId)
+                                                            .blockLast();
+                                                })
+                                ).then();
     }
 
     @Override
     public Mono<Void> enableUserInitiativeInstruments(String userId, String initiativeId) {
-        return hpanInitiativesRepository.setUserInitiativeStatus(userId, initiativeId, HpanInitiativeStatus.ACTIVE)
-                .map(hpanInitiative -> {
-                    hpanInitiative.getOnboardedInitiatives().stream()
-                            .filter(onboardedInitiative ->
-                                    initiativeId.equals(onboardedInitiative.getInitiativeId()))
-                            .forEach(filteredInitiative -> {
-                                String entityId = filteredInitiative.getFamilyId() != null ?
-                                        filteredInitiative.getFamilyId() : userId;
-                                userInitiativeCountersRepository.updateEntityIdByInitiativeIdAndEntityId(
-                                        initiativeId, "HISTORY_"+entityId, entityId).blockLast();
-                            });
-                    return hpanInitiative;
-                }).then();
+        return hpanInitiativesRepository.setUserInitiativeStatus(
+                userId, initiativeId, HpanInitiativeStatus.ACTIVE).doOnNext(
+                hpanInitiative ->
+                                hpanInitiative.getOnboardedInitiatives().stream()
+                                        .filter(onboardedInitiative ->
+                                                initiativeId.equals(onboardedInitiative.getInitiativeId()))
+                                        .forEach(filteredInitiative -> {
+                                            String entityId = filteredInitiative.getFamilyId() != null ?
+                                                    filteredInitiative.getFamilyId() : userId;
+                                userInitiativeCountersRepository
+                                        .updateEntityIdByInitiativeIdAndEntityId(
+                                                initiativeId, "HISTORY_"+entityId, entityId)
+                                        .blockLast();
+                            })
+                        ).then();
     }
+
 }

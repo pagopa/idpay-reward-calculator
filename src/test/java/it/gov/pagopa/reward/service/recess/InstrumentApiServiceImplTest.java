@@ -47,7 +47,7 @@ class InstrumentApiServiceImplTest {
                 .userId(USERID).build();
         Mockito.doReturn(Flux.just()).when(userInitiativeCountersRepository).updateEntityIdByInitiativeIdAndEntityId(
                 eq(INITIATIVEID), eq("FAMILYID"),eq("HISTORY_FAMILYID"));
-        Mockito.doReturn(Flux.just(hpanInitiatives))
+        Mockito.doReturn(Mono.just(hpanInitiatives))
                 .when(hpanInitiativesRepositoryMock).setUserInitiativeStatus(USERID,INITIATIVEID, HpanInitiativeStatus.INACTIVE);
 
         Void result = instrumentApiService.disableUserInitiativeInstruments(USERID, INITIATIVEID).block();
@@ -65,7 +65,7 @@ class InstrumentApiServiceImplTest {
                         .userId(USERID).build();
         Mockito.doReturn(Flux.just()).when(userInitiativeCountersRepository).updateEntityIdByInitiativeIdAndEntityId(
                 eq(INITIATIVEID), eq("HISTORY_FAMILYID"),eq("FAMILYID"));
-        Mockito.doReturn(Flux.just(hpanInitiatives))
+        Mockito.doReturn(Mono.just(hpanInitiatives))
                 .when(hpanInitiativesRepositoryMock).setUserInitiativeStatus(USERID,INITIATIVEID, HpanInitiativeStatus.ACTIVE);
 
         Void result = instrumentApiService.enableUserInitiativeInstruments(USERID, INITIATIVEID).block();
