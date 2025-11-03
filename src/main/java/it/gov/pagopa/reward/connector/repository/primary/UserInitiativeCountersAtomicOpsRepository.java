@@ -13,5 +13,5 @@ public interface UserInitiativeCountersAtomicOpsRepository {
     Mono<UserInitiativeCounters> findByPendingTrx(String trxId);
     Mono<UserInitiativeCounters> saveIfVersionNotChanged(UserInitiativeCounters counters);
 
-    Flux<UserInitiativeCounters> updateEntityIdByInitiativeIdAndEntityId(String initiativeId, String entityId, String newEntityId);
+    Mono<UserInitiativeCounters> updateEntityIdByInitiativeIdAndEntityId(String initiativeId, String entityId, String newEntityId);
 }

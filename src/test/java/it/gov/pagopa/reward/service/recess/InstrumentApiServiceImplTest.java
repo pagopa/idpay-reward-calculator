@@ -45,7 +45,7 @@ class InstrumentApiServiceImplTest {
                         Collections.singletonList(
                                 OnboardedInitiative.builder().familyId("FAMILYID").initiativeId(INITIATIVEID).build()))
                 .userId(USERID).build();
-        Mockito.doReturn(Flux.just()).when(userInitiativeCountersRepository).updateEntityIdByInitiativeIdAndEntityId(
+        Mockito.doReturn(Mono.empty()).when(userInitiativeCountersRepository).updateEntityIdByInitiativeIdAndEntityId(
                 eq(INITIATIVEID), eq("FAMILYID"),eq("HISTORY_FAMILYID"));
         Mockito.doReturn(Mono.just(hpanInitiatives))
                 .when(hpanInitiativesRepositoryMock).setUserInitiativeStatus(USERID,INITIATIVEID, HpanInitiativeStatus.INACTIVE);
@@ -63,7 +63,7 @@ class InstrumentApiServiceImplTest {
                                 Collections.singletonList(
                                         OnboardedInitiative.builder().familyId("FAMILYID").initiativeId(INITIATIVEID).build()))
                         .userId(USERID).build();
-        Mockito.doReturn(Flux.just()).when(userInitiativeCountersRepository).updateEntityIdByInitiativeIdAndEntityId(
+        Mockito.doReturn(Mono.empty()).when(userInitiativeCountersRepository).updateEntityIdByInitiativeIdAndEntityId(
                 eq(INITIATIVEID), eq("HISTORY_FAMILYID"),eq("FAMILYID"));
         Mockito.doReturn(Mono.just(hpanInitiatives))
                 .when(hpanInitiativesRepositoryMock).setUserInitiativeStatus(USERID,INITIATIVEID, HpanInitiativeStatus.ACTIVE);

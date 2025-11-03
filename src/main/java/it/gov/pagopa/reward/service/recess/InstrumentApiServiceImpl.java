@@ -39,7 +39,7 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
                                                             .updateEntityIdByInitiativeIdAndEntityId(
                                                                     initiativeId, entityId,
                                                                     "HISTORY_" + entityId)
-                                                            .blockLast();
+                                                            .block();
                                                 })
                                 ).then();
     }
@@ -58,7 +58,7 @@ public class InstrumentApiServiceImpl implements InstrumentApiService {
                                 userInitiativeCountersRepository
                                         .updateEntityIdByInitiativeIdAndEntityId(
                                                 initiativeId, "HISTORY_"+entityId, entityId)
-                                        .blockLast();
+                                        .block();
                             })
                         ).then();
     }

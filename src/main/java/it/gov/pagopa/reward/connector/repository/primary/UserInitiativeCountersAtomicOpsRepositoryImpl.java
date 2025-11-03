@@ -4,7 +4,6 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.exception.custom.InvalidCounterVersionException;
-import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
@@ -16,7 +15,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository {
     private static final String PENDING_TRX_ID_FIELD = String.format("%s.%s", UserInitiativeCounters.Fields.pendingTrx, TransactionDTO.Fields.id);
@@ -89,22 +87,14 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
     }
 
     @Override
-    public Flux<UserInitiativeCounters> updateEntityIdByInitiativeIdAndEntityId(String initiativeId, String entityId, String newEntityId) {
+    public Mono<UserInitiativeCounters> updateEntityIdByInitiativeIdAndEntityId(String initiativeId, String entityId, String newEntityId) {
 
-        ReactiveBulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
-                UserInitiativeCounters.class);
         Query query = Query.query(Criteria.where(UserInitiativeCounters.Fields.entityId).is(entityId)
                 .and(UserInitiativeCounters.Fields.initiativeId).is(initiativeId));
-        return mongoTemplate.find(
-                query, UserInitiativeCounters.class).map(item -> {
-                    bulkOperations.updateOne(Query.query(Criteria.where(UserInitiativeCounters.Fields.id).is(
-                            Objects.requireNonNull(item).getId())),
-                            new Update()
-                                    .set(UserInitiativeCounters.Fields.entityId, newEntityId));
-                    return item;
-                }
-        ).doFinally(signal -> bulkOperations.execute());
-
+        return mongoTemplate.findAndModify(
+                query, new Update()
+                        .set(UserInitiativeCounters.Fields.entityId, newEntityId),
+                UserInitiativeCounters.class);
 
     }
 }
