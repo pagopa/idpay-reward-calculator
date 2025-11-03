@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitiativeCountersAtomicOpsRepository {
@@ -41,12 +42,14 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                                     .set(UserInitiativeCounters.Fields.version, 0L)
                                     .set(UserInitiativeCounters.Fields.exhaustedBudget, false)
                                     .set(UserInitiativeCounters.Fields.pendingTrx, null)
-                                    .set(UserInitiativeCounters.Fields.dailyCounters, null)
-                                    .set(UserInitiativeCounters.Fields.monthlyCounters, null)
-                                    .set(UserInitiativeCounters.Fields.yearlyCounters, null)
-                                    .set(Counters.Fields.trxNumber, null)
-                                    .set(Counters.Fields.totalAmountCents, null)
-                                    .set(Counters.Fields.totalRewardCents, null),
+                                    .set(UserInitiativeCounters.Fields.lastTrx, new ArrayList<>())
+                                    .set(UserInitiativeCounters.Fields.dailyCounters, new HashMap<>())
+                                    .set(UserInitiativeCounters.Fields.weeklyCounters, new HashMap<>())
+                                    .set(UserInitiativeCounters.Fields.monthlyCounters, new HashMap<>())
+                                    .set(UserInitiativeCounters.Fields.yearlyCounters, new HashMap<>())
+                                    .set(Counters.Fields.trxNumber, 0L)
+                                    .set(Counters.Fields.totalAmountCents, 0L)
+                                    .set(Counters.Fields.totalRewardCents, 0L),
                             UserInitiativeCounters.class).onErrorResume(e -> {
                         if (e instanceof DuplicateKeyException) {
                             return Mono.just(UpdateResult.acknowledged(1, 0L, null));
