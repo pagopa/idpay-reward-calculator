@@ -80,16 +80,15 @@ public class HpanInitiativesAtomicOpsRepositoryImpl implements HpanInitiativesAt
     }
 
     @Override
-    public Mono<UpdateResult> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
-        return mongoTemplate
-                .updateMulti(
-                        Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
-                                .and(FIELD_INITIATIVE_ID).is(initiativeId)),
-                        new Update()
+    public Mono<HpanInitiatives> setUserInitiativeStatus(String userId, String initiativeId, HpanInitiativeStatus status) {
+
+        Query query = Query.query(Criteria.where(HpanInitiatives.Fields.userId).is(userId)
+                        .and(FIELD_INITIATIVE_ID).is(initiativeId));
+        return mongoTemplate.findAndModify(
+                query, new Update()
                                 .set(FIELD_INTERNAL_STATUS, status)
-                                .currentDate(FIELD_INTERNAL_UPDATE_DATE),
-                        HpanInitiatives.class
-                );
+                                .currentDate(FIELD_INTERNAL_UPDATE_DATE), HpanInitiatives.class);
+
     }
 
     @Override

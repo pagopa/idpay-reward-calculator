@@ -294,7 +294,8 @@ class AddHpanServiceImplTest {
 
         LocalDateTime now = LocalDateTime.now().with(LocalTime.MIN).plusDays(1L);
 
-        ActiveTimeInterval initialActiveInterval = ActiveTimeInterval.builder().startInterval(now.minusMonths(5L)).endInterval(now.minusDays(1L)).build();
+        ActiveTimeInterval initialActiveInterval = ActiveTimeInterval.builder()
+                .startInterval(now.plusDays(5L)).endInterval(now.plusWeeks(1L)).build();
         List<ActiveTimeInterval> activeList = new ArrayList<>();
         activeList.add(initialActiveInterval);
 
