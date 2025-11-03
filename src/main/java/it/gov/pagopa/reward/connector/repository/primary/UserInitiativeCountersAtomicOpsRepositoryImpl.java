@@ -36,7 +36,7 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
                             Query.query(Criteria
                                     .where(UserInitiativeCounters.Fields.id).is(counterId)),
                             new Update()
-                                    .setOnInsert(UserInitiativeCounters.Fields.entityId, entityId)
+                                    .set(UserInitiativeCounters.Fields.entityId, entityId)
                                     .setOnInsert(UserInitiativeCounters.Fields.entityType, entityType)
                                     .setOnInsert(UserInitiativeCounters.Fields.initiativeId, initiativeId)
                                     .set(UserInitiativeCounters.Fields.version, 0L)
