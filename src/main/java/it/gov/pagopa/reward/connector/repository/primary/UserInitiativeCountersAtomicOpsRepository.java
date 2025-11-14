@@ -12,4 +12,6 @@ public interface UserInitiativeCountersAtomicOpsRepository {
     Mono<UserInitiativeCounters> unlockPendingTrx(String trxId);
     Mono<UserInitiativeCounters> findByPendingTrx(String trxId);
     Mono<UserInitiativeCounters> saveIfVersionNotChanged(UserInitiativeCounters counters);
+
+    Mono<UserInitiativeCounters> updateEntityIdByInitiativeIdAndEntityId(String initiativeId, String entityId, String newEntityId);
 }
