@@ -47,6 +47,6 @@ class RecoveredTrx2RewardTransactionMapperTest {
         // Then
         Assertions.assertEquals(expected, result);
 
-        TestUtils.checkNotNullFields(result,"businessName");
+        TestUtils.checkNotNullFields(result,"businessName","familyId");
     }
 }
