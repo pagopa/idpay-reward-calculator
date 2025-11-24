@@ -47,7 +47,8 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
         if(PAYMENT_STATE_AUTHORIZED.equals(trx.getStatus())
             || PAYMENT_STATE_REWARDED.equals(trx.getStatus())) {
             if (trx.getFamilyId() != null) {
-                return userInitiativeCountersRepository.unlockPendingTrxById(trx.getFamilyId());
+                return userInitiativeCountersRepository.unlockPendingTrxById(trx.getFamilyId()+
+                "-"+trx.getInitiatives().get(0));
             }
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
