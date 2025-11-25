@@ -10,6 +10,7 @@ public interface UserInitiativeCountersAtomicOpsRepository {
     Mono<UpdateResult> createIfNotExists(String entityId, InitiativeGeneralDTO.BeneficiaryTypeEnum entityType, String initiativeId);
     Flux<UserInitiativeCounters> findByInitiativesWithBatch(String initiativeId, int batchSize);
     Mono<UserInitiativeCounters> unlockPendingTrx(String trxId);
+    Mono<UserInitiativeCounters> unlockPendingTrxById(String id);
     Mono<UserInitiativeCounters> findByPendingTrx(String trxId);
     Mono<UserInitiativeCounters> saveIfVersionNotChanged(UserInitiativeCounters counters);
 
