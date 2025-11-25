@@ -46,6 +46,10 @@ public class UserInitiativeCountersUnlockMediatorServiceImpl implements UserInit
         log.info("[USER_COUNTER_UNLOCK] Handle unlock counter on trxId {} with status {} and channel {}",trx.getId(),trx.getStatus(),trx.getChannel());
         if(PAYMENT_STATE_AUTHORIZED.equals(trx.getStatus())
             || PAYMENT_STATE_REWARDED.equals(trx.getStatus())) {
+            if (trx.getFamilyId() != null) {
+                return userInitiativeCountersRepository.unlockPendingTrxById(trx.getFamilyId()+
+                "_"+trx.getInitiativeId());
+            }
             return userInitiativeCountersRepository.unlockPendingTrx(trx.getId());
         }
         return handleUnlockedRejectedType(trx);

@@ -51,7 +51,7 @@ class Transaction2TransactionDroolsMapperTest {
         Assertions.assertNull(result.getInitiatives());
         Assertions.assertEquals(new HashMap<>(), result.getRewards());
 
-        TestUtils.checkNotNullFields(result,"initiatives","businessName");
+        TestUtils.checkNotNullFields(result,"initiatives","businessName","familyId");
     }
 
 }
