@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -70,6 +70,19 @@ public class UserInitiativeCountersAtomicOpsRepositoryImpl implements UserInitia
         return mongoTemplate
                 .findAndModify(
                         Query.query(Criteria.where(PENDING_TRX_ID_FIELD).is(trxId)),
+                        new Update()
+                                .currentDate(UserInitiativeCounters.Fields.updateDate)
+                                .set(UserInitiativeCounters.Fields.pendingTrx, null),
+                        FindAndModifyOptions.options().returnNew(true),
+                        UserInitiativeCounters.class
+                );
+    }
+
+    @Override
+    public Mono<UserInitiativeCounters> unlockPendingTrxById(String id) {
+        return mongoTemplate
+                .findAndModify(
+                        Query.query(Criteria.where("_id").is(id)),
                         new Update()
                                 .currentDate(UserInitiativeCounters.Fields.updateDate)
                                 .set(UserInitiativeCounters.Fields.pendingTrx, null),
