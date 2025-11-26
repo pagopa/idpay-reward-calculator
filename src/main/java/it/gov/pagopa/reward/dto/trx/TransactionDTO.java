@@ -96,6 +96,9 @@ public class TransactionDTO {
     //voucher amount
     private Long voucherAmountCents;
 
+    //region fields added by payment
+    private String familyId;
+
     public String getId() {
         if(this.id == null){
             this.id = computeTrxId(this);
