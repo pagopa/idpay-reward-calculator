@@ -50,10 +50,29 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
         RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
         trx.setStatus(statusAccepted);
         trx.setChannel(TRX_CHANNEL_QRCODE);
-
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
         Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrx(trx.getId()))
                         .thenReturn(Mono.just(userInitiativeCounters));
+
+        UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx).block();
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(userInitiativeCounters, result);
+
+        Mockito.verifyNoMoreInteractions(userInitiativeCountersRepositoryMock);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {PAYMENT_STATE_AUTHORIZED, PAYMENT_STATE_REWARDED})
+    void execute_statusAuthorizedAndRewarded_unlockPendingTrxById(String statusAccepted){
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(1);
+        trx.setStatus(statusAccepted);
+        trx.setChannel(TRX_CHANNEL_QRCODE);
+        trx.setFamilyId("familyId");
+        trx.setInitiativeId("initiativeId");
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        Mockito.when(userInitiativeCountersRepositoryMock.unlockPendingTrxById(trx.getFamilyId()+"_"+trx.getInitiativeId()))
+                .thenReturn(Mono.just(userInitiativeCounters));
 
         UserInitiativeCounters result = userInitiativeCountersUnlockMediatorServiceImpl.execute(trx).block();
 
