@@ -15,6 +15,8 @@ public final class RewardConstants {
     public static final String TRX_CHANNEL_BARCODE = "BARCODE";
     //endregion
 
+    public static final String IDPAYCODE_PREFIX = "IDPAYCODE_";
+
     //region rules' order and default rejection reasons
     /** The order of execution of the trx condition */
     public enum InitiativeTrxConditionOrder {
