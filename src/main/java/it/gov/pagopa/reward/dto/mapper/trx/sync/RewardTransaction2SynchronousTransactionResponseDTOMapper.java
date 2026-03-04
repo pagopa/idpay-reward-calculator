@@ -1,12 +1,14 @@
 package it.gov.pagopa.reward.dto.mapper.trx.sync;
 
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
+import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
@@ -24,11 +26,21 @@ public class RewardTransaction2SynchronousTransactionResponseDTOMapper implement
         out.setAmount(rewardTransactionDTO.getAmount());
         out.setEffectiveAmountCents(rewardTransactionDTO.getEffectiveAmountCents());
         out.setStatus(rewardTransactionDTO.getStatus());
+        out.setRewards(rewardTransactionDTO.getRewards() != null ? rewardTransactionDTO.getRewards() : Map.of());
         if(rewardTransactionDTO.getStatus().equals(RewardConstants.REWARD_STATE_REWARDED)) {
-            out.setReward(rewardTransactionDTO.getRewards().get(initiativeId));
+            Reward reward = out.getRewards().get(initiativeId);
+            out.setReward(reward);
+            if (reward != null && reward.getCounters() != null) {
+                out.setTrxNumber(reward.getCounters().getTrxNumber());
+                out.setTotalAmountCents(reward.getCounters().getTotalAmountCents());
+                out.setTotalRewardCents(reward.getCounters().getTotalRewardCents());
+            }
         } else {
             setRejectionReasons(initiativeId, rewardTransactionDTO, out);
         }
+        if (out.getTrxNumber() == null) out.setTrxNumber(0L);
+        if (out.getTotalAmountCents() == null) out.setTotalAmountCents(0L);
+        if (out.getTotalRewardCents() == null) out.setTotalRewardCents(0L);
         return out;
     }
 

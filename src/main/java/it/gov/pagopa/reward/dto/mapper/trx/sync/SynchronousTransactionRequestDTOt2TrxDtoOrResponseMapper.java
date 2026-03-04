@@ -16,8 +16,6 @@ import java.util.List;
 public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
     private final String chargeOperation;
 
-    private static final String PREFIX_PAYMENT_INSTRUMENT="IDPAY_%s";
-
     public SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(@Value("${app.operationType.charge}") String chargeOperation) {
         this.chargeOperation = chargeOperation;
     }
@@ -30,7 +28,6 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
         out.setAcquirerCode(trx.getAcquirerCode());
         out.setTrxDate(trx.getTrxDate());
-        out.setHpan(getPaymentInstrument(trx.getUserId(), trx.getChannel()));
         out.setOperationType(chargeOperation);
         out.setIdTrxIssuer(trx.getIdTrxIssuer());
         out.setCorrelationId(trx.getTransactionId());
@@ -64,13 +61,10 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setEffectiveAmountCents(request.getAmountCents());
         out.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         out.setRejectionReasons(discardCause);
+        out.setRewards(java.util.Collections.emptyMap());
+        out.setTrxNumber(0L);
+        out.setTotalAmountCents(0L);
+        out.setTotalRewardCents(0L);
         return out;
-    }
-
-    public static String getPaymentInstrument(String userId, String channel){
-        if (RewardConstants.TRX_CHANNEL_IDPAYCODE.equals(channel)){
-            return RewardConstants.TRX_CHANNEL_IDPAYCODE+"_"+userId;
-        }
-        return PREFIX_PAYMENT_INSTRUMENT.formatted(userId);
     }
 }
