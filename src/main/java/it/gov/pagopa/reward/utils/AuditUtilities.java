@@ -20,8 +20,6 @@ public class AuditUtilities {
     private static final String CEF_CORRELATED_PATTERN = CEF_PATTERN + " cs6Label=correlationId cs6={}";
     private static final String CEF_PATTERN_DELETE = CEF_BASE_PATTERN + " cs1Label=initiativeId cs1={}";
     private static final String CEF_BENEFICIARY_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=beneficiaryId cs2={}";
-    private static final String CEF_INSTRUMENTS_COUNT_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=numberInstruments cs2={}";
-    private static final String CEF_INSTRUMENTS_DELETE_PATTERN = CEF_BASE_USER_PATTERN + " cs1Label=hpan cs1={}";
     private static final String CEF_TRANSACTIONS_COUNT_DELETE_PATTERN = CEF_PATTERN_DELETE + " cs2Label=numberTransactions cs2={}";
 
 
@@ -75,24 +73,10 @@ public class AuditUtilities {
         );
     }
 
-    public void logDeletedHpanInitiative(String initiativeId, Long deletedHpanInitiative) {
-        AuditLogger.logAuditString(
-                CEF_INSTRUMENTS_COUNT_DELETE_PATTERN,
-                "Payment instruments deleted.", initiativeId, deletedHpanInitiative.toString()
-        );
-    }
-
     public void logDeletedTransaction(String initiativeId, Long deletedTransactions) {
         AuditLogger.logAuditString(
                 CEF_TRANSACTIONS_COUNT_DELETE_PATTERN,
                 "Transactions deleted.", initiativeId, deletedTransactions.toString()
-        );
-    }
-
-    public void logDeletedHpan(String paymentInstrument, String userId) {
-        AuditLogger.logAuditString(
-                CEF_INSTRUMENTS_DELETE_PATTERN,
-                "Payment instruments without any initiative associate deleted.", userId, paymentInstrument
         );
     }
 
