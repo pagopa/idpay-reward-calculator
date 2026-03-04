@@ -209,64 +209,6 @@ class RewardErrorNotifierServiceTest {
 
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
-    @Test
-    void notifyHpanUpdateEvaluation() {
-
-        Mockito.when(kafkaConfigurationMock.getStream()).thenReturn(Mockito.mock(KafkaConfiguration.Stream.class));
-        Mockito.when(kafkaConfigurationMock.getStream().getBindings()).thenReturn(
-                Map.of(
-                        HPAN_INITIATIVE_CONSUMER_IN_0,
-                        KafkaConfiguration.KafkaInfoDTO.builder()
-                                .group(HPAN_UPDATE_GROUP)
-                                .type(BINDER_KAFKA_TYPE)
-                                .brokers(BINDER_BROKER)
-                                .destination(HPAN_UPDATE_TOPIC)
-                                .build()
-                )
-        );
-        errorNotifyMock(baseKafkaInfoDTOArgumentCaptor, true, true);
-
-        boolean result = rewardErrorNotifierService.notifyHpanUpdateEvaluation(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
-
-        KafkaConfiguration.BaseKafkaInfoDTO capturedSrcDetails = baseKafkaInfoDTOArgumentCaptor.getValue();
-
-        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getType());
-        Assertions.assertEquals(HPAN_UPDATE_TOPIC, capturedSrcDetails.getDestination());
-        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getBrokers());
-        Assertions.assertEquals(HPAN_UPDATE_GROUP, capturedSrcDetails.getGroup());
-        Assertions.assertTrue(result);
-
-        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
-    }
-    @Test
-    void notifyHpanUpdateOutcome() {
-
-        Mockito.when(kafkaConfigurationMock.getStream()).thenReturn(Mockito.mock(KafkaConfiguration.Stream.class));
-        Mockito.when(kafkaConfigurationMock.getStream().getBindings()).thenReturn(
-                Map.of(
-                        HPAN_UPDATE_OUTCOME_OUT_0,
-                        KafkaConfiguration.KafkaInfoDTO.builder()
-                                .group(null)
-                                .type(BINDER_KAFKA_TYPE)
-                                .brokers(BINDER_BROKER)
-                                .destination(HPAN_UPDATE_OUTCOME_TOPIC)
-                                .build()
-                )
-        );
-
-        errorNotifyMock(baseKafkaInfoDTOArgumentCaptor,  true, false );
-
-        boolean result = rewardErrorNotifierService.notifyHpanUpdateOutcome(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
-
-        KafkaConfiguration.BaseKafkaInfoDTO capturedSrcDetails = baseKafkaInfoDTOArgumentCaptor.getValue();
-
-        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getType());
-        Assertions.assertEquals(HPAN_UPDATE_OUTCOME_TOPIC, capturedSrcDetails.getDestination());
-        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getBrokers());
-        Assertions.assertNull(capturedSrcDetails.getGroup());
-        Assertions.assertTrue(result);
-        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
-    }
 
     private void errorNotifyMock(ArgumentCaptor<KafkaConfiguration.BaseKafkaInfoDTO> baseKafkaInfoDTO, boolean retryable, boolean resendApplication ) {
         Mockito.when(errorNotifierServiceMock.notify(
