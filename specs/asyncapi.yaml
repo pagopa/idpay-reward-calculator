@@ -15,12 +15,6 @@ tags:
     description: "captures the initiative creation event"
   - name: "rewardRuleNotifyError"
     description: "captures the initiative creation event error"
-  - name: "hpanInitiativeConsumer"
-    description: "Captures the payment instrument number"
-  - name: "hpanInitiativeNotifyError"
-    description: "captures the evaluation of the HPAN update initiative error"
-  - name: "hpanUpdateOutcome"
-    description: "Returns the status after registering the payment instruments"
   - name: "trxResubmitter"
     description: "Reevaluate chargeback transactions that arrived before debit transactions"
   - name: "trxResponseConsumer"
@@ -75,33 +69,6 @@ channels:
           topic: idpay-error
       tags:
         - name: "rewardRuleNotifyError"
-  reward-calculator-hpan-initiative-consumer:
-    subscribe:
-      message:
-        $ref: '#/components/messages/HpanUpdateEvaluation'
-      bindings:
-        kafka:
-          topic: idpay-hpan-update
-      tags:
-        - name: "hpanInitiativeConsumer"
-  reward-calculator-hpan-initiative-error:
-    publish:
-      message:
-        $ref: '#/components/messages/HpanUpdateEvaluationError'
-      bindings:
-        kafka:
-          topic: idpay-error
-      tags:
-        - name: "hpanInitiativeNotifyError"
-  reward-calculator-hpan-update-outcome:
-    publish:
-      message:
-        $ref: '#/components/messages/HpanInitiativeExecution'
-      bindings:
-        kafka:
-          topic: idpay-hpan-update-outcome
-      tags:
-        - name: "hpanUpdateOutcome"
   reward-calculator-trx-resubmitter:
     publish:
       message:
@@ -181,31 +148,6 @@ components:
         oneOf:
           - $ref: "#/components/schemas/TransactionProcessed"
           - $ref: "https://raw.githubusercontent.com/pagopa/idpay-reward-user-id-splitter/main/specs/asyncapi.yaml#/components/schemas/TransactionEnrichedDTO"
-    HpanUpdateEvaluation:
-      contentType: application/json
-      description: >-
-        Receive information about HPAN update initiative evaluation
-      summary: Information about HPAN update evaluation
-      payload:
-        $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/main/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
-    HpanUpdateEvaluationError:
-      contentType: application/json
-      description: >-
-        An error occurred during the evaluation of the HPAN update initiative
-      summary: Informs of HPAN update evaluation error
-      headers:
-        $ref: "#/components/schemas/ErrorQueueHeader"
-      payload:
-        oneOf:
-          - $ref: "https://raw.githubusercontent.com/pagopa/idpay-payment-instrument/main/specs/asyncapi.yml#/components/schemas/RuleEngineRequestDTO"
-          - $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
-    HpanInitiativeExecution:
-      contentType: application/json
-      description: >-
-        Send result of execution of the HPAN initiative
-      summary: Informs of HPAN initiative execution
-      payload:
-        $ref: "#/components/schemas/HpanUpdateOutcomeDTO"
     TrxResubmitter:
       contentType: application/json
       description: Reevaluate chargeback transactions that arrived before debit transactions
