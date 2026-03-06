@@ -11,9 +11,10 @@ import reactor.core.publisher.Flux;
 @Configuration
 @Slf4j
 public class OnboardingConsumerConfig {
-    @Bean
-    public Consumer<Flux<Message<String>>> onboardingOutcome(
-        OnboardingOutcomeMediatorService onboardingConsumer){
-        return onboardingConsumer::execute;
-    }
+
+  @Bean
+  public Consumer<Flux<Message<String>>> onboardingOutcome(
+      OnboardingOutcomeMediatorService onboardingConsumer) {
+    return onboardingConsumer::execute;
+  }
 }
