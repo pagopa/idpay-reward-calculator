@@ -1,7 +1,11 @@
 package it.gov.pagopa.reward.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
 import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
 import it.gov.pagopa.reward.config.KafkaConfiguration;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,10 +16,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-
-import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class RewardErrorNotifierServiceTest {
@@ -30,9 +30,7 @@ class RewardErrorNotifierServiceTest {
     private static final String TRANSACTIONS_TOPIC = "trx-topic";
     private static final String TRANSACTIONS_GROUP = "trx-Group";
     private static final String TRANSACTION_REWARDED_TOPIC = "trx-reward-topic";
-    private static final String HPAN_UPDATE_TOPIC = "hpan-update-topic";
-    private static final String HPAN_UPDATE_GROUP = "hpan-update-group";
-    private static final String HPAN_UPDATE_OUTCOME_TOPIC = "hpanUpdateOutcome-topic";
+
     private static final String COMMANDS_TOPIC ="commands-topic";
     private static final String COMMANDS_GROUP ="commands-group";
     private static final Message<String> dummyMessage = MessageBuilder.withPayload(DUMMY_MESSAGE).build();
@@ -40,10 +38,8 @@ class RewardErrorNotifierServiceTest {
     private final static String REWARD_RULE_CONSOMER_IN_0 = "rewardRuleConsumer-in-0";
     private final static String TRX_PROCESSOR_IN_0 = "trxProcessor-in-0";
     private final static String TRX_PROCESSOR_OUT_0 = "trxProcessorOut-out-0";
-    private final static String HPAN_INITIATIVE_CONSUMER_IN_0 = "hpanInitiativeConsumer-in-0";
     private final static String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
     private final static String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
-    private final static String HPAN_UPDATE_OUTCOME_OUT_0 = "hpanUpdateOutcome-out-0";
 
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;

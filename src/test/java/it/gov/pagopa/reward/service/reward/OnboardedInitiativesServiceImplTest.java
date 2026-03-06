@@ -33,8 +33,6 @@ class OnboardedInitiativesServiceImplTest {
 
     private OnboardedInitiativesService onboardedInitiativesService;
 
-    private final OffsetDateTime trxDate = OffsetDateTime.now().plusDays(6L);
-
     @BeforeEach
     public void init(){
         onboardedInitiativesService = new OnboardedInitiativesServiceImpl(

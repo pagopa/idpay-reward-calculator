@@ -1,6 +1,7 @@
 package it.gov.pagopa.reward.connector.rest.onboarding;
 
-import it.gov.pagopa.reward.dto.onboarding.OnboardingStatusResponseDTO;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -11,8 +12,6 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class OnboardingWorkflowConnectorImplTest {
 
