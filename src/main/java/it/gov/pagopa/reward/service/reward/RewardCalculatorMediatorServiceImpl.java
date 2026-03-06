@@ -5,34 +5,28 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaBlockingPartitionConsumer;
 import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.reward.dto.InitiativeConfig;
-import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
-import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
 import it.gov.pagopa.reward.service.reward.ops.OperationTypeHandlerService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import it.gov.pagopa.reward.utils.Utils;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -41,9 +35,6 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
     private final TransactionProcessedService transactionProcessedService;
     private final OperationTypeHandlerService operationTypeHandlerService;
     private final TransactionValidatorService transactionValidatorService;
-    private final OnboardedInitiativesService onboardedInitiativesService;
-    private final InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService;
-    private final Transaction2RewardTransactionMapper rewardTransactionMapper;
     private final RewardNotifierService rewardNotifierService;
     private final RewardErrorNotifierService rewardErrorNotifierService;
 
@@ -59,9 +50,6 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
             TransactionProcessedService transactionProcessedService,
             OperationTypeHandlerService operationTypeHandlerService,
             TransactionValidatorService transactionValidatorService,
-            OnboardedInitiativesService onboardedInitiativesService,
-            InitiativesEvaluatorFacadeService initiativesEvaluatorFacadeService,
-            Transaction2RewardTransactionMapper rewardTransactionMapper,
             RewardNotifierService rewardNotifierService,
             RewardErrorNotifierService rewardErrorNotifierService,
             AuditUtilities auditUtilities,
@@ -73,9 +61,6 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
         this.transactionProcessedService = transactionProcessedService;
         this.operationTypeHandlerService = operationTypeHandlerService;
         this.transactionValidatorService = transactionValidatorService;
-        this.onboardedInitiativesService = onboardedInitiativesService;
-        this.rewardTransactionMapper = rewardTransactionMapper;
-        this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
         this.rewardNotifierService = rewardNotifierService;
         this.rewardErrorNotifierService = rewardErrorNotifierService;
         this.commitDelay = Duration.ofMillis(commitMillis);

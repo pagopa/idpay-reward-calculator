@@ -5,12 +5,10 @@ import it.gov.pagopa.common.reactive.service.LockService;
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.enums.InitiativeRewardType;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.evaluate.InitiativesEvaluatorFacadeService;
@@ -20,10 +18,19 @@ import it.gov.pagopa.reward.service.reward.trx.TransactionValidatorService;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import it.gov.pagopa.reward.utils.RewardConstants;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +38,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.Invocation;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -39,14 +45,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @ExtendWith(MockitoExtension.class)
 class RewardCalculatorMediatorServiceImplTest {
@@ -80,9 +78,6 @@ class RewardCalculatorMediatorServiceImplTest {
                 transactionProcessedServiceMock,
                 operationTypeHandlerServiceMock,
                 transactionValidatorServiceMock,
-                onboardedInitiativesServiceMock,
-                initiativesEvaluatorFacadeServiceMock,
-                rewardTransactionMapper,
                 rewardNotifierServiceMock,
                 rewardErrorNotifierServiceMock,
                 auditUtilitiesMock,
