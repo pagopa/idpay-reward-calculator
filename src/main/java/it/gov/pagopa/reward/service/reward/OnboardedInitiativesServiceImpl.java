@@ -1,5 +1,7 @@
 package it.gov.pagopa.reward.service.reward;
 
+import static it.gov.pagopa.reward.utils.Utils.sanitizeString;
+
 import it.gov.pagopa.reward.connector.rest.onboarding.OnboardingWorkflowConnector;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
@@ -29,19 +31,16 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
     @Override
     public Mono<Pair<InitiativeConfig, OnboardingInfo>> isOnboarded(String userId, OffsetDateTime trxDate, String initiativeId) {
-        log.debug("[REWARD][IS_ONBOARDED] Checking onboarding status via REST for userId: {}, initiativeId: {}", userId, initiativeId);
-        return onboardingWorkflowConnector.getOnboardingStatus(userId, initiativeId)
+        var safeUserId = sanitizeString(userId);
+        var safeInitiativeId = sanitizeString(initiativeId);
+        log.debug("[REWARD][IS_ONBOARDED] Checking onboarding status via REST for userId: {}, initiativeId: {}", safeUserId, safeInitiativeId);
+        return onboardingWorkflowConnector.getOnboardingStatus(safeUserId, safeInitiativeId)
                 .filter(response -> "ONBOARDING_OK".equals(response.status()))
-                .flatMap(response -> rewardContextHolderService.getInitiativeConfig(initiativeId)
+                .flatMap(response -> rewardContextHolderService.getInitiativeConfig(safeInitiativeId)
                         .filter(initiativeConfig -> checkInitiativeValidity(initiativeConfig, trxDate))
                         .map(initiativeConfig -> Pair.of(initiativeConfig,
                             // TODO in case it's not NF the familyId is not present in the response. is correct to set it as null?
-                            new BaseOnboardingInfo(initiativeId, response.familyId()))));
-    }
-
-    /** true if > 0 */
-    private boolean isPositive(Long value) {
-        return 0L < value;
+                            new BaseOnboardingInfo(safeInitiativeId, response.familyId()))));
     }
 
     private boolean checkInitiativeValidity(InitiativeConfig initiativeConfig, OffsetDateTime trxDate) {
