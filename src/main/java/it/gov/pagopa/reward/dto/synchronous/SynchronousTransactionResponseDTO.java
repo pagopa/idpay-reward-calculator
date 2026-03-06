@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -26,6 +27,9 @@ public class SynchronousTransactionResponseDTO implements ServiceExceptionPayloa
     private Long effectiveAmountCents;
     private String status;
     private Reward reward;
-    //TODO counterVersion?
+    private Map<String, Reward> rewards;
+    private Long trxNumber;
+    private Long totalAmountCents;
+    private Long totalRewardCents;
     private List<String> rejectionReasons;
 }

@@ -1,18 +1,13 @@
 package it.gov.pagopa.reward.service.build;
 
-import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
-import it.gov.pagopa.reward.dto.HpanInitiativeBulkDTO;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.model.DroolsRule;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativeBulkDTOFaker;
 import it.gov.pagopa.reward.test.fakers.InitiativeReward2BuildDTOFaker;
-import it.gov.pagopa.reward.utils.HpanInitiativeConstants;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,7 +22,6 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -114,51 +108,6 @@ class RewardRuleMediatorServiceImplTest {
         Mockito.verify(kieContainerBuilderServiceMock, Mockito.atLeast(1)).buildAll();
         Mockito.verify(rewardContextHolderServiceMock, Mockito.atLeast(1)).setRewardRulesKieBase(Mockito.same(newKieBaseBuiltMock));
         Mockito.verifyNoInteractions(rewardErrorNotifierServiceMock);
-    }
-
-    @Test
-    @Disabled("TODO - Check to be updated after inactive removal as an error status")
-    void otherApplicationRetryTest(){
-        // Given
-        RewardRuleMediatorService rewardRuleMediatorService = new RewardRuleMediatorServiceImpl(
-                "appName",
-                1000L,
-                "PT1S",
-                rewardRule2DroolsRuleServiceMock,
-                droolsRuleRepositoryMock,
-                kieContainerBuilderServiceMock,
-                rewardContextHolderServiceMock,
-                rewardErrorNotifierServiceMock,
-                TestUtils.objectMapper);
-
-        Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));
-
-        HpanInitiativeBulkDTO initiative1 = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(1)
-                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
-                .operationDate(LocalDateTime.now()).build();
-        HpanInitiativeBulkDTO initiative2 = HpanInitiativeBulkDTOFaker.mockInstanceBuilder(2)
-                .operationType(HpanInitiativeConstants.OPERATION_ADD_INSTRUMENT)
-                .operationDate(LocalDateTime.now()).build();
-
-
-        Flux<Message<String>> msgs = Flux.just(initiative1, initiative2)
-                .map(TestUtils::jsonSerializer)
-                .map(payload -> MessageBuilder
-                        .withPayload(payload)
-                        .setHeader(KafkaHeaders.RECEIVED_PARTITION, 0)
-                        .setHeader(KafkaHeaders.OFFSET, 0L)
-                )
-                .doOnNext(m->m.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, "otherAppName".getBytes(StandardCharsets.UTF_8)))
-                .map(MessageBuilder::build);
-
-        // When
-        rewardRuleMediatorService.execute(msgs);
-
-        // Then
-        Mockito.verify(kieContainerBuilderServiceMock,Mockito.atLeast(1)).buildAll();
-        Mockito.verify(rewardContextHolderServiceMock, Mockito.atLeast(1)).setRewardRulesKieBase(newKieBaseBuiltMock);
-
-        Mockito.verifyNoInteractions(rewardRule2DroolsRuleServiceMock, droolsRuleRepositoryMock, rewardErrorNotifierServiceMock);
     }
 
     @Test

@@ -61,10 +61,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setEffectiveAmountCents(request.getAmountCents());
         out.setStatus(RewardConstants.REWARD_STATE_REJECTED);
         out.setRejectionReasons(discardCause);
-        out.setRewards(java.util.Collections.emptyMap());
-        out.setTrxNumber(0L);
-        out.setTotalAmountCents(0L);
-        out.setTotalRewardCents(0L);
         return out;
     }
+
 }

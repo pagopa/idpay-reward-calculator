@@ -46,6 +46,10 @@ class TransactionProcessed2SyncTrxResponseDTOMapperTest {
         Assertions.assertEquals(transactionProcessed.getEffectiveAmountCents(), result.getEffectiveAmountCents());
         Assertions.assertEquals(transactionProcessed.getStatus(), result.getStatus());
         Assertions.assertEquals(reward, result.getReward());
+        Assertions.assertEquals(transactionProcessed.getRewards(), result.getRewards());
+        Assertions.assertEquals(0L, result.getTrxNumber());
+        Assertions.assertEquals(0L, result.getTotalAmountCents());
+        Assertions.assertEquals(0L, result.getTotalRewardCents());
         TestUtils.checkNotNullFields(result, "rejectionReasons");
     }
 

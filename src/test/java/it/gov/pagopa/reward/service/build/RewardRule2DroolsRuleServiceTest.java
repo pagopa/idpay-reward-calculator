@@ -365,7 +365,7 @@ public class RewardRule2DroolsRuleServiceTest {
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
 
         if(counters==null){
-            counters = new UserInitiativeCountersWrapper(trx.getHpan(), new HashMap<>());
+            counters = new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>());
         }
 
         @SuppressWarnings("unchecked")

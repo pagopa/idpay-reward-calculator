@@ -10,9 +10,9 @@ import reactor.core.publisher.Mono;
 import java.time.OffsetDateTime;
 
 /**
- * This component will retrieve initiatives to which the input hpan has been enabled
+ * This component will retrieve initiatives to which the input userId has been onboarded
  * */
 public interface OnboardedInitiativesService {
     Flux<InitiativeConfig> getInitiatives(TransactionDTO trx);
-    Mono<Pair<InitiativeConfig, OnboardingInfo>> isOnboarded(String hpan, OffsetDateTime trxDate, String initiativeId);
+    Mono<Pair<InitiativeConfig, OnboardingInfo>> isOnboarded(String userId, OffsetDateTime trxDate, String initiativeId);
 }

@@ -1,18 +1,18 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.repository.secondary.UserInitiativesRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
+import it.gov.pagopa.reward.enums.OnboardingStatus;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.HpanInitiatives;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.OnboardingInfo;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
+import it.gov.pagopa.reward.model.UserInitiatives;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import it.gov.pagopa.reward.test.fakers.UserInitiativesFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,18 +34,16 @@ import java.util.Map;
 @Slf4j
 class OnboardedInitiativesServiceImplTest {
 
-    @Mock private HpanInitiativesRepository hpanInitiativesRepositoryMock;
+    @Mock private UserInitiativesRepository userInitiativesRepositoryMock;
     @Mock private RewardContextHolderService rewardContextHolderServiceMock;
 
     private OnboardedInitiativesService onboardedInitiativesService;
 
-
-    private final String hpan = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
     private final OffsetDateTime trxDate = OffsetDateTime.now().plusDays(6L);
 
     @BeforeEach
     public void init(){
-        onboardedInitiativesService = new OnboardedInitiativesServiceImpl(hpanInitiativesRepositoryMock, rewardContextHolderServiceMock);
+        onboardedInitiativesService = new OnboardedInitiativesServiceImpl(userInitiativesRepositoryMock, rewardContextHolderServiceMock);
     }
 
     @Test
@@ -91,25 +89,24 @@ class OnboardedInitiativesServiceImplTest {
         if(trxDateTime == null){
             trxDateTime = OffsetDateTime.now().plusDays(10L);
         }
-        TransactionDTO trx = buildTrx(trxDateTime, hpan);
-
-        testGetInitiativesPrivateMethod(trx,initiativeStartDate, initiativeEndDate, expectSuccess);
+        TransactionDTO trx = buildTrx(trxDateTime);
+        testGetInitiativesPrivateMethod(trx, initiativeStartDate, initiativeEndDate, expectSuccess);
     }
+
     void testGetInitiativesPrivateMethod(TransactionDTO trx, LocalDate initiativeStartDate, LocalDate initiativeEndDate, boolean expectSuccess) {
         // Given
         Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
+        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstance(bias);
 
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
+        Mockito.when(userInitiativesRepositoryMock.findById(Mockito.same(trx.getUserId()))).thenReturn(Mono.just(userInitiatives));
 
-        final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
+        final String mockedInitiativeId = userInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(
                 Mono.just(InitiativeConfig.builder()
                         .initiativeId(mockedInitiativeId)
                         .startDate(initiativeStartDate)
                         .endDate(initiativeEndDate)
                         .build()));
-
 
         // When
         List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
@@ -118,72 +115,71 @@ class OnboardedInitiativesServiceImplTest {
 
         // Then
         if(expectSuccess) {
-            Mockito.verify(hpanInitiativesRepositoryMock).findById(Mockito.same(hpan));
+            Mockito.verify(userInitiativesRepositoryMock).findById(Mockito.same(trx.getUserId()));
             Assertions.assertEquals(1, resultIds.size());
             Assertions.assertTrue(resultIds.contains(String.format("INITIATIVE_%d", bias)));
         } else {
-            checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
+            checkInitiativeNotFound(userInitiativesRepositoryMock, trx, result);
         }
     }
 
-    private TransactionDTO buildTrx(OffsetDateTime trxDateTime, String hpan) {
+    private TransactionDTO buildTrx(OffsetDateTime trxDateTime) {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setTrxChargeDate(trxDateTime);
-        trx.setHpan(hpan);
         return trx;
     }
 
     @Test
     void getInitiativesHpanNotFound() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
 
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.empty());
+        Mockito.when(userInitiativesRepositoryMock.findById(Mockito.same(trx.getUserId()))).thenReturn(Mono.empty());
 
         // When
         List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
+        checkInitiativeNotFound(userInitiativesRepositoryMock, trx, result);
     }
 
-    private void checkInitiativeNotFound(HpanInitiativesRepository hpanInitiativesRepository, String hpanMock, List<InitiativeConfig> result) {
-        Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
+    private void checkInitiativeNotFound(UserInitiativesRepository userInitiativesRepository, TransactionDTO trx, List<InitiativeConfig> result) {
+        Mockito.verify(userInitiativesRepository).findById(Mockito.same(trx.getUserId()));
         Assertions.assertTrue(result.isEmpty());
     }
 
     @Test
     void getNotOnboardedInitiatives() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
 
         Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
+        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstanceWithoutInitiative(bias);
 
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
+        Mockito.when(userInitiativesRepositoryMock.findById(Mockito.same(trx.getUserId()))).thenReturn(Mono.just(userInitiatives));
 
         // When
         List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
+        checkInitiativeNotFound(userInitiativesRepositoryMock, trx, result);
     }
 
     @Test
     void getNotIntitiaveTrxNotInActiveInterval() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
 
         Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceNotInActiveInterval(bias);
+        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstanceNotInActiveInterval(bias);
 
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
+        Mockito.when(userInitiativesRepositoryMock.findById(Mockito.same(trx.getUserId()))).thenReturn(Mono.just(userInitiatives));
 
-        final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
+        final String mockedInitiativeId = userInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build()));
 
         // When
@@ -191,13 +187,13 @@ class OnboardedInitiativesServiceImplTest {
         Assertions.assertNotNull(result);
 
         // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
+        checkInitiativeNotFound(userInitiativesRepositoryMock, trx, result);
     }
 
     @Test
     void getCompleteReverseNoChargeRewarded() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmountCents(0L);
 
@@ -212,7 +208,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void getCompleteReverse() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         trx.setEffectiveAmountCents(0L);
         trx.setRefundInfo(new RefundInfo());
@@ -231,7 +227,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void getPartialReverseCapped() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
 
         testGetInitiativesPrivateMethod(trx, null, null, true);
@@ -243,8 +239,8 @@ class OnboardedInitiativesServiceImplTest {
         OffsetDateTime trxDate = OffsetDateTime.now();
         String initiativeId = "INITIATIVEID";
         LocalDate now = LocalDate.now();
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstance(1);
+        Mockito.when(userInitiativesRepositoryMock.findById(userInitiatives.getUserId())).thenReturn(Mono.just(userInitiatives));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVE_1")
@@ -253,7 +249,7 @@ class OnboardedInitiativesServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE_1")).thenReturn(Mono.just(initiativeConfig));
         // When
-        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(userInitiatives.getUserId(), trxDate, initiativeId).block();
         // Then
         Assertions.assertNull(result);
     }
@@ -263,10 +259,10 @@ class OnboardedInitiativesServiceImplTest {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
         LocalDate now = LocalDate.now();
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
-        hpanInitiatives.getOnboardedInitiatives().get(0).setFamilyId("FAMILY_ID");
-        String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstance(1);
+        userInitiatives.getOnboardedInitiatives().get(0).setFamilyId("FAMILY_ID");
+        String initiativeId = userInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
+        Mockito.when(userInitiativesRepositoryMock.findById(userInitiatives.getUserId())).thenReturn(Mono.just(userInitiatives));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
@@ -276,9 +272,9 @@ class OnboardedInitiativesServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
         // When
-        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(userInitiatives.getUserId(), trxDate, initiativeId).block();
         // Then
-        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, hpanInitiatives.getOnboardedInitiatives().get(0));
+        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, userInitiatives.getOnboardedInitiatives().get(0));
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expectedPair, result);
     }
@@ -286,23 +282,23 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void onboardedInitiativeInactive(){
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        TransactionDTO trx = buildTrx(trxDate);
 
         Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
+        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstanceWithoutInitiative(bias);
         OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
                 .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status(HpanInitiativeStatus.INACTIVE)
+                .status(OnboardingStatus.INACTIVE)
                 .activeTimeIntervals(new ArrayList<>()).build();
-        hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
+        userInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
 
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
+        Mockito.when(userInitiativesRepositoryMock.findById(Mockito.same(trx.getUserId()))).thenReturn(Mono.just(userInitiatives));
 
         // When
         List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
         Assertions.assertNotNull(result);
 
         // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
+        checkInitiativeNotFound(userInitiativesRepositoryMock, trx, result);
     }
 }

@@ -52,7 +52,6 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());
         Assertions.assertSame(trx.getTrxDate(), result.getTrxDate());
-        Assertions.assertSame(trx.getHpan(), result.getHpan());
         Assertions.assertSame(trx.getOperationType(), result.getOperationType());
         Assertions.assertSame(trx.getCircuitType(), result.getCircuitType());
         Assertions.assertSame(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
@@ -74,9 +73,6 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getRejectionReasons(), result.getRejectionReasons());
         Assertions.assertSame(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
         Assertions.assertSame(trx.getUserId(), result.getUserId());
-        Assertions.assertSame(trx.getMaskedPan(), result.getMaskedPan());
-        Assertions.assertSame(trx.getBrandLogo(), result.getBrandLogo());
-        Assertions.assertSame(trx.getBrand(), result.getBrand());
         Assertions.assertSame(trx.getChannel(), result.getChannel());
         Assertions.assertSame(trx.getRuleEngineTopicPartition(), result.getRuleEngineTopicPartition());
         Assertions.assertSame(trx.getRuleEngineTopicOffset(), result.getRuleEngineTopicOffset());
