@@ -2,12 +2,15 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.repository.secondary.UserInitiativesRepository;
+import it.gov.pagopa.reward.connector.rest.onboarding.OnboardingWorkflowConnector;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
+import it.gov.pagopa.reward.dto.onboarding.OnboardingStatusResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OnboardingStatus;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.model.UserInitiatives;
@@ -36,6 +39,7 @@ class OnboardedInitiativesServiceImplTest {
 
     @Mock private UserInitiativesRepository userInitiativesRepositoryMock;
     @Mock private RewardContextHolderService rewardContextHolderServiceMock;
+    @Mock private OnboardingWorkflowConnector onboardingWorkflowConnectorMock;
 
     private OnboardedInitiativesService onboardedInitiativesService;
 
@@ -43,7 +47,10 @@ class OnboardedInitiativesServiceImplTest {
 
     @BeforeEach
     public void init(){
-        onboardedInitiativesService = new OnboardedInitiativesServiceImpl(userInitiativesRepositoryMock, rewardContextHolderServiceMock);
+        onboardedInitiativesService = new OnboardedInitiativesServiceImpl(
+                userInitiativesRepositoryMock,
+                rewardContextHolderServiceMock,
+                onboardingWorkflowConnectorMock);
     }
 
     @Test
@@ -234,35 +241,112 @@ class OnboardedInitiativesServiceImplTest {
     }
 
     @Test
-    void isOnboardedEmpty() {
+    void isOnboarded_emptyWhenStatusNotOk() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
-        String initiativeId = "INITIATIVEID";
-        LocalDate now = LocalDate.now();
-        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstance(1);
-        Mockito.when(userInitiativesRepositoryMock.findById(userInitiatives.getUserId())).thenReturn(Mono.just(userInitiatives));
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
 
-        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
-                .initiativeId("INITIATIVE_1")
-                .startDate(now.minusYears(5L))
-                .startDate(now.plusYears(5L))
-                .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE_1")).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_KO", null)));
+
         // When
-        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(userInitiatives.getUserId(), trxDate, initiativeId).block();
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+        Mockito.verify(onboardingWorkflowConnectorMock).getOnboardingStatus(userId, initiativeId);
+        Mockito.verifyNoInteractions(rewardContextHolderServiceMock);
+    }
+
+    @Test
+    void isOnboarded_emptyWhenConnectorReturnsEmpty() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.empty());
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+        Mockito.verifyNoInteractions(rewardContextHolderServiceMock);
+    }
+
+    @Test
+    void isOnboarded_emptyWhenInitiativeDatesInvalid() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        LocalDate now = LocalDate.now();
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null)));
+
+        // initiative already ended yesterday
+        InitiativeConfig expiredConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .startDate(now.minusYears(5L))
+                .endDate(now.minusDays(1L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(expiredConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
         // Then
         Assertions.assertNull(result);
     }
 
     @Test
-    void isOnboardedOK_withFamilyId() {
+    void isOnboarded_ok() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
         LocalDate now = LocalDate.now();
-        UserInitiatives userInitiatives = UserInitiativesFaker.mockInstance(1);
-        userInitiatives.getOnboardedInitiatives().get(0).setFamilyId("FAMILY_ID");
-        String initiativeId = userInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(userInitiativesRepositoryMock.findById(userInitiatives.getUserId())).thenReturn(Mono.just(userInitiatives));
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null)));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(initiativeConfig, result.getFirst());
+        Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, null), result.getSecond());
+    }
+
+    @Test
+    void isOnboarded_ok_withFamilyId() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        String familyId = "FAMILY_1";
+        LocalDate now = LocalDate.now();
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", familyId)));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
@@ -270,13 +354,17 @@ class OnboardedInitiativesServiceImplTest {
                 .startDate(now.minusYears(5L))
                 .endDate(now.plusYears(5L))
                 .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
         // When
-        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(userInitiatives.getUserId(), trxDate, initiativeId).block();
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
         // Then
-        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, userInitiatives.getOnboardedInitiatives().get(0));
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedPair, result);
+        Assertions.assertEquals(initiativeConfig, result.getFirst());
+        Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, familyId), result.getSecond());
     }
 
     @Test

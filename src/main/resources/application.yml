@@ -296,6 +296,10 @@ logging:
     org.apache.kafka: WARN
     org.springframework.boot.autoconfigure: WARN
 
+rest-client:
+  onboarding-workflow:
+    base-url: ${ONBOARDING_WORKFLOW_BASE_URL:http://idpay-onboarding-workflow}
+
 app:
   reward-rule:
     # if true, it will try to build each rule singularly, but this will take more time

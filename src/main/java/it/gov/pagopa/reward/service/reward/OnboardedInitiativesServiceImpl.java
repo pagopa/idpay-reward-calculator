@@ -2,11 +2,13 @@ package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.connector.repository.secondary.UserInitiativesRepository;
+import it.gov.pagopa.reward.connector.rest.onboarding.OnboardingWorkflowConnector;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OnboardingStatus;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
@@ -25,10 +27,15 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
     private final UserInitiativesRepository userInitiativesRepository;
     private final RewardContextHolderService rewardContextHolderService;
+    private final OnboardingWorkflowConnector onboardingWorkflowConnector;
 
-    public OnboardedInitiativesServiceImpl(UserInitiativesRepository userInitiativesRepository, RewardContextHolderService rewardContextHolderService){
+    public OnboardedInitiativesServiceImpl(
+            UserInitiativesRepository userInitiativesRepository,
+            RewardContextHolderService rewardContextHolderService,
+            OnboardingWorkflowConnector onboardingWorkflowConnector) {
         this.userInitiativesRepository = userInitiativesRepository;
         this.rewardContextHolderService = rewardContextHolderService;
+        this.onboardingWorkflowConnector = onboardingWorkflowConnector;
     }
 
     @Override
@@ -49,8 +56,14 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
 
     @Override
     public Mono<Pair<InitiativeConfig, OnboardingInfo>> isOnboarded(String userId, OffsetDateTime trxDate, String initiativeId) {
-        return getInitiativesByUserId(userId, trxDate, Set.of(initiativeId))
-                .singleOrEmpty();
+        log.debug("[REWARD][IS_ONBOARDED] Checking onboarding status via REST for userId: {}, initiativeId: {}", userId, initiativeId);
+        return onboardingWorkflowConnector.getOnboardingStatus(userId, initiativeId)
+                .filter(response -> "ONBOARDING_OK".equals(response.status()))
+                .flatMap(response -> rewardContextHolderService.getInitiativeConfig(initiativeId)
+                        .filter(initiativeConfig -> checkInitiativeValidity(initiativeConfig, trxDate))
+                        .map(initiativeConfig -> Pair.of(initiativeConfig,
+                            // TODO in case it's not NF the familyId is not present in the response. is correct to set it as null?
+                                (OnboardingInfo) new BaseOnboardingInfo(initiativeId, response.familyId()))));
     }
 
     public Flux<Pair<InitiativeConfig, OnboardingInfo>> getInitiativesByUserId(String userId, OffsetDateTime trxDate, Set<String> initiatives) {
