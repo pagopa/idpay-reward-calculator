@@ -152,7 +152,6 @@ class RewardCalculatorMediatorServiceImplTest {
         verifyLockAcquireReleaseCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicated, trxDuplicatedCorrelationId);
         verifyDuplicateCheckCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicated, trxDuplicatedCorrelationId);
         verifyOperationTypeCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicatedCorrelationId);
-        verifyOnboardedInitiativeCalls(trx, trxPartialRefund);
         verifyInitiativeEvaluatorCalls(expectedInitiatives, trx, trxPartialRefund);
         verifyRewardNotifyCalls(trx, trxInvalidOpType, trxInvalidAmount, trxPartialRefund, trxTotalRefund, trxDuplicatedCorrelationId);
 
@@ -205,16 +204,6 @@ class RewardCalculatorMediatorServiceImplTest {
         Mockito.when(transactionValidatorServiceMock.validate(Mockito.any())).thenAnswer(i -> i.getArgument(0));
 
         Mockito.when(initiativesEvaluatorFacadeServiceMock.evaluateAndUpdateBudget(Mockito.any(), Mockito.any())).thenAnswer(i -> Mono.just(rewardTransactionMapper.apply(i.getArgument(0))));
-
-        Mockito.when(onboardedInitiativesServiceMock.getInitiatives(Mockito.any()))
-                .thenReturn(Flux.fromIterable(initiatives)
-                        .map(i -> {
-                            InitiativeConfig o = new InitiativeConfig();
-                            o.setInitiativeId(i);
-                            o.setInitiativeRewardType(InitiativeRewardType.REFUND);
-                            return o;
-                        })
-                        .concatWith(Mono.just(InitiativeConfig.builder().initiativeId("SYNCINITIATIVE").initiativeRewardType(InitiativeRewardType.DISCOUNT).build())));
 
         Mockito.when(operationTypeHandlerServiceMock.handleOperationType(trxInvalidOpType)).thenAnswer(i -> {
             final TransactionDTO t = i.getArgument(0);
@@ -292,12 +281,6 @@ class RewardCalculatorMediatorServiceImplTest {
     private void verifyOperationTypeCalls(TransactionDTO... expectedTrxs) {
         for (TransactionDTO t : expectedTrxs) {
             Mockito.verify(operationTypeHandlerServiceMock).handleOperationType(t);
-        }
-    }
-
-    private void verifyOnboardedInitiativeCalls(TransactionDTO... expectedTrxs) {
-        for (TransactionDTO t : expectedTrxs) {
-            Mockito.verify(onboardedInitiativesServiceMock).getInitiatives(t);
         }
     }
 

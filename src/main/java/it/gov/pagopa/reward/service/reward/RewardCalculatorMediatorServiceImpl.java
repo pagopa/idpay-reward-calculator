@@ -153,19 +153,21 @@ public class RewardCalculatorMediatorServiceImpl extends BaseKafkaBlockingPartit
         return "REWARD";
     }
 
+    // ONLY FOR REFUND INITIATIVES
     private Mono<RewardTransactionDTO> retrieveInitiativesAndEvaluate(TransactionDTO trx) {
-        if (CollectionUtils.isEmpty(trx.getRejectionReasons())) {
-            return onboardedInitiativesService.getInitiatives(trx)
-                    .filter(i-> InitiativeRewardType.REFUND.equals(i.getInitiativeRewardType()))
-                    .map(InitiativeConfig::getInitiativeId)
-                    .collectList()
-                    .flatMap(initiatives -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trx, initiatives));
-        } else {
-            log.trace("[REWARD] [REWARD_KO] Transaction discarded: {} - {}", trx.getId(), trx.getRejectionReasons());
-            RewardTransactionDTO rejectedTrx = rewardTransactionMapper.apply(trx);
-            return transactionProcessedService.save(rejectedTrx)
-                    .then(Mono.just(rejectedTrx));
-        }
+      return Mono.empty();
+//        if (CollectionUtils.isEmpty(trx.getRejectionReasons())) {
+//            return onboardedInitiativesService.getInitiatives(trx)
+//                    .filter(i-> InitiativeRewardType.REFUND.equals(i.getInitiativeRewardType()))
+//                    .map(InitiativeConfig::getInitiativeId)
+//                    .collectList()
+//                    .flatMap(initiatives -> initiativesEvaluatorFacadeService.evaluateAndUpdateBudget(trx, initiatives));
+//        } else {
+//            log.trace("[REWARD] [REWARD_KO] Transaction discarded: {} - {}", trx.getId(), trx.getRejectionReasons());
+//            RewardTransactionDTO rejectedTrx = rewardTransactionMapper.apply(trx);
+//            return transactionProcessedService.save(rejectedTrx)
+//                    .then(Mono.just(rejectedTrx));
+//        }
     }
 
 
