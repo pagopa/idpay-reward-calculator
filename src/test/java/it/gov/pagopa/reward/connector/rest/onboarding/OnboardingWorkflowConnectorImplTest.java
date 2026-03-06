@@ -18,6 +18,7 @@ class OnboardingWorkflowConnectorImplTest {
     private static final String USER_ID = "USER_1";
     private static final String INITIATIVE_ID = "INITIATIVE_1";
     private static final String BASE_URL = "http://test-onboarding-workflow";
+    private static final String GET_STATUS_PATH = "/idpay/onboarding/{initiativeId}/{userId}/status";
 
     private ExchangeFunction exchangeFunction;
     private OnboardingWorkflowConnectorImpl connector;
@@ -31,7 +32,7 @@ class OnboardingWorkflowConnectorImplTest {
 
     private OnboardingWorkflowConnectorImpl buildConnector(ExchangeFunction ef) {
         WebClient.Builder builder = WebClient.builder().exchangeFunction(ef);
-        return new OnboardingWorkflowConnectorImpl(builder, BASE_URL);
+        return new OnboardingWorkflowConnectorImpl(builder, BASE_URL, GET_STATUS_PATH);
     }
 
     // ─── happy path ─────────────────────────────────────────────────────────────

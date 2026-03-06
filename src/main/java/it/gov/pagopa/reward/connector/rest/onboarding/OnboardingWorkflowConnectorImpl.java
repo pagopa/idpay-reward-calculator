@@ -13,14 +13,15 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class OnboardingWorkflowConnectorImpl implements OnboardingWorkflowConnector {
 
-    static final String ONBOARDING_STATUS_PATH = "/idpay/onboarding/{initiativeId}/{userId}/status";
-
+    private final String onboardingStatusPath;
     private final WebClient webClient;
 
     public OnboardingWorkflowConnectorImpl(
             WebClient.Builder webClientBuilder,
-            @Value("${rest-client.onboarding-workflow.base-url}") String baseUrl) {
+            @Value("${rest-client.onboarding-workflow.base-url}") String baseUrl,
+            @Value("${rest-client.onboarding-workflow.get-status-path}") String getStatusPath) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
+        onboardingStatusPath = getStatusPath;
     }
 
     @Override
@@ -28,7 +29,7 @@ public class OnboardingWorkflowConnectorImpl implements OnboardingWorkflowConnec
         log.debug("[ONBOARDING_WORKFLOW][GET_STATUS] Fetching onboarding status for userId: {}, initiativeId: {}",
                 userId, initiativeId);
         return webClient.get()
-                .uri(ONBOARDING_STATUS_PATH, initiativeId, userId)
+                .uri(onboardingStatusPath, initiativeId, userId)
                 .retrieve()
                 .onStatus(HttpStatus.NOT_FOUND::equals,
                         response -> Mono.empty())
