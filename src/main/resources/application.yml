@@ -133,6 +133,7 @@ spring:
               autoCommitOffset: ${KAFKA_WALLET_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
               #enableDlq: ${KAFKA_WALLET_ENABLE_DLQ:${KAFKA_CONSUMER_CONFIG_ENABLE_DLQ:false}}
               #dlqName: ${KAFKA_WALLET_DLQ_NAME:${KAFKA_CONSUMER_CONFIG_DLQ_NAME:errorTopic}}
+              ackTime: ${KAFKA_ONBOARDING_OUTCOME_ACK_MILLIS:100}
               standardHeaders: ${KAFKA_WALLET_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               configuration:
                 max.poll:
