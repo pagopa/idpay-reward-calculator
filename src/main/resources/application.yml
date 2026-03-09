@@ -271,7 +271,7 @@ logging:
 rest-client:
   onboarding-workflow:
     base-url: ${ONBOARDING_WORKFLOW_BASE_URL:http://idpay-onboarding-workflow}
-    get-status-path: ${ONBOARDING_WORKFLOW_GET_STATUS_PATH:/idpay/onboarding/{initiativeId}/{userId}/status}
+    get-status-path: ${ONBOARDING_WORKFLOW_GET_STATUS_PATH:/idpay/onboarding/{initiativeId}/{userId}/status/details}
 
 app:
   reward-rule:

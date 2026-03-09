@@ -18,7 +18,7 @@ class OnboardingWorkflowConnectorImplTest {
     private static final String USER_ID = "USER_1";
     private static final String INITIATIVE_ID = "INITIATIVE_1";
     private static final String BASE_URL = "http://test-onboarding-workflow";
-    private static final String GET_STATUS_PATH = "/idpay/onboarding/{initiativeId}/{userId}/status";
+    private static final String GET_STATUS_PATH = "/idpay/onboarding/{initiativeId}/{userId}/status/details";
 
     private ExchangeFunction exchangeFunction;
     private OnboardingWorkflowConnectorImpl connector;
@@ -142,7 +142,7 @@ class OnboardingWorkflowConnectorImplTest {
         connector = buildConnector(request -> {
             String path = request.url().getPath();
             assertThat(path)
-                    .isEqualTo("/idpay/onboarding/" + INITIATIVE_ID + "/" + USER_ID + "/status");
+                    .isEqualTo("/idpay/onboarding/" + INITIATIVE_ID + "/" + USER_ID + "/status/details");
             return Mono.just(
                     ClientResponse.create(HttpStatus.OK)
                             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

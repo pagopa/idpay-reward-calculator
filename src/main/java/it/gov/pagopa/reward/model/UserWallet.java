@@ -23,7 +23,6 @@ public class UserWallet {
     private Long trxCount;
     private String status;
 
-    @SuppressWarnings("squid:S107")
     public UserWallet(String userId, String initiativeId, LocalDate acceptanceDate, Long budget, List<OnboardedInitiative> accrued, Long trxCount, String status) {
         this.id=userId.concat(initiativeId);
         this.userId = userId;

@@ -102,7 +102,7 @@ class OnboardedInitiativesServiceImplTest {
         String initiativeId = "INITIATIVE_1";
 
         Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
-                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_KO", null)));
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_KO", null, null, null)));
 
         // When
         Pair<InitiativeConfig, OnboardingInfo> result =
@@ -142,7 +142,7 @@ class OnboardedInitiativesServiceImplTest {
         LocalDate now = LocalDate.now();
 
         Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
-                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null)));
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
 
         // initiative already ended yesterday
         InitiativeConfig expiredConfig = InitiativeConfig.builder()
@@ -170,7 +170,7 @@ class OnboardedInitiativesServiceImplTest {
         LocalDate now = LocalDate.now();
 
         Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
-                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null)));
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
@@ -200,7 +200,7 @@ class OnboardedInitiativesServiceImplTest {
         LocalDate now = LocalDate.now();
 
         Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
-                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", familyId)));
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, familyId)));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
@@ -230,7 +230,7 @@ class OnboardedInitiativesServiceImplTest {
         LocalDate now = LocalDate.now();
 
         Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
-            .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null)));
+            .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
