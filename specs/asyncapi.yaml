@@ -493,33 +493,6 @@ components:
           type: integer
           description: Accrued reward in cents
 
-    HpanUpdateOutcomeDTO:
-      type: object
-      properties:
-        initiativeId:
-          type: string
-          description: Initiative ID
-        userId:
-          type: string
-          description: User ID
-        hpanList:
-          type: array
-          items:
-            type: string
-          description: List of HPANs (Hashed PANs)
-        rejectedHpanList:
-          type: array
-          items:
-            type: string
-          description: List of rejected HPANs
-        operationType:
-          type: string
-          description: Type of operation
-        timestamp:
-          type: string
-          format: date-time
-          description: Timestamp of the operation
-
     ErrorQueueHeader:
       type: object
       properties:
