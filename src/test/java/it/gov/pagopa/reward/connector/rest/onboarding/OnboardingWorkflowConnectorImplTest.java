@@ -69,6 +69,22 @@ class OnboardingWorkflowConnectorImplTest {
                 .verifyComplete();
     }
 
+        @Test
+        void getOnboardingStatus_thenReturnOk_withSnakeCaseFamilyId() {
+                connector = buildConnector(request -> Mono.just(
+                                ClientResponse.create(HttpStatus.OK)
+                                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                                .body("{\"status\":\"ONBOARDING_OK\",\"family_id\":\"FAM_1\"}")
+                                                .build()));
+
+                StepVerifier.create(connector.getOnboardingStatus(USER_ID, INITIATIVE_ID))
+                                .assertNext(response -> {
+                                        assertThat(response.status()).isEqualTo("ONBOARDING_OK");
+                                        assertThat(response.familyId()).isEqualTo("FAM_1");
+                                })
+                                .verifyComplete();
+        }
+
     // ─── non-ONBOARDING_OK status ────────────────────────────────────────────────
 
     @Test

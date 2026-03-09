@@ -34,9 +34,9 @@ public class OnboardingWorkflowConnectorImpl implements OnboardingWorkflowConnec
                 .onStatus(HttpStatus.NOT_FOUND::equals,
                         response -> Mono.empty())
                 .bodyToMono(OnboardingStatusResponseDTO.class)
-                .doOnNext(r -> log.debug(
-                        "[ONBOARDING_WORKFLOW][GET_STATUS] Status for userId: {}, initiativeId: {} -> {}",
-                        userId, initiativeId, r.status()))
+                .doOnNext(r -> log.info(
+                        "[ONBOARDING_WORKFLOW][GET_STATUS] Status for userId: {}, initiativeId: {} -> {}, familyIdPresent: {}, familyIdMasked: {}",
+                        userId, initiativeId, r.status(), r.familyId() != null && !r.familyId().isBlank(), maskFamilyId(r.familyId())))
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     log.error("[ONBOARDING_WORKFLOW][GET_STATUS] HTTP error {} fetching status for userId: {}, initiativeId: {}",
                             ex.getStatusCode(), userId, initiativeId);
@@ -48,4 +48,14 @@ public class OnboardingWorkflowConnectorImpl implements OnboardingWorkflowConnec
                     return Mono.empty();
                 });
     }
+
+        private String maskFamilyId(String familyId) {
+                if (familyId == null || familyId.isBlank()) {
+                        return "<null>";
+                }
+                if (familyId.length() <= 4) {
+                        return "****";
+                }
+                return "%s****%s".formatted(familyId.substring(0, 2), familyId.substring(familyId.length() - 2));
+        }
 }
