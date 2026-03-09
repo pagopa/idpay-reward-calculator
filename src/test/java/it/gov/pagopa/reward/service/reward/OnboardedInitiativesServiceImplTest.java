@@ -221,4 +221,32 @@ class OnboardedInitiativesServiceImplTest {
         Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, familyId), result.getSecond());
     }
 
+    @Test
+    void isOnboarded_emptyWhenNFWithoutFamilyId() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        LocalDate now = LocalDate.now();
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+            .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null)));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+            onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+    }
+
 }

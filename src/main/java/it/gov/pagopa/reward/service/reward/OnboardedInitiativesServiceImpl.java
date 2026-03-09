@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
+import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -38,9 +39,18 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                 .filter(response -> "ONBOARDING_OK".equals(response.status()))
                 .flatMap(response -> rewardContextHolderService.getInitiativeConfig(safeInitiativeId)
                         .filter(initiativeConfig -> checkInitiativeValidity(initiativeConfig, trxDate))
+                        .filter(initiativeConfig -> hasValidEntityReference(initiativeConfig, response.familyId(), safeUserId, safeInitiativeId))
                         .map(initiativeConfig -> Pair.of(initiativeConfig,
-                            // TODO in case it's not NF the familyId is not present in the response. is correct to set it as null?
                             new BaseOnboardingInfo(safeInitiativeId, response.familyId()))));
+    }
+
+    private boolean hasValidEntityReference(InitiativeConfig initiativeConfig, String familyId, String userId, String initiativeId) {
+        if (InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(initiativeConfig.getBeneficiaryType())
+                && (familyId == null || familyId.isBlank())) {
+            log.warn("[REWARD][IS_ONBOARDED] Missing familyId for NF initiative. userId: {}, initiativeId: {}", userId, initiativeId);
+            return false;
+        }
+        return true;
     }
 
     private boolean checkInitiativeValidity(InitiativeConfig initiativeConfig, OffsetDateTime trxDate) {
