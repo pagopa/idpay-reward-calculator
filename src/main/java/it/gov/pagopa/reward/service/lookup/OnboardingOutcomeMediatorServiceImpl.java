@@ -71,7 +71,7 @@ public class OnboardingOutcomeMediatorServiceImpl extends
   @Override
   protected void notifyError(Message<String> message, Throwable e) {
     rewardErrorNotifierService.notifyTransactionEvaluation(message,
-        "[ONBOARDING_OUTCOME] An error occurred evaluating hpan update", false, e);
+        "[ONBOARDING_OUTCOME] An error occurred evaluating onboarding outcome", false, e);
   }
 
   @Override
@@ -88,7 +88,6 @@ public class OnboardingOutcomeMediatorServiceImpl extends
   @Override
   protected Mono<EvaluationDTO> execute(EvaluationDTO payload, Message<String> message,
       Map<String, Object> ctx) {
-//        LocalDateTime evaluationDate = LocalDateTime.now();
 
     // Only create counters when onboarding was successful
     if (!"ONBOARDING_OK".equals(payload.status())) {
@@ -108,7 +107,7 @@ public class OnboardingOutcomeMediatorServiceImpl extends
                       payload.initiativeId())
                   .thenReturn(payload);
             }
-            // TODO is this logic correct?
+
             return onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId(payload.userId(),
                     payload.initiativeId())
                 .collectSortedList(COMPARATOR_FAMILIES_CREATE_DATE_DESC)
@@ -131,7 +130,7 @@ public class OnboardingOutcomeMediatorServiceImpl extends
           log.error(
               "[ONBOARDING_OUTCOME] Error while creating user initiative counter for event {}",
               payload, e);
-          // rewardErrorNotifierService.notifyHpanUpdateEvaluation(message, "[HPAN_INITIATIVE_OP] Error while creating counters", true, e);
+          rewardErrorNotifierService.notifyOnboardingOutcome(message, "[ONBOARDING_OUTCOME] Error while creating counters", true, e);
           return Mono.just(payload);
         });
   }
