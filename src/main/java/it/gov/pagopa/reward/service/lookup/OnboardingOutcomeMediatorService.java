@@ -14,4 +14,3 @@ import reactor.core.publisher.Flux;
 public interface OnboardingOutcomeMediatorService {
     void execute(Flux<Message<String>> messageFlux);
 }
-

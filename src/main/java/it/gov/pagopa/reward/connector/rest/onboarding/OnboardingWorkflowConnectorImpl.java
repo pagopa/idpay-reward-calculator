@@ -34,7 +34,7 @@ public class OnboardingWorkflowConnectorImpl implements OnboardingWorkflowConnec
                 .onStatus(HttpStatus.NOT_FOUND::equals,
                         response -> Mono.empty())
                 .bodyToMono(OnboardingStatusResponseDTO.class)
-                .doOnNext(r -> log.info(
+                .doOnNext(r -> log.debug(
                         "[ONBOARDING_WORKFLOW][GET_STATUS] Status for userId: {}, initiativeId: {} -> {}, familyIdPresent: {}, familyIdMasked: {}",
                         userId, initiativeId, r.status(), r.familyId() != null && !r.familyId().isBlank(), maskFamilyId(r.familyId())))
                 .onErrorResume(WebClientResponseException.class, ex -> {
