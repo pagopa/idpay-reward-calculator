@@ -120,8 +120,6 @@ abstract class BaseTrxSynchronousOp {
     }
 
     protected Mono<UserInitiativeCounters> findUserInitiativeCounter(String initiativeId, Pair<InitiativeConfig, OnboardingInfo> i2o, TransactionDTO trxDTO) {
-        log.info("[{}] retrieving counter for transaction {} of userId {} on initiative {} with counterId {}",
-                initiativeId, trxDTO.getId(), trxDTO.getUserId(), initiativeId, UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxDTO), initiativeId));
         return userInitiativeCountersRepository.findById(UserInitiativeCounters.buildId(retrieveCounterEntityId(i2o.getFirst(), i2o.getSecond(), trxDTO), initiativeId))
                 .map(counter -> checkTrxAlreadyProcessed(trxDTO, counter));
     }
