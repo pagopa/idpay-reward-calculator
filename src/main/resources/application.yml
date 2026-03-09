@@ -28,7 +28,7 @@ spring:
     stream:
       bindings:
         onboardingOutcome-in-0:
-          binder: kafka-outcome
+          binder: kafka-onboarding-outcome
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_OUTCOME:}
           group: ${KAFKA_OUTCOME_GROUP_IN:}
