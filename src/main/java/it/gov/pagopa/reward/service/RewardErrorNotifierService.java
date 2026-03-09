@@ -10,4 +10,5 @@ public interface RewardErrorNotifierService {
     void notifyRewardCommands(Message<String> message, String description, boolean retryable, Throwable exception);
     boolean notifyTransactionResponse(Message<String> message, String description, boolean retryable, Throwable exception);
     boolean notify(KafkaConfiguration.BaseKafkaInfoDTO baseKafkaInfoDTO, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception);
+    boolean notifyOnboardingOutcome(Message<?> message, String description, boolean retryable, Throwable exception);
 }

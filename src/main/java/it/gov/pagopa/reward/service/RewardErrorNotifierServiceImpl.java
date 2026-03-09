@@ -18,8 +18,9 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private static final  String TRX_PROCESSOR_OUT_0 = "trxProcessorOut-out-0";
     private static final String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
     private static final String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
+    private static final String ONBOARDING_OUTCOME_IN_0 = "onboardingOutcome-in-0";
 
-    public RewardErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
+  public RewardErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
                                           KafkaConfiguration kafkaConfiguration
     ) {
         this.kafkaConfiguration = kafkaConfiguration;
@@ -55,5 +56,10 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     @Override
     public boolean notify(KafkaConfiguration.BaseKafkaInfoDTO baseKafkaInfoDTO, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception) {
         return errorNotifierService.notify(baseKafkaInfoDTO, description, retryable,exception, resendApplication, message);
+    }
+
+    @Override
+    public boolean notifyOnboardingOutcome(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(kafkaConfiguration.getStream().getBindings().get(ONBOARDING_OUTCOME_IN_0), message, description, retryable, true, exception);
     }
 }
