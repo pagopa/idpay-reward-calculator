@@ -1,7 +1,8 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -152,5 +153,37 @@ class OnboardingOutcomeMediatorServiceImplTest {
         .verifyComplete();
 
     verify(countersRepository, never()).createIfNotExists(any(), any(), any());
+  }
+
+  @Test
+  void shouldNotCreateFamilyCounterWhenNFLookupEmpty() {
+    EvaluationDTO payload = buildPayload("U6", null, "I6", "ONBOARDING_OK");
+    InitiativeConfig cfg = InitiativeConfig.builder().beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF).build();
+
+    when(rewardContextHolderService.getInitiativeConfig("I6")).thenReturn(Mono.just(cfg));
+    when(onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId("U6", "I6"))
+        .thenReturn(Flux.empty());
+
+    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+        .expectNext(payload)
+        .verifyComplete();
+
+    verify(countersRepository, never()).createIfNotExists(any(), any(), any());
+  }
+
+  @Test
+  void shouldNotifyOnErrorWhenCreateFails() {
+    EvaluationDTO payload = buildPayload("U7", null, "I7", "ONBOARDING_OK");
+    InitiativeConfig cfg = InitiativeConfig.builder().beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF).build();
+
+    when(rewardContextHolderService.getInitiativeConfig("I7")).thenReturn(Mono.just(cfg));
+    when(countersRepository.createIfNotExists("U7", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, "I7"))
+        .thenReturn(Mono.error(new RuntimeException("boom")));
+
+    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+        .expectNext(payload)
+        .verifyComplete();
+
+    verify(errorNotifierService).notifyOnboardingOutcome(any(), anyString(), anyBoolean(), any());
   }
 }
