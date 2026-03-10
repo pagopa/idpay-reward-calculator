@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.lookup;
 
-import it.gov.pagopa.reward.dto.EvaluationDTO;
 import reactor.core.publisher.Mono;
 
 /**
@@ -12,5 +11,5 @@ import reactor.core.publisher.Mono;
  * </ol>*/
 
 public interface OnboardingOutcomeMediatorService {
-    Mono<EvaluationDTO> processOnboardingOutcome(EvaluationDTO payload);
+    Mono<Void> processOnboardingOutcome(String initiativeId, String userId);
 }

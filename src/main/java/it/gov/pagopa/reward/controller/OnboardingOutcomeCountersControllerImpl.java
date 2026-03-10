@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.controller;
 
-import it.gov.pagopa.reward.dto.EvaluationDTO;
 import it.gov.pagopa.reward.service.lookup.OnboardingOutcomeMediatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +14,10 @@ public class OnboardingOutcomeCountersControllerImpl implements OnboardingOutcom
   private final OnboardingOutcomeMediatorService onboardingOutcomeMediatorService;
 
   @Override
-  public Mono<EvaluationDTO> processOnboardingOutcome(EvaluationDTO evaluationDTO) {
+  public Mono<Void> processOnboardingOutcome(String initiativeId, String userId) {
     log.info("[ONBOARDING_OUTCOME] Received onboarding outcome request for initiative {} and user {}",
-        evaluationDTO.initiativeId(), evaluationDTO.userId());
+        initiativeId, userId);
 
-    return onboardingOutcomeMediatorService.processOnboardingOutcome(evaluationDTO);
+    return onboardingOutcomeMediatorService.processOnboardingOutcome(initiativeId, userId);
   }
 }

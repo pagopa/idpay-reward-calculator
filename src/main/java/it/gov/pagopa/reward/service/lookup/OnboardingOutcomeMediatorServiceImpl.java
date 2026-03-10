@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.service.lookup;
 
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.connector.repository.secondary.OnboardingFamiliesRepository;
-import it.gov.pagopa.reward.dto.EvaluationDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
@@ -32,50 +31,36 @@ public class OnboardingOutcomeMediatorServiceImpl implements OnboardingOutcomeMe
   }
 
   @Override
-  public Mono<EvaluationDTO> processOnboardingOutcome(EvaluationDTO payload) {
-
-    // Only create counters when onboarding was successful
-    if (!"ONBOARDING_OK".equals(payload.status())) {
-      return Mono.just(payload);
-    }
-
-    return rewardContextHolderService.getInitiativeConfig(payload.initiativeId())
+  public Mono<Void> processOnboardingOutcome(String initiativeId, String userId) {
+    return rewardContextHolderService.getInitiativeConfig(initiativeId)
         .switchIfEmpty(Mono.error(new IllegalArgumentException(
-            "Cannot find initiative having id %s".formatted(payload.initiativeId()))))
+            "Cannot find initiative having id %s".formatted(initiativeId))))
         .flatMap(initiativeConfig -> {
           InitiativeGeneralDTO.BeneficiaryTypeEnum bType = initiativeConfig.getBeneficiaryType();
 
           if (InitiativeGeneralDTO.BeneficiaryTypeEnum.NF.equals(bType)) {
-            // family-level counters: prefer familyId from event if present, otherwise lookup
-            if (payload.familyId() != null && !payload.familyId().isBlank()) {
-              return userInitiativeCountersRepository.createIfNotExists(payload.familyId(), bType,
-                      payload.initiativeId())
-                  .thenReturn(payload);
-            }
-
-            return onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId(payload.userId(),
-                    payload.initiativeId())
+            return onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId(userId,
+                    initiativeId)
                 .collectSortedList(COMPARATOR_FAMILIES_CREATE_DATE_DESC)
                 .flatMap(families -> {
                   if (families == null || families.isEmpty()) {
-                    return Mono.just(payload);
+                    return Mono.empty();
                   }
                   return userInitiativeCountersRepository.createIfNotExists(
-                          families.getFirst().getFamilyId(), bType, payload.initiativeId())
-                      .thenReturn(payload);
+                          families.getFirst().getFamilyId(), bType, initiativeId)
+                      .then();
                 });
           } else {
-            // person-level counters
-            return userInitiativeCountersRepository.createIfNotExists(payload.userId(), bType,
-                    payload.initiativeId())
-                .thenReturn(payload);
+            return userInitiativeCountersRepository.createIfNotExists(userId, bType,
+                    initiativeId)
+                .then();
           }
         })
         .onErrorResume(e -> {
           log.error(
-              "[ONBOARDING_OUTCOME] Error while creating user initiative counter for event {}",
-              payload, e);
-          return Mono.just(payload);
+              "[ONBOARDING_OUTCOME] Error while creating user initiative counter for initiative {} and user {}",
+              initiativeId, userId, e);
+          return Mono.empty();
         });
   }
 
