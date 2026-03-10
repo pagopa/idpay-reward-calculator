@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 @Import({ServiceExceptionConfig.class, ErrorManager.class, ValidationExceptionHandler.class})
 class OnboardingOutcomeCountersControllerImplTest {
 
-    private static final String ONBOARDING_OUTCOME_PATH = "/reward/onboarding/{initiativeId}/users/{userId}/outcome";
+    private static final String ONBOARDING_OUTCOME_PATH = "/reward/onboarding/{initiativeId}/users/{userId}/counters";
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
     private static final String USER_ID = "USER_ID";
 

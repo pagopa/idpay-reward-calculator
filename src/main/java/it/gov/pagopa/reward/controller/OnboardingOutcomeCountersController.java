@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/reward/onboarding")
 public interface OnboardingOutcomeCountersController {
 
-  @PostMapping("/{initiativeId}/users/{userId}/outcome")
+  @PostMapping("/{initiativeId}/users/{userId}/counters")
   Mono<Void> processOnboardingOutcome(@PathVariable("initiativeId") String initiativeId,
       @PathVariable("userId") String userId);
 }
