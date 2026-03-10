@@ -2,7 +2,6 @@ package it.gov.pagopa.reward.connector.repository;
 
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersAtomicOpsRepository;
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersAtomicOpsRepositoryImpl;
-import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

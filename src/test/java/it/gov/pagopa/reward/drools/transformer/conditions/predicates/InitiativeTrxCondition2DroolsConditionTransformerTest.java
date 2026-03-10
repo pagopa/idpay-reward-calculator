@@ -87,7 +87,7 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
     protected List<Command<?>> buildKieContainerCommands(TransactionDroolsDTO trx, String agendaGroup) {
 
         final UserInitiativeCounters counter = getInitiativeCounters();
-        @SuppressWarnings("unchecked")
+
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(trx),
                 CommandFactory.newInsert(counter),

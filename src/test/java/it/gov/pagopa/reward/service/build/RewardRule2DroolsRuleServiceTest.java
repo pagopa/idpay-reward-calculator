@@ -368,7 +368,6 @@ public class RewardRule2DroolsRuleServiceTest {
             counters = new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>());
         }
 
-        @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(ruleEngineConfig),
                 CommandFactory.newInsert(counters),
