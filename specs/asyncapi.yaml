@@ -5,8 +5,6 @@ info:
   description: >-
     Its purpose is to notify allowed citizen notification and cancellation of an initiative
 tags:
-  - name: "trxProcessor"
-    description: "capture rtd transactions"
   - name: "trxProcessorOut"
     description: "returns the result of the transaction evaluation"
   - name: "trxProcessorOutNotifyError"
@@ -24,24 +22,6 @@ tags:
   - name: "deleteInitiative"
     description: "Delete the initiative"
 channels:
-  reward-calculator-trx-processor:
-    subscribe:
-      message:
-        $ref: '#/components/messages/RewardTransactionEvaluation'
-      bindings:
-        kafka:
-          topic: idpay-transaction-user-id-splitter
-      tags:
-        - name: "trxProcessor"
-  reward-calculator-trx-processor-out:
-    publish:
-      message:
-        $ref: '#/components/messages/RewardTransactionNotify'
-      bindings:
-        kafka:
-          topic: idpay-transaction
-      tags:
-        - name: "trxProcessorOut"
   reward-calculator-trx-processor-out-error:
     publish:
       message:
@@ -69,15 +49,6 @@ channels:
           topic: idpay-error
       tags:
         - name: "rewardRuleNotifyError"
-  reward-calculator-trx-resubmitter:
-    publish:
-      message:
-        $ref: '#/components/messages/TrxResubmitter'
-      bindings:
-        kafka:
-          topic: idpay-transaction-user-id-splitter
-      tags:
-        - name: "trxResubmitter"
   reward-calculator-trx-response-consumer:
     subscribe:
       message:

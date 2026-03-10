@@ -45,48 +45,53 @@ class OnboardedInitiativesServiceImplTest {
 
     @Test
     void getChargeInitiativesWhenNoEndEnd(){
-        testChargeInitiative(null,null, null, true);
+        testChargeInitiative(null);
     }
 
     @Test
     void getChargeInitiativesWhenEndEnd(){
-        testChargeInitiative(null, LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10));
     }
     @Test
     void getChargeInitiativesWhenFutureEndEnd(){
-        testChargeInitiative(null, LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10));
     }
 
     @Test
     void getChargeInitiativesWhenPastEndEnd(){
-        testChargeInitiative(null, LocalDate.now().plusDays(9), OffsetDateTime.now().plusDays(10), false);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10));
     }
 
     @Test
     void getChargeInitiativesWhenStart(){
-        testChargeInitiative(LocalDate.now().plusDays(10L),null, OffsetDateTime.now().plusDays(10L), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10L));
     }
 
     @Test
     void getChargeInitiativeAfterStartInitiative(){
-        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(11L), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(11L));
     }
 
     @Test
     void getChargeInitiativeBeforeStartInitiative(){
-        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(9L),false);
+        testChargeInitiative(OffsetDateTime.now().plusDays(9L));
     }
 
     @Test
     void getChargeInitiativeIntoInitiativeInterval(){
-        testChargeInitiative(LocalDate.now().minusDays(10L), LocalDate.now().plusDays(10L), OffsetDateTime.now(),true);
+        testChargeInitiative(OffsetDateTime.now());
     }
 
-    void testChargeInitiative(LocalDate initiativeStartDate, LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
-        if(trxDateTime == null){
+    void testChargeInitiative(OffsetDateTime trxDateTime) {
+        if(trxDateTime == null) {
             trxDateTime = OffsetDateTime.now().plusDays(10L);
         }
         TransactionDTO trx = buildTrx(trxDateTime);
+
+        Assertions.assertNotNull(trx);
+        Assertions.assertEquals(OperationType.CHARGE, trx.getOperationTypeTranscoded());
+        Assertions.assertEquals(CommonUtilities.euroToCents(trx.getAmount()), trx.getEffectiveAmountCents());
+        Assertions.assertEquals(trxDateTime, trx.getTrxChargeDate());
     }
 
     @Test
