@@ -1,7 +1,7 @@
 package it.gov.pagopa.reward.service.lookup;
 
-import org.springframework.messaging.Message;
-import reactor.core.publisher.Flux;
+import it.gov.pagopa.reward.dto.EvaluationDTO;
+import reactor.core.publisher.Mono;
 
 /**
  * This component take a EvaluationDto and save into DB
@@ -12,5 +12,5 @@ import reactor.core.publisher.Flux;
  * </ol>*/
 
 public interface OnboardingOutcomeMediatorService {
-    void execute(Flux<Message<String>> messageFlux);
+    Mono<EvaluationDTO> processOnboardingOutcome(EvaluationDTO payload);
 }

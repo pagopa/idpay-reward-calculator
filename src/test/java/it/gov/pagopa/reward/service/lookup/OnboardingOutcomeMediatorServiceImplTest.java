@@ -1,8 +1,6 @@
 package it.gov.pagopa.reward.service.lookup;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,9 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.messaging.support.MessageBuilder;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.UpdateResult;
 
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
@@ -27,7 +22,6 @@ import it.gov.pagopa.reward.dto.EvaluationDTO;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
-import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -37,7 +31,6 @@ import reactor.test.StepVerifier;
 class OnboardingOutcomeMediatorServiceImplTest {
 
   @Mock private UserInitiativeCountersRepository countersRepository;
-  @Mock private RewardErrorNotifierService errorNotifierService;
   @Mock private RewardContextHolderService rewardContextHolderService;
   @Mock private OnboardingFamiliesRepository onboardingFamiliesRepository;
 
@@ -46,11 +39,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
   @BeforeEach
   void setUp() {
     sut = new OnboardingOutcomeMediatorServiceImpl(
-        "app",
-        1000L,
         countersRepository,
-        new ObjectMapper(),
-        errorNotifierService,
         rewardContextHolderService,
         onboardingFamiliesRepository);
   }
@@ -83,7 +72,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
   void shouldNotCreateCounterWhenStatusNotOk() {
     EvaluationDTO payload = buildPayload("U1", null, "I1", "ONBOARDING_KO");
 
-    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+    StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
 
@@ -99,7 +88,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
     when(countersRepository.createIfNotExists("U2", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, "I2"))
         .thenReturn(Mono.just(UpdateResult.acknowledged(1, 0L, null)));
 
-    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+    StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
 
@@ -115,7 +104,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
     when(countersRepository.createIfNotExists("FAM_1", InitiativeGeneralDTO.BeneficiaryTypeEnum.NF, "I3"))
         .thenReturn(Mono.just(UpdateResult.acknowledged(1, 0L, null)));
 
-    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+    StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
 
@@ -136,7 +125,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
     when(countersRepository.createIfNotExists("FAM_NEW", InitiativeGeneralDTO.BeneficiaryTypeEnum.NF, "I4"))
         .thenReturn(Mono.just(UpdateResult.acknowledged(1, 0L, null)));
 
-    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+    StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
 
@@ -148,7 +137,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
     EvaluationDTO payload = buildPayload("U5", null, "I5", "ONBOARDING_OK");
   when(rewardContextHolderService.getInitiativeConfig("I5")).thenReturn(Mono.empty());
 
-  StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+  StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
 
@@ -164,7 +153,7 @@ class OnboardingOutcomeMediatorServiceImplTest {
     when(onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId("U6", "I6"))
         .thenReturn(Flux.empty());
 
-    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+    StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
 
@@ -180,10 +169,8 @@ class OnboardingOutcomeMediatorServiceImplTest {
     when(countersRepository.createIfNotExists("U7", InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, "I7"))
         .thenReturn(Mono.error(new RuntimeException("boom")));
 
-    StepVerifier.create(sut.execute(payload, MessageBuilder.withPayload("p").build(), java.util.Collections.emptyMap()))
+    StepVerifier.create(sut.processOnboardingOutcome(payload))
         .expectNext(payload)
         .verifyComplete();
-
-    verify(errorNotifierService).notifyOnboardingOutcome(any(), anyString(), anyBoolean(), any());
   }
 }
