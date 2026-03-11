@@ -27,19 +27,17 @@ class RewardErrorNotifierServiceTest {
     private static final String TRX_RESPONSE_GROUP = "trx-response-group";
     private static final String REWARD_RULE_TOPIC = "reward-rule-topic";
     private static final String REWARD_RULE_GROUP = "rewrd-rule-group";
-    private static final String TRANSACTIONS_TOPIC = "trx-topic";
-    private static final String TRANSACTIONS_GROUP = "trx-Group";
+
     private static final String TRANSACTION_REWARDED_TOPIC = "trx-reward-topic";
 
     private static final String COMMANDS_TOPIC ="commands-topic";
     private static final String COMMANDS_GROUP ="commands-group";
     private static final Message<String> dummyMessage = MessageBuilder.withPayload(DUMMY_MESSAGE).build();
 
-    private final static String REWARD_RULE_CONSOMER_IN_0 = "rewardRuleConsumer-in-0";
-    private final static String TRX_PROCESSOR_IN_0 = "trxProcessor-in-0";
-    private final static String TRX_PROCESSOR_OUT_0 = "trxProcessorOut-out-0";
-    private final static String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
-    private final static String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
+    private static final String REWARD_RULE_CONSUMER_IN_0 = "rewardRuleConsumer-in-0";
+    private static final String TRX_PROCESSOR_OUT_0 = "trxProcessorOut-out-0";
+    private static final String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
+    private static final String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
 
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
@@ -64,7 +62,7 @@ class RewardErrorNotifierServiceTest {
         Mockito.when(kafkaConfigurationMock.getStream()).thenReturn(Mockito.mock(KafkaConfiguration.Stream.class));
         Mockito.when(kafkaConfigurationMock.getStream().getBindings()).thenReturn(
                 Map.of(
-                        REWARD_RULE_CONSOMER_IN_0,
+                    REWARD_RULE_CONSUMER_IN_0,
                         KafkaConfiguration.KafkaInfoDTO.builder()
                                 .group(REWARD_RULE_GROUP)
                                 .type(BINDER_KAFKA_TYPE)
@@ -88,35 +86,7 @@ class RewardErrorNotifierServiceTest {
 
         Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
     }
-    @Test
-    void notifyTransactionEvaluation() {
 
-        Mockito.when(kafkaConfigurationMock.getStream()).thenReturn(Mockito.mock(KafkaConfiguration.Stream.class));
-        Mockito.when(kafkaConfigurationMock.getStream().getBindings()).thenReturn(
-                Map.of(
-                        TRX_PROCESSOR_IN_0,
-                        KafkaConfiguration.KafkaInfoDTO.builder()
-                                .group(TRANSACTIONS_GROUP)
-                                .type(BINDER_KAFKA_TYPE)
-                                .brokers(BINDER_BROKER)
-                                .destination(TRANSACTIONS_TOPIC)
-                                .build()
-                )
-        );
-        errorNotifyMock(baseKafkaInfoDTOArgumentCaptor, true, true );
-
-        boolean result = rewardErrorNotifierService.notifyTransactionEvaluation(dummyMessage, DUMMY_MESSAGE, true, new Throwable(DUMMY_MESSAGE));
-
-        KafkaConfiguration.BaseKafkaInfoDTO capturedSrcDetails = baseKafkaInfoDTOArgumentCaptor.getValue();
-
-        Assertions.assertEquals(BINDER_KAFKA_TYPE, capturedSrcDetails.getType());
-        Assertions.assertEquals(TRANSACTIONS_TOPIC, capturedSrcDetails.getDestination());
-        Assertions.assertEquals(BINDER_BROKER, capturedSrcDetails.getBrokers());
-        Assertions.assertEquals(TRANSACTIONS_GROUP, capturedSrcDetails.getGroup());
-        Assertions.assertTrue(result);
-
-        Mockito.verifyNoMoreInteractions(errorNotifierServiceMock);
-    }
     @Test
     void notifyRewardedTransaction() {
 

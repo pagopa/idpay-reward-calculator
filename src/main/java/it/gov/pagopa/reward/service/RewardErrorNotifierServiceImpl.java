@@ -14,7 +14,6 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     private final KafkaConfiguration kafkaConfiguration;
 
     private static final String REWARD_RULE_CONSOMER_IN_0 = "rewardRuleConsumer-in-0";
-    private static final  String TRX_PROCESSOR_IN_0 = "trxProcessor-in-0";
     private static final  String TRX_PROCESSOR_OUT_0 = "trxProcessorOut-out-0";
     private static final String COMMANDS_CONSUMER_IN_0 = "commandsConsumer-in-0";
     private static final String TRX_RESPONSE_CONSUMER_IN_0 = "trxResponseConsumer-in-0";
@@ -29,11 +28,6 @@ public class RewardErrorNotifierServiceImpl implements RewardErrorNotifierServic
     @Override
     public boolean notifyRewardRuleBuilder(Message<?> message, String description, boolean retryable, Throwable exception) {
         return notify(kafkaConfiguration.getStream().getBindings().get(REWARD_RULE_CONSOMER_IN_0), message, description, retryable, true, exception);
-    }
-
-    @Override
-    public boolean notifyTransactionEvaluation(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(kafkaConfiguration.getStream().getBindings().get(TRX_PROCESSOR_IN_0), message, description, retryable, true, exception);
     }
 
     @Override
