@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import static it.gov.pagopa.reward.utils.Utils.sanitizeString;
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -15,9 +17,12 @@ public class OnboardingOutcomeCountersControllerImpl implements OnboardingOutcom
 
   @Override
   public Mono<Void> processOnboardingOutcome(String initiativeId, String userId) {
-    log.info("[ONBOARDING_OUTCOME] Received onboarding outcome request for initiative {} and user {}",
-        initiativeId, userId);
+    final String sanitizedInitiativeId = initiativeId == null ? null : sanitizeString(initiativeId);
+    final String sanitizedUserId = userId == null ? null : sanitizeString(userId);
 
-    return onboardingOutcomeMediatorService.processOnboardingOutcome(initiativeId, userId);
+    log.info("[ONBOARDING_OUTCOME] Received onboarding outcome request for initiative {} and user {}",
+        sanitizedInitiativeId, sanitizedUserId);
+
+    return onboardingOutcomeMediatorService.processOnboardingOutcome(sanitizedInitiativeId, sanitizedUserId);
   }
 }
