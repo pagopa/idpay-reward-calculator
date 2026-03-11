@@ -94,68 +94,6 @@ class OnboardedInitiativesServiceImplTest {
         Assertions.assertEquals(trxDateTime, trx.getTrxChargeDate());
     }
 
-    @Test
-    void checkDate_singleIntervalInside() {
-        OnboardedInitiativesServiceImpl svc = (OnboardedInitiativesServiceImpl) onboardedInitiativesService;
-        LocalDateTime trxDate = LocalDateTime.now();
-        List<it.gov.pagopa.reward.model.ActiveTimeInterval> intervals = new ArrayList<>();
-        intervals.add(it.gov.pagopa.reward.model.ActiveTimeInterval.builder()
-                .startInterval(trxDate.minusMinutes(5))
-                .endInterval(trxDate.plusMinutes(5))
-                .build());
-
-        boolean result = svc.checkDate(trxDate, intervals);
-        Assertions.assertTrue(result);
-    }
-
-    @Test
-    void checkDate_endNullMeansOpenEnded() {
-        OnboardedInitiativesServiceImpl svc = (OnboardedInitiativesServiceImpl) onboardedInitiativesService;
-        LocalDateTime trxDate = LocalDateTime.now();
-        List<it.gov.pagopa.reward.model.ActiveTimeInterval> intervals = new ArrayList<>();
-        intervals.add(it.gov.pagopa.reward.model.ActiveTimeInterval.builder()
-                .startInterval(trxDate.minusDays(1))
-                .endInterval(null)
-                .build());
-
-        boolean result = svc.checkDate(trxDate, intervals);
-        Assertions.assertTrue(result);
-    }
-
-    @Test
-    void checkDate_multipleIntervalsMatchingEarlier() {
-        OnboardedInitiativesServiceImpl svc = (OnboardedInitiativesServiceImpl) onboardedInitiativesService;
-        LocalDateTime trxDate = LocalDateTime.now();
-        List<it.gov.pagopa.reward.model.ActiveTimeInterval> intervals = new ArrayList<>();
-        // First interval does not match
-        intervals.add(it.gov.pagopa.reward.model.ActiveTimeInterval.builder()
-                .startInterval(trxDate.plusDays(1))
-                .endInterval(trxDate.plusDays(2))
-                .build());
-        // Second interval (later in list) matches — checkDate scans from end
-        intervals.add(it.gov.pagopa.reward.model.ActiveTimeInterval.builder()
-                .startInterval(trxDate.minusHours(1))
-                .endInterval(trxDate.plusHours(1))
-                .build());
-
-        boolean result = svc.checkDate(trxDate, intervals);
-        Assertions.assertTrue(result);
-    }
-
-    @Test
-    void checkDate_noMatchReturnsFalse() {
-        OnboardedInitiativesServiceImpl svc = (OnboardedInitiativesServiceImpl) onboardedInitiativesService;
-        LocalDateTime trxDate = LocalDateTime.now();
-        List<it.gov.pagopa.reward.model.ActiveTimeInterval> intervals = new ArrayList<>();
-        intervals.add(it.gov.pagopa.reward.model.ActiveTimeInterval.builder()
-                .startInterval(trxDate.plusDays(1))
-                .endInterval(trxDate.plusDays(2))
-                .build());
-
-        boolean result = svc.checkDate(trxDate, intervals);
-        Assertions.assertFalse(result);
-    }
-
     private TransactionDTO buildTrx(OffsetDateTime trxDateTime) {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);

@@ -59,15 +59,4 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                 && (initiativeConfig.getEndDate() == null || !initiativeConfig.getEndDate().isBefore(trxDate.toLocalDate()));
     }
 
-    //scroll the ActiveTimeInterval list from the end to facilitate the exit of the for-cycle
-    boolean checkDate(LocalDateTime trxDate, List<ActiveTimeInterval> timeIntervals){
-        for (int i = timeIntervals.size()-1; i>=0;i--) {
-            LocalDateTime start = timeIntervals.get(i).getStartInterval();
-            LocalDateTime end = timeIntervals.get(i).getEndInterval();
-            if (!trxDate.isBefore(start) && (end == null || trxDate.isBefore(end))) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
