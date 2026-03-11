@@ -172,10 +172,6 @@ class CreateTrxSynchronousServiceImplTest {
                 .amount(CommonUtilities.centsToEuro(rewardTransactionDTO.getAmountCents()))
                 .effectiveAmountCents(rewardTransactionDTO.getAmountCents())
                 .status(RewardConstants.REWARD_STATE_REWARDED)
-                .rewards(rewardTransactionDTO.getRewards())
-                .trxNumber(0L)
-                .totalAmountCents(0L)
-                .totalRewardCents(0L)
                 .build();
 
         // When
@@ -525,10 +521,6 @@ class CreateTrxSynchronousServiceImplTest {
                 .effectiveAmountCents(authorizeRequest.getAmountCents())
                 .status(RewardConstants.REWARD_STATE_REWARDED)
                 .reward(new Reward(initiativeId, initiativeConfig.getOrganizationId(), authorizeRequest.getRewardCents()))
-                .rewards(Map.of(initiativeId, new Reward(initiativeId, initiativeConfig.getOrganizationId(), authorizeRequest.getRewardCents())))
-                .trxNumber(0L)
-                .totalAmountCents(0L)
-                .totalRewardCents(0L)
                 .build();
     }
 }
