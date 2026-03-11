@@ -88,12 +88,11 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
 
         final UserInitiativeCounters counter = getInitiativeCounters();
 
-        List<Command<?>> commands = Arrays.asList(
+        return Arrays.<Command<?>>asList(
                 CommandFactory.newInsert(trx),
                 CommandFactory.newInsert(counter),
                 new AgendaGroupSetFocusCommand(agendaGroup)
         );
-        return commands;
     }
 
     protected UserInitiativeCounters getInitiativeCounters() {
