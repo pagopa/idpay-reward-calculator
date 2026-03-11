@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 @Import({ServiceExceptionConfig.class, ErrorManager.class, ValidationExceptionHandler.class})
 class OnboardingOutcomeCountersControllerImplTest {
 
-    private static final String ONBOARDING_OUTCOME_PATH = "/reward/onboarding/{initiativeId}/users/{userId}/counters";
+    private static final String ONBOARDING_OUTCOME_PATH = "/reward/onboarding/{initiativeId}/{userId}/counters";
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
     private static final String USER_ID = "USER_ID";
 
@@ -32,7 +32,7 @@ class OnboardingOutcomeCountersControllerImplTest {
     Mockito.when(onboardingOutcomeMediatorService.processOnboardingOutcome(INITIATIVE_ID, USER_ID))
         .thenReturn(Mono.empty());
 
-    webTestClient.post()
+    webTestClient.put()
         .uri(ONBOARDING_OUTCOME_PATH, INITIATIVE_ID, USER_ID)
         .exchange()
         .expectStatus().isOk()
@@ -47,7 +47,7 @@ class OnboardingOutcomeCountersControllerImplTest {
     Mockito.when(onboardingOutcomeMediatorService.processOnboardingOutcome(INITIATIVE_ID, USER_ID))
         .thenReturn(Mono.error(new RuntimeException("boom")));
 
-    webTestClient.post()
+    webTestClient.put()
         .uri(ONBOARDING_OUTCOME_PATH, INITIATIVE_ID, USER_ID)
         .exchange()
         .expectStatus().is5xxServerError();
