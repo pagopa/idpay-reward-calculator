@@ -10,6 +10,8 @@ import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,12 +22,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
