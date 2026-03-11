@@ -9,7 +9,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -21,7 +21,7 @@ class OnboardingOutcomeCountersControllerImplTest {
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
     private static final String USER_ID = "USER_ID";
 
-  @MockitoSpyBean
+  @MockitoBean
   private OnboardingOutcomeMediatorService onboardingOutcomeMediatorService;
 
   @Autowired

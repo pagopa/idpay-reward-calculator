@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
@@ -38,7 +38,7 @@ class RewardTrxSynchronousApiControllerImplTest {
     private final String rewardPreviewPath = "/reward/initiative/preview/{initiativeId}";
     private final String rewardAuthorizePath = "/reward/initiative/{initiativeId}";
 
-    @MockitoSpyBean
+    @MockitoBean
     private RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;
 
     @Autowired
