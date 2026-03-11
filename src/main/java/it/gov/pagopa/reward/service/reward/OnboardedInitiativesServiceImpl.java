@@ -39,7 +39,6 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
                 .filter(response -> "ONBOARDING_OK".equals(response.status()))
                 .flatMap(response -> rewardContextHolderService.getInitiativeConfig(safeInitiativeId)
                         .filter(initiativeConfig -> checkInitiativeValidity(initiativeConfig, trxDate))
-                    // todo capire se realmente necessario hasValidEntityReference
                         .filter(initiativeConfig -> hasValidEntityReference(initiativeConfig, response.familyId(), safeUserId, safeInitiativeId))
                         .map(initiativeConfig -> Pair.of(initiativeConfig,
                             new BaseOnboardingInfo(safeInitiativeId, response.familyId()))));
