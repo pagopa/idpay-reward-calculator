@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
  */
 @ExtendWith(MockitoExtension.class)
 @Slf4j
-public class UserInitativeCountersAtomicOpsRepositoryUnitTest {
+class UserInitativeCountersAtomicOpsRepositoryUnitTest {
 
     @Mock
     private ReactiveMongoTemplate mongoTemplate;
@@ -26,12 +26,12 @@ public class UserInitativeCountersAtomicOpsRepositoryUnitTest {
     private UserInitiativeCountersAtomicOpsRepository userInitiativeCountersAtomicOpsRepository;
 
     @BeforeEach
-    public void init() {
+    void init() {
         userInitiativeCountersAtomicOpsRepository = new UserInitiativeCountersAtomicOpsRepositoryImpl(mongoTemplate);
     }
 
     @Test
-    public void testUpdateInitativeStatusOK() {
+    void testUpdateInitativeStatusOK() {
         userInitiativeCountersAtomicOpsRepository.updateEntityIdByInitiativeIdAndEntityId(
                 "INITATIVEID","ENTITYID", "NEWENTITYID");
         verify(mongoTemplate).findAndModify(any(),any(),any());
