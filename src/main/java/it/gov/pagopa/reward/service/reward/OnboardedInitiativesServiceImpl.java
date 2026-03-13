@@ -54,9 +54,9 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     }
 
     private boolean checkInitiativeValidity(InitiativeConfig initiativeConfig, OffsetDateTime trxDate) {
-        return initiativeConfig != null
-                && (initiativeConfig.getStartDate() == null || !initiativeConfig.getStartDate().isAfter(trxDate.toLocalDate()))
-                && (initiativeConfig.getEndDate() == null || !initiativeConfig.getEndDate().isBefore(trxDate.toLocalDate()));
+        var trxLocalDate = trxDate.toLocalDate();
+        return (initiativeConfig.getStartDate() == null || !initiativeConfig.getStartDate().isAfter(trxLocalDate))
+                && (initiativeConfig.getEndDate() == null || !initiativeConfig.getEndDate().isBefore(trxLocalDate));
     }
 
 }

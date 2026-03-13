@@ -36,6 +36,7 @@ Apply these principles to every line of code:
 * **Testing Stack:** JUnit 5, AssertJ, Mockito, and **Testcontainers** for integration tests.
 * **Coverage Goals:** Minimum **90% Line Coverage** and **80% Branch Coverage**.
 * **Deterministic Tests:** Ensure tests don't flake; mock external systems (Kafka/Mongo) or use Testcontainers.
+* **Unit Testing Practice:** Test behavior through public APIs. Do not test private methods with reflection or similar techniques. If a branch is not testable via behavior, refactor the code structure (for example, extract a collaborator or simplify unreachable branches) to restore testability.
 
 ## 7. Operational Commands (Maven & Docker)
 * **Build & Verify:** `./mvnw clean verify`
