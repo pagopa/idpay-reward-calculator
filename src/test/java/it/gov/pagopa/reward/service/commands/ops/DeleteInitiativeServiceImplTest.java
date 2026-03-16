@@ -3,17 +3,13 @@ package it.gov.pagopa.reward.service.commands.ops;
 import com.mongodb.MongoException;
 import com.mongodb.client.result.DeleteResult;
 import it.gov.pagopa.reward.connector.repository.secondary.DroolsRuleRepository;
-import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
 import it.gov.pagopa.reward.connector.repository.primary.TransactionProcessedRepository;
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.enums.InitiativeRewardType;
-import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.model.OnboardedInitiative;
 import it.gov.pagopa.reward.model.TransactionProcessed;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.service.reward.RewardContextHolderService;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionProcessedFaker;
 import it.gov.pagopa.reward.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -33,7 +29,6 @@ import java.util.List;
 @ExtendWith(MockitoExtension.class)
 class DeleteInitiativeServiceImplTest {
     @Mock private DroolsRuleRepository droolsRuleRepositoryMock;
-    @Mock private HpanInitiativesRepository hpanInitiativesRepositoryMock;
     @Mock private TransactionProcessedRepository transactionProcessedRepositoryMock;
     @Mock private UserInitiativeCountersRepository userInitiativeCountersRepositoryMock;
     @Mock private RewardContextHolderService rewardContextHolderServiceMock;
@@ -46,16 +41,11 @@ class DeleteInitiativeServiceImplTest {
             .id("TRANSACTION_PROCESSED_ID")
             .initiatives(List.of(INITIATIVE_ID))
             .build();
-    private static final HpanInitiatives HPAN_INITIATIVES = HpanInitiatives.builder()
-            .hpan("HPAN")
-            .onboardedInitiatives(List.of(OnboardedInitiative.builder().initiativeId(INITIATIVE_ID).build()))
-            .build();
 
     @BeforeEach
     void setUp() {
         deleteInitiativeService = Mockito.spy(new DeleteInitiativeServiceImpl(
                 droolsRuleRepositoryMock,
-                hpanInitiativesRepositoryMock,
                 transactionProcessedRepositoryMock,
                 userInitiativeCountersRepositoryMock,
                 rewardContextHolderServiceMock,
@@ -90,11 +80,6 @@ class DeleteInitiativeServiceImplTest {
         Mockito.when(droolsRuleRepositoryMock.removeById(INITIATIVE_ID))
                 .thenReturn(Mono.just(Mockito.mock(DeleteResult.class)));
 
-        Mockito.when(hpanInitiativesRepositoryMock.findByInitiativesWithBatch(INITIATIVE_ID, 100))
-                .thenReturn(Flux.just(HPAN_INITIATIVES));
-        Mockito.when(hpanInitiativesRepositoryMock.removeInitiativeOnHpan(HPAN_INITIATIVES.getHpan(), INITIATIVE_ID))
-                .thenReturn(Mono.empty());
-
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
         userInitiativeCounters.setId("INITIATIVE_COUNTERS_ID");
         userInitiativeCounters.setEntityId(userid);
@@ -102,12 +87,6 @@ class DeleteInitiativeServiceImplTest {
         Mockito.when(userInitiativeCountersRepositoryMock.findByInitiativesWithBatch(INITIATIVE_ID, 100))
                 .thenReturn(Flux.just(userInitiativeCounters));
         Mockito.when(userInitiativeCountersRepositoryMock.deleteById(userInitiativeCounters.getId()))
-                .thenReturn(Mono.empty());
-
-        HpanInitiatives hpanWithoutInitiatives = HpanInitiativesFaker.mockInstance(1);
-        Mockito.when(hpanInitiativesRepositoryMock.findWithoutInitiativesWithBatch(100))
-                .thenReturn(Flux.just(hpanWithoutInitiatives));
-        Mockito.when(hpanInitiativesRepositoryMock.deleteById(hpanWithoutInitiatives.getHpan()))
                 .thenReturn(Mono.empty());
 
         TransactionProcessed trxProcessedWithoutInitiatives = TransactionProcessedFaker.mockInstance(1);
@@ -121,7 +100,6 @@ class DeleteInitiativeServiceImplTest {
         Assertions.assertNotNull(result);
 
         Mockito.verify(droolsRuleRepositoryMock, Mockito.times(1)).removeById(Mockito.anyString());
-        Mockito.verify(hpanInitiativesRepositoryMock, Mockito.times(1)).removeInitiativeOnHpan(Mockito.anyString(), Mockito.anyString());
         Mockito.verify(rewardContextHolderServiceMock, Mockito.times(1)).getInitiativeConfig(Mockito.anyString());
         Mockito.verify(transactionProcessedRepositoryMock, Mockito.times(1)).findByInitiativesWithBatch(Mockito.anyString(), Mockito.anyInt());
 
@@ -149,10 +127,8 @@ class DeleteInitiativeServiceImplTest {
             catch (RuntimeException e) {
                 // Do nothing
             }
-        }
-        catch (MongoException e){
-            // Do nothing
+        } catch (Exception e) {
+            Assertions.assertTrue(e instanceof MongoException);
         }
     }
-
 }

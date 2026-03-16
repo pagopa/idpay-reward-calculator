@@ -365,10 +365,9 @@ public class RewardRule2DroolsRuleServiceTest {
         ruleEngineConfig.setShortCircuitConditions(shortCircuited);
 
         if(counters==null){
-            counters = new UserInitiativeCountersWrapper(trx.getHpan(), new HashMap<>());
+            counters = new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>());
         }
 
-        @SuppressWarnings("unchecked")
         List<Command<?>> commands = Arrays.asList(
                 CommandFactory.newInsert(ruleEngineConfig),
                 CommandFactory.newInsert(counters),

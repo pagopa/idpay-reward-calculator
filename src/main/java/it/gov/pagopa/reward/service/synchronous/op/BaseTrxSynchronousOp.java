@@ -146,7 +146,7 @@ abstract class BaseTrxSynchronousOp {
     }
 
     protected Mono<Pair<InitiativeConfig, OnboardingInfo>> checkOnboarded(SynchronousTransactionRequestDTO request, TransactionDTO trx, String initiativeId) {
-        return onboardedInitiativesService.isOnboarded(trx.getHpan(), trx.getTrxChargeDate(), initiativeId)
+        return onboardedInitiativesService.isOnboarded(trx.getUserId(), trx.getTrxChargeDate(), initiativeId)
                 .switchIfEmpty(Mono.error(new InitiativeNotActiveException(String.format(RewardConstants.ExceptionMessage.INITIATIVE_NOT_ACTIVE_FOR_USER_MSG,initiativeId),syncTrxRequest2TransactionDtoMapper
                         .apply(request, initiativeId, List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)))));
     }

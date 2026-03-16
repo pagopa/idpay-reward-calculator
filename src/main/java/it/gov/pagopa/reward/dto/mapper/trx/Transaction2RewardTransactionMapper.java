@@ -37,7 +37,6 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setIdTrxAcquirer(src.getIdTrxAcquirer());
         dest.setAcquirerCode(src.getAcquirerCode());
         dest.setTrxDate(src.getTrxDate());
-        dest.setHpan(src.getHpan());
         dest.setCircuitType(src.getCircuitType());
         dest.setOperationType(src.getOperationType());
         dest.setIdTrxIssuer(src.getIdTrxIssuer());
@@ -62,9 +61,6 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setRefundInfo(src.getRefundInfo());
         dest.setOperationTypeTranscoded(src.getOperationTypeTranscoded());
         dest.setUserId(src.getUserId());
-        dest.setMaskedPan(src.getMaskedPan());
-        dest.setBrandLogo(src.getBrandLogo());
-        dest.setBrand(src.getBrand());
         dest.setChannel(src.getChannel());
         dest.setRuleEngineTopicPartition(src.getRuleEngineTopicPartition());
         dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());

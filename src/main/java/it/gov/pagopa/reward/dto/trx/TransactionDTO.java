@@ -30,8 +30,6 @@ public class TransactionDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime trxDate;
 
-    private String hpan;
-
     private String operationType;
 
     private String circuitType;
@@ -85,9 +83,6 @@ public class TransactionDTO {
 
     //region fields added by splitter
     private String userId;
-    private String brandLogo;
-    private String brand;
-    private String maskedPan;
     //endregion
 
     //region fields added by self-expense

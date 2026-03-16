@@ -51,7 +51,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
     private InitiativeConfig initiativeConfig;
 
     @BeforeEach
-    public void init() {
+    void init() {
         initiativeConfig = InitiativeConfig.builder()
                 .initiativeId("INITIATIVEID1")
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)

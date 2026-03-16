@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.controller;
 
-import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ErrorManager;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.reward.config.ServiceExceptionConfig;
@@ -21,18 +20,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionMessage;
 @WebFluxTest(controllers = {RewardTrxSynchronousApiController.class})
 @Import({ServiceExceptionConfig.class, ErrorManager.class, ValidationExceptionHandler.class})
@@ -40,7 +38,7 @@ class RewardTrxSynchronousApiControllerImplTest {
     private final String rewardPreviewPath = "/reward/initiative/preview/{initiativeId}";
     private final String rewardAuthorizePath = "/reward/initiative/{initiativeId}";
 
-    @MockBean
+    @MockitoBean
     private RewardTrxSynchronousApiService rewardTrxSynchronousServiceMock;
 
     @Autowired
@@ -127,7 +125,6 @@ class RewardTrxSynchronousApiControllerImplTest {
     @Test
     void postTransactionPreviewNotResponse(){
         String initiativeId = " INITIATIVEID";
-        ErrorDTO errorDTO = new ErrorDTO(ExceptionCode.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT, String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG,initiativeId));
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
 
         Mockito.when(rewardTrxSynchronousServiceMock.previewTransaction(Mockito.any(), Mockito.eq(initiativeId))).thenReturn(Mono.empty());
@@ -213,7 +210,6 @@ class RewardTrxSynchronousApiControllerImplTest {
     @Test
     void postTransactionAuthorizeNotResponse(){
         String initiativeId = " INITIATIVEID";
-        ErrorDTO errorDTO = new ErrorDTO(ExceptionCode.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT, String.format(ExceptionMessage.INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT_MSG,initiativeId));
         SynchronousTransactionRequestDTO request = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         long counterVersion = 50L;
 

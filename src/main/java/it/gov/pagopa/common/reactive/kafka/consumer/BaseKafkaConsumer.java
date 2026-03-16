@@ -76,9 +76,9 @@ public abstract class BaseKafkaConsumer<T, R> {
     }
 
     /** It will ask the superclass to handle the messages, then sequentially it will acknowledge them */
-    public final void execute(Flux<Message<String>> messagesFlux) {
+    public final void execute(Flux<Message<String>> messageFlux) {
         Flux<List<R>> processUntilCommits =
-                messagesFlux
+                messageFlux
                         .flatMapSequential(this::executeAcknowledgeAware, getConcurrency())
 
                         .buffer(getCommitDelay())

@@ -1,6 +1,6 @@
 package it.gov.pagopa.reward.model;
 
-import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
+import it.gov.pagopa.reward.enums.OnboardingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ public class OnboardedInitiative implements OnboardingInfo{
     private String initiativeId;
     private String familyId;
     private LocalDateTime acceptanceDate;
-    private HpanInitiativeStatus status;
+    private OnboardingStatus status;
     private LocalDateTime updateDate;
     private LocalDateTime lastEndInterval;
     private List<ActiveTimeInterval> activeTimeIntervals;

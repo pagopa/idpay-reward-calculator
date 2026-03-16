@@ -101,8 +101,7 @@ class CreateTrxSynchronousServiceImplTest {
         String initiativeId = "INITIATIVEID";
 
         mockRewardContextHolderService(initiativeId);
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                        .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())), Mockito.same(previewRequest.getTrxDate()),
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(previewRequest.getUserId()), Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.empty());
 
         Mono<SynchronousTransactionResponseDTO> mono = service.previewTransaction(previewRequest, initiativeId);
@@ -145,8 +144,7 @@ class CreateTrxSynchronousServiceImplTest {
 
         InitiativeConfig initiativeConfig = mockRewardContextHolderService(initiativeId);
 
-        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper
-                        .getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel())),
+        Mockito.when(onboardedInitiativesServiceMock.isOnboarded(Mockito.eq(previewRequest.getUserId()),
                 Mockito.same(previewRequest.getTrxDate()),
                 Mockito.same(initiativeId))).thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeId, null))));
 
@@ -439,7 +437,7 @@ class CreateTrxSynchronousServiceImplTest {
 
     private void mockOnboardedInitiativeService(SynchronousTransactionAuthRequestDTO authorizeRequest, InitiativeConfig initiativeConfig) {
         Mockito.when(onboardedInitiativesServiceMock.isOnboarded(
-                        Mockito.eq(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(authorizeRequest.getUserId(), authorizeRequest.getChannel())),
+                        Mockito.eq(authorizeRequest.getUserId()),
                         Mockito.same(authorizeRequest.getTrxChargeDate()),
                         Mockito.same(initiativeConfig.getInitiativeId())))
                 .thenReturn(Mono.just(Pair.of(initiativeConfig,new BaseOnboardingInfo(initiativeConfig.getInitiativeId(), null))));
