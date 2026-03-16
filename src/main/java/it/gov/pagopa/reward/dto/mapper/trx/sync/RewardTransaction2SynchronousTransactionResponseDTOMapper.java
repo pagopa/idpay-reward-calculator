@@ -3,11 +3,10 @@ package it.gov.pagopa.reward.dto.mapper.trx.sync;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
-import org.apache.commons.lang3.function.TriFunction;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.function.TriFunction;
+import org.springframework.stereotype.Service;
 
 @Service
 public class RewardTransaction2SynchronousTransactionResponseDTOMapper implements TriFunction<String, String, RewardTransactionDTO, SynchronousTransactionResponseDTO> {

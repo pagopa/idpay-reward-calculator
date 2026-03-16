@@ -57,7 +57,6 @@ public class TransactionDTOFaker {
                         trxDateTime,
                         CommonConstants.ZONEID.getRules().getOffset(trxDateTime)
                 ))
-                .hpan("HPAN%d".formatted(bias))
                 .operationType("00")
                 .circuitType("CIRCUITTYPE%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
@@ -76,9 +75,6 @@ public class TransactionDTOFaker {
                 .posType("POSTYPE%d".formatted(bias))
                 .par("PAR%d".formatted(bias))
                 .userId("USERID%d".formatted(bias))
-                .maskedPan("MASKEDPAN%d".formatted(bias))
-                .brandLogo("BRANDLOGO%d".formatted(bias))
-                .brand("BRAND%d".formatted(bias))
                 .channel(RewardConstants.TRX_CHANNEL_RTD)
                 .ruleEngineTopicPartition(0)
                 .ruleEngineTopicOffset(-1L);

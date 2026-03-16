@@ -24,15 +24,9 @@ spring:
       on-profile: default
   cloud:
     function:
-      definition: trxProcessor;trxProcessorOut;rewardRuleConsumer;hpanInitiativeConsumer;trxProducer;hpanUpdateOutcome;errors;trxResubmitter;commandsConsumer;trxResponseConsumer
+      definition: trxProcessorOut;rewardRuleConsumer;errors;commandsConsumer;trxResponseConsumer
     stream:
       bindings:
-        trxProcessor-in-0:
-          destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
-          group: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_GROUP_ID:idpay-consumer-group}
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-idpay-splitter
-          consumer.autoStartup: false
         trxProcessorOut-out-0:
           destination: ${KAFKA_REWARD_RESPONSE_TOPIC:idpay-transaction}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -42,23 +36,10 @@ spring:
           group: ${KAFKA_REWARD_RULE_GROUP_ID:idpay-reward-rule-consumer}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-rule
-        hpanInitiativeConsumer-in-0:
-          destination: ${KAFKA_HPAN_UPDATE_TOPIC:idpay-hpan-update}
-          group: ${KAFKA_HPAN_UPDATE_GROUP_ID:idpay-hpan-update-consumer-group}
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-idpay-hpan-update
-        hpanUpdateOutcome-out-0:
-          destination: ${KAFKA_HPAN_UPDATE_OUTCOME_TOPIC:idpay-hpan-update-outcome}
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-hpan-update-outcome
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-errors
-        trxResubmitter-out-0:
-          destination: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_TOPIC:idpay-transaction-user-id-splitter}
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-idpay-splitter-producer
         commandsConsumer-in-0:
           destination: ${KAFKA_COMMANDS_TOPIC:idpay-commands}
           group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-reward-calculator-consumer-group}
@@ -69,27 +50,7 @@ spring:
           group: ${KAFKA_REWARD_RESPONSE_GROUP_ID:idpay-reward-calculator-consumer-group}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-idpay-transaction-response
-        # TODO remove me
-        trxProducer-out-0:
-          destination: ${KAFKA_RTD_TOPIC:rtd-trx}
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          binder: kafka-rtd-producer
       binders:
-        kafka-idpay-splitter:
-          type: kafka
-          environment:
-            spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
-              configuration:
-                sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_SASL_JAAS_CONFIG:}
-        kafka-idpay-splitter-producer:
-          type: kafka
-          environment:
-            spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_BROKER:${KAFKA_BROKER:}}
-              configuration:
-                sasl.jaas.config: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_PRODUCER_SASL_JAAS_CONFIG:}
-                key.serializer: org.apache.kafka.common.serialization.StringSerializer
         kafka-idpay:
           type: kafka
           environment:
@@ -113,28 +74,6 @@ spring:
               configuration:
                 sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
                 key.serializer: org.apache.kafka.common.serialization.StringSerializer
-        kafka-idpay-hpan-update:
-          type: kafka
-          environment:
-            spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_HPAN_UPDATE_BROKER:${KAFKA_BROKER:}}
-              configuration:
-                sasl.jaas.config: ${KAFKA_HPAN_UPDATE_SASL_JAAS_CONFIG:}
-        kafka-hpan-update-outcome:
-          type: kafka
-          environment:
-            spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_HPAN_UPDATE_OUTCOME_BROKER:${KAFKA_BROKER:}}
-              configuration:
-                sasl.jaas.config: ${KAFKA_HPAN_UPDATE_OUTCOME_SASL_JAAS_CONFIG:}
-        #TODO remove me
-        kafka-rtd-producer:
-          type: kafka
-          environment:
-            spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_RTD_BROKER:${KAFKA_BROKER:}}
-              configuration:
-                sasl.jaas.config: ${KAFKA_RTD_PROD_SASL_JAAS_CONFIG:}
         kafka-commands:
           type: kafka
           environment:
@@ -163,21 +102,6 @@ spring:
             metadata.max.age.ms: ${KAFKA_CONFIG_METADATA_MAX_AGE_INTERVAL:179000}
             max.request.size: ${KAFKA_CONFIG_METADATA_MAX_REQUEST_SIZE:1000000}
         bindings:
-          trxProcessor-in-0:
-            consumer:
-              startOffset: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
-              autoCommitOffset: false
-              ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_ACK_MILLIS:500}
-              standardHeaders: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
-              configuration:
-                max.poll:
-                  records: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
-                  interval.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
-                connections.max.idle.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:180000}}
-                socket.connection.setup.timeout:
-                  max.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
-                  ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
           trxProcessorOut-out-0:
             producer:
               configuration:
@@ -194,27 +118,6 @@ spring:
                 retry.backoff.ms: ${KAFKA_ERRORS_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
                 linger.ms: ${KAFKA_ERRORS_LINGER_MS:${KAFKA_LINGER_MS:2}}
                 batch.size: ${KAFKA_ERRORS_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
-          hpanUpdateOutcome-out-0:
-            producer:
-              configuration:
-                client.id: hpanUpdateOutcome
-                connections.max.idle.ms: ${KAFKA_HPANUPDATE_OUTCOME_CONNECTION_MAX_IDLE_TIME:180000}
-                retry.backoff.ms: ${KAFKA_HPANUPDATE_OUTCOME_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
-                linger.ms: ${KAFKA_HPANUPDATE_OUTCOME_LINGER_MS:${KAFKA_LINGER_MS:2}}
-                batch.size: ${KAFKA_HPANUPDATE_OUTCOME_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
-          trxResubmitter-out-0:
-            producer:
-              configuration:
-                client.id: trxResubmitter
-                connections.max.idle.ms: ${KAFKA_TRANSACTION_USER_ID_SPLITTER_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:180000}}
-                retry.backoff.ms: ${KAFKA_TRX_RESUBMITTER_PRODUCER_RETRY_MS:${KAFKA_RETRY_MS:10000}}
-                linger.ms: ${KAFKA_TRX_RESUBMITTER_PRODUCER_LINGER_MS:${KAFKA_LINGER_MS:2}}
-                batch.size: ${KAFKA_TRX_RESUBMITTER_PRODUCER_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
-          # TODO remove me
-          trxProducer-out-0:
-            producer:
-              configuration:
-                client.id: trxProducer-simulateTrx
           rewardRuleConsumer-in-0:
             consumer:
               startOffset: ${KAFKA_REWARD_RULE_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
@@ -230,21 +133,6 @@ spring:
                 socket.connection.setup.timeout:
                   max.ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
                   ms: ${KAFKA_REWARD_RULE_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
-          hpanInitiativeConsumer-in-0:
-            consumer:
-              startOffset: ${KAFKA_HPAN_UPDATE_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
-              autoCommitOffset: false
-              ackMode: MANUAL_IMMEDIATE
-              ackTime: ${KAFKA_HPAN_UPDATE_ACK_MILLIS:500}
-              standardHeaders: ${KAFKA_HPAN_UPDATE_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
-              configuration:
-                max.poll:
-                  records: ${KAFKA_HPAN_UPDATE_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
-                  interval.ms: ${KAFKA_HPAN_UPDATE_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
-                connections.max.idle.ms: ${KAFKA_HPAN_UPDATE_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:180000}}
-                socket.connection.setup.timeout:
-                  max.ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
-                  ms: ${KAFKA_HPAN_UPDATE_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
           commandsConsumer-in-0:
             consumer:
               startOffset: ${KAFKA_COMMANDS_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
@@ -341,6 +229,11 @@ logging:
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
     org.apache.kafka: WARN
     org.springframework.boot.autoconfigure: WARN
+
+rest-client:
+  onboarding-workflow:
+    base-url: ${ONBOARDING_WORKFLOW_BASE_URL:http://idpay-onboarding-workflow}
+    get-status-path: ${ONBOARDING_WORKFLOW_GET_STATUS_PATH:/idpay/onboarding/{initiativeId}/{userId}/status/details}
 
 app:
   reward-rule:

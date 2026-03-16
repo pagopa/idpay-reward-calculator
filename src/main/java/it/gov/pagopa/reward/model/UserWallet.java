@@ -22,10 +22,8 @@ public class UserWallet {
     private List<OnboardedInitiative> accrued;
     private Long trxCount;
     private String status;
-    private List<String> hpanActive;
 
-    @SuppressWarnings("squid:S107")
-    public UserWallet(String userId, String initiativeId, LocalDate acceptanceDate, Long budget, List<OnboardedInitiative> accrued, Long trxCount, String status, List<String> hpanActive) {
+    public UserWallet(String userId, String initiativeId, LocalDate acceptanceDate, Long budget, List<OnboardedInitiative> accrued, Long trxCount, String status) {
         this.id=userId.concat(initiativeId);
         this.userId = userId;
         this.initiativeId = initiativeId;
@@ -34,6 +32,5 @@ public class UserWallet {
         this.accrued = accrued;
         this.trxCount = trxCount;
         this.status = status;
-        this.hpanActive = hpanActive;
     }
 }

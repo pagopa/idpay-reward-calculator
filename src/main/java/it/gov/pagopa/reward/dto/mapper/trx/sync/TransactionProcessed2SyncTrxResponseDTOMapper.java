@@ -3,10 +3,9 @@ package it.gov.pagopa.reward.dto.mapper.trx.sync;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionResponseDTO;
 import it.gov.pagopa.reward.model.BaseTransactionProcessed;
 import it.gov.pagopa.reward.model.TransactionProcessed;
-import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 import java.util.function.BiFunction;
+import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionProcessed2SyncTrxResponseDTOMapper implements BiFunction<BaseTransactionProcessed,String, SynchronousTransactionResponseDTO> {
