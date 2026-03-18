@@ -17,4 +17,8 @@ public final class Utils {
         }
         return null;
     }
+
+    public static String sanitizeString(String str){
+        return str.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", "");
+    }
 }

@@ -35,7 +35,7 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
     private static final TrxConsequence2DroolsRuleTransformerFacadeImpl transformer = new TrxConsequence2DroolsRuleTransformerFacadeImpl(expressionTransformerFacadeMock);
 
     @BeforeAll
-    public static void removeFinalModifiers() throws IllegalAccessException {
+    static void removeFinalModifiers() throws IllegalAccessException {
         configureMock(rewardValueTransformerMock, "rewardValueTrxConsequenceTransformer");
         configureMock(rewardGroupsTransformerMock, "rewardGroupsTrxConsequenceTransformer");
         configureMock(rewardLimitsTransformerMock, "rewardLimitsTrxConsequenceTransformer");
@@ -43,7 +43,7 @@ class TrxConsequence2DroolsRuleTransformerFacadeTest {
     }
 
     @BeforeEach
-    public void resetMocks() {
+    void resetMocks() {
         Mockito.reset(expressionTransformerFacadeMock, rewardValueTransformerMock, rewardGroupsTransformerMock, rewardLimitsTransformerMock, trxCountTransformerMock);
     }
 

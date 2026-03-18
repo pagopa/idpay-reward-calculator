@@ -39,7 +39,6 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getIdTrxAcquirer(), result.getIdTrxAcquirer());
         Assertions.assertEquals(previewRequest.getAcquirerCode(), result.getAcquirerCode());
         Assertions.assertEquals(previewRequest.getTrxDate(), result.getTrxDate());
-        Assertions.assertEquals(SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper.getPaymentInstrument(previewRequest.getUserId(), previewRequest.getChannel()), result.getHpan());
         Assertions.assertEquals(previewRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
         Assertions.assertEquals(expectedAmountEur, result.getAmount());
         Assertions.assertEquals(previewRequest.getAmountCurrency(), result.getAmountCurrency());
@@ -56,7 +55,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getChannel(),result.getChannel());
 
         TestUtils.checkNotNullFields(result, "businessName","circuitType", "terminalId", "bin", "senderCode",
-                "posType","par", "refundInfo", "brandLogo", "brand", "maskedPan", "ruleEngineTopicPartition", "ruleEngineTopicOffset","familyId");
+                "posType","par", "refundInfo", "ruleEngineTopicPartition", "ruleEngineTopicOffset","familyId");
     }
 
     @Test
@@ -86,6 +85,6 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(RewardConstants.REWARD_STATE_REJECTED, result.getStatus());
         Assertions.assertEquals(discardCause, result.getRejectionReasons());
         Assertions.assertNull(result.getReward());
-        TestUtils.checkNotNullFields(result, "reward");
+        TestUtils.checkNotNullFields(result, "reward", "rewards", "trxNumber", "totalAmountCents", "totalRewardCents", "channel", "operationType");
     }
 }

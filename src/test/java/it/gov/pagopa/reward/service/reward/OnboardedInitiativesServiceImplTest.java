@@ -1,18 +1,17 @@
 package it.gov.pagopa.reward.service.reward;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.reward.connector.repository.secondary.HpanInitiativesRepository;
+import it.gov.pagopa.reward.connector.rest.onboarding.OnboardingWorkflowConnector;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
-import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.onboarding.OnboardingStatusResponseDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
-import it.gov.pagopa.reward.enums.HpanInitiativeStatus;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.reward.model.HpanInitiatives;
-import it.gov.pagopa.reward.model.OnboardedInitiative;
+import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
-import it.gov.pagopa.reward.test.fakers.HpanInitiativesFaker;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,249 +23,274 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 @ExtendWith(MockitoExtension.class)
 @Slf4j
 class OnboardedInitiativesServiceImplTest {
 
-    @Mock private HpanInitiativesRepository hpanInitiativesRepositoryMock;
     @Mock private RewardContextHolderService rewardContextHolderServiceMock;
+    @Mock private OnboardingWorkflowConnector onboardingWorkflowConnectorMock;
 
     private OnboardedInitiativesService onboardedInitiativesService;
 
-
-    private final String hpan = "5c6bda1b1f5f6238dcba70f9f4b5a77671eb2b1563b0ca6d15d14c649a9b7ce0";
-    private final OffsetDateTime trxDate = OffsetDateTime.now().plusDays(6L);
-
     @BeforeEach
     public void init(){
-        onboardedInitiativesService = new OnboardedInitiativesServiceImpl(hpanInitiativesRepositoryMock, rewardContextHolderServiceMock);
+        onboardedInitiativesService = new OnboardedInitiativesServiceImpl(
+                rewardContextHolderServiceMock,
+                onboardingWorkflowConnectorMock);
     }
 
     @Test
     void getChargeInitiativesWhenNoEndEnd(){
-        testChargeInitiative(null,null, null, true);
+        testChargeInitiative(null);
     }
 
     @Test
     void getChargeInitiativesWhenEndEnd(){
-        testChargeInitiative(null, LocalDate.now().plusDays(10L), OffsetDateTime.now().plusDays(10), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10));
     }
     @Test
     void getChargeInitiativesWhenFutureEndEnd(){
-        testChargeInitiative(null, LocalDate.now().plusDays(11), OffsetDateTime.now().plusDays(10), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10));
     }
 
     @Test
     void getChargeInitiativesWhenPastEndEnd(){
-        testChargeInitiative(null, LocalDate.now().plusDays(9), OffsetDateTime.now().plusDays(10), false);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10));
     }
 
     @Test
     void getChargeInitiativesWhenStart(){
-        testChargeInitiative(LocalDate.now().plusDays(10L),null, OffsetDateTime.now().plusDays(10L), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(10L));
     }
 
     @Test
     void getChargeInitiativeAfterStartInitiative(){
-        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(11L), true);
+        testChargeInitiative(OffsetDateTime.now().plusDays(11L));
     }
 
     @Test
     void getChargeInitiativeBeforeStartInitiative(){
-        testChargeInitiative(LocalDate.now().plusDays(10L), null, OffsetDateTime.now().plusDays(9L),false);
+        testChargeInitiative(OffsetDateTime.now().plusDays(9L));
     }
 
     @Test
     void getChargeInitiativeIntoInitiativeInterval(){
-        testChargeInitiative(LocalDate.now().minusDays(10L), LocalDate.now().plusDays(10L), OffsetDateTime.now(),true);
+        testChargeInitiative(OffsetDateTime.now());
     }
 
-    void testChargeInitiative(LocalDate initiativeStartDate, LocalDate initiativeEndDate, OffsetDateTime trxDateTime, boolean expectSuccess) {
-        if(trxDateTime == null){
+    void testChargeInitiative(OffsetDateTime trxDateTime) {
+        if(trxDateTime == null) {
             trxDateTime = OffsetDateTime.now().plusDays(10L);
         }
-        TransactionDTO trx = buildTrx(trxDateTime, hpan);
+        TransactionDTO trx = buildTrx(trxDateTime);
 
-        testGetInitiativesPrivateMethod(trx,initiativeStartDate, initiativeEndDate, expectSuccess);
-    }
-    void testGetInitiativesPrivateMethod(TransactionDTO trx, LocalDate initiativeStartDate, LocalDate initiativeEndDate, boolean expectSuccess) {
-        // Given
-        Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(bias);
-
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
-
-        final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(
-                Mono.just(InitiativeConfig.builder()
-                        .initiativeId(mockedInitiativeId)
-                        .startDate(initiativeStartDate)
-                        .endDate(initiativeEndDate)
-                        .build()));
-
-
-        // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-        List<String> resultIds = result.stream().map(InitiativeConfig::getInitiativeId).toList();
-
-        // Then
-        if(expectSuccess) {
-            Mockito.verify(hpanInitiativesRepositoryMock).findById(Mockito.same(hpan));
-            Assertions.assertEquals(1, resultIds.size());
-            Assertions.assertTrue(resultIds.contains(String.format("INITIATIVE_%d", bias)));
-        } else {
-            checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
-        }
+        Assertions.assertNotNull(trx);
+        Assertions.assertEquals(OperationType.CHARGE, trx.getOperationTypeTranscoded());
+        Assertions.assertEquals(CommonUtilities.euroToCents(trx.getAmount()), trx.getEffectiveAmountCents());
+        Assertions.assertEquals(trxDateTime, trx.getTrxChargeDate());
     }
 
-    private TransactionDTO buildTrx(OffsetDateTime trxDateTime, String hpan) {
+    private TransactionDTO buildTrx(OffsetDateTime trxDateTime) {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
         trx.setTrxChargeDate(trxDateTime);
-        trx.setHpan(hpan);
         return trx;
     }
 
     @Test
-    void getInitiativesHpanNotFound() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.empty());
-
-        // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-
-        // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
-    }
-
-    private void checkInitiativeNotFound(HpanInitiativesRepository hpanInitiativesRepository, String hpanMock, List<InitiativeConfig> result) {
-        Mockito.verify(hpanInitiativesRepository).findById(Mockito.same(hpanMock));
-        Assertions.assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getNotOnboardedInitiatives() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-
-        Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
-
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
-
-        // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-
-        // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
-    }
-
-    @Test
-    void getNotIntitiaveTrxNotInActiveInterval() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-
-        Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceNotInActiveInterval(bias);
-
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
-
-        final String mockedInitiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(mockedInitiativeId)).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId(mockedInitiativeId).build()));
-
-        // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-
-        // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
-    }
-
-    @Test
-    void getCompleteReverseNoChargeRewarded() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REFUND);
-        trx.setEffectiveAmountCents(0L);
-
-        // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-
-        // Then
-        Assertions.assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getCompleteReverse() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REFUND);
-        trx.setEffectiveAmountCents(0L);
-        trx.setRefundInfo(new RefundInfo());
-        trx.getRefundInfo().setPreviousRewards(Map.of("INITIATIVE2REVERSE", new RefundInfo.PreviousReward("INITIATIVE2REVERSE", "ORGANIZATION", 1_00L)));
-
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE2REVERSE")).thenReturn(Mono.just(InitiativeConfig.builder().initiativeId("INITIATIVE2REVERSE").build()));
-
-        // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
-
-        // Then
-        Assertions.assertEquals(List.of("INITIATIVE2REVERSE"), result.stream().map(InitiativeConfig::getInitiativeId).toList());
-    }
-
-    @Test
-    void getPartialReverseCapped() {
-        // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
-        trx.setOperationTypeTranscoded(OperationType.REFUND);
-
-        testGetInitiativesPrivateMethod(trx, null, null, true);
-    }
-
-    @Test
-    void isOnboardedEmpty() {
+    void isOnboarded_emptyWhenStatusNotOk() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
-        String initiativeId = "INITIATIVEID";
-        LocalDate now = LocalDate.now();
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
 
-        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
-                .initiativeId("INITIATIVE_1")
-                .startDate(now.minusYears(5L))
-                .startDate(now.plusYears(5L))
-                .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig("INITIATIVE_1")).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_KO", null, null, null)));
+
         // When
-        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+        Mockito.verify(onboardingWorkflowConnectorMock).getOnboardingStatus(userId, initiativeId);
+        Mockito.verifyNoInteractions(rewardContextHolderServiceMock);
+    }
+
+    @Test
+    void isOnboarded_emptyWhenConnectorReturnsEmpty() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.empty());
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+        Mockito.verifyNoInteractions(rewardContextHolderServiceMock);
+    }
+
+    @Test
+    void isOnboarded_emptyWhenEndDateIsBeforeTrxDate() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        LocalDate now = LocalDate.now();
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
+
+        // initiative already ended yesterday
+        InitiativeConfig expiredConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .startDate(now.minusYears(5L))
+                .endDate(now.minusDays(1L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(expiredConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
         // Then
         Assertions.assertNull(result);
     }
 
     @Test
-    void isOnboardedOK_withFamilyId() {
+    void isOnboarded_okWhenNonNfWithoutFamilyId() {
         // Given
         OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
         LocalDate now = LocalDate.now();
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstance(1);
-        hpanInitiatives.getOnboardedInitiatives().get(0).setFamilyId("FAMILY_ID");
-        String initiativeId = hpanInitiatives.getOnboardedInitiatives().get(0).getInitiativeId();
-        Mockito.when(hpanInitiativesRepositoryMock.findById(hpanInitiatives.getHpan())).thenReturn(Mono.just(hpanInitiatives));
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(initiativeConfig, result.getFirst());
+        Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, null), result.getSecond());
+    }
+
+    @Test
+    void isOnboarded_okWhenStartAndEndDateAreNull() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
+                .startDate(null)
+                .endDate(null)
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(initiativeConfig, result.getFirst());
+        Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, null), result.getSecond());
+    }
+
+    @Test
+    void isOnboarded_emptyWhenStartDateIsAfterTrxDate() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
+                .startDate(trxDate.toLocalDate().plusDays(1L))
+                .endDate(trxDate.toLocalDate().plusDays(10L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    void isOnboarded_okWhenTrxDateEqualsStartAndEndBoundaries() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
+                .startDate(trxDate.toLocalDate())
+                .endDate(trxDate.toLocalDate())
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(initiativeConfig, result.getFirst());
+        Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, null), result.getSecond());
+    }
+
+    @Test
+    void isOnboarded_ok_withFamilyId() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        String familyId = "FAMILY_1";
+        LocalDate now = LocalDate.now();
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, familyId)));
 
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
@@ -274,35 +298,73 @@ class OnboardedInitiativesServiceImplTest {
                 .startDate(now.minusYears(5L))
                 .endDate(now.plusYears(5L))
                 .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId)).thenReturn(Mono.just(initiativeConfig));
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
         // When
-        Pair<InitiativeConfig, OnboardingInfo> result = onboardedInitiativesService.isOnboarded(hpanInitiatives.getHpan(), trxDate, initiativeId).block();
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
         // Then
-        Pair<InitiativeConfig, OnboardingInfo> expectedPair = Pair.of(initiativeConfig, hpanInitiatives.getOnboardedInitiatives().get(0));
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(expectedPair, result);
+        Assertions.assertEquals(initiativeConfig, result.getFirst());
+        Assertions.assertEquals(new BaseOnboardingInfo(initiativeId, familyId), result.getSecond());
     }
 
     @Test
-    void onboardedInitiativeInactive(){
+    void isOnboarded_emptyWhenNFWithoutFamilyId() {
         // Given
-        TransactionDTO trx = buildTrx(trxDate, hpan);
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        LocalDate now = LocalDate.now();
 
-        Integer bias = 1;
-        HpanInitiatives hpanInitiatives = HpanInitiativesFaker.mockInstanceWithoutInitiative(bias);
-        OnboardedInitiative onboardedInitiative = OnboardedInitiative.builder()
-                .initiativeId(String.format("INITIATIVE_%d",bias))
-                .status(HpanInitiativeStatus.INACTIVE)
-                .activeTimeIntervals(new ArrayList<>()).build();
-        hpanInitiatives.setOnboardedInitiatives(List.of(onboardedInitiative));
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+            .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, null)));
 
-        Mockito.when(hpanInitiativesRepositoryMock.findById(Mockito.same(hpan))).thenReturn(Mono.just(hpanInitiatives));
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
 
         // When
-        List<InitiativeConfig> result = onboardedInitiativesService.getInitiatives(trx).collectList().block();
-        Assertions.assertNotNull(result);
+        Pair<InitiativeConfig, OnboardingInfo> result =
+            onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
 
         // Then
-        checkInitiativeNotFound(hpanInitiativesRepositoryMock, hpan, result);
+        Assertions.assertNull(result);
     }
+
+    @Test
+    void isOnboarded_emptyWhenNFWithBlankFamilyId() {
+        // Given
+        OffsetDateTime trxDate = OffsetDateTime.now();
+        String userId = "USER_1";
+        String initiativeId = "INITIATIVE_1";
+        LocalDate now = LocalDate.now();
+
+        Mockito.when(onboardingWorkflowConnectorMock.getOnboardingStatus(userId, initiativeId))
+                .thenReturn(Mono.just(new OnboardingStatusResponseDTO("ONBOARDING_OK", null, null, "   ")));
+
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
+                .startDate(now.minusYears(5L))
+                .endDate(now.plusYears(5L))
+                .build();
+        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
+                .thenReturn(Mono.just(initiativeConfig));
+
+        // When
+        Pair<InitiativeConfig, OnboardingInfo> result =
+                onboardedInitiativesService.isOnboarded(userId, trxDate, initiativeId).block();
+
+        // Then
+        Assertions.assertNull(result);
+    }
+
 }

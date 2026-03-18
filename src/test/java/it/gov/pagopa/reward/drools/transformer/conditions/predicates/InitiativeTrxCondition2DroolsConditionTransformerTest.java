@@ -87,13 +87,12 @@ abstract class InitiativeTrxCondition2DroolsConditionTransformerTest {
     protected List<Command<?>> buildKieContainerCommands(TransactionDroolsDTO trx, String agendaGroup) {
 
         final UserInitiativeCounters counter = getInitiativeCounters();
-        @SuppressWarnings("unchecked")
-        List<Command<?>> commands = Arrays.asList(
+
+        return Arrays.<Command<?>>asList(
                 CommandFactory.newInsert(trx),
                 CommandFactory.newInsert(counter),
                 new AgendaGroupSetFocusCommand(agendaGroup)
         );
-        return commands;
     }
 
     protected UserInitiativeCounters getInitiativeCounters() {

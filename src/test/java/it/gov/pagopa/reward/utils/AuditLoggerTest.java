@@ -31,7 +31,7 @@ class AuditLoggerTest {
     private final TransactionDroolsDTO2RewardTransactionMapper mapper = new TransactionDroolsDTO2RewardTransactionMapper();
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("AUDIT");
         memoryAppender = new MemoryAppender();
         memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
@@ -171,23 +171,6 @@ class AuditLoggerTest {
     }
 
     @Test
-    void logDeletedHpanInitiative(){
-        Long count = 10L;
-        auditUtilities.logDeletedHpanInitiative(INITIATIVE_ID, count);
-
-        Assertions.assertEquals(
-                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Payment instruments deleted." +
-                        " cs1Label=initiativeId cs1=%s cs2Label=numberInstruments cs2=%s")
-                        .formatted(
-                                AuditLogger.SRCIP,
-                                INITIATIVE_ID,
-                                count
-                        ),
-                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
-        );
-    }
-
-    @Test
     void logDeletedTransaction(){
         Long count = 10L;
         auditUtilities.logDeletedTransaction(INITIATIVE_ID, count);
@@ -199,22 +182,6 @@ class AuditLoggerTest {
                                 AuditLogger.SRCIP,
                                 INITIATIVE_ID,
                                 count
-                        ),
-                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
-        );
-    }
-
-    @Test
-    void logDeletedHpan(){
-        String hpan = "HPAN";
-        auditUtilities.logDeletedHpan(hpan, USER);
-        Assertions.assertEquals(
-                ("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Reward dstip=%s msg=Payment instruments without any initiative associate deleted." +
-                        " suser=%s cs1Label=hpan cs1=%s")
-                        .formatted(
-                                AuditLogger.SRCIP,
-                                USER,
-                                hpan
                         ),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
