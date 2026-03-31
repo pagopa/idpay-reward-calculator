@@ -1,8 +1,8 @@
 package it.gov.pagopa.common.stream;
 
 import lombok.NonNull;
-import org.springframework.boot.actuate.health.AbstractHealthIndicator;
-import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.health.contributor.AbstractHealthIndicator;
+import org.springframework.boot.health.contributor.Health;
 import org.springframework.cloud.stream.messaging.DirectWithAttributesChannel;
 import org.springframework.context.ApplicationContext;
 import org.springframework.integration.config.GlobalChannelInterceptor;

@@ -3,8 +3,8 @@ package it.gov.pagopa.common.config;
 import com.mongodb.MongoException;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.Status;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -16,16 +16,16 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 
-class CustomMongoHealthIndicatorTest {
+class CustomReactiveMongoHealthIndicatorTest {
     @Test
     void testMongoIsUp() {
         Document buildInfo = mock(Document.class);
         given(buildInfo.getInteger("maxWireVersion")).willReturn(10);
         ReactiveMongoTemplate reactiveMongoTemplate = mock(ReactiveMongoTemplate.class);
         given(reactiveMongoTemplate.executeCommand("{ isMaster: 1 }")).willReturn(Mono.just(buildInfo));
-        CustomReactiveMongoHealthIndicator customReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
+        CustomReactiveMongoHealthIndicator mongoReactiveHealthIndicator = new CustomReactiveMongoHealthIndicator(
                 reactiveMongoTemplate);
-        Mono<Health> health = customReactiveMongoHealthIndicator.health();
+        Mono<Health> health = mongoReactiveHealthIndicator.health();
         StepVerifier.create(health).consumeNextWith(h -> {
             assertThat(h.getStatus()).isEqualTo(Status.UP);
             assertThat(h.getDetails()).containsOnlyKeys("maxWireVersion");
@@ -37,9 +37,9 @@ class CustomMongoHealthIndicatorTest {
     void testMongoIsDown() {
         ReactiveMongoTemplate reactiveMongoTemplate = mock(ReactiveMongoTemplate.class);
         given(reactiveMongoTemplate.executeCommand("{ isMaster: 1 }")).willThrow(new MongoException("Connection failed"));
-        CustomReactiveMongoHealthIndicator customReactiveMongoHealthIndicator = new CustomReactiveMongoHealthIndicator(
+        CustomReactiveMongoHealthIndicator mongoReactiveHealthIndicator = new CustomReactiveMongoHealthIndicator(
                 reactiveMongoTemplate);
-        Mono<Health> health = customReactiveMongoHealthIndicator.health();
+        Mono<Health> health = mongoReactiveHealthIndicator.health();
         StepVerifier.create(health).consumeNextWith(h -> {
             assertThat(h.getStatus()).isEqualTo(Status.DOWN);
             assertThat(h.getDetails()).containsOnlyKeys("error");
