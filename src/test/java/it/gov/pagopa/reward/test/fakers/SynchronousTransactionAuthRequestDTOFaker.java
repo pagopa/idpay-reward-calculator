@@ -1,8 +1,8 @@
 package it.gov.pagopa.reward.test.fakers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionAuthRequestDTO;
+import tools.jackson.core.JacksonException;
 
 public class SynchronousTransactionAuthRequestDTOFaker {
 
@@ -17,7 +17,7 @@ public class SynchronousTransactionAuthRequestDTOFaker {
                             SynchronousTransactionAuthRequestDTO.class
                     ).toBuilder()
                     .rewardCents(bias);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Cannot build SynchronousTransactionAuthRequestDTO mockInstance", e);
         }
     }

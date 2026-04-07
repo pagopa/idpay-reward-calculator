@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.commands;
 
-import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.commands.CommandOperationDTO;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
@@ -19,6 +18,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.ObjectReader;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

@@ -14,7 +14,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
@@ -28,16 +28,16 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
         properties = {
                 "de.flapdoodle.mongodb.embedded.version=4.2.24",
 
-                "spring.data.mongodb.database=idpay",
-                "spring.data.mongodb.config.connectionPool.maxSize: 100",
-                "spring.data.mongodb.config.connectionPool.minSize: 0",
-                "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
-                "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
-                "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
-                "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
-                "spring.data.mongodb.secondary.uri=mongodb://localhost:${spring.data.mongodb.port}",
-                "spring.data.mongodb.secondary.database=idpay2",
-                "spring.data.mongodb.secondary.enabled=true",
+                "spring.mongodb.database=idpay",
+                "spring.mongodb.config.connectionPool.maxSize: 100",
+                "spring.mongodb.config.connectionPool.minSize: 0",
+                "spring.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
+                "spring.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
+                "spring.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
+                "spring.mongodb.config.connectionPool.maxConnecting: 2",
+                "spring.mongodb.secondary.uri=mongodb://localhost:${spring.mongodb.port}",
+                "spring.mongodb.secondary.database=idpay2",
+                "spring.mongodb.secondary.enabled=true",
         })
 @AutoConfigureSingleInstanceMongodb
 @Import({MongoTestUtilitiesService.TestMongoConfiguration.class,

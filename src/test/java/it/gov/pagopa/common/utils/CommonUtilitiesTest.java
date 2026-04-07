@@ -1,6 +1,5 @@
 package it.gov.pagopa.common.utils;
 
-import com.fasterxml.jackson.databind.ObjectReader;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -9,6 +8,7 @@ import org.mockito.Mockito;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
+import tools.jackson.databind.ObjectReader;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

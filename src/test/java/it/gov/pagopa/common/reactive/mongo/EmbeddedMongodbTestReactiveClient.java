@@ -18,7 +18,7 @@ public class EmbeddedMongodbTestReactiveClient implements EmbeddedMongodbTestCli
     private final String dbName;
 
     public EmbeddedMongodbTestReactiveClient(Environment env) {
-        this.dbName = Objects.requireNonNull(env.getProperty("spring.data.mongodb.database"));
+        this.dbName = Objects.requireNonNull(env.getProperty("spring.mongodb.database"));
     }
 
     @Override
