@@ -3,7 +3,7 @@ spring:
     mongodb:
       secondary:
         enabled: true
-        uri: mongodb://localhost:${spring.data.mongodb.port}
+        uri: mongodb://localhost:${spring.mongodb.port}
         database: idpay
 rest-client:
   onboarding-workflow:

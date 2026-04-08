@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRep
 import org.springframework.util.StringUtils;
 
 @Configuration
-@ConditionalOnProperty(prefix = "spring.data.mongodb.secondary", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "spring.mongodb.secondary", name = "enabled", havingValue = "true")
 @EnableReactiveMongoRepositories(
         basePackages = "it.gov.pagopa.reward.connector.repository.secondary",
         reactiveMongoTemplateRef = "secondaryReactiveMongoTemplate"
@@ -45,7 +45,7 @@ public class SecondaryReactiveMongoConfig {
             @Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
         if (!StringUtils.hasText(mongoConfig.uri()) || !StringUtils.hasText(mongoConfig.database())) {
             throw new IllegalStateException(
-                    "Secondary MongoDB enabled but uri/database not configured (spring.data.mongodb.secondary.uri / .database)");
+                    "Secondary MongoDB enabled but uri/database not configured (spring.mongodb.secondary.uri / .database)");
         }
         log.info("Initializing secondary MongoClient for database {} at uri {}", mongoConfig.database(),
                 maskConnString(mongoConfig.uri()));

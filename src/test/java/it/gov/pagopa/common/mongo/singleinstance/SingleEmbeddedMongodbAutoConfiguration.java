@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.mongo.singleinstance;
 
+import de.flapdoodle.embed.mongo.commands.MongoImportArguments;
 import de.flapdoodle.embed.mongo.commands.MongodArguments;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.IFeatureAwareVersion;
@@ -9,9 +10,9 @@ import it.gov.pagopa.common.mongo.EmbeddedMongodbTestClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoProperties;
-import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration;
+import org.springframework.boot.mongodb.autoconfigure.MongoAutoConfiguration;
+import org.springframework.boot.mongodb.autoconfigure.MongoProperties;
+import org.springframework.boot.mongodb.autoconfigure.MongoReactiveAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -22,6 +23,7 @@ import org.springframework.test.context.event.annotation.AfterTestClass;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -47,7 +49,7 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
         if(SingleInstanceMongodWrapper.singleMongodNet!=null){
             ConfigurableEnvironment env = context.getEnvironment();
             env.getPropertySources().addFirst(new MapPropertySource("embeddedMongoReusedProperties",
-                    Map.of("spring.data.mongodb.port", SingleInstanceMongodWrapper.singleMongodNet.getPort())));
+                    Map.of("spring.mongodb.port", SingleInstanceMongodWrapper.singleMongodNet.getPort())));
             super.net(context);
 
             return SingleInstanceMongodWrapper.singleMongodNet;
@@ -83,10 +85,10 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
                 destroyMethod = "stop"
         )
         @ConditionalOnMissingBean
-        public MongodWrapper reactiveClientServerWrapper(IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments) {
+        public MongodWrapper reactiveClientServerWrapper(IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments, MongoImportArguments mongoImportArguments) {
             return Objects.requireNonNullElseGet(
                     singleMongodWrapperInstance,
-                    () -> createMongodWrapper(unprotectedReactiveClientServerFactoryConstructor, version, properties, mongod, mongodArguments));
+                    () -> createMongodWrapper(unprotectedReactiveClientServerFactoryConstructor, version, properties, mongod, mongodArguments, mongoImportArguments));
         }
 
         @Bean
@@ -118,10 +120,10 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
                 destroyMethod = "stop"
         )
         @ConditionalOnMissingBean
-        public MongodWrapper syncClientServerWrapper(IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments) {
+        public MongodWrapper syncClientServerWrapper(IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments, MongoImportArguments mongoImportArguments) {
             return Objects.requireNonNullElseGet(
                     singleMongodWrapperInstance,
-                    () -> createMongodWrapper(unprotectedSyncClientServerFactoryConstructor, version, properties, mongod, mongodArguments));
+                    () -> createMongodWrapper(unprotectedSyncClientServerFactoryConstructor, version, properties, mongod, mongodArguments, mongoImportArguments));
         }
 
         @Bean
@@ -131,9 +133,9 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
         }
     }
 
-    private static MongodWrapper createMongodWrapper(Constructor<? extends AbstractServerFactory<?>> unprotectedSyncClientServerFactoryConstructor, IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments) {
+    private static MongodWrapper createMongodWrapper(Constructor<? extends AbstractServerFactory<?>> unprotectedSyncClientServerFactoryConstructor, IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments, MongoImportArguments mongoImportArguments) {
         try {
-            return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(unprotectedSyncClientServerFactoryConstructor.newInstance(properties).createWrapper(version, mongod, mongodArguments));
+            return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(unprotectedSyncClientServerFactoryConstructor.newInstance(properties).createWrapper(version, mongod, mongodArguments, List.of(mongoImportArguments)));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("Cannot call protected constructor", e);
         }

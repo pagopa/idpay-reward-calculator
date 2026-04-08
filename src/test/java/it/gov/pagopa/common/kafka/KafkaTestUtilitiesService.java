@@ -2,8 +2,6 @@ package it.gov.pagopa.common.kafka;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.reactive.kafka.consumer.BaseKafkaConsumer;
 import it.gov.pagopa.common.utils.MemoryAppender;
@@ -36,6 +34,8 @@ import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.event.annotation.AfterTestClass;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -127,7 +127,7 @@ public class KafkaTestUtilitiesService {
             kafkaBroker.addTopics(topic);
         }
 
-        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(groupId, "true", kafkaBroker);
+        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(kafkaBroker, groupId, true);
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         DefaultKafkaConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
         Consumer<String, String> consumer = cf.createConsumer();
@@ -196,7 +196,7 @@ public class KafkaTestUtilitiesService {
     public void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, Object payload) {
         try {
             publishIntoEmbeddedKafka(topic, headers, key, objectMapper.writeValueAsString(payload));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException(e);
         }
     }

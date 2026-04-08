@@ -16,7 +16,7 @@
 //import org.mockito.Mockito;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+//import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 //import org.springframework.boot.test.mock.mockito.SpyBean;
 //import org.springframework.http.HttpStatus;
 //import org.springframework.stereotype.Service;
@@ -40,13 +40,13 @@
 //
 //                "de.flapdoodle.mongodb.embedded.version: 4.2.24",
 //
-//                "spring.data.mongodb.database: idpay",
-//                "spring.data.mongodb.config.connectionPool.maxSize: 100",
-//                "spring.data.mongodb.config.connectionPool.minSize: 0",
-//                "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
-//                "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
-//                "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
-//                "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
+//                "spring.mongodb.database: idpay",
+//                "spring.mongodb.config.connectionPool.maxSize: 100",
+//                "spring.mongodb.config.connectionPool.minSize: 0",
+//                "spring.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
+//                "spring.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
+//                "spring.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
+//                "spring.mongodb.config.connectionPool.maxConnecting: 2",
 //        })
 //@ContextConfiguration(classes = {
 //        ReactiveRequestContextFilter.class,

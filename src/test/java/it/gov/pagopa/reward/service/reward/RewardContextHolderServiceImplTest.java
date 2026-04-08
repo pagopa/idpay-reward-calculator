@@ -191,4 +191,32 @@ class RewardContextHolderServiceImplTest {
                 ((RewardContextHolderServiceImpl)rewardContextHolderService).getState(null)
         );
     }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true}) // serve Redis attivo
+    void testInvalidCachedKieBase_shouldTriggerCatch(boolean isRedisCacheEnabled) {
+        // Given
+        configureMocks(false); // evitiamo comportamento standard
+
+        byte[] invalidBytes = new byte[]{1, 2, 3, 4}; // NON serializzato
+
+        Mockito.when(reactiveRedisTemplateMock.opsForValue().get(Mockito.anyString()))
+                .thenReturn(Mono.just(invalidBytes));
+
+        Mockito.when(droolsRuleRepositoryMock.findAll()).thenReturn(Flux.empty());
+        Mockito.when(kieContainerBuilderServiceMock.build(Mockito.any()))
+                .thenReturn(Mono.just(expectedKieBase));
+
+        buildService(true);
+
+        // When
+        TestUtils.waitFor(() -> {
+            KieBase result = rewardContextHolderService.getRewardRulesKieBase();
+
+            // Then
+            Assertions.assertNotNull(result); // fallback OK
+            return true;
+        }, () -> "KieBase not initialized", 10, 100);
+    }
+
 }

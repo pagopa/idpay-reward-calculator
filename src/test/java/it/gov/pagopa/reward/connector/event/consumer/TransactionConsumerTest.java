@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.connector.event.consumer;
 
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.mongodb.MongoException;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
@@ -18,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.ObjectReader;
 
 import java.time.Duration;
 import java.util.Collections;
