@@ -28,7 +28,7 @@ import org.springframework.util.SerializationUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.Collections;
 
 @ExtendWith(MockitoExtension.class)
@@ -134,8 +134,8 @@ class RewardContextHolderServiceImplTest {
                 .initiativeName("NAME")
                 .organizationId("ORGANIZATIONID")
                 .beneficiaryBudgetCents(100_00L)
-                .startDate(LocalDate.MIN)
-                .endDate(LocalDate.MAX)
+                .startDate(Instant.MIN)
+                .endDate(Instant.MAX)
                 .dailyThreshold(true)
                 .monthlyThreshold(false)
                 .yearlyThreshold(false)

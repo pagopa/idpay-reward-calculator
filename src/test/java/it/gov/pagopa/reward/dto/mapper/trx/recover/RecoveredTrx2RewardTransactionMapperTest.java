@@ -14,7 +14,7 @@ import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +32,7 @@ class RecoveredTrx2RewardTransactionMapperTest {
         expected.setRejectionReasons(List.of("DUMMY"));
         expected.setInitiativeRejectionReasons(Map.of("INITIATIVEID", List.of("DUMMY")));
         expected.setRewards(Map.of("INITIATIVEID2", new Reward()));
-        expected.setElaborationDateTime(LocalDateTime.now());
+        expected.setElaborationDateTime(Instant.now());
 
         TransactionProcessed trxProcessed = transactionProcessedMapper.apply(expected);
         trxProcessed.setElaborationDateTime(expected.getElaborationDateTime());

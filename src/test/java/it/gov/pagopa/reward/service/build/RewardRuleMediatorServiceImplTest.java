@@ -22,8 +22,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -55,13 +54,13 @@ class RewardRuleMediatorServiceImplTest {
                     InitiativeConfig.builder()
                             .initiativeId(i.getInitiativeId())
                             .beneficiaryBudgetCents(1000_00L)
-                            .endDate(LocalDate.now())
+                            .endDate(Instant.now())
                             .dailyThreshold(true)
                             .weeklyThreshold(true)
                             .monthlyThreshold(false)
                             .yearlyThreshold(false)
                             .build(),
-                    LocalDateTime.now());
+                    Instant.now());
         });
         Mockito.when(droolsRuleRepositoryMock.save(Mockito.any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         Mockito.when(kieContainerBuilderServiceMock.buildAll()).thenReturn(Mono.just(newKieBaseBuiltMock));

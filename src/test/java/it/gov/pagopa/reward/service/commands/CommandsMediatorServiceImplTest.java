@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
 import tools.jackson.databind.ObjectReader;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +77,7 @@ class CommandsMediatorServiceImplTest {
     void execute_operationDelete() {
         CommandOperationDTO payload = CommandOperationDTO.builder()
                 .entityId("DUMMY_INITITATIVEID")
-                .operationTime(LocalDateTime.now())
+                .operationTime(Instant.now())
                 .operationType(CommandsConstants.COMMANDS_OPERATION_TYPE_DELETE_INITIATIVE)
                 .build();
 
@@ -97,7 +97,7 @@ class CommandsMediatorServiceImplTest {
     void execute_anotherOperation() {
         CommandOperationDTO payload = CommandOperationDTO.builder()
                 .entityId("DUMMY_INITITATIVEID")
-                .operationTime(LocalDateTime.now())
+                .operationTime(Instant.now())
                 .operationType("OTHER_OPERATION_TYPE")
                 .build();
 

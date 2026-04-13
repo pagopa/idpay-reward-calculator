@@ -29,6 +29,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
@@ -36,7 +39,7 @@ import java.util.stream.StreamSupport;
 class InitiativeEvaluatorFacadeServiceTest {
 
     @BeforeAll
-    public static void setDefaultTimezone() {
+    static void setDefaultTimezone() {
         TimeZone.setDefault(TimeZone.getTimeZone(CommonConstants.ZONEID));
     }
 
@@ -57,7 +60,7 @@ class InitiativeEvaluatorFacadeServiceTest {
     private final Transaction2TransactionProcessedMapper reward2ProcessedMapper = new Transaction2TransactionProcessedMapper();
 
     @BeforeEach
-    public void initMocks() {
+    void initMocks() {
         initiativesEvaluatorFacadeService = new InitiativesEvaluatorFacadeServiceImpl(
                 3, 1, userInitiativeCountersRepositoryMock,
                 initiativesEvaluatorServiceMock,

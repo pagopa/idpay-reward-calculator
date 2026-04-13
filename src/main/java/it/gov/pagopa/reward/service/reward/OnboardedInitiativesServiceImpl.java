@@ -8,8 +8,8 @@ import it.gov.pagopa.reward.model.ActiveTimeInterval;
 import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
@@ -31,7 +31,7 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
     }
 
     @Override
-    public Mono<Pair<InitiativeConfig, OnboardingInfo>> isOnboarded(String userId, OffsetDateTime trxDate, String initiativeId) {
+    public Mono<Pair<InitiativeConfig, OnboardingInfo>> isOnboarded(String userId, Instant trxDate, String initiativeId) {
         var safeUserId = sanitizeString(userId);
         var safeInitiativeId = sanitizeString(initiativeId);
         log.debug("[REWARD][IS_ONBOARDED] Checking onboarding status via REST for userId: {}, initiativeId: {}", safeUserId, safeInitiativeId);
@@ -53,10 +53,9 @@ public class OnboardedInitiativesServiceImpl implements OnboardedInitiativesServ
         return true;
     }
 
-    private boolean checkInitiativeValidity(InitiativeConfig initiativeConfig, OffsetDateTime trxDate) {
-        var trxLocalDate = trxDate.toLocalDate();
-        return (initiativeConfig.getStartDate() == null || !initiativeConfig.getStartDate().isAfter(trxLocalDate))
-                && (initiativeConfig.getEndDate() == null || !initiativeConfig.getEndDate().isBefore(trxLocalDate));
+    private boolean checkInitiativeValidity(InitiativeConfig initiativeConfig, Instant trxDate) {
+        return (initiativeConfig.getStartDate() == null || !initiativeConfig.getStartDate().isAfter(trxDate))
+                && (initiativeConfig.getEndDate() == null || !initiativeConfig.getEndDate().isBefore(trxDate));
     }
 
 }

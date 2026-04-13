@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -38,8 +39,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode.INITIATIVE_NOT_ACTIVE_FOR_USER;
@@ -63,6 +67,7 @@ class CancelTrxSynchronousServiceImplTest{
     private final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper("00");
     private final Transaction2RewardTransactionMapper rewardTransactionMapper = new Transaction2RewardTransactionMapper();
 
+    private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     private CancelTrxSynchronousServiceImpl cancelTrxSynchronousService;
 
@@ -76,7 +81,8 @@ class CancelTrxSynchronousServiceImplTest{
                         rewardTransactionMapper,
                         userInitiativeCountersUpdateServiceMock,
                         onboardedInitiativesServiceMock,
-                        synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper);
+                        synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper,
+                        clock);
     }
 
     @Test
@@ -221,7 +227,7 @@ class CancelTrxSynchronousServiceImplTest{
                         .trxId(trxCancelRequest.getTransactionId())
                         .operationTypeTranscoded(OperationType.REFUND)
                         .accruedReward(Map.of(INITIATIVEID, trxCancelRequest.getRewardCents()))
-                        .elaborationDateTime(LocalDateTime.now())
+                        .elaborationDateTime(Instant.now())
                         .build()
         ));
         Mockito.when(userInitiativeCountersRepositoryMock.findById(UserInitiativeCounters.buildId(trxCancelRequest.getUserId(), INITIATIVEID)))
@@ -303,8 +309,8 @@ class CancelTrxSynchronousServiceImplTest{
                 .organizationId(ORGANIZATIONID)
                 .initiativeName("INITIATIVENAME")
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
-                .startDate(LocalDate.now().minusMonths(10L))
-                .endDate(LocalDate.now().plusYears(2))
+                .startDate(LocalDate.now().minusMonths(10L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
+                .endDate(LocalDate.now().plusYears(2).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
                 .initiativeRewardType(InitiativeRewardType.DISCOUNT)
                 .dailyThreshold(false)
                 .weeklyThreshold(false)
@@ -318,7 +324,7 @@ class CancelTrxSynchronousServiceImplTest{
         return UserInitiativeCounters
                 .builder(trxCancelRequest.getUserId(), InitiativeGeneralDTO.BeneficiaryTypeEnum.PF, INITIATIVEID)
                 .version(3L)
-                .updateDate(LocalDateTime.now().minusDays(10L))
+                .updateDate(Instant.now().minus(10L, ChronoUnit.DAYS))
                 .exhaustedBudget(false)
                 .trxNumber(3L)
                 .totalRewardCents(100_00L)

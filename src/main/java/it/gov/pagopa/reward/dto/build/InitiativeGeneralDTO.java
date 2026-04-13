@@ -3,7 +3,7 @@ package it.gov.pagopa.reward.dto.build;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import java.time.LocalDate;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -74,15 +74,15 @@ public class InitiativeGeneralDTO {
   private Long beneficiaryBudgetCents;
 
   @JsonProperty("startDate")
-  private LocalDate startDate;
+  private Instant startDate;
 
   @JsonProperty("endDate")
-  private LocalDate endDate;
+  private Instant endDate;
 
   @JsonProperty("rankingStartDate")
-  private LocalDate rankingStartDate;
+  private Instant rankingStartDate;
 
   @JsonProperty("rankingEndDate")
-  private LocalDate rankingEndDate;
+  private Instant rankingEndDate;
 
 }

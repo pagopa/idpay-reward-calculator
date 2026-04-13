@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.connector.rest.onboarding.OnboardingWorkflowConnector;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
@@ -11,7 +12,9 @@ import it.gov.pagopa.reward.model.BaseOnboardingInfo;
 import it.gov.pagopa.reward.model.OnboardingInfo;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,41 +49,41 @@ class OnboardedInitiativesServiceImplTest {
 
     @Test
     void getChargeInitiativesWhenEndEnd(){
-        testChargeInitiative(OffsetDateTime.now().plusDays(10));
+        testChargeInitiative(Instant.now().plus(10, ChronoUnit.DAYS));
     }
     @Test
     void getChargeInitiativesWhenFutureEndEnd(){
-        testChargeInitiative(OffsetDateTime.now().plusDays(10));
+        testChargeInitiative(Instant.now().plus(10, ChronoUnit.DAYS));
     }
 
     @Test
     void getChargeInitiativesWhenPastEndEnd(){
-        testChargeInitiative(OffsetDateTime.now().plusDays(10));
+        testChargeInitiative(Instant.now().plus(10, ChronoUnit.DAYS));
     }
 
     @Test
     void getChargeInitiativesWhenStart(){
-        testChargeInitiative(OffsetDateTime.now().plusDays(10L));
+        testChargeInitiative(Instant.now().plus(10, ChronoUnit.DAYS));
     }
 
     @Test
     void getChargeInitiativeAfterStartInitiative(){
-        testChargeInitiative(OffsetDateTime.now().plusDays(11L));
+        testChargeInitiative(Instant.now().plus(11,ChronoUnit.DAYS));
     }
 
     @Test
     void getChargeInitiativeBeforeStartInitiative(){
-        testChargeInitiative(OffsetDateTime.now().plusDays(9L));
+        testChargeInitiative(Instant.now().plus(9,ChronoUnit.DAYS));
     }
 
     @Test
     void getChargeInitiativeIntoInitiativeInterval(){
-        testChargeInitiative(OffsetDateTime.now());
+        testChargeInitiative(Instant.now());
     }
 
-    void testChargeInitiative(OffsetDateTime trxDateTime) {
+    void testChargeInitiative(Instant trxDateTime) {
         if(trxDateTime == null) {
-            trxDateTime = OffsetDateTime.now().plusDays(10L);
+            trxDateTime = Instant.now().plus(10, ChronoUnit.DAYS);
         }
         TransactionDTO trx = buildTrx(trxDateTime);
 
@@ -90,7 +93,7 @@ class OnboardedInitiativesServiceImplTest {
         Assertions.assertEquals(trxDateTime, trx.getTrxChargeDate());
     }
 
-    private TransactionDTO buildTrx(OffsetDateTime trxDateTime) {
+    private TransactionDTO buildTrx(Instant trxDateTime) {
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
         trx.setOperationTypeTranscoded(OperationType.CHARGE);
         trx.setEffectiveAmountCents(CommonUtilities.euroToCents(trx.getAmount()));
@@ -101,7 +104,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_emptyWhenStatusNotOk() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
 
@@ -121,7 +124,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_emptyWhenConnectorReturnsEmpty() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
 
@@ -140,7 +143,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_emptyWhenEndDateIsBeforeTrxDate() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
         LocalDate now = LocalDate.now();
@@ -151,8 +154,8 @@ class OnboardedInitiativesServiceImplTest {
         // initiative already ended yesterday
         InitiativeConfig expiredConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
-                .startDate(now.minusYears(5L))
-                .endDate(now.minusDays(1L))
+                .startDate(now.minusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
+                .endDate(now.minusDays(1L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(expiredConfig));
@@ -168,7 +171,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_okWhenNonNfWithoutFamilyId() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
         LocalDate now = LocalDate.now();
@@ -179,8 +182,8 @@ class OnboardedInitiativesServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
-                .startDate(now.minusYears(5L))
-                .endDate(now.plusYears(5L))
+                .startDate(now.minusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
+                .endDate(now.plusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(initiativeConfig));
@@ -198,7 +201,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_okWhenStartAndEndDateAreNull() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
 
@@ -227,7 +230,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_emptyWhenStartDateIsAfterTrxDate() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
 
@@ -237,8 +240,8 @@ class OnboardedInitiativesServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
-                .startDate(trxDate.toLocalDate().plusDays(1L))
-                .endDate(trxDate.toLocalDate().plusDays(10L))
+                .startDate(trxDate.plus(1, ChronoUnit.DAYS))
+                .endDate(trxDate.plus(10, ChronoUnit.DAYS))
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(initiativeConfig));
@@ -254,7 +257,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_okWhenTrxDateEqualsStartAndEndBoundaries() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
 
@@ -264,8 +267,8 @@ class OnboardedInitiativesServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
-                .startDate(trxDate.toLocalDate())
-                .endDate(trxDate.toLocalDate())
+                .startDate(trxDate)
+                .endDate(trxDate)
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(initiativeConfig));
@@ -283,7 +286,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_ok_withFamilyId() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
         String familyId = "FAMILY_1";
@@ -295,8 +298,8 @@ class OnboardedInitiativesServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
-                .startDate(now.minusYears(5L))
-                .endDate(now.plusYears(5L))
+                .startDate(now.minusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
+                .endDate(now.plusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(initiativeConfig));
@@ -314,7 +317,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_emptyWhenNFWithoutFamilyId() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
         LocalDate now = LocalDate.now();
@@ -325,8 +328,8 @@ class OnboardedInitiativesServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
-                .startDate(now.minusYears(5L))
-                .endDate(now.plusYears(5L))
+                .startDate(now.minusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
+                .endDate(now.plusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(initiativeConfig));
@@ -342,7 +345,7 @@ class OnboardedInitiativesServiceImplTest {
     @Test
     void isOnboarded_emptyWhenNFWithBlankFamilyId() {
         // Given
-        OffsetDateTime trxDate = OffsetDateTime.now();
+        Instant trxDate = Instant.now();
         String userId = "USER_1";
         String initiativeId = "INITIATIVE_1";
         LocalDate now = LocalDate.now();
@@ -353,8 +356,8 @@ class OnboardedInitiativesServiceImplTest {
         InitiativeConfig initiativeConfig = InitiativeConfig.builder()
                 .initiativeId(initiativeId)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF)
-                .startDate(now.minusYears(5L))
-                .endDate(now.plusYears(5L))
+                .startDate(now.minusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
+                .endDate(now.plusYears(5L).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant())
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(initiativeId))
                 .thenReturn(Mono.just(initiativeConfig));

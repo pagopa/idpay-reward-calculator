@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
-import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
@@ -11,10 +10,7 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +18,11 @@ import java.util.function.Supplier;
 
 class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondition2DroolsRuleTransformerTest<RewardLimitsDTO> {
 
-    private static final LocalDateTime TRX_DATE = LocalDateTime.of(LocalDate.of(2022, 3, 15), LocalTime.NOON);
+    private static final OffsetDateTime TRX_DATE =  OffsetDateTime.of(
+            LocalDate.of(2022, 3, 15),
+            LocalTime.NOON,
+            ZoneOffset.UTC
+    );
 
     private final RewardLimitsTrxCondition2DroolsRuleTransformer transformer = new RewardLimitsTrxCondition2DroolsRuleTransformer(new TrxCondition2DroolsConditionTransformerFacadeImpl());
     private UserInitiativeCounters counters;
@@ -34,10 +34,11 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
 
     private TransactionDroolsDTO buildTrx() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        trx.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, CommonConstants.ZONEID.getRules().getOffset(TRX_DATE)));
+        trx.setTrxChargeDate(TRX_DATE);
         return trx;
     }
 
+    private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     @Override
     protected RewardLimitsTrxCondition2DroolsRuleTransformer getTransformer() {
         return transformer;

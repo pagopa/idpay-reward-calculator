@@ -15,7 +15,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -27,13 +28,15 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
     private final TransactionProcessedRepository transactionProcessedRepository;
     private final TrxRePublisherService trxRePublisherService;
     private final RecoveryProcessedTransactionService recoveryProcessedTransactionService;
+    private final Clock clock;
 
-    public TransactionProcessedServiceImpl(OperationTypeHandlerService operationTypeHandlerService, Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper, TransactionProcessedRepository transactionProcessedRepository, TrxRePublisherService trxRePublisherService, RecoveryProcessedTransactionService recoveryProcessedTransactionService) {
+    public TransactionProcessedServiceImpl(OperationTypeHandlerService operationTypeHandlerService, Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper, TransactionProcessedRepository transactionProcessedRepository, TrxRePublisherService trxRePublisherService, RecoveryProcessedTransactionService recoveryProcessedTransactionService, Clock clock) {
         this.operationTypeHandlerService = operationTypeHandlerService;
         this.transaction2TransactionProcessedMapper = transaction2TransactionProcessedMapper;
         this.transactionProcessedRepository = transactionProcessedRepository;
         this.trxRePublisherService = trxRePublisherService;
         this.recoveryProcessedTransactionService = recoveryProcessedTransactionService;
+        this.clock = clock;
     }
 
     @Override
@@ -111,7 +114,7 @@ public class TransactionProcessedServiceImpl implements TransactionProcessedServ
         } else {
             trxProcessed = transaction2TransactionProcessedMapper.apply(trx);
         }
-        trxProcessed.setElaborationDateTime(LocalDateTime.now());
+        trxProcessed.setElaborationDateTime(Instant.now(clock));
         return transactionProcessedRepository.save(trxProcessed);
     }
 

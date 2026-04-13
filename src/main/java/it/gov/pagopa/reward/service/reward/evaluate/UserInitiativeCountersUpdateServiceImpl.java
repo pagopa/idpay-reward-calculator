@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.service.reward.evaluate;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.BaseTransactionProcessed2LastTrxInfoDTOMapper;
@@ -20,8 +21,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Clock;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -59,15 +61,18 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     private final BaseTransactionProcessed2LastTrxInfoDTOMapper baseTransactionProcessed2LastTrxInfoDTOMapper;
     private final Duration lastTrxExpired;
 
+    private final Clock clock;
+
     private final List<String> justTrxCountRejectionReason = List.of(RewardConstants.InitiativeTrxConditionOrder.TRXCOUNT.getRejectionReason());
 
     public UserInitiativeCountersUpdateServiceImpl(RewardContextHolderService rewardContextHolderService,
                                                    RewardCountersMapper rewardCountersMapper,
-                                                   BaseTransactionProcessed2LastTrxInfoDTOMapper baseTransactionProcessed2LastTrxInfoDTOMapper, @Value("${app.trx-counters.lastTrxExpired}") String lastTrxExpired) {
+                                                   BaseTransactionProcessed2LastTrxInfoDTOMapper baseTransactionProcessed2LastTrxInfoDTOMapper, @Value("${app.trx-counters.lastTrxExpired}") String lastTrxExpired, Clock clock) {
         this.rewardContextHolderService = rewardContextHolderService;
         this.rewardCountersMapper = rewardCountersMapper;
         this.baseTransactionProcessed2LastTrxInfoDTOMapper = baseTransactionProcessed2LastTrxInfoDTOMapper;
         this.lastTrxExpired = Duration.parse(lastTrxExpired);
+        this.clock = clock;
     }
 
     @Override
@@ -88,7 +93,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                             evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter, ruleEngineResult);
                                             final Long previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedRewardCents).orElse(null) : null;
                                             initiativeCounter.setVersion(initiativeCounter.getVersion()+1L);
-                                            initiativeCounter.setUpdateDate(LocalDateTime.now());
+                                            initiativeCounter.setUpdateDate(Instant.now(clock));
                                             updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
                                             updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
                                             updateLastTrxCounters(initiativeCounter, ruleEngineResult);
@@ -195,11 +200,11 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateTemporalCounter(Map<String, Counters> periodicalMap, DateTimeFormatter periodicalKeyFormatter, RewardTransactionDTO ruleEngineResult, OperationType operationType, Long previousRewardsCents, Reward initiativeReward, boolean justTrxCountRejection) {
-        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate()), k -> new Counters()), operationType, initiativeReward, previousRewardsCents, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
+        updateCounters(periodicalMap.computeIfAbsent(periodicalKeyFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDate()), k -> new Counters()), operationType, initiativeReward, previousRewardsCents, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
     }
 
     private void updateLastTrxCounters(UserInitiativeCounters initiativeCounter, RewardTransactionDTO ruleEngineResult) {
-        LocalDateTime expiredTime = LocalDateTime.now().minus(lastTrxExpired);
+        Instant expiredTime = Instant.now(clock).minus(lastTrxExpired);
 
         //delete transactions expired
         List<LastTrxInfoDTO> listUpdated = initiativeCounter.getLastTrx()

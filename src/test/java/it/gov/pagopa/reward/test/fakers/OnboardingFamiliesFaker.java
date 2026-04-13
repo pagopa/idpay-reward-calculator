@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.model.OnboardingFamilies;
 
 import java.time.LocalDateTime;
@@ -47,6 +48,6 @@ public class OnboardingFamiliesFaker {
                 .id(OnboardingFamilies.buildId(familyId, initiativeId))
                 .familyId(familyId)
                 .initiativeId(initiativeId)
-                .createDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+                .createDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS).atZone(CommonConstants.ZONEID).toInstant());
     }
 }

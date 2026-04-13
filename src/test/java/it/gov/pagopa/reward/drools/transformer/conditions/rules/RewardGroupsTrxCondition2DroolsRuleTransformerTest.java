@@ -44,6 +44,9 @@ class RewardGroupsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
     @Override
     protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
+        trx.setAcquirerCode("ACQUIRERCODE");
+        trx.setOperationType("OPERATIONTYPE");
+        trx.setAcquirerId("ACQUIREDID");
         trx.setEffectiveAmountCents(5_00L);
         return List.of(() -> trx);
     }

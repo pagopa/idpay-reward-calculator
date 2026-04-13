@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper.trx;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
@@ -22,10 +23,10 @@ public class RewardCountersMapper {
         rewardCounters.setInitiativeBudgetCents(initiativeConfig.getBeneficiaryBudgetCents());
         rewardCounters.setTotalAmountCents(userInitiativeCounters.getTotalAmountCents());
 
-        rewardCounters.setDailyCounters(extractInvolved(userInitiativeCounters.getDailyCounters(), RewardConstants.dayDateFormatter.format(ruleEngineResult.getTrxChargeDate())));
-        rewardCounters.setWeeklyCounters(extractInvolved(userInitiativeCounters.getWeeklyCounters(), RewardConstants.weekDateFormatter.format(ruleEngineResult.getTrxChargeDate())));
-        rewardCounters.setMonthlyCounters(extractInvolved(userInitiativeCounters.getMonthlyCounters(), RewardConstants.monthDateFormatter.format(ruleEngineResult.getTrxChargeDate())));
-        rewardCounters.setYearlyCounters(extractInvolved(userInitiativeCounters.getYearlyCounters(), RewardConstants.yearDateFormatter.format(ruleEngineResult.getTrxChargeDate())));
+        rewardCounters.setDailyCounters(extractInvolved(userInitiativeCounters.getDailyCounters(), RewardConstants.dayDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
+        rewardCounters.setWeeklyCounters(extractInvolved(userInitiativeCounters.getWeeklyCounters(), RewardConstants.weekDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
+        rewardCounters.setMonthlyCounters(extractInvolved(userInitiativeCounters.getMonthlyCounters(), RewardConstants.monthDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
+        rewardCounters.setYearlyCounters(extractInvolved(userInitiativeCounters.getYearlyCounters(), RewardConstants.yearDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
 
         return rewardCounters;
     }

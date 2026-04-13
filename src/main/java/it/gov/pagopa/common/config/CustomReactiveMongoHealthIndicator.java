@@ -12,8 +12,8 @@ public class CustomReactiveMongoHealthIndicator extends AbstractReactiveHealthIn
     private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     public CustomReactiveMongoHealthIndicator(ReactiveMongoTemplate reactiveMongoTemplate) {
-        Assert.notNull(reactiveMongoTemplate, "ReactiveMongoTemplate must not be null");
         super("Mongo health check failed");
+        Assert.notNull(reactiveMongoTemplate, "ReactiveMongoTemplate must not be null");
         this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 

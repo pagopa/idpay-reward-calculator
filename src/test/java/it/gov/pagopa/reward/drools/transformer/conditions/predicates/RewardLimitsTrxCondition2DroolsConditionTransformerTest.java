@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.predicates;
 
-import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.rule.trx.RewardLimitsDTO;
@@ -10,22 +9,24 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.HashMap;
 import java.util.Map;
 
 class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
-    private static final LocalDateTime TRX_DATE = LocalDateTime.of(LocalDate.of(2022, 1, 8), LocalTime.NOON);
+    private static final OffsetDateTime TRX_DATE =  OffsetDateTime.of(
+            LocalDate.of(2022, 1, 8),
+            LocalTime.NOON,
+            ZoneOffset.UTC
+    );
     private final String initiativeId = "RewardLimit";
     private final RewardLimitsTrxCondition2DroolsConditionTransformer transformer = new RewardLimitsTrxCondition2DroolsConditionTransformer();
 
     private final Long rewardLimit = 15_00L;
 
     private Long totalRewardCents;
+
 
     @Override
     protected UserInitiativeCounters getInitiativeCounters() {
@@ -47,7 +48,7 @@ class RewardLimitsTrxCondition2DroolsConditionTransformerTest extends Initiative
     }
 
     private void testRewardLimit(String rewardLimitsCondition, TransactionDroolsDTO transaction) {
-        transaction.setTrxChargeDate(OffsetDateTime.of(TRX_DATE, CommonConstants.ZONEID.getRules().getOffset(TRX_DATE)));
+        transaction.setTrxChargeDate(TRX_DATE);
         transaction.setRewards(new HashMap<>(Map.of(
                 initiativeId, new Reward(initiativeId, "ORGANIZATION_"+initiativeId,10_00L)
         )));

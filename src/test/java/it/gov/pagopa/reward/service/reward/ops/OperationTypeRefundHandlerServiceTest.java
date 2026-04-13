@@ -21,8 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -113,8 +112,8 @@ class OperationTypeRefundHandlerServiceTest {
         List<BaseTransactionProcessed> expectedPreviousTrxs = List.of(
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.CHARGE)
-                        .trxDate(LocalDateTime.MIN)
-                        .trxChargeDate(LocalDateTime.MIN)
+                        .trxDate(Instant.MIN)
+                        .trxChargeDate(Instant.MIN)
                         .amount(BigDecimal.TEN)
                         .amountCents(10_00L)
                         .effectiveAmountCents(10_00L)
@@ -128,8 +127,8 @@ class OperationTypeRefundHandlerServiceTest {
                 RewardTransactionDTO.builder()
                         .operationTypeTranscoded(OperationType.REFUND)
                         .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH))
-                        .trxDate(OffsetDateTime.MIN)
-                        .trxChargeDate(OffsetDateTime.MIN)
+                        .trxDate(Instant.MIN)
+                        .trxChargeDate(Instant.MIN)
                         .amount(BigDecimal.ONE)
                         .amountCents(1_00L)
                         .effectiveAmountCents(1_00L)
@@ -138,8 +137,8 @@ class OperationTypeRefundHandlerServiceTest {
                 // a past refund elaborated
                 TransactionProcessed.builder()
                         .operationTypeTranscoded(OperationType.REFUND)
-                        .trxDate(LocalDateTime.MAX)
-                        .trxChargeDate(LocalDateTime.MIN)
+                        .trxDate(Instant.MAX)
+                        .trxChargeDate(Instant.MIN)
                         .amount(BigDecimal.ONE)
                         .amountCents(1_00L)
                         .effectiveAmountCents(9_00L)
@@ -159,7 +158,7 @@ class OperationTypeRefundHandlerServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertSame(trx, result);
         Assertions.assertEquals(OperationType.REFUND, result.getOperationTypeTranscoded());
-        Assertions.assertEquals(OffsetDateTime.MIN.toLocalDateTime(), result.getTrxChargeDate().toLocalDateTime());
+        Assertions.assertEquals(Instant.MIN, result.getTrxChargeDate());
         Assertions.assertEquals(7_00L, result.getEffectiveAmountCents());
         Assertions.assertEquals(Collections.emptyList(), result.getRejectionReasons());
         Assertions.assertNotNull(result.getRefundInfo());

@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -49,7 +50,7 @@ public class TransactionProcessedFaker {
     public static TransactionProcessed.TransactionProcessedBuilder mockInstanceBuilder(Integer bias) {
         LocalDate trxDate = LocalDate.of(2022, getRandomPositiveNumber(bias, 11) + 1, getRandomPositiveNumber(bias, 27)+1);
         LocalTime trxTime = LocalTime.of(getRandomPositiveNumber(bias, 23), getRandomPositiveNumber(bias, 59), getRandomPositiveNumber(bias, 59));
-        LocalDateTime trxDateTime = LocalDateTime.of(trxDate, trxTime);
+        Instant trxDateTime = LocalDateTime.of(trxDate, trxTime).atZone(CommonConstants.ZONEID).toInstant();
 
         String initiativeId = "INITIATIVEID%s".formatted(bias);
         Map<String, Reward> rewards = Map.of(
@@ -74,6 +75,6 @@ public class TransactionProcessedFaker {
                 .acquirerId("ACQUIRERID%s".formatted(bias))
                 .userId("USERID%s".formatted(bias))
                 .rewards(rewards)
-                .elaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+                .elaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS).atZone(CommonConstants.ZONEID).toInstant());
     }
 }

@@ -15,7 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -29,17 +30,19 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
     private final TrxConsequence2DroolsRuleTransformerFacade trxConsequence2DroolsRuleTransformerFacade;
 
     private final InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper;
+    private final Clock clock;
 
     public RewardRule2DroolsRuleServiceImpl(
             @Value("${app.reward-rule.online-syntax-check}") boolean onlineSyntaxCheck,
             KieContainerBuilderService builderService,
             TrxCondition2DroolsRuleTransformerFacade trxCondition2DroolsRuleTransformerFacade, TrxConsequence2DroolsRuleTransformerFacade trxConsequence2DroolsRuleTransformerFacade,
-            InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper) {
+            InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper, Clock clock) {
         this.onlineSyntaxCheck = onlineSyntaxCheck;
         this.builderService = builderService;
         this.trxCondition2DroolsRuleTransformerFacade = trxCondition2DroolsRuleTransformerFacade;
         this.trxConsequence2DroolsRuleTransformerFacade = trxConsequence2DroolsRuleTransformerFacade;
         this.initiativeReward2BuildDTO2ConfigMapper = initiativeReward2BuildDTO2ConfigMapper;
+        this.clock = clock;
     }
 
     @Override
@@ -64,7 +67,7 @@ public class RewardRule2DroolsRuleServiceImpl implements RewardRule2DroolsRuleSe
                 out.getRuleVersion(),
                 buildRules(out.getId(), out.getId(), out.getInitiativeConfig()))
         );
-        out.setUpdateDate(LocalDateTime.now());
+        out.setUpdateDate(Instant.now(clock));
 
         if (onlineSyntaxCheck) {
             log.debug("Checking if the rule has valid syntax. id: %s".formatted(initiative.getInitiativeId()));

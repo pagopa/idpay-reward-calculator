@@ -5,7 +5,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,8 +60,8 @@ class OnboardingOutcomeMediatorServiceImplTest {
   void shouldCreateFamilyCounterWhenNFWithoutFamilyIdLookup() {
     InitiativeConfig cfg = InitiativeConfig.builder().beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.NF).build();
 
-    OnboardingFamilies older = OnboardingFamilies.builder().familyId("FAM_OLD").createDate(LocalDateTime.now().minusDays(2)).build();
-    OnboardingFamilies latest = OnboardingFamilies.builder().familyId("FAM_NEW").createDate(LocalDateTime.now()).build();
+    OnboardingFamilies older = OnboardingFamilies.builder().familyId("FAM_OLD").createDate(Instant.now().minus(2, ChronoUnit.DAYS)).build();
+    OnboardingFamilies latest = OnboardingFamilies.builder().familyId("FAM_NEW").createDate(Instant.now()).build();
 
     when(rewardContextHolderService.getInitiativeConfig("I4")).thenReturn(Mono.just(cfg));
     when(onboardingFamiliesRepository.findByMemberIdsInAndInitiativeId("U4", "I4"))

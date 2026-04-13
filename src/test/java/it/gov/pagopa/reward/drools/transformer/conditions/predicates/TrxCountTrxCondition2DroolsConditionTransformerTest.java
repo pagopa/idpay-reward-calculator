@@ -7,6 +7,7 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+
 class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxCondition2DroolsConditionTransformerTest {
 
     private final String initiativeId = "TrxCount";
@@ -16,6 +17,7 @@ class TrxCountTrxCondition2DroolsConditionTransformerTest extends InitiativeTrxC
     private final long upperBound = 10L;
 
     private long trxNumber;
+
 
     @Override
     protected UserInitiativeCounters getInitiativeCounters() {

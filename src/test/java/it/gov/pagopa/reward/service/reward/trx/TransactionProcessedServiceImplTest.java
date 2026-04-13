@@ -25,6 +25,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,10 +46,10 @@ class TransactionProcessedServiceImplTest {
 
     private final Transaction2RewardTransactionMapper transaction2RewardTransactionMapper = new Transaction2RewardTransactionMapper();
     private final Transaction2TransactionProcessedMapper transaction2TransactionProcessedMapper = new Transaction2TransactionProcessedMapper();
-
+    private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     @BeforeEach
     void init() {
-        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock, recoveryProcessedTransactionServiceMock);
+        service = new TransactionProcessedServiceImpl(operationTypeHandlerServiceMock, transaction2TransactionProcessedMapper, transactionProcessedRepositoryMock, trxRePublisherServiceMock, recoveryProcessedTransactionServiceMock, clock);
 
         Mockito.lenient().when(operationTypeHandlerServiceMock.isChargeOperation(Mockito.any())).thenAnswer(i -> i.getArgument(0, TransactionDTO.class).getOperationType().equals("00"));
     }

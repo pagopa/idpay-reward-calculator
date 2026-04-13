@@ -29,6 +29,9 @@ import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +43,7 @@ import java.util.Map;
  ******************
 */
 public class RewardRule2DroolsRuleServiceTest {
-
+    private final static Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     @BeforeAll
     public static void configDroolsLogLevel() {
         KieContainerBuilderServiceImplTest.configDroolsLogs();
@@ -60,8 +63,8 @@ public class RewardRule2DroolsRuleServiceTest {
                 new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)),
                 new TrxCondition2DroolsRuleTransformerFacadeImpl(new TrxCondition2DroolsConditionTransformerFacadeImpl()),
                 new TrxConsequence2DroolsRuleTransformerFacadeImpl(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl()),
-                new InitiativeReward2BuildDTO2ConfigMapper()
-        );
+                new InitiativeReward2BuildDTO2ConfigMapper(),
+                clock);
     }
 
     @Test

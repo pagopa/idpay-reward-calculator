@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -21,8 +21,8 @@ public class InitiativeConfig {
     private String initiativeName;
     private String organizationId;
     private Long beneficiaryBudgetCents;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private Instant startDate;
+    private Instant endDate;
     private boolean dailyThreshold;
     private boolean weeklyThreshold;
     private boolean monthlyThreshold;

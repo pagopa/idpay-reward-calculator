@@ -1,5 +1,6 @@
 package it.gov.pagopa.reward.dto.mapper.trx;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.model.counters.Counters;
@@ -7,13 +8,11 @@ import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.RewardTransactionDTOFaker;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.Map;
 
 class RewardCountersMapperTest {
@@ -37,10 +36,16 @@ class RewardCountersMapperTest {
 
     private void test(Counters expectedInvolvedDaily, Counters expectedInvolvedWeekly, Counters expectedInvolvedMonthly, Counters expectedInvolvedYearly) {
         // Given
-        String dayKey = "2000-07-20";
-        String weekKey = "2000-07-3";
-        String monthKey = "2000-07";
-        String yearKey = "2000";
+
+        Instant trxInstant = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 44))
+                .atZone(CommonConstants.ZONEID).toInstant();
+
+        LocalDate chargeDate = trxInstant.atZone(CommonConstants.ZONEID).toLocalDate();
+
+        String dayKey = RewardConstants.dayDateFormatter.format(chargeDate);
+        String weekKey = RewardConstants.weekDateFormatter.format(chargeDate);
+        String monthKey = RewardConstants.monthDateFormatter.format(chargeDate);
+        String yearKey = RewardConstants.yearDateFormatter.format(chargeDate);
 
 
         UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
@@ -55,7 +60,7 @@ class RewardCountersMapperTest {
         userInitiativeCounters.setYearlyCounters(buildTemporalCounter(expectedInvolvedYearly, yearKey));
 
         RewardTransactionDTO reward = RewardTransactionDTOFaker.mockInstance(0);
-        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, 7, 20), LocalTime.NOON, ZoneOffset.UTC));
+        reward.setTrxChargeDate(LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 44)).atZone(CommonConstants.ZONEID).toInstant());
 
         InitiativeConfig initiative = new InitiativeConfig();
         initiative.setBeneficiaryBudgetCents(10_00L);

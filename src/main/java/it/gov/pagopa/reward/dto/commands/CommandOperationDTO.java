@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -12,5 +12,5 @@ import java.time.LocalDateTime;
 public class CommandOperationDTO {
     private String entityId;
     private String operationType;
-    private LocalDateTime operationTime;
+    private Instant operationTime;
 }

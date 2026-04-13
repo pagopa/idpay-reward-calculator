@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ abstract class BaseTrxSynchronousOp {
     private final OnboardedInitiativesService onboardedInitiativesService;
     protected final SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper;
 
+    protected final Clock clock;
     protected BaseTrxSynchronousOp(
             UserInitiativeCountersRepository userInitiativeCountersRepository,
             RewardTransaction2SynchronousTransactionResponseDTOMapper mapper,
@@ -47,7 +49,7 @@ abstract class BaseTrxSynchronousOp {
             Transaction2RewardTransactionMapper rewardTransactionMapper,
             UserInitiativeCountersUpdateService userInitiativeCountersUpdateService,
             OnboardedInitiativesService onboardedInitiativesService,
-            SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper) {
+            SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper, Clock clock) {
         this.userInitiativeCountersRepository = userInitiativeCountersRepository;
         this.mapper = mapper;
         this.rewardContextHolderService = rewardContextHolderService;
@@ -55,6 +57,7 @@ abstract class BaseTrxSynchronousOp {
         this.userInitiativeCountersUpdateService = userInitiativeCountersUpdateService;
         this.onboardedInitiativesService = onboardedInitiativesService;
         this.syncTrxRequest2TransactionDtoMapper = syncTrxRequest2TransactionDtoMapper;
+        this.clock = clock;
     }
 
     protected Mono<SynchronousTransactionResponseDTO> evaluate(Mono<Pair<InitiativeConfig, OnboardingInfo>> trxChecks, TransactionDTO trxDTO, String initiativeId,

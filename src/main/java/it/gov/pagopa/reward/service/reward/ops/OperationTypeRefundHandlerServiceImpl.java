@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         if (trxCharge == null) {
             trx.setRejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_REFUND_NOT_MATCH));
         } else {
-            trx.setTrxChargeDate(readChargeDate(trxCharge));
+            trx.setTrxChargeDate(trxCharge.getTrxChargeDate());
             trx.setEffectiveAmountCents(effectiveAmountCents);
             trx.setRefundInfo(new RefundInfo());
             trx.getRefundInfo().setPreviousTrxs(pastElabTrxs);
@@ -91,10 +92,10 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         return trx;
     }
 
-    private static OffsetDateTime readChargeDate(TransactionProcessed trxCharge) {
-        LocalDateTime trxChargeLocalDateTime = trxCharge.getTrxChargeDate();
-        return OffsetDateTime.of(trxChargeLocalDateTime, CommonConstants.ZONEID.getRules().getOffset(trxChargeLocalDateTime));
-    }
+//    private static OffsetDateTime readChargeDate(TransactionProcessed trxCharge) {
+//        LocalDateTime trxChargeInstant = trxCharge.getTrxChargeDate();
+//        return OffsetDateTime.of(trxChargeInstant, CommonConstants.ZONEID.getRules().getOffset(trxChargeInstant));
+//    }
 
     private void reduceRewards(Map<String, RefundInfo.PreviousReward> pastRewards, BaseTransactionProcessed pt) {
         pt.getRewards().forEach((initiativeId, r) -> pastRewards.compute(initiativeId, (k, acc) -> {

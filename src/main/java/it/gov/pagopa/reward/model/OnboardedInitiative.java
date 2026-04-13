@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -18,9 +18,9 @@ import java.util.List;
 public class OnboardedInitiative implements OnboardingInfo{
     private String initiativeId;
     private String familyId;
-    private LocalDateTime acceptanceDate;
+    private Instant acceptanceDate;
     private OnboardingStatus status;
-    private LocalDateTime updateDate;
-    private LocalDateTime lastEndInterval;
+    private Instant updateDate;
+    private Instant lastEndInterval;
     private List<ActiveTimeInterval> activeTimeIntervals;
 }

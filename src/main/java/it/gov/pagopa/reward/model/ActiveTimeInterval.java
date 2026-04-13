@@ -5,13 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class ActiveTimeInterval {
-    private LocalDateTime startInterval;
-    private LocalDateTime endInterval;
+    private Instant startInterval;
+    private Instant endInterval;
 }

@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.service.synchronous.op;
 
-import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
@@ -30,7 +29,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.OffsetDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             Transaction2RewardTransactionMapper rewardTransactionMapper,
             UserInitiativeCountersUpdateService userInitiativeCountersUpdateService,
             OnboardedInitiativesService onboardedInitiativesService,
-            SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper) {
+            SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper, Clock clock) {
         super(
                 userInitiativeCountersRepository,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
@@ -59,7 +59,8 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                 rewardTransactionMapper,
                 userInitiativeCountersUpdateService,
                 onboardedInitiativesService,
-                syncTrxRequest2TransactionDtoMapper);
+                syncTrxRequest2TransactionDtoMapper,
+                clock);
         this.refundOperationType = refundOperationType;
     }
 
@@ -91,7 +92,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         // refund info
         trx.setOperationType(refundOperationType);
         trx.setOperationTypeTranscoded(OperationType.REFUND);
-        trx.setTrxDate(OffsetDateTime.now());
+        trx.setTrxDate(Instant.now(clock));
         trx.setEffectiveAmountCents(LONG_ZERO);
 
         Map<String, RefundInfo.PreviousReward> previousRewardMap = Map.of(
@@ -125,7 +126,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         out.setId(trx.getId());
         out.setIdTrxAcquirer(trx.getIdTrxAcquirer());
         out.setAcquirerCode(trx.getAcquirerCode());
-        out.setTrxDate(trx.getTrxDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime());
+        out.setTrxDate(trx.getTrxDate());
         out.setOperationType(trx.getOperationType());
         out.setAcquirerId(trx.getAcquirerId());
         out.setUserId(trx.getUserId());
@@ -133,7 +134,7 @@ public class CancelTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
         out.setAmount(trx.getAmount());
         out.setAmountCents(trx.getAmountCents());
         out.setEffectiveAmountCents(trx.getEffectiveAmountCents());
-        out.setTrxChargeDate(trx.getTrxChargeDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime());
+        out.setTrxChargeDate(trx.getTrxChargeDate());
         out.setOperationTypeTranscoded(trx.getOperationTypeTranscoded());
         out.setRejectionReasons(trx.getRejectionReasons());
         out.setRefundInfo(trx.getRefundInfo());

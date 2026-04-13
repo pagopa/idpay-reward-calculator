@@ -45,7 +45,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import static it.gov.pagopa.reward.utils.RewardConstants.ExceptionCode;
@@ -70,6 +72,7 @@ class CreateTrxSynchronousServiceImplTest {
 
     private CreateTrxSynchronousService service;
 
+    private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     @BeforeEach
     void init(){
         service = new CreateTrxSynchronousServiceImpl(
@@ -80,7 +83,8 @@ class CreateTrxSynchronousServiceImplTest {
                 synchronousTransactionRequestDTOt2TrxDtoOrResponseMapper,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
                 rewardTransactionMapper,
-                userInitiativeCountersUpdateServiceMock);
+                userInitiativeCountersUpdateServiceMock,
+                clock);
     }
 
     @AfterEach
@@ -368,7 +372,7 @@ class CreateTrxSynchronousServiceImplTest {
                         .trxId(authorizeRequest.getTransactionId())
                         .operationTypeTranscoded(OperationType.CHARGE)
                         .accruedReward(Map.of(initiativeId, authorizeRequest.getRewardCents()))
-                        .elaborationDateTime(LocalDateTime.now())
+                        .elaborationDateTime(Instant.now())
                         .build()));
         mockOnboardedInitiativeService(authorizeRequest, initiativeConfig);
 

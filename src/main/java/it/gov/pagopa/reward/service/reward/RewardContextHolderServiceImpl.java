@@ -139,7 +139,7 @@ public class RewardContextHolderServiceImpl extends ReadinessStateHealthIndicato
                             try{
                                 KieBase newKieBase = org.apache.commons.lang3.SerializationUtils.deserialize(c);
                                 acceptNewKieBase(newKieBase);
-                            } catch (Exception _){
+                            } catch (Exception ex){
                                 log.warn("[REWARD_RULE_BUILD] Cached KieContainer cannot be executed! refreshing it!");
                                 return null;
                             }

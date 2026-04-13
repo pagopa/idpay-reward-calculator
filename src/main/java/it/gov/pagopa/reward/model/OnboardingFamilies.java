@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +24,7 @@ public class OnboardingFamilies {
     private Set<String> memberIds;
     private String status;
     private List<OnboardingRejectionReason> onboardingRejectionReasons;
-    private LocalDateTime createDate;
+    private Instant createDate;
 
 
     public static String buildId(String familyId, String initiativeId) {
