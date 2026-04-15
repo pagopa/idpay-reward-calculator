@@ -5,11 +5,13 @@ import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.fakers.TransactionDTOFaker;
 import it.gov.pagopa.common.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
 
 @Slf4j
 class Transaction2RewardTransactionDTOMapperTest {
@@ -71,6 +73,78 @@ class Transaction2RewardTransactionDTOMapperTest {
         Assertions.assertSame(trx.getPosType(), result.getPosType());
         Assertions.assertSame(trx.getPar(), result.getPar());
         Assertions.assertSame(trx.getRejectionReasons(), result.getRejectionReasons());
+        Assertions.assertSame(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertSame(trx.getUserId(), result.getUserId());
+        Assertions.assertSame(trx.getChannel(), result.getChannel());
+        Assertions.assertSame(trx.getRuleEngineTopicPartition(), result.getRuleEngineTopicPartition());
+        Assertions.assertSame(trx.getRuleEngineTopicOffset(), result.getRuleEngineTopicOffset());
+    }
+
+    public static void assertCommonFieldsValues(TransactionDTO trx, TransactionDroolsDTO result) {
+
+        Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
+        Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());
+
+
+
+        Assertions.assertEquals(trx.getTrxDate(), result.getTrxDate().toInstant());
+
+        Assertions.assertSame(trx.getOperationType(), result.getOperationType());
+        Assertions.assertSame(trx.getCircuitType(), result.getCircuitType());
+        Assertions.assertSame(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
+        Assertions.assertSame(trx.getCorrelationId(), result.getCorrelationId());
+
+        // BigDecimal, Long, String: OK con assertSame
+        Assertions.assertSame(trx.getAmount(), result.getAmount());
+        Assertions.assertSame(trx.getEffectiveAmountCents(), result.getEffectiveAmountCents());
+        Assertions.assertSame(trx.getAmountCents(), result.getAmountCents());
+        Assertions.assertSame(trx.getAmountCurrency(), result.getAmountCurrency());
+        Assertions.assertSame(trx.getMcc(), result.getMcc());
+        Assertions.assertSame(trx.getAcquirerId(), result.getAcquirerId());
+        Assertions.assertSame(trx.getMerchantId(), result.getMerchantId());
+        Assertions.assertSame(trx.getTerminalId(), result.getTerminalId());
+        Assertions.assertSame(trx.getBin(), result.getBin());
+        Assertions.assertSame(trx.getSenderCode(), result.getSenderCode());
+        Assertions.assertSame(trx.getFiscalCode(), result.getFiscalCode());
+        Assertions.assertSame(trx.getVat(), result.getVat());
+        Assertions.assertSame(trx.getPosType(), result.getPosType());
+        Assertions.assertSame(trx.getPar(), result.getPar());
+
+        Assertions.assertEquals(trx.getRejectionReasons(), result.getRejectionReasons());
+        Assertions.assertSame(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+        Assertions.assertSame(trx.getUserId(), result.getUserId());
+        Assertions.assertSame(trx.getChannel(), result.getChannel());
+        Assertions.assertSame(trx.getRuleEngineTopicPartition(), result.getRuleEngineTopicPartition());
+        Assertions.assertSame(trx.getRuleEngineTopicOffset(), result.getRuleEngineTopicOffset());
+    }
+    public static void assertCommonFieldsValues(TransactionDroolsDTO trx, TransactionDTO result) {
+
+        Assertions.assertSame(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
+        Assertions.assertSame(trx.getAcquirerCode(), result.getAcquirerCode());
+
+        Assertions.assertEquals(trx.getTrxDate().toInstant(), result.getTrxDate());
+
+        Assertions.assertSame(trx.getOperationType(), result.getOperationType());
+        Assertions.assertSame(trx.getCircuitType(), result.getCircuitType());
+        Assertions.assertSame(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
+        Assertions.assertSame(trx.getCorrelationId(), result.getCorrelationId());
+        Assertions.assertSame(trx.getAmount(), result.getAmount());
+        Assertions.assertSame(trx.getEffectiveAmountCents(), result.getEffectiveAmountCents());
+        Assertions.assertSame(trx.getAmountCents(), result.getAmountCents());
+        Assertions.assertSame(trx.getAmountCurrency(), result.getAmountCurrency());
+        Assertions.assertSame(trx.getMcc(), result.getMcc());
+        Assertions.assertSame(trx.getAcquirerId(), result.getAcquirerId());
+        Assertions.assertSame(trx.getMerchantId(), result.getMerchantId());
+        Assertions.assertSame(trx.getTerminalId(), result.getTerminalId());
+        Assertions.assertSame(trx.getBin(), result.getBin());
+        Assertions.assertSame(trx.getSenderCode(), result.getSenderCode());
+        Assertions.assertSame(trx.getFiscalCode(), result.getFiscalCode());
+        Assertions.assertSame(trx.getVat(), result.getVat());
+        Assertions.assertSame(trx.getPosType(), result.getPosType());
+        Assertions.assertSame(trx.getPar(), result.getPar());
+
+        Assertions.assertEquals(trx.getRejectionReasons(), result.getRejectionReasons());
+
         Assertions.assertSame(trx.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
         Assertions.assertSame(trx.getUserId(), result.getUserId());
         Assertions.assertSame(trx.getChannel(), result.getChannel());

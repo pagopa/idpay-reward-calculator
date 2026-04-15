@@ -97,6 +97,7 @@ public abstract class InitiativeTrxCondition2DroolsRuleTransformerTest<T extends
 
             expectedInitiativeRejectionReasons = expectRejectionReason && !shortCircuited ? Map.of("agendaGroup", List.of("DUMMYREJECTION", getExpectedRejectionReason())) : dummyRejectionMap;
         }
+        System.out.println(rule);
         KieBase kieBase = buildRule(rule);
         executeRule(trx, shortCircuited, kieBase);
         Assertions.assertEquals(

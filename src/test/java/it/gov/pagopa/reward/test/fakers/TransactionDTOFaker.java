@@ -56,7 +56,7 @@ public class TransactionDTOFaker {
                 .trxDate(OffsetDateTime.of(
                         trxDateTime,
                         CommonConstants.ZONEID.getRules().getOffset(trxDateTime)
-                ))
+                ).toInstant())
                 .operationType("00")
                 .circuitType("CIRCUITTYPE%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))

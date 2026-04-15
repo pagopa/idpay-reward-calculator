@@ -9,7 +9,8 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ public class UserInitiativeCounters extends Counters {
     @NonNull
     private String initiativeId;
 
-    private LocalDateTime updateDate;
+    private Instant updateDate;
     private TransactionDTO pendingTrx;
     @Builder.Default
     private List<LastTrxInfoDTO> lastTrx = new ArrayList<>();
@@ -61,7 +62,7 @@ public class UserInitiativeCounters extends Counters {
         this.entityId = entityId;
         this.entityType = entityType;
         this.initiativeId=initiativeId;
-        this.updateDate = LocalDateTime.now();
+        this.updateDate = Instant.now();
 
         // for some reason, lombok is changing the code letting null these fields when using this constructor
         this.dailyCounters = new HashMap<>();
@@ -85,7 +86,7 @@ public class UserInitiativeCounters extends Counters {
                 .entityId(entityId)
                 .entityType(entityType)
                 .initiativeId(initiativeId)
-                .updateDate(LocalDateTime.now());
+                .updateDate(Instant.now());
     }
 
     public abstract static class UserInitiativeCountersBuilder<C extends UserInitiativeCounters, B extends UserInitiativeCountersBuilder<C, B>> extends CountersBuilder<C,B> {

@@ -10,7 +10,7 @@ import it.gov.pagopa.common.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,7 +84,7 @@ class RecoveredTrx2UserInitiativeCountersMapperTest {
 
         TransactionProcessed trxStored = new TransactionProcessed();
         trxStored.setUserId("USERID");
-        trxStored.setElaborationDateTime(LocalDateTime.now());
+        trxStored.setElaborationDateTime(Instant.now());
 
         // When
         UserInitiativeCounters result = mapper.apply(reward, trxStored, previous, InitiativeGeneralDTO.BeneficiaryTypeEnum.PF);

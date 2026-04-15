@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 class RuleEngineServiceImplTest {
 
     @BeforeAll
-    public static void configDroolsLogLevel() {
+    static void configDroolsLogLevel() {
         KieContainerBuilderServiceImplTest.configDroolsLogs();
         ((Logger) LoggerFactory.getLogger("it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl")).setLevel(Level.WARN);
         ((Logger) LoggerFactory.getLogger("org.drools.compiler.kie.builder.impl")).setLevel(Level.WARN);
@@ -61,7 +61,7 @@ class RuleEngineServiceImplTest {
         RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
 
         TransactionDTO trx = Mockito.mock(TransactionDTO.class);
-        List<String> initiatives =  List.of("Initiative1");
+        List<String> initiatives = List.of("Initiative1");
         UserInitiativeCountersWrapper counters = new UserInitiativeCountersWrapper("userId", new HashMap<>());
 
         TransactionDroolsDTO rewardTrx = Mockito.mock(TransactionDroolsDTO.class);
@@ -105,21 +105,23 @@ class RuleEngineServiceImplTest {
         ruleEngineService.applyRules(trx, initiatives, counters);
 
         // Then
-        Mockito.verify(rewardContextHolderService,Mockito.never()).getRewardRulesKieBase();
+        Mockito.verify(rewardContextHolderService, Mockito.never()).getRewardRulesKieBase();
         Mockito.verify(transaction2TransactionDroolsMapper).apply(Mockito.same(trx));
         Mockito.verify(rewardContextHolderService, Mockito.never()).getRewardRulesKieBase();
         Mockito.verify(transactionDroolsDTO2RewardTransactionMapper).apply(Mockito.same(rewardTrx));
     }
 
     @Test
-    void testComplete(){
+    void testComplete() {
         testComplete(false);
     }
+
     @Test
-    void testCompleteShortCircuited(){
+    void testCompleteShortCircuited() {
         testComplete(true);
     }
-    void testComplete(boolean shortCircuited){
+
+    void testComplete(boolean shortCircuited) {
         // given
         RewardRule2DroolsRuleService droolsRuleService = RewardRule2DroolsRuleServiceTest.buildRewardRule2DroolsRule(false);
         KieContainerBuilderService kieContainerBuilder = new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class));
@@ -146,12 +148,12 @@ class RuleEngineServiceImplTest {
         List<String> evaluatingInitiativeIds = Stream.concat(
                         Stream.of("NOTINCONTAINERINITIATIVEID"),
                         rules.stream().map(DroolsRule::getId))
-                .collect(Collectors.toList());
+                .toList();
         RewardTransactionDTO result = ruleEngineService.applyRules(trx, evaluatingInitiativeIds, new UserInitiativeCountersWrapper(trx.getUserId(), new HashMap<>()));
 
         Assertions.assertEquals(Map.of(
                 "NOTINCONTAINERINITIATIVEID", List.of("RULE_ENGINE_NOT_READY"),
-                "ID_0_ssx", shortCircuited ? List.of("TRX_RULE_MCCFILTER_FAIL") :List.of("TRX_RULE_MCCFILTER_FAIL","TRX_RULE_THRESHOLD_FAIL"),
+                "ID_0_ssx", shortCircuited ? List.of("TRX_RULE_MCCFILTER_FAIL") : List.of("TRX_RULE_MCCFILTER_FAIL", "TRX_RULE_THRESHOLD_FAIL"),
                 "ID_1_rah", List.of("TRX_RULE_THRESHOLD_FAIL")
         ), result.getInitiativeRejectionReasons());
 
@@ -163,7 +165,7 @@ class RuleEngineServiceImplTest {
     }
 
     @Test
-    void applyRulesAndSetRefundCounters(){
+    void applyRulesAndSetRefundCounters() {
         // Given
         RewardContextHolderService rewardContextHolderService = Mockito.mock(RewardContextHolderServiceImpl.class);
         Transaction2TransactionDroolsMapper transaction2TransactionDroolsMapper = Mockito.mock(Transaction2TransactionDroolsMapper.class);
@@ -172,7 +174,7 @@ class RuleEngineServiceImplTest {
         RuleEngineService ruleEngineService = new RuleEngineServiceImpl(new RuleEngineConfig(), rewardContextHolderService, transaction2TransactionDroolsMapper, transactionDroolsDTO2RewardTransactionMapper);
 
         TransactionDTO trx = TransactionDTOFaker.mockInstance(1);
-        List<String> initiatives =  List.of("Initiative1");
+        List<String> initiatives = List.of("Initiative1");
         trx.setOperationTypeTranscoded(OperationType.REFUND);
         RefundInfo refundInfo = new RefundInfo(List.of(TransactionProcessedFaker.mockInstance(1)), Map.of("Initiative1", new RefundInfo.PreviousReward("Initiative1", "OrganizationId1", 1_00L)));
         trx.setRefundInfo(refundInfo);

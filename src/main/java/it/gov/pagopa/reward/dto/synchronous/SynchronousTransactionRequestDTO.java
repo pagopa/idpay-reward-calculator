@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -21,7 +21,7 @@ public class SynchronousTransactionRequestDTO {
     private String vat;
     private String idTrxIssuer;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxDate;
+    private Instant trxDate;
     private Long amountCents;
     private String amountCurrency;
     private String mcc;
@@ -29,7 +29,7 @@ public class SynchronousTransactionRequestDTO {
     private String acquirerId;
     private String idTrxAcquirer;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxChargeDate;
+    private Instant trxChargeDate;
     private String channel;
     private Long voucherAmountCents;
 }

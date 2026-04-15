@@ -25,6 +25,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Clock;
 import java.util.List;
 
 @Service
@@ -41,7 +42,8 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
             SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper syncTrxRequest2TransactionDtoMapper,
             RewardTransaction2SynchronousTransactionResponseDTOMapper rewardTransaction2SynchronousTransactionResponseDTOMapper,
             Transaction2RewardTransactionMapper rewardTransactionMapper,
-            UserInitiativeCountersUpdateService userInitiativeCountersUpdateService) {
+            UserInitiativeCountersUpdateService userInitiativeCountersUpdateService,
+            Clock clock) {
         super(
                 userInitiativeCountersRepository,
                 rewardTransaction2SynchronousTransactionResponseDTOMapper,
@@ -49,7 +51,8 @@ public class CreateTrxSynchronousServiceImpl extends BaseTrxSynchronousOp implem
                 rewardTransactionMapper,
                 userInitiativeCountersUpdateService,
                 onboardedInitiativesService,
-                syncTrxRequest2TransactionDtoMapper);
+                syncTrxRequest2TransactionDtoMapper,
+                clock);
         this.initiativesEvaluatorFacadeService = initiativesEvaluatorFacadeService;
     }
 

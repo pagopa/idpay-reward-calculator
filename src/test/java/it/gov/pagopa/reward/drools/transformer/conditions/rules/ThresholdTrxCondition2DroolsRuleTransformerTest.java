@@ -52,7 +52,6 @@ class ThresholdTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
         TransactionDroolsDTO trx1 = new TransactionDroolsDTO();
         trx1.setEffectiveAmountCents(10_01L);
-
         TransactionDroolsDTO trx2 = new TransactionDroolsDTO();
         trx2.setEffectiveAmountCents(-1L);
         return List.of(() -> trx1, () -> trx2);

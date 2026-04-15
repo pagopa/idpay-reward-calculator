@@ -1,6 +1,5 @@
 package it.gov.pagopa.reward.dto.mapper.trx.recover;
 
-import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
@@ -20,7 +19,7 @@ public class RecoveredTrx2RewardTransactionMapper {
         RewardTransactionDTO rewardedTrx = transaction2RewardTransactionMapper.apply(trx);
 
 //region enriched data
-        rewardedTrx.setTrxChargeDate(trxStored.getTrxChargeDate().atZone(CommonConstants.ZONEID).toOffsetDateTime());
+        rewardedTrx.setTrxChargeDate(trxStored.getTrxChargeDate());
         rewardedTrx.setAmountCents(trxStored.getAmountCents());
         rewardedTrx.setAmount(trxStored.getAmount());
         rewardedTrx.setEffectiveAmountCents(trxStored.getEffectiveAmountCents());

@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class UserInitiativeCountersUpdateServiceImplTest {
 
-    public static final OffsetDateTime TRX_DATE = OffsetDateTime.of(LocalDate.of(2022, 1, 8), LocalTime.NOON, ZoneOffset.UTC);
+    public static final Instant TRX_DATE = OffsetDateTime.of(LocalDate.of(2022, 1, 8), LocalTime.NOON, ZoneOffset.UTC).toInstant();
     public static final String TRX_DATE_DAY = "2022-01-08";
     public static final String TRX_DATE_WEEK = "2022-01-1";
     public static final String TRX_DATE_MONTH = "2022-01";
@@ -50,6 +51,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
 
     private InitiativeConfig initiativeConfig;
 
+    private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     @BeforeEach
     void init() {
         initiativeConfig = InitiativeConfig.builder()
@@ -63,7 +65,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .build();
         Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
 
-        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(), baseTransactionProcessed2LastTrxInfoDTOMapper, "PT1H");
+        userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(), baseTransactionProcessed2LastTrxInfoDTOMapper, "PT1H", clock);
     }
 
     @Test
@@ -499,7 +501,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
-                .trxDate(TRX_DATE.plusDays(1))
+                .trxDate(TRX_DATE.plus(1, ChronoUnit.DAYS))
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(99))
                 .effectiveAmountCents(1001_00L)
@@ -534,7 +536,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
-                .trxDate(TRX_DATE.plusDays(1))
+                .trxDate(TRX_DATE.plus(1, ChronoUnit.DAYS))
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(99))
                 .amountCents(99_00L)
@@ -598,7 +600,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
-                .trxDate(TRX_DATE.plusDays(1))
+                .trxDate(TRX_DATE.plus(1, ChronoUnit.DAYS))
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.ONE)
                 .amountCents(1_00L)
@@ -637,7 +639,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
                 .userId("USERID")
                 .operationTypeTranscoded(OperationType.REFUND)
-                .trxDate(TRX_DATE.plusDays(1))
+                .trxDate(TRX_DATE.plus(1, ChronoUnit.DAYS))
                 .trxChargeDate(TRX_DATE)
                 .amount(BigDecimal.valueOf(100))
                 .amountCents(100_00L)
@@ -717,15 +719,15 @@ class UserInitiativeCountersUpdateServiceImplTest {
         setTemporalCounters(userInitiativeCounters, 11L, 100_00L, 70_00L);
 
         //set initial lastTrx
-        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        Instant now = Instant.now(clock);
         LastTrxInfoDTO trxAlreadyProcessedExpired = LastTrxInfoDTO.builder()
                 .trxId("TRXPROCESSEDID1")
-                .elaborationDateTime(localDateTimeNow.minusHours(2))
+                .elaborationDateTime(now.minus(2,ChronoUnit.HOURS))
                 .build();
 
         LastTrxInfoDTO trxAlreadyProcessedNotExpired = LastTrxInfoDTO.builder()
                 .trxId("TRXPROCESSEDID2")
-                .elaborationDateTime(localDateTimeNow)
+                .elaborationDateTime(now)
                 .build();
 
         userInitiativeCounters.setLastTrx(Arrays.asList(trxAlreadyProcessedExpired, trxAlreadyProcessedNotExpired));

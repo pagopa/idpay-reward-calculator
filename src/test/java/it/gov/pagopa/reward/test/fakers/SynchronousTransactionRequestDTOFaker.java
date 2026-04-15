@@ -4,8 +4,7 @@ import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.reward.dto.synchronous.SynchronousTransactionRequestDTO;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.Random;
 
@@ -42,7 +41,7 @@ public class SynchronousTransactionRequestDTOFaker {
     }
 
     public static SynchronousTransactionRequestDTO.SynchronousTransactionRequestDTOBuilder mockInstanceBuilder(Integer bias) {
-        OffsetDateTime offsetDateTimeNow = OffsetDateTime.now(ZoneOffset.UTC);
+        Instant instantNow = Instant.now();
         return SynchronousTransactionRequestDTO.builder()
                 .transactionId("TRANSACTIONID%d".formatted(bias))
                 .channel("SYNCPAYMENTCHANNEL%d".formatted(bias))
@@ -51,7 +50,7 @@ public class SynchronousTransactionRequestDTOFaker {
                 .senderCode("SENDERCODE%d".formatted(bias))
                 .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
                 .vat("VAT%d".formatted(bias))
-                .trxDate(offsetDateTimeNow)
+                .trxDate(instantNow)
                 .amountCents(1_000L)
                 .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
                 .mcc("MCC%d".formatted(bias))
@@ -59,7 +58,7 @@ public class SynchronousTransactionRequestDTOFaker {
                 .acquirerId("ACQUIRERID%d".formatted(bias))
                 .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-                .trxChargeDate(offsetDateTimeNow)
+                .trxChargeDate(instantNow)
                 .channel("SYNCPAYMENTCHANNEL%d".formatted(bias));
     }
 

@@ -11,7 +11,8 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class TransactionDTO {
     private String acquirerCode;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxDate;
+    private Instant trxDate;
 
     private String operationType;
 
@@ -73,7 +74,7 @@ public class TransactionDTO {
     private Long amountCents;
     private Long effectiveAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxChargeDate;
+    private Instant trxChargeDate;
     private RefundInfo refundInfo;
     private String channel;
 
@@ -101,12 +102,13 @@ public class TransactionDTO {
         return id;
     }
 
-    public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    public static final DateTimeFormatter DATETIME_FORMATTER =   DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss").withZone(ZoneId.of("Europe/Rome"));
     public static String computeTrxId(TransactionDTO trx) {
         return trx.getIdTrxAcquirer()
                 .concat(trx.getAcquirerCode())
-                .concat(trx.getTrxDate().atZoneSameInstant(CommonConstants.ZONEID).toLocalDateTime().format(DATETIME_FORMATTER))
+                .concat(DATETIME_FORMATTER.format(trx.getTrxDate()))
                 .concat(trx.getOperationType())
                 .concat(trx.getAcquirerId());
     }
+
 }

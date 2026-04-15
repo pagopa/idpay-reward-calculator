@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class TransactionProcessed implements BaseTransactionProcessed {
     private String acquirerCode;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime trxDate;
+    private Instant trxDate;
 
     private String operationType;
 
@@ -62,10 +62,10 @@ public class TransactionProcessed implements BaseTransactionProcessed {
     private Long effectiveAmountCents;
     private Long amountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime trxChargeDate;
+    private Instant trxChargeDate;
     private OperationType operationTypeTranscoded;
 
-    private LocalDateTime elaborationDateTime;
+    private Instant elaborationDateTime;
     private String channel;
 
     private Integer ruleEngineTopicPartition;

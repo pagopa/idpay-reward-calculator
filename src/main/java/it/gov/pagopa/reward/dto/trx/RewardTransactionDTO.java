@@ -5,7 +5,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class RewardTransactionDTO extends TransactionDTO implements BaseTransact
     private Map<String, Reward> rewards;
     private List<String> initiatives;
     private String initiativeId;
-
+    
     @Builder.Default
-    private LocalDateTime elaborationDateTime = LocalDateTime.now();
+    private Instant elaborationDateTime = Instant.now();
 }

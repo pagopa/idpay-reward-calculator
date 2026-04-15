@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -17,13 +17,13 @@ public class UserWallet {
     private String id;
     private String userId;
     private String initiativeId;
-    private LocalDate acceptanceDate;
+    private Instant acceptanceDate;
     private Long budget;
     private List<OnboardedInitiative> accrued;
     private Long trxCount;
     private String status;
 
-    public UserWallet(String userId, String initiativeId, LocalDate acceptanceDate, Long budget, List<OnboardedInitiative> accrued, Long trxCount, String status) {
+    public UserWallet(String userId, String initiativeId, Instant acceptanceDate, Long budget, List<OnboardedInitiative> accrued, Long trxCount, String status) {
         this.id=userId.concat(initiativeId);
         this.userId = userId;
         this.initiativeId = initiativeId;

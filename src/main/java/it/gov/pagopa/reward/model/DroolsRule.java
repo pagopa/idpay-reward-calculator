@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -22,5 +22,5 @@ public class DroolsRule {
     private String rule;
     private String ruleVersion;
     private InitiativeConfig initiativeConfig;
-    private LocalDateTime updateDate;
+    private Instant updateDate;
 }

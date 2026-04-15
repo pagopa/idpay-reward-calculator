@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
                 .amount(amount)
                 .effectiveAmountCents(effectiveAmountCents)
                 .rewards(rewards)
-                .elaborationDateTime(LocalDateTime.now())
+                .elaborationDateTime(Instant.now())
                 .build();
 
         // When
@@ -76,7 +76,7 @@ class RewardTransaction2SynchronousTransactionResponseDTOMapperTest {
                 .effectiveAmountCents(effectiveAmountCents)
                 .status(RewardConstants.REWARD_STATE_REJECTED)
                 .rejectionReasons(rejectionReasons)
-                .elaborationDateTime(LocalDateTime.now())
+                .elaborationDateTime(Instant.now())
                 .build();
 
         // When

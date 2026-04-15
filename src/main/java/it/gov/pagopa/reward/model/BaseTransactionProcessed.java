@@ -5,7 +5,7 @@ import it.gov.pagopa.reward.enums.OperationType;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +32,8 @@ public interface BaseTransactionProcessed {
     Map<String, Reward> getRewards();
     List<String> getInitiatives();
 
-    LocalDateTime getElaborationDateTime();
-    void setElaborationDateTime(LocalDateTime elaborationDateTime);
+    Instant getElaborationDateTime();
+    void setElaborationDateTime(Instant elaborationDateTime);
 
     Integer getRuleEngineTopicPartition();
     Long getRuleEngineTopicOffset();

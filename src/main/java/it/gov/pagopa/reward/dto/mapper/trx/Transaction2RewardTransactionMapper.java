@@ -1,7 +1,9 @@
 package it.gov.pagopa.reward.dto.mapper.trx;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
 import it.gov.pagopa.reward.dto.trx.TransactionDTO;
+import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -66,4 +68,75 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());
         dest.setVoucherAmountCents(src.getVoucherAmountCents());
     }
+
+    public static void copyFields(TransactionDTO src, TransactionDroolsDTO dest){
+        dest.setId(src.getId());
+        dest.setIdTrxAcquirer(src.getIdTrxAcquirer());
+        dest.setAcquirerCode(src.getAcquirerCode());
+        dest.setTrxDate(src.getTrxDate() != null ? src.getTrxDate().atZone(CommonConstants.ZONEID).toOffsetDateTime() : null);
+        dest.setCircuitType(src.getCircuitType());
+        dest.setOperationType(src.getOperationType());
+        dest.setIdTrxIssuer(src.getIdTrxIssuer());
+        dest.setCorrelationId(src.getCorrelationId());
+        dest.setAmount(src.getAmount());
+        dest.setAmountCurrency(src.getAmountCurrency());
+        dest.setMcc(src.getMcc());
+        dest.setAcquirerId(src.getAcquirerId());
+        dest.setMerchantId(src.getMerchantId());
+        dest.setTerminalId(src.getTerminalId());
+        dest.setBin(src.getBin());
+        dest.setSenderCode(src.getSenderCode());
+        dest.setFiscalCode(src.getFiscalCode());
+        dest.setVat(src.getVat());
+        dest.setPosType(src.getPosType());
+        dest.setPar(src.getPar());
+        dest.setRejectionReasons(src.getRejectionReasons());
+        dest.setUserId(src.getUserId());
+        dest.setEffectiveAmountCents(src.getEffectiveAmountCents());
+        dest.setAmountCents(src.getAmountCents());
+        dest.setTrxChargeDate(src.getTrxChargeDate() != null ? src.getTrxChargeDate().atZone(CommonConstants.ZONEID).toOffsetDateTime() : null);
+        dest.setRefundInfo(src.getRefundInfo());
+        dest.setOperationTypeTranscoded(src.getOperationTypeTranscoded());
+        dest.setUserId(src.getUserId());
+        dest.setChannel(src.getChannel());
+        dest.setRuleEngineTopicPartition(src.getRuleEngineTopicPartition());
+        dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());
+        dest.setVoucherAmountCents(src.getVoucherAmountCents());
+    }
+
+    public static void copyFields(TransactionDroolsDTO src, TransactionDTO dest){
+        dest.setId(src.getId());
+        dest.setIdTrxAcquirer(src.getIdTrxAcquirer());
+        dest.setAcquirerCode(src.getAcquirerCode());
+        dest.setTrxDate(src.getTrxDate() != null ? src.getTrxDate().toInstant(): null);
+        dest.setCircuitType(src.getCircuitType());
+        dest.setOperationType(src.getOperationType());
+        dest.setIdTrxIssuer(src.getIdTrxIssuer());
+        dest.setCorrelationId(src.getCorrelationId());
+        dest.setAmount(src.getAmount());
+        dest.setAmountCurrency(src.getAmountCurrency());
+        dest.setMcc(src.getMcc());
+        dest.setAcquirerId(src.getAcquirerId());
+        dest.setMerchantId(src.getMerchantId());
+        dest.setTerminalId(src.getTerminalId());
+        dest.setBin(src.getBin());
+        dest.setSenderCode(src.getSenderCode());
+        dest.setFiscalCode(src.getFiscalCode());
+        dest.setVat(src.getVat());
+        dest.setPosType(src.getPosType());
+        dest.setPar(src.getPar());
+        dest.setRejectionReasons(src.getRejectionReasons());
+        dest.setUserId(src.getUserId());
+        dest.setEffectiveAmountCents(src.getEffectiveAmountCents());
+        dest.setAmountCents(src.getAmountCents());
+        dest.setTrxChargeDate(src.getTrxChargeDate() != null ? src.getTrxChargeDate().toInstant() : null);
+        dest.setRefundInfo(src.getRefundInfo());
+        dest.setOperationTypeTranscoded(src.getOperationTypeTranscoded());
+        dest.setUserId(src.getUserId());
+        dest.setChannel(src.getChannel());
+        dest.setRuleEngineTopicPartition(src.getRuleEngineTopicPartition());
+        dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());
+        dest.setVoucherAmountCents(src.getVoucherAmountCents());
+    }
+
 }

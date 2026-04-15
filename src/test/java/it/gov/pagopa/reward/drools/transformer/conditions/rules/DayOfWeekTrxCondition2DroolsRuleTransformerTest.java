@@ -1,16 +1,13 @@
 package it.gov.pagopa.reward.drools.transformer.conditions.rules;
 
-import it.gov.pagopa.common.utils.CommonConstants;
+
 import it.gov.pagopa.reward.drools.transformer.conditions.TrxCondition2DroolsConditionTransformerFacadeImpl;
 import it.gov.pagopa.reward.dto.rule.trx.DayOfWeekDTO;
 import it.gov.pagopa.reward.model.TransactionDroolsDTO;
 import it.gov.pagopa.reward.test.fakers.rule.DayOfWeekDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -49,16 +46,23 @@ class DayOfWeekTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCondi
     @Override
     protected List<Supplier<TransactionDroolsDTO>> getSuccessfulUseCaseSuppliers() {
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 45));
-        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, CommonConstants.ZONEID.getRules().getOffset(localDateTime)));
+        OffsetDateTime dateTime =   OffsetDateTime.of(
+                LocalDate.of(2022, 1, 5).atTime(0,45),
+                ZoneOffset.UTC
+        );
+        trx.setTrxChargeDate(dateTime);
         return List.of(() -> trx);
     }
 
     @Override
     protected List<Supplier<TransactionDroolsDTO>> getFailingUseCaseSuppliers() {
+
         TransactionDroolsDTO trx = new TransactionDroolsDTO();
-        LocalDateTime localDateTime = LocalDateTime.of(LocalDate.of(2022, 1, 5), LocalTime.of(0, 44));
-        trx.setTrxChargeDate(OffsetDateTime.of(localDateTime, CommonConstants.ZONEID.getRules().getOffset(localDateTime)));
+        OffsetDateTime dateTime =   OffsetDateTime.of(
+                LocalDate.of(2022, 1, 5).atTime(23,44),
+                ZoneOffset.UTC
+        );
+        trx.setTrxChargeDate(dateTime);
         return List.of(() -> trx);
     }
 

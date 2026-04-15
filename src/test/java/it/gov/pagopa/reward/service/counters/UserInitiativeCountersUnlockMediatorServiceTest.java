@@ -35,7 +35,6 @@ class UserInitiativeCountersUnlockMediatorServiceTest {
     UserInitiativeCountersUnlockMediatorServiceImpl userInitiativeCountersUnlockMediatorServiceImpl;
     @Mock
     CancelTrxSynchronousServiceImpl cancelTrxSynchronousService;
-
     @BeforeEach
     void setUp() {
         userInitiativeCountersUnlockMediatorServiceImpl = new UserInitiativeCountersUnlockMediatorServiceImpl(

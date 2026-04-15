@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.test.fakers;
 
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -70,8 +72,8 @@ public final class InitiativeReward2BuildDTOFaker {
                 Long.valueOf(fakeValuesService.numerify("#####")),
                 null,
                 null,
-                LocalDate.of(1970, 1, 1),
-                LocalDate.now()
+                LocalDate.of(1970, 1, 1).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant(),
+                Instant.now()
         );
         out.general(initiativeGeneral);
 
@@ -130,10 +132,10 @@ public final class InitiativeReward2BuildDTOFaker {
                 InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,
                 randomGenerator.nextBoolean(),
                 Long.valueOf(fakeValuesService.numerify("#####")),
-                LocalDate.of(1970, 1, 1),
-                LocalDate.now(),
-                LocalDate.of(1970, 1, 1),
-                LocalDate.now()
+                LocalDate.of(1970, 1, 1).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant(),
+                LocalDate.now().atStartOfDay().atZone(CommonConstants.ZONEID).toInstant(),
+                LocalDate.of(1970, 1, 1).atStartOfDay().atZone(CommonConstants.ZONEID).toInstant(),
+                LocalDate.now().atStartOfDay().atZone(CommonConstants.ZONEID).toInstant()
         );
         out.setGeneral(initiativeGeneral);
 

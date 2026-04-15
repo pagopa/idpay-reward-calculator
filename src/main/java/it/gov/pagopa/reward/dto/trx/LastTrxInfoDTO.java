@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 
 @Data
@@ -17,5 +17,5 @@ public class LastTrxInfoDTO {
     private String trxId;
     private OperationType operationTypeTranscoded;
     private Map<String,Long> accruedReward;
-    private LocalDateTime elaborationDateTime;
+    private Instant elaborationDateTime;
 }
