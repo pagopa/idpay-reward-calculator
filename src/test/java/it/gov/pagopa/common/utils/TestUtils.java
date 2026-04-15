@@ -121,7 +121,7 @@ public class TestUtils {
                     .timeout(timeout, timeoutUnit)
                     .pollInterval(timeout, timeoutUnit)
                     .until(()->false);
-        } catch (ConditionTimeoutException ex){
+        } catch (ConditionTimeoutException _){
             // Do Nothing
         }
     }
@@ -152,7 +152,7 @@ public class TestUtils {
     public static boolean availableLocalPort(int port) {
         try (Socket ignored = new Socket("localhost", port)) {
             return false;
-        } catch (ConnectException ex) {
+        } catch (ConnectException _) {
             return true;
         } catch (IOException e) {
             throw new IllegalStateException("Error while trying to check open port", e);

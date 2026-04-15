@@ -38,7 +38,6 @@ class RewardLimitsTrxCondition2DroolsRuleTransformerTest extends InitiativeTrxCo
         return trx;
     }
 
-    private final Clock clock = Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneOffset.UTC);
     @Override
     protected RewardLimitsTrxCondition2DroolsRuleTransformer getTransformer() {
         return transformer;

@@ -92,11 +92,6 @@ public class OperationTypeRefundHandlerServiceImpl implements OperationTypeRefun
         return trx;
     }
 
-//    private static OffsetDateTime readChargeDate(TransactionProcessed trxCharge) {
-//        LocalDateTime trxChargeInstant = trxCharge.getTrxChargeDate();
-//        return OffsetDateTime.of(trxChargeInstant, CommonConstants.ZONEID.getRules().getOffset(trxChargeInstant));
-//    }
-
     private void reduceRewards(Map<String, RefundInfo.PreviousReward> pastRewards, BaseTransactionProcessed pt) {
         pt.getRewards().forEach((initiativeId, r) -> pastRewards.compute(initiativeId, (k, acc) -> {
             if (acc != null) {

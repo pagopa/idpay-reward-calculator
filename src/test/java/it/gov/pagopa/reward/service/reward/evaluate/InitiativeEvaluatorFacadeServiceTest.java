@@ -2,17 +2,17 @@ package it.gov.pagopa.reward.service.reward.evaluate;
 
 import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
-import it.gov.pagopa.reward.dto.trx.Reward;
-import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
-import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2RewardTransactionMapper;
 import it.gov.pagopa.reward.dto.mapper.trx.Transaction2TransactionProcessedMapper;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
+import it.gov.pagopa.reward.dto.trx.Reward;
+import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.dto.trx.TransactionDTO;
 import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCountersWrapper;
-import it.gov.pagopa.reward.connector.repository.primary.UserInitiativeCountersRepository;
 import it.gov.pagopa.reward.service.RewardErrorNotifierService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedService;
 import it.gov.pagopa.reward.service.reward.trx.TransactionProcessedServiceImpl;
@@ -29,9 +29,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.StreamSupport;
 

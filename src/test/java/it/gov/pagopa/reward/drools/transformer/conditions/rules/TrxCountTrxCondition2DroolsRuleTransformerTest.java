@@ -8,9 +8,6 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.test.fakers.rule.TrxCountDTOFaker;
 import it.gov.pagopa.reward.utils.RewardConstants;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.function.Supplier;
 
