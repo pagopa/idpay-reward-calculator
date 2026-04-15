@@ -23,10 +23,40 @@ public class RewardCountersMapper {
         rewardCounters.setInitiativeBudgetCents(initiativeConfig.getBeneficiaryBudgetCents());
         rewardCounters.setTotalAmountCents(userInitiativeCounters.getTotalAmountCents());
 
-        rewardCounters.setDailyCounters(extractInvolved(userInitiativeCounters.getDailyCounters(), RewardConstants.dayDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
-        rewardCounters.setWeeklyCounters(extractInvolved(userInitiativeCounters.getWeeklyCounters(), RewardConstants.weekDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
-        rewardCounters.setMonthlyCounters(extractInvolved(userInitiativeCounters.getMonthlyCounters(), RewardConstants.monthDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
-        rewardCounters.setYearlyCounters(extractInvolved(userInitiativeCounters.getYearlyCounters(), RewardConstants.yearDateFormatter.format(ruleEngineResult.getTrxChargeDate().atZone(CommonConstants.ZONEID).toLocalDateTime())));
+        ZoneId zone = CommonConstants.ZONEID;
+
+        LocalDate trxChargeLocalDate = ruleEngineResult
+                .getTrxChargeDate()
+                .atZone(zone)
+                .toLocalDate();
+        
+        rewardCounters.setDailyCounters(
+                extractInvolved(
+                        userInitiativeCounters.getDailyCounters(),
+                        RewardConstants.dayDateFormatter.format(trxChargeLocalDate)
+                )
+        );
+        
+        rewardCounters.setWeeklyCounters(
+                extractInvolved(
+                        userInitiativeCounters.getWeeklyCounters(),
+                        RewardConstants.weekDateFormatter.format(trxChargeLocalDate)
+                )
+        );
+        
+        rewardCounters.setMonthlyCounters(
+                extractInvolved(
+                        userInitiativeCounters.getMonthlyCounters(),
+                        RewardConstants.monthDateFormatter.format(trxChargeLocalDate)
+                )
+        );
+        
+        rewardCounters.setYearlyCounters(
+                extractInvolved(
+                        userInitiativeCounters.getYearlyCounters(),
+                        RewardConstants.yearDateFormatter.format(trxChargeLocalDate)
+                )
+        );
 
         return rewardCounters;
     }
