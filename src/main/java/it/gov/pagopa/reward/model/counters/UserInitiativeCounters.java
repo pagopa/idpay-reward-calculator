@@ -86,7 +86,7 @@ public class UserInitiativeCounters extends Counters {
                 .entityId(entityId)
                 .entityType(entityType)
                 .initiativeId(initiativeId)
-                .updateDate(Instant.now(Clock.systemUTC()));
+                .updateDate(Instant.now());
     }
 
     public abstract static class UserInitiativeCountersBuilder<C extends UserInitiativeCounters, B extends UserInitiativeCountersBuilder<C, B>> extends CountersBuilder<C,B> {
