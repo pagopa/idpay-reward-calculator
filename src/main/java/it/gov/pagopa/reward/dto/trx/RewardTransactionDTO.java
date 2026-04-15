@@ -29,7 +29,5 @@ public class RewardTransactionDTO extends TransactionDTO implements BaseTransact
     private Map<String, Reward> rewards;
     private List<String> initiatives;
     private String initiativeId;
-
-    @Builder.Default
-    private Instant elaborationDateTime = Instant.now(Clock.systemUTC());
+    private Instant elaborationDateTime;
 }
