@@ -62,7 +62,7 @@ public class UserInitiativeCounters extends Counters {
         this.entityId = entityId;
         this.entityType = entityType;
         this.initiativeId=initiativeId;
-        this.updateDate = Instant.now(Clock.systemUTC());
+        this.updateDate = Instant.now();
 
         // for some reason, lombok is changing the code letting null these fields when using this constructor
         this.dailyCounters = new HashMap<>();
