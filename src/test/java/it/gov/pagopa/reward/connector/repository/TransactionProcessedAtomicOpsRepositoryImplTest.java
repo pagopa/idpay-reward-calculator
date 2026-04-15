@@ -23,7 +23,7 @@
 //
 //@TestPropertySource(properties = {
 //        "de.flapdoodle.mongodb.embedded.version=4.2.24",
-//        "spring.data.mongodb.database=idpay",
+//        "spring.mongodb.database=idpay",
 //})
 //@ExtendWith(SpringExtension.class)
 //@AutoConfigureSingleInstanceMongodb

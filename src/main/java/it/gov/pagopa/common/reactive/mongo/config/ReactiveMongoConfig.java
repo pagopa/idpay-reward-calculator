@@ -8,7 +8,7 @@ import it.gov.pagopa.common.mongo.config.PrimaryMongoProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -43,7 +43,7 @@ public class ReactiveMongoConfig {
             @Autowired(required = false) MongoClientSettingsBuilderCustomizer customizer) {
         if (!StringUtils.hasText(properties.uri()) || !StringUtils.hasText(properties.database())) {
             throw new IllegalStateException(
-                    "MongoDB enabled but uri/database not configured (spring.data.mongodb.primary.uri / .database)");
+                    "MongoDB enabled but uri/database not configured (spring.mongodb.primary.uri / .database)");
         }
         log.info("Initializing MongoClient for database {} at uri {}", properties.database(),
                 maskConnString(properties.uri()));
