@@ -9,6 +9,7 @@ import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
 import it.gov.pagopa.reward.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @Service
@@ -23,11 +24,9 @@ public class RewardCountersMapper {
         rewardCounters.setInitiativeBudgetCents(initiativeConfig.getBeneficiaryBudgetCents());
         rewardCounters.setTotalAmountCents(userInitiativeCounters.getTotalAmountCents());
 
-        ZoneId zone = CommonConstants.ZONEID;
-
         LocalDate trxChargeLocalDate = ruleEngineResult
                 .getTrxChargeDate()
-                .atZone(zone)
+                .atZone(CommonConstants.ZONEID)
                 .toLocalDate();
         
         rewardCounters.setDailyCounters(
