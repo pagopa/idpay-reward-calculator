@@ -70,6 +70,7 @@ public final class InitiativeReward2BuildDTOFaker {
                 Long.valueOf(fakeValuesService.numerify("#####")),
                 null,
                 null,
+                null,
                 LocalDate.of(1970, 1, 1),
                 LocalDate.now()
         );
@@ -130,6 +131,7 @@ public final class InitiativeReward2BuildDTOFaker {
                 InitiativeGeneralDTO.BeneficiaryTypeEnum.PF,
                 randomGenerator.nextBoolean(),
                 Long.valueOf(fakeValuesService.numerify("#####")),
+                null,
                 LocalDate.of(1970, 1, 1),
                 LocalDate.now(),
                 LocalDate.of(1970, 1, 1),

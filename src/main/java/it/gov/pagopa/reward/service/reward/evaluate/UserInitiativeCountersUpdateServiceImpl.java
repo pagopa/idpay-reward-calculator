@@ -115,11 +115,30 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, UserInitiativeCounters initiativeCounter, RewardTransactionDTO trx) {
-        Long budgetCents = trx.getVoucherAmountCents() != null ? trx.getVoucherAmountCents() : initiativeConfig.getBeneficiaryBudgetCents();
+        Long availableBudgetCents = RewardCountersMapper.resolveAvailableBudgetCents(trx, initiativeConfig);
+        Long productTypeCapCents = RewardCountersMapper.resolveProductTypeCapCents(trx, initiativeConfig);
+
+        if (productTypeCapCents != null) {
+            Long residualAvailableBudgetCents = availableBudgetCents != null
+                    ? Math.max(0L, availableBudgetCents - initiativeCounter.getTotalRewardCents())
+                    : null;
+            Long maxApplicableRewardCents = availableBudgetCents != null
+                    ? Math.min(residualAvailableBudgetCents, productTypeCapCents)
+                    : productTypeCapCents;
+            if (reward.getAccruedRewardCents().compareTo(maxApplicableRewardCents) > 0) {
+                reward.setCapped(true);
+                reward.setAccruedRewardCents(maxApplicableRewardCents);
+            }
+            if (reward.getAccruedRewardCents().compareTo(0L) > 0) {
+                trx.setVoucherAmountCents(initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents());
+            }
+        }
+
+        Long budgetCents = RewardCountersMapper.resolveAvailableBudgetCents(trx, initiativeConfig);
         initiativeCounter.setExhaustedBudget(budgetCents != null && ((initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents())>=(budgetCents)));
         if (initiativeCounter.isExhaustedBudget()) {
             Long newAccruedRewardCents = budgetCents - (initiativeCounter.getTotalRewardCents());
-            reward.setCapped(newAccruedRewardCents.compareTo(reward.getAccruedRewardCents()) != 0);
+            reward.setCapped(reward.isCapped() || newAccruedRewardCents.compareTo(reward.getAccruedRewardCents()) != 0);
             reward.setAccruedRewardCents(newAccruedRewardCents);
         }
     }

@@ -90,6 +90,7 @@ public class TransactionDTO {
 
     //voucher amount
     private Long voucherAmountCents;
+    private String productType;
 
     //region fields added by payment
     private String familyId;

@@ -19,7 +19,7 @@ public class RewardCountersMapper {
         rewardCounters.setExhaustedBudget(userInitiativeCounters.isExhaustedBudget());
         rewardCounters.setTrxNumber(userInitiativeCounters.getTrxNumber());
         rewardCounters.setTotalRewardCents(userInitiativeCounters.getTotalRewardCents());
-        rewardCounters.setInitiativeBudgetCents(initiativeConfig.getBeneficiaryBudgetCents());
+        rewardCounters.setInitiativeBudgetCents(resolveAvailableBudgetCents(ruleEngineResult, initiativeConfig));
         rewardCounters.setTotalAmountCents(userInitiativeCounters.getTotalAmountCents());
 
         rewardCounters.setDailyCounters(extractInvolved(userInitiativeCounters.getDailyCounters(), RewardConstants.dayDateFormatter.format(ruleEngineResult.getTrxChargeDate())));
@@ -32,5 +32,16 @@ public class RewardCountersMapper {
     private Map<String, Counters> extractInvolved(Map<String, Counters> counters, String key) {
         Counters involvedCounter = counters.get(key);
         return involvedCounter !=null ? Map.of(key, involvedCounter) : null;
+    }
+
+    public static Long resolveAvailableBudgetCents(RewardTransactionDTO trx, InitiativeConfig initiativeConfig) {
+        return trx.getVoucherAmountCents() != null ? trx.getVoucherAmountCents() : initiativeConfig.getBeneficiaryBudgetCents();
+    }
+
+    public static Long resolveProductTypeCapCents(RewardTransactionDTO trx, InitiativeConfig initiativeConfig) {
+        Long productTypeBudgetCents = initiativeConfig.getProductTypeBudgetCents() != null
+                ? initiativeConfig.getProductTypeBudgetCents().get(trx.getProductType())
+                : null;
+        return productTypeBudgetCents;
     }
 }

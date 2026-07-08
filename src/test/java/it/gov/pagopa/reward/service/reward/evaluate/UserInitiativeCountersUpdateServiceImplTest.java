@@ -190,6 +190,40 @@ class UserInitiativeCountersUpdateServiceImplTest {
     }
 
     @Test
+    void testUpdateCountersConsumesVoucherBudgetWhenProductTypeCapApplies() {
+        // Given
+        initiativeConfig.setProductTypeBudgetCents(Map.of("DTSC", 30_00L));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", 50_00L));
+        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
+                .operationTypeTranscoded(OperationType.CHARGE)
+                .trxChargeDate(TRX_DATE)
+                .amount(BigDecimal.valueOf(100))
+                .effectiveAmountCents(100_00L)
+                .productType("DTSC")
+                .voucherAmountCents(70_00L)
+                .rewards(rewardMock)
+                .id("TRXID").build();
+
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 40_00L, 20_00L);
+        setTemporalCounters(userInitiativeCounters, 10L, 100_00L, 70_00L);
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
+                "USERID",
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
+        );
+
+        // When
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
+
+        // Then
+        assertEquals(30_00L, rewardMock.get("INITIATIVEID1").getAccruedRewardCents());
+        assertTrue(rewardMock.get("INITIATIVEID1").isCapped());
+        assertEquals(50_00L, rewardTransactionDTO.getVoucherAmountCents());
+        checkCounters(userInitiativeCounters, 21L, 50_00L, 140_00L);
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 21L, true, 50_00L, 50_00L, 140_00L);
+    }
+
+    @Test
     void testWithUnrewardedInitiative() {
         // Given
         Map<String, Reward> rewardMock = Map.of(

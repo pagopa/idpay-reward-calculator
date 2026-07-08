@@ -35,6 +35,26 @@ class RewardCountersMapperTest {
         test(null, null, null, null);
     }
 
+    @Test
+    void testVoucherBudgetIsReturnedWhenPresent() {
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        userInitiativeCounters.setDailyCounters(Map.of());
+        userInitiativeCounters.setWeeklyCounters(Map.of());
+        userInitiativeCounters.setMonthlyCounters(Map.of());
+        userInitiativeCounters.setYearlyCounters(Map.of());
+
+        RewardTransactionDTO reward = RewardTransactionDTOFaker.mockInstance(0);
+        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, 7, 20), LocalTime.NOON, ZoneOffset.UTC));
+        reward.setVoucherAmountCents(50_00L);
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setBeneficiaryBudgetCents(100_00L);
+
+        RewardCounters result = mapper.apply(userInitiativeCounters, reward, initiative);
+
+        Assertions.assertEquals(50_00L, result.getInitiativeBudgetCents());
+    }
+
     private void test(Counters expectedInvolvedDaily, Counters expectedInvolvedWeekly, Counters expectedInvolvedMonthly, Counters expectedInvolvedYearly) {
         // Given
         String dayKey = "2000-07-20";

@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 @Data
 @Builder
@@ -21,6 +22,7 @@ public class InitiativeConfig {
     private String initiativeName;
     private String organizationId;
     private Long beneficiaryBudgetCents;
+    private Map<String, Long> productTypeBudgetCents;
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean dailyThreshold;
