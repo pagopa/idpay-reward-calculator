@@ -152,7 +152,7 @@ class RewardContextHolderServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "productTypeBudgetCents ");
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
 
         checkReadiness(ReadinessState.ACCEPTING_TRAFFIC);
     }
