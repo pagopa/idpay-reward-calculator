@@ -129,15 +129,11 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                 reward.setCapped(true);
                 reward.setAccruedRewardCents(maxApplicableRewardCents);
             }
-            if (reward.getAccruedRewardCents().compareTo(0L) > 0) {
-                trx.setVoucherAmountCents(initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents());
-            }
         }
 
-        Long budgetCents = RewardCountersMapper.resolveAvailableBudgetCents(trx, initiativeConfig);
-        initiativeCounter.setExhaustedBudget(budgetCents != null && ((initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents())>=(budgetCents)));
+        initiativeCounter.setExhaustedBudget(availableBudgetCents != null && ((initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents())>=(availableBudgetCents)));
         if (initiativeCounter.isExhaustedBudget()) {
-            Long newAccruedRewardCents = budgetCents - (initiativeCounter.getTotalRewardCents());
+            Long newAccruedRewardCents = availableBudgetCents - (initiativeCounter.getTotalRewardCents());
             reward.setCapped(reward.isCapped() || newAccruedRewardCents.compareTo(reward.getAccruedRewardCents()) != 0);
             reward.setAccruedRewardCents(newAccruedRewardCents);
         }
