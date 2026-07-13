@@ -16,6 +16,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -71,7 +72,7 @@ public final class InitiativeReward2BuildDTOFaker {
                 null,
                 null,
                 null,
-                LocalDate.of(1970, 1, 1),
+                LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now()
         );
         out.general(initiativeGeneral);
@@ -132,9 +133,9 @@ public final class InitiativeReward2BuildDTOFaker {
                 randomGenerator.nextBoolean(),
                 Long.valueOf(fakeValuesService.numerify("#####")),
                 null,
-                LocalDate.of(1970, 1, 1),
+                LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now(),
-                LocalDate.of(1970, 1, 1),
+                LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now()
         );
         out.setGeneral(initiativeGeneral);

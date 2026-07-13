@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                             evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter, ruleEngineResult);
                                             final Long previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedRewardCents).orElse(null) : null;
                                             initiativeCounter.setVersion(initiativeCounter.getVersion()+1L);
-                                            initiativeCounter.setUpdateDate(LocalDateTime.now());
+                                            initiativeCounter.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
                                             updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
                                             updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
                                             updateLastTrxCounters(initiativeCounter, ruleEngineResult);
@@ -218,7 +219,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateLastTrxCounters(UserInitiativeCounters initiativeCounter, RewardTransactionDTO ruleEngineResult) {
-        LocalDateTime expiredTime = LocalDateTime.now().minus(lastTrxExpired);
+        LocalDateTime expiredTime = LocalDateTime.now(ZoneOffset.UTC).minus(lastTrxExpired);
 
         //delete transactions expired
         List<LastTrxInfoDTO> listUpdated = initiativeCounter.getLastTrx()

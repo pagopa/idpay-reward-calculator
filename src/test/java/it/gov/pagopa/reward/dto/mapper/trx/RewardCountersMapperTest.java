@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
@@ -44,7 +45,7 @@ class RewardCountersMapperTest {
         userInitiativeCounters.setYearlyCounters(Map.of());
 
         RewardTransactionDTO reward = RewardTransactionDTOFaker.mockInstance(0);
-        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, 7, 20), LocalTime.NOON, ZoneOffset.UTC));
+        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, Month.JULY, 20), LocalTime.NOON, ZoneOffset.UTC));
         reward.setVoucherAmountCents(50_00L);
 
         InitiativeConfig initiative = new InitiativeConfig();
@@ -75,7 +76,7 @@ class RewardCountersMapperTest {
         userInitiativeCounters.setYearlyCounters(buildTemporalCounter(expectedInvolvedYearly, yearKey));
 
         RewardTransactionDTO reward = RewardTransactionDTOFaker.mockInstance(0);
-        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, 7, 20), LocalTime.NOON, ZoneOffset.UTC));
+        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, Month.JULY, 20), LocalTime.NOON, ZoneOffset.UTC));
 
         InitiativeConfig initiative = new InitiativeConfig();
         initiative.setBeneficiaryBudgetCents(10_00L);

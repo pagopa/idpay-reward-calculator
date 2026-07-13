@@ -21,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
@@ -31,11 +30,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserInitiativeCountersUpdateServiceImplTest {
 
-    public static final OffsetDateTime TRX_DATE = OffsetDateTime.of(LocalDate.of(2022, 1, 8), LocalTime.NOON, ZoneOffset.UTC);
+    public static final OffsetDateTime TRX_DATE = OffsetDateTime.of(LocalDate.of(2022, Month.JANUARY, 8), LocalTime.NOON, ZoneOffset.UTC);
     public static final String TRX_DATE_DAY = "2022-01-08";
     public static final String TRX_DATE_WEEK = "2022-01-1";
     public static final String TRX_DATE_MONTH = "2022-01";
@@ -61,7 +62,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .monthlyThreshold(true)
                 .yearlyThreshold(true)
                 .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
+        when(rewardContextHolderServiceMock.getInitiativeConfig(any())).thenReturn(Mono.just(initiativeConfig));
 
         userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(), baseTransactionProcessed2LastTrxInfoDTOMapper, "PT1H");
     }
@@ -751,7 +752,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         setTemporalCounters(userInitiativeCounters, 11L, 100_00L, 70_00L);
 
         //set initial lastTrx
-        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        LocalDateTime localDateTimeNow = LocalDateTime.now(ZoneOffset.UTC);
         LastTrxInfoDTO trxAlreadyProcessedExpired = LastTrxInfoDTO.builder()
                 .trxId("TRXPROCESSEDID1")
                 .elaborationDateTime(localDateTimeNow.minusHours(2))
