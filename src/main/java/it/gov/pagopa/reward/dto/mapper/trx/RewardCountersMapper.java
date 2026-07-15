@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.mapper.trx;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.exception.custom.ProductTypeNotValidException;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -39,9 +40,17 @@ public class RewardCountersMapper {
     }
 
     public static Long resolveProductTypeCapCents(RewardTransactionDTO trx, InitiativeConfig initiativeConfig) {
-        Long productTypeBudgetCents = initiativeConfig.getProductTypeBudgetCents() != null
-                ? initiativeConfig.getProductTypeBudgetCents().get(trx.getProductType())
-                : null;
+        if(initiativeConfig.getProductTypeBudgetCents() == null){
+            return null;
+        }
+
+        Long productTypeBudgetCents = initiativeConfig.getProductTypeBudgetCents().get(trx.getProductType());
+
+        if (productTypeBudgetCents == null) {
+            throw new ProductTypeNotValidException(RewardConstants.ExceptionCode.TRANSACTION_PRODUCT_TYPE_NOT_VALID,
+                    String.format(RewardConstants.ExceptionMessage.TRANSACTION_PRODUCT_TYPE_NOT_VALID_MSG, trx.getId(), trx.getProductType(), trx.getInitiativeId()),
+                    null);
+        }
         return productTypeBudgetCents;
     }
 }

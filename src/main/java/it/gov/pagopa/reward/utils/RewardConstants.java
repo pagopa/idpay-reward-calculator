@@ -81,6 +81,7 @@ public final class RewardConstants {
         public static final String INITIATIVE_NOT_ACTIVE_FOR_USER = "REWARD_CALCULATOR_INITIATIVE_NOT_ACTIVE_FOR_USER";
         public static final String INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT = "REWARD_CALCULATOR_INITIATIVE_NOT_FOUND_OR_NOT_DISCOUNT";
         public static final String INITIATIVE_NOT_READY = "REWARD_CALCULATOR_INITIATIVE_NOT_READY";
+        public static final String TRANSACTION_PRODUCT_TYPE_NOT_VALID = "REWARD_CALCULATOR_TRANSACTION_PRODUCT_TYPE_NOT_VALID";
         public static final String INVALID_COUNTER_VERSION = "INVALID_COUNTER_VERSION";
         public static final String PENDING_COUNTER = "PENDING_COUNTER";
         public static final String TOO_MANY_REQUESTS = "REWARD_CALCULATOR_TOO_MANY_REQUESTS";
@@ -100,5 +101,7 @@ public final class RewardConstants {
         public static final String PENDING_COUNTER = "The counter is actually locked";
         public static final String TRANSACTION_ALREADY_AUTHORIZED_MSG = "The transaction with id [%s] is already authorized";
         public static final String TRANSACTION_ALREADY_CANCELLED_MSG = "The transaction with id [%s] is already cancelled";
+        public static final String TRANSACTION_PRODUCT_TYPE_NOT_VALID_MSG = "The transaction [%s] contains product type [%s], which is not valid for initiative [%s]";
+
     }
 }
