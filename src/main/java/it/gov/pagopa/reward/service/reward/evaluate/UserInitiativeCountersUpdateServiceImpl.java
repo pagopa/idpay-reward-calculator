@@ -121,7 +121,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
 
         if (productTypeCapCents != null) {
             Long residualAvailableBudgetCents = availableBudgetCents != null
-                    ? Math.max(0L, availableBudgetCents - initiativeCounter.getTotalRewardCents())
+                    ? Math.max(0L, Math.subtractExact(availableBudgetCents, initiativeCounter.getTotalRewardCents()))
                     : null;
             Long maxApplicableRewardCents = availableBudgetCents != null
                     ? Math.min(residualAvailableBudgetCents, productTypeCapCents)
