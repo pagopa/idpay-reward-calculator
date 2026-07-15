@@ -65,5 +65,6 @@ public class Transaction2RewardTransactionMapper implements Function<Transaction
         dest.setRuleEngineTopicPartition(src.getRuleEngineTopicPartition());
         dest.setRuleEngineTopicOffset(src.getRuleEngineTopicOffset());
         dest.setVoucherAmountCents(src.getVoucherAmountCents());
+        dest.setProductType(src.getProductType());
     }
 }

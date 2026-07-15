@@ -40,6 +40,10 @@ public class ServiceExceptionConfig {
         // TooManyRequests
         exceptionWithPayloadMap.put(InitiativeNotInContainerException.class, HttpStatus.TOO_MANY_REQUESTS);
 
+        //BadRequest
+        exceptionWithPayloadMap.put(ProductTypeNotValidException.class, HttpStatus.BAD_REQUEST);
+
+
         return exceptionWithPayloadMap;
     }
 }

@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.mapper.trx;
 
 import it.gov.pagopa.reward.dto.InitiativeConfig;
 import it.gov.pagopa.reward.dto.trx.RewardTransactionDTO;
+import it.gov.pagopa.reward.exception.custom.ProductTypeNotValidException;
 import it.gov.pagopa.reward.model.counters.Counters;
 import it.gov.pagopa.reward.model.counters.RewardCounters;
 import it.gov.pagopa.reward.model.counters.UserInitiativeCounters;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
@@ -35,6 +37,70 @@ class RewardCountersMapperTest {
         test(null, null, null, null);
     }
 
+    @Test
+    void testVoucherBudgetIsReturnedWhenPresent() {
+        UserInitiativeCounters userInitiativeCounters = new UserInitiativeCounters();
+        userInitiativeCounters.setDailyCounters(Map.of());
+        userInitiativeCounters.setWeeklyCounters(Map.of());
+        userInitiativeCounters.setMonthlyCounters(Map.of());
+        userInitiativeCounters.setYearlyCounters(Map.of());
+
+        RewardTransactionDTO reward = RewardTransactionDTOFaker.mockInstance(0);
+        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, Month.JULY, 20), LocalTime.NOON, ZoneOffset.UTC));
+        reward.setVoucherAmountCents(50_00L);
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setBeneficiaryBudgetCents(100_00L);
+
+        RewardCounters result = mapper.apply(userInitiativeCounters, reward, initiative);
+
+        Assertions.assertEquals(50_00L, result.getInitiativeBudgetCents());
+    }
+
+    @Test
+    void resolveProductTypeCapCents_whenProductTypeBudgetIsNull_thenReturnsNull() {
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+        trx.setProductType("PRODUCT_A");
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setProductTypeBudgetCents(null);
+
+        Assertions.assertNull(RewardCountersMapper.resolveProductTypeCapCents(trx, initiative));
+    }
+
+    @Test
+    void resolveProductTypeCapCents_whenProductTypeExists_thenReturnsConfiguredBudget() {
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+        trx.setProductType("PRODUCT_A");
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setProductTypeBudgetCents(Map.of("PRODUCT_A", 15_00L));
+
+        Assertions.assertEquals(15_00L, RewardCountersMapper.resolveProductTypeCapCents(trx, initiative));
+    }
+
+    @Test
+    void resolveProductTypeCapCents_whenProductTypeDoesNotExist_thenThrowsException() {
+        RewardTransactionDTO trx = RewardTransactionDTOFaker.mockInstance(0);
+        trx.setId("trx-1");
+        trx.setInitiativeId("initiative-1");
+        trx.setProductType("PRODUCT_B");
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setProductTypeBudgetCents(Map.of("PRODUCT_A", 15_00L));
+
+        ProductTypeNotValidException exception = Assertions.assertThrows(
+                ProductTypeNotValidException.class,
+                () -> RewardCountersMapper.resolveProductTypeCapCents(trx, initiative)
+        );
+
+        Assertions.assertEquals("REWARD_CALCULATOR_TRANSACTION_PRODUCT_TYPE_NOT_VALID", exception.getCode());
+        Assertions.assertEquals(
+                "The transaction [trx-1] contains product type [PRODUCT_B], which is not valid for initiative [initiative-1]",
+                exception.getMessage()
+        );
+    }
+
     private void test(Counters expectedInvolvedDaily, Counters expectedInvolvedWeekly, Counters expectedInvolvedMonthly, Counters expectedInvolvedYearly) {
         // Given
         String dayKey = "2000-07-20";
@@ -55,7 +121,7 @@ class RewardCountersMapperTest {
         userInitiativeCounters.setYearlyCounters(buildTemporalCounter(expectedInvolvedYearly, yearKey));
 
         RewardTransactionDTO reward = RewardTransactionDTOFaker.mockInstance(0);
-        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, 7, 20), LocalTime.NOON, ZoneOffset.UTC));
+        reward.setTrxChargeDate(OffsetDateTime.of(LocalDate.of(2000, Month.JULY, 20), LocalTime.NOON, ZoneOffset.UTC));
 
         InitiativeConfig initiative = new InitiativeConfig();
         initiative.setBeneficiaryBudgetCents(10_00L);
