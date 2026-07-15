@@ -45,6 +45,7 @@ public class SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper {
         out.setUserId(trx.getUserId());
         out.setChannel(trx.getChannel());
         out.setVoucherAmountCents(trx.getVoucherAmountCents());
+        out.setProductType(trx.getProductType());
 
         return out;
     }

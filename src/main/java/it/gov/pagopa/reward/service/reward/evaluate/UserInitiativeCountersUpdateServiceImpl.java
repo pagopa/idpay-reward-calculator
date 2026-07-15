@@ -22,6 +22,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
                                             evaluateInitiativeBudget(reward, initiativeConfig, initiativeCounter, ruleEngineResult);
                                             final Long previousRewards = ruleEngineResult.getRefundInfo() != null ? Optional.ofNullable(ruleEngineResult.getRefundInfo().getPreviousRewards().get(initiativeId)).map(RefundInfo.PreviousReward::getAccruedRewardCents).orElse(null) : null;
                                             initiativeCounter.setVersion(initiativeCounter.getVersion()+1L);
-                                            initiativeCounter.setUpdateDate(LocalDateTime.now());
+                                            initiativeCounter.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
                                             updateCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, previousRewards, ruleEngineResult.getAmountCents(), ruleEngineResult.getEffectiveAmountCents(), justTrxCountRejection);
                                             updateTemporalCounters(initiativeCounter, ruleEngineResult.getOperationTypeTranscoded(), reward, ruleEngineResult, previousRewards, initiativeConfig, justTrxCountRejection);
                                             updateLastTrxCounters(initiativeCounter, ruleEngineResult);
@@ -115,11 +116,30 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void evaluateInitiativeBudget(Reward reward, InitiativeConfig initiativeConfig, UserInitiativeCounters initiativeCounter, RewardTransactionDTO trx) {
-        Long budgetCents = trx.getVoucherAmountCents() != null ? trx.getVoucherAmountCents() : initiativeConfig.getBeneficiaryBudgetCents();
+        Long availableBudgetCents = RewardCountersMapper.resolveAvailableBudgetCents(trx, initiativeConfig);
+        Long productTypeCapCents = RewardCountersMapper.resolveProductTypeCapCents(trx, initiativeConfig);
+
+        if (productTypeCapCents != null) {
+            Long residualAvailableBudgetCents = availableBudgetCents != null
+                    ? Math.max(0L, Math.subtractExact(availableBudgetCents, initiativeCounter.getTotalRewardCents()))
+                    : null;
+            Long maxApplicableRewardCents = availableBudgetCents != null
+                    ? Math.min(residualAvailableBudgetCents, productTypeCapCents)
+                    : productTypeCapCents;
+            if (reward.getAccruedRewardCents().compareTo(maxApplicableRewardCents) > 0) {
+                reward.setCapped(true);
+                reward.setAccruedRewardCents(maxApplicableRewardCents);
+            }
+            if (reward.getAccruedRewardCents().compareTo(0L) > 0) {
+                trx.setVoucherAmountCents(initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents());
+            }
+        }
+
+        Long budgetCents = RewardCountersMapper.resolveAvailableBudgetCents(trx, initiativeConfig);
         initiativeCounter.setExhaustedBudget(budgetCents != null && ((initiativeCounter.getTotalRewardCents() + reward.getAccruedRewardCents())>=(budgetCents)));
         if (initiativeCounter.isExhaustedBudget()) {
             Long newAccruedRewardCents = budgetCents - (initiativeCounter.getTotalRewardCents());
-            reward.setCapped(newAccruedRewardCents.compareTo(reward.getAccruedRewardCents()) != 0);
+            reward.setCapped(reward.isCapped() || newAccruedRewardCents.compareTo(reward.getAccruedRewardCents()) != 0);
             reward.setAccruedRewardCents(newAccruedRewardCents);
         }
     }
@@ -199,7 +219,7 @@ public class UserInitiativeCountersUpdateServiceImpl implements UserInitiativeCo
     }
 
     private void updateLastTrxCounters(UserInitiativeCounters initiativeCounter, RewardTransactionDTO ruleEngineResult) {
-        LocalDateTime expiredTime = LocalDateTime.now().minus(lastTrxExpired);
+        LocalDateTime expiredTime = LocalDateTime.now(ZoneOffset.UTC).minus(lastTrxExpired);
 
         //delete transactions expired
         List<LastTrxInfoDTO> listUpdated = initiativeCounter.getLastTrx()
