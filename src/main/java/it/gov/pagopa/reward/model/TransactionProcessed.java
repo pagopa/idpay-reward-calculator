@@ -1,10 +1,9 @@
 package it.gov.pagopa.reward.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import it.gov.pagopa.reward.dto.trx.RefundInfo;
 import it.gov.pagopa.reward.dto.trx.Reward;
 import it.gov.pagopa.reward.enums.OperationType;
-import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +12,7 @@ import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

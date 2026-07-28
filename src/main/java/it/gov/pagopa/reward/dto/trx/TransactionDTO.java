@@ -1,14 +1,14 @@
 package it.gov.pagopa.reward.dto.trx;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.common.utils.CommonConstants;
-import it.gov.pagopa.reward.enums.OperationType;
 import it.gov.pagopa.common.utils.json.BigDecimalScale2Deserializer;
+import it.gov.pagopa.common.utils.json.FlexibleOffsetDateTimeDeserializer;
+import it.gov.pagopa.reward.enums.OperationType;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -27,7 +27,7 @@ public class TransactionDTO {
 
     private String acquirerCode;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @JsonDeserialize(using = FlexibleOffsetDateTimeDeserializer.class)
     private OffsetDateTime trxDate;
 
     private String operationType;
@@ -72,8 +72,10 @@ public class TransactionDTO {
     private List<String> rejectionReasons = new ArrayList<>();
     private Long amountCents;
     private Long effectiveAmountCents;
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+
+    @JsonDeserialize(using = FlexibleOffsetDateTimeDeserializer.class)
     private OffsetDateTime trxChargeDate;
+
     private RefundInfo refundInfo;
     private String channel;
 
