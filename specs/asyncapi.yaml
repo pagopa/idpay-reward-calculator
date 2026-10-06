@@ -335,6 +335,15 @@ components:
         channel:
           type: string
           description: Channel of the transaction
+        voucherAmountCents:
+          type: integer
+          format: int64
+          description: Maximum budget available for the beneficiary voucher in cents
+          example: 7000
+        productType:
+          type: string
+          description: Product type selected during discount voucher redemption
+          example: DTSC
         ruleEngineTopicPartition:
           type: integer
           description: Partition of the rule engine topic

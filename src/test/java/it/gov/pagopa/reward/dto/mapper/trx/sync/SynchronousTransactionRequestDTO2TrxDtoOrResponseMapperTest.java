@@ -24,6 +24,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper mapper = new SynchronousTransactionRequestDTOt2TrxDtoOrResponseMapper(chargeOperation);
         SynchronousTransactionRequestDTO previewRequest = SynchronousTransactionRequestDTOFaker.mockInstance(1);
         previewRequest.setVoucherAmountCents(100L);
+        previewRequest.setProductType("DTSC");
         BigDecimal expectedAmountEur = new BigDecimal("10.00");
         // When
         TransactionDTO result = mapper.apply(previewRequest);
@@ -53,6 +54,7 @@ public class SynchronousTransactionRequestDTO2TrxDtoOrResponseMapperTest {
         Assertions.assertEquals(previewRequest.getTransactionId(), result.getCorrelationId());
         Assertions.assertEquals(previewRequest.getTrxChargeDate(),result.getTrxChargeDate());
         Assertions.assertEquals(previewRequest.getChannel(),result.getChannel());
+        Assertions.assertEquals(previewRequest.getProductType(), result.getProductType());
 
         TestUtils.checkNotNullFields(result, "businessName","circuitType", "terminalId", "bin", "senderCode",
                 "posType","par", "refundInfo", "ruleEngineTopicPartition", "ruleEngineTopicOffset","familyId");

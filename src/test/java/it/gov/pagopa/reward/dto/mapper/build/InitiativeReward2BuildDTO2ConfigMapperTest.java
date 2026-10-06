@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 class InitiativeReward2BuildDTO2ConfigMapperTest {
     @Test
     void test() {
@@ -38,7 +40,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertSame(initiative.getRewardRule(), result.getRewardRule());
         Assertions.assertSame(initiative.getInitiativeRewardType(), result.getInitiativeRewardType());
 
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
 
     }
 
@@ -56,14 +58,14 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
         Assertions.assertTrue(result.isDailyThreshold());
         Assertions.assertFalse(result.isWeeklyThreshold());
         Assertions.assertFalse(result.isMonthlyThreshold());
         Assertions.assertFalse(result.isYearlyThreshold());
 
 
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
     }
 
     @Test
@@ -80,7 +82,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
         Assertions.assertFalse(result.isDailyThreshold());
         Assertions.assertTrue(result.isWeeklyThreshold());
         Assertions.assertFalse(result.isMonthlyThreshold());
@@ -102,7 +104,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
         Assertions.assertFalse(result.isDailyThreshold());
         Assertions.assertFalse(result.isWeeklyThreshold());
         Assertions.assertTrue(result.isMonthlyThreshold());
@@ -124,7 +126,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
         Assertions.assertFalse(result.isDailyThreshold());
         Assertions.assertFalse(result.isWeeklyThreshold());
         Assertions.assertFalse(result.isMonthlyThreshold());
@@ -151,7 +153,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
         Assertions.assertTrue(result.isDailyThreshold());
         Assertions.assertTrue(result.isWeeklyThreshold());
         Assertions.assertTrue(result.isMonthlyThreshold());
@@ -178,11 +180,11 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
 
         // When
-        try {
-            initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
-            Assertions.fail("Expected exception");
-        }catch (IllegalArgumentException actualException){
-            Assertions.assertEquals("Frequency cannot be null",actualException.getMessage());
-        }
+        IllegalArgumentException actualException = assertThrows(
+                IllegalArgumentException.class,
+                () -> initiativeReward2BuildDTO2ConfigMapper.apply(initiative));
+
+        // Then
+        Assertions.assertEquals("Frequency cannot be null", actualException.getMessage());
     }
 }

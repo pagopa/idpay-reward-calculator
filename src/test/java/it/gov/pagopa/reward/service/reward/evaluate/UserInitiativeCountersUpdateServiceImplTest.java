@@ -21,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
@@ -31,11 +30,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserInitiativeCountersUpdateServiceImplTest {
 
-    public static final OffsetDateTime TRX_DATE = OffsetDateTime.of(LocalDate.of(2022, 1, 8), LocalTime.NOON, ZoneOffset.UTC);
+    public static final OffsetDateTime TRX_DATE = OffsetDateTime.of(LocalDate.of(2022, Month.JANUARY, 8), LocalTime.NOON, ZoneOffset.UTC);
     public static final String TRX_DATE_DAY = "2022-01-08";
     public static final String TRX_DATE_WEEK = "2022-01-1";
     public static final String TRX_DATE_MONTH = "2022-01";
@@ -61,7 +62,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
                 .monthlyThreshold(true)
                 .yearlyThreshold(true)
                 .build();
-        Mockito.when(rewardContextHolderServiceMock.getInitiativeConfig(Mockito.any())).thenReturn(Mono.just(initiativeConfig));
+        when(rewardContextHolderServiceMock.getInitiativeConfig(any())).thenReturn(Mono.just(initiativeConfig));
 
         userInitiativeCountersUpdateService = new UserInitiativeCountersUpdateServiceImpl(rewardContextHolderServiceMock, new RewardCountersMapper(), baseTransactionProcessed2LastTrxInfoDTOMapper, "PT1H");
     }
@@ -187,6 +188,40 @@ class UserInitiativeCountersUpdateServiceImplTest {
         checkTemporalCounters(userInitiativeCounters, 11L, 9870_00L, 10100_00L);
         checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 21L, true, 10000_00L, 10000_00L, 14000_00L);
         Assertions.assertFalse(rewardMock.get("INITIATIVEID1").isCompleteRefund());
+    }
+
+    @Test
+    void testUpdateCountersConsumesVoucherBudgetWhenProductTypeCapApplies() {
+        // Given
+        initiativeConfig.setProductTypeBudgetCents(Map.of("DTSC", 30_00L));
+        Map<String, Reward> rewardMock = Map.of("INITIATIVEID1", new Reward("INITIATIVEID1","ORGANIZATION", 50_00L));
+        RewardTransactionDTO rewardTransactionDTO = RewardTransactionDTO.builder()
+                .userId("USERID")
+                .operationTypeTranscoded(OperationType.CHARGE)
+                .trxChargeDate(TRX_DATE)
+                .amount(BigDecimal.valueOf(100))
+                .effectiveAmountCents(100_00L)
+                .productType("DTSC")
+                .voucherAmountCents(70_00L)
+                .rewards(rewardMock)
+                .id("TRXID").build();
+
+        UserInitiativeCounters userInitiativeCounters = createInitiativeCounter(rewardTransactionDTO.getUserId(), "INITIATIVEID1", 20L, 40_00L, 20_00L);
+        setTemporalCounters(userInitiativeCounters, 10L, 100_00L, 70_00L);
+        UserInitiativeCountersWrapper userInitiativeCountersWrapper = new UserInitiativeCountersWrapper(
+                "USERID",
+                new HashMap<>(Map.of(userInitiativeCounters.getInitiativeId(), userInitiativeCounters))
+        );
+
+        // When
+        userInitiativeCountersUpdateService.update(userInitiativeCountersWrapper, rewardTransactionDTO).block();
+
+        // Then
+        assertEquals(30_00L, rewardMock.get("INITIATIVEID1").getAccruedRewardCents());
+        assertTrue(rewardMock.get("INITIATIVEID1").isCapped());
+        assertEquals(50_00L, rewardTransactionDTO.getVoucherAmountCents());
+        checkCounters(userInitiativeCounters, 21L, 50_00L, 140_00L);
+        checkRewardCounters(rewardTransactionDTO.getRewards().get("INITIATIVEID1").getCounters(), 21L, true, 50_00L, 50_00L, 140_00L);
     }
 
     @Test
@@ -717,7 +752,7 @@ class UserInitiativeCountersUpdateServiceImplTest {
         setTemporalCounters(userInitiativeCounters, 11L, 100_00L, 70_00L);
 
         //set initial lastTrx
-        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        LocalDateTime localDateTimeNow = LocalDateTime.now(ZoneOffset.UTC);
         LastTrxInfoDTO trxAlreadyProcessedExpired = LastTrxInfoDTO.builder()
                 .trxId("TRXPROCESSEDID1")
                 .elaborationDateTime(localDateTimeNow.minusHours(2))

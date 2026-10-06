@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.LocalDate;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -72,6 +73,9 @@ public class InitiativeGeneralDTO {
 
   @JsonProperty("beneficiaryBudgetCents")
   private Long beneficiaryBudgetCents;
+
+  @JsonProperty("productTypeBudgetCents")
+  private Map<String, Long> productTypeBudgetCents;
 
   @JsonProperty("startDate")
   private LocalDate startDate;

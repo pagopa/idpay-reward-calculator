@@ -32,4 +32,5 @@ public class SynchronousTransactionRequestDTO {
     private OffsetDateTime trxChargeDate;
     private String channel;
     private Long voucherAmountCents;
+    private String productType;
 }

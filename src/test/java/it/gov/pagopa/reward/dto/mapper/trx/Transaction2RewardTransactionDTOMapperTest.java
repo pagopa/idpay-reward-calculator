@@ -45,7 +45,7 @@ class Transaction2RewardTransactionDTOMapperTest {
 
         assertCommonFieldsValues(trx, result);
 
-        TestUtils.checkNotNullFields(result, "status", "initiatives","businessName","familyId","initiativeId");
+        TestUtils.checkNotNullFields(result, "status", "initiatives","businessName","familyId","initiativeId", "productType");
     }
 
     public static void assertCommonFieldsValues(TransactionDTO trx, TransactionDTO result) {
