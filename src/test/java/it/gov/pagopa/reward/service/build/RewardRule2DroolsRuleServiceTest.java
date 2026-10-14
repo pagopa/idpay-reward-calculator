@@ -325,6 +325,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 .trxRule(dto.getTrxRule())
                 .rewardRule(dto.getRewardRule())
                 .initiativeRewardType(dto.getInitiativeRewardType())
+                .voucherDurationDays(dto.getGeneral().getVoucherDurationDays())
                 .build());
 
         expected.setRuleVersion("20230404");
