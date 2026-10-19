@@ -42,7 +42,7 @@ import java.util.Map;
 public class RewardRule2DroolsRuleServiceTest {
 
     @BeforeAll
-    public static void configDroolsLogLevel() {
+    static void configDroolsLogLevel() {
         KieContainerBuilderServiceImplTest.configDroolsLogs();
         ((Logger) LoggerFactory.getLogger("it.gov.pagopa.reward.service.build.KieContainerBuilderServiceImpl")).setLevel(Level.WARN);
         ((Logger) LoggerFactory.getLogger("org.drools.compiler.kie.builder.impl")).setLevel(Level.WARN);

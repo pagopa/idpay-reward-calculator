@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -81,7 +82,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertNull(initiative.getGeneral().getVoucherDurationDays());
         Assertions.assertNull(result.getVoucherDurationDays());
         Assertions.assertEquals(10000L, result.getBeneficiaryBudgetCents());
-        Assertions.assertEquals(LocalDate.of(2026, 12, 31), result.getEndDate());
+        Assertions.assertEquals(LocalDate.of(2026, Month.DECEMBER, 31), result.getEndDate());
     }
 
     @Test
