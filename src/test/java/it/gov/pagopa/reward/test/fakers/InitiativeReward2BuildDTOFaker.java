@@ -25,6 +25,8 @@ import java.util.Set;
 public final class InitiativeReward2BuildDTOFaker {
     private InitiativeReward2BuildDTOFaker(){}
 
+    public static final Integer VOUCHER_DURATION_DAYS = 30;
+
     private static final Random randomGenerator = new Random();
 
     private static Random getRandom(Integer bias) {
@@ -73,7 +75,8 @@ public final class InitiativeReward2BuildDTOFaker {
                 null,
                 null,
                 LocalDate.of(1970, Month.JANUARY, 1),
-                LocalDate.now()
+                LocalDate.now(),
+                VOUCHER_DURATION_DAYS
         );
         out.general(initiativeGeneral);
 
@@ -136,7 +139,8 @@ public final class InitiativeReward2BuildDTOFaker {
                 LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now(),
                 LocalDate.of(1970, Month.JANUARY, 1),
-                LocalDate.now()
+                LocalDate.now(),
+                VOUCHER_DURATION_DAYS
         );
         out.setGeneral(initiativeGeneral);
 
