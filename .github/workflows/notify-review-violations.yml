@@ -1,0 +1,77 @@
+name: Notify Slack on code review policy violation
+
+on:
+  pull_request_review_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  notify:
+    if: >-
+      github.event.comment.user.login == 'copilot-pull-request-reviewer[bot]' &&
+      contains(github.event.comment.body, '][VIOLAZIONE]')
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Notify Slack
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_REVIEW_ALERTS_WEBHOOK }}
+          COMMENT_BODY: ${{ toJSON(github.event.comment.body) }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          node --input-type=module <<'NODE'
+          const body = JSON.parse(process.env.COMMENT_BODY);
+          const ruleIds = new Set([
+            'BC-SCOPE',
+            'BC-BEHAVIOR',
+            'BC-REST',
+            'BC-DB',
+            'BC-MSG',
+            'BC-FEATURES',
+            'BC-FLAGS',
+            'BC-RELEASE',
+            'BC-EVIDENCE',
+            'MS-DB-OWNERSHIP',
+            'MS-DB-ACCESS',
+            'MS-DB-INTEGRATION',
+            'MS-DOMAIN-MODEL',
+            'MS-DOMAIN-INVARIANTS',
+            'MS-EVIDENCE',
+          ]);
+          const matches = [...body.matchAll(/\[([A-Z]+(?:-[A-Z]+)+)\]\[VIOLAZIONE\]/g)]
+            .map(match => match[1])
+            .filter(ruleId => ruleIds.has(ruleId));
+
+          if (matches.length === 0) {
+            console.log('Nessuna violazione di policy con etichetta valida.');
+            process.exit(0);
+          }
+
+          const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+          if (!webhookUrl) {
+            throw new Error('Secret SLACK_REVIEW_ALERTS_WEBHOOK assente o vuoto.');
+          }
+
+          const ruleIdsText = [...new Set(matches)].join(', ');
+          const text = [
+            '*Copilot ha segnalato una violazione delle linee guida di code review*',
+            `Repository: ${process.env.REPOSITORY}`,
+            `PR: <${process.env.PULL_REQUEST_URL}|#${process.env.PULL_REQUEST_NUMBER}>`,
+            `Regola: <${process.env.COMMENT_URL}|${ruleIdsText}>`,
+          ].join('\n');
+
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ text }),
+          });
+          if (!response.ok) {
+            const responseBody = await response.text();
+            throw new Error(`Invio a Slack fallito (${response.status}): ${responseBody}`);
+          }
+          NODE
