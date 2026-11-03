@@ -104,6 +104,8 @@ Per le superfici interessate **DEVONO** essere fornite evidenze proporzionate al
 
 Le evidenze **DEVONO** distinguere test eseguiti e relativi risultati da test solo proposti. Aspetti non verificabili **DEVONO** essere dichiarati con evidenze mancanti, responsabile e azione richiesta prima del rilascio; **NON DEVONO** essere presentati come conformi.
 
+In code review, ogni segnalazione **DEVE** distinguere una violazione accertata (`[BC-CATEGORIA][VIOLAZIONE]`), un rischio non verificabile con le informazioni disponibili (`[BC-CATEGORIA][NON-VERIFICABILE]`) e una prova obbligatoria mancante (`[BC-EVIDENCE][PROVA-MANCANTE]`). `VIOLAZIONE` **DEVE** essere usato solo con evidenza concreta nel diff e impatto su un contratto o consumatore supportato. Le altre due categorie descrivono incertezze o verifiche da completare e **NON DEVONO** essere presentate come incompatibilità accertate.
+
 La review considera il diff complessivo della PR e, quando disponibili, i singoli commit. Ogni stato rilasciabile **DEVE** rispettare queste regole; i commit intermedi non rilasciabili **NON DEVONO** essere distribuiti autonomamente.
 
 GitHub Copilot supporta la verifica e segnala le violazioni, ma **NON** sostituisce test, valutazione dei responsabili e controlli di rilascio. L'assenza di commenti nella review **NON** costituisce prova di retrocompatibilità.
