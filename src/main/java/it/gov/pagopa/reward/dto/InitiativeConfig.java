@@ -33,5 +33,6 @@ public class InitiativeConfig {
     private InitiativeTrxConditions trxRule;
     private InitiativeRewardType initiativeRewardType;
     private InitiativeGeneralDTO.BeneficiaryTypeEnum beneficiaryType;
+    private Integer voucherDurationDays;
 
 }

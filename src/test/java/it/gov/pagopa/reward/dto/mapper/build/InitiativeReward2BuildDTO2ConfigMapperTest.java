@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,9 +40,67 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertSame(initiative.getTrxRule(), result.getTrxRule());
         Assertions.assertSame(initiative.getRewardRule(), result.getRewardRule());
         Assertions.assertSame(initiative.getInitiativeRewardType(), result.getInitiativeRewardType());
+        Assertions.assertEquals(InitiativeReward2BuildDTOFaker.VOUCHER_DURATION_DAYS, result.getVoucherDurationDays());
 
         TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
 
+    }
+
+    @Test
+    void givenGeneralWithoutVoucherDurationDays_whenApply_thenVoucherDurationDaysIsNull() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
+        initiative.getGeneral().setVoucherDurationDays(null);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertNull(result.getVoucherDurationDays());
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "voucherDurationDays");
+    }
+
+    @Test
+    void givenLegacyMessageWithoutVoucherDurationDays_whenDeserializeAndApply_thenVoucherDurationDaysIsNull() {
+        // Given
+        String legacyPayload = """
+                {"initiativeId":"INITIATIVE_ID","initiativeName":"NAME","organizationId":"ORGANIZATION_ID",
+                 "general":{"beneficiaryType":"PF","beneficiaryBudgetCents":10000,"startDate":"2026-01-01","endDate":"2026-12-31"},
+                 "trxRule":{}}
+                """;
+
+        // When
+        InitiativeReward2BuildDTO initiative = TestUtils.objectMapper.readValue(legacyPayload, InitiativeReward2BuildDTO.class);
+        InitiativeConfig result = new InitiativeReward2BuildDTO2ConfigMapper().apply(initiative);
+
+        // Then
+        Assertions.assertNull(initiative.getGeneral().getVoucherDurationDays());
+        Assertions.assertNull(result.getVoucherDurationDays());
+        Assertions.assertEquals(10000L, result.getBeneficiaryBudgetCents());
+        Assertions.assertEquals(LocalDate.of(2026, Month.DECEMBER, 31), result.getEndDate());
+    }
+
+    @Test
+    void givenMessageWithVoucherDurationDays_whenDeserializeAndApply_thenVoucherDurationDaysIsMapped() {
+        // Given
+        String payload = """
+                {"initiativeId":"INITIATIVE_ID","initiativeName":"NAME","organizationId":"ORGANIZATION_ID",
+                 "general":{"beneficiaryType":"PF","beneficiaryBudgetCents":10000,"voucherDurationDays":30},
+                 "trxRule":{}}
+                """;
+
+        // When
+        InitiativeReward2BuildDTO initiative = TestUtils.objectMapper.readValue(payload, InitiativeReward2BuildDTO.class);
+        InitiativeConfig result = new InitiativeReward2BuildDTO2ConfigMapper().apply(initiative);
+
+        // Then
+        Assertions.assertEquals(30, initiative.getGeneral().getVoucherDurationDays());
+        Assertions.assertEquals(30, result.getVoucherDurationDays());
     }
 
     @Test

@@ -20,6 +20,7 @@ public class InitiativeReward2BuildDTO2ConfigMapper implements Function<Initiati
         out.setProductTypeBudgetCents(initiativeReward2BuildDTO.getGeneral()!=null?initiativeReward2BuildDTO.getGeneral().getProductTypeBudgetCents():null);
         out.setStartDate(initiativeReward2BuildDTO.getGeneral()!=null?initiativeReward2BuildDTO.getGeneral().getStartDate():null);
         out.setEndDate(initiativeReward2BuildDTO.getGeneral()!=null?initiativeReward2BuildDTO.getGeneral().getEndDate():null);
+        out.setVoucherDurationDays(initiativeReward2BuildDTO.getGeneral()!=null?initiativeReward2BuildDTO.getGeneral().getVoucherDurationDays():null);
         out.setTrxRule(initiativeReward2BuildDTO.getTrxRule());
         out.setRewardRule(initiativeReward2BuildDTO.getRewardRule());
         out.setInitiativeRewardType(initiativeReward2BuildDTO.getInitiativeRewardType());

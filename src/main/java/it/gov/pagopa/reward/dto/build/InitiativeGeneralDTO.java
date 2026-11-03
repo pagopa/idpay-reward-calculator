@@ -89,4 +89,7 @@ public class InitiativeGeneralDTO {
   @JsonProperty("rankingEndDate")
   private LocalDate rankingEndDate;
 
+  @JsonProperty("voucherDurationDays")
+  private Integer voucherDurationDays;
+
 }
