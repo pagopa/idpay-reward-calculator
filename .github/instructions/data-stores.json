@@ -1,0 +1,203 @@
+{
+    "data_stores": [
+        {
+            "repository": "pagopa/idpay-admissibility-assessor",
+            "mongodb_collections": [
+                "idpay-beneficiari.beneficiary_rule",
+                "idpay-beneficiari.custom_sequence",
+                "idpay-beneficiari.initiative_counters",
+                "idpay-beneficiari.onboarding_families",
+                "idpay-beneficiari.onboarding_citizen"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-asset-register-backend",
+            "mongodb_collections": [
+                "rdb.initiatives_config",
+                "rdb.producers_initiative",
+                "rdb.product",
+                "rdb.product_file",
+                "rdb.portal_consent",
+                "rdb.role_permission"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-asset-register-frontend",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-initiative-statistics",
+            "mongodb_collections": [
+                "idpay-iniziative.initiative_statistics",
+                "idpay-iniziative.merchant_initiative_counters"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-kafka-connect",
+            "mongodb_collections": [],
+            "postgresql_tables": [
+                "idpay-database.idpay-pagamenti.transaction_outbox"
+            ]
+        },
+        {
+            "repository": "pagopa/idpay-merchant",
+            "mongodb_collections": [
+                "idpay-pagamenti.merchant",
+                "idpay-pagamenti.merchant_file",
+                "idpay-pagamenti.point_of_sales",
+                "idpay-pagamenti.point_of_sales_initiative",
+                "idpay-pagamenti.reported_user"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-merchants-catalog-portal",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-notification-manager",
+            "mongodb_collections": [
+                "idpay-beneficiari.notification"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-notification-email",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-onboarding-workflow",
+            "mongodb_collections": [
+                "idpay-beneficiari.onboarding_citizen",
+                "idpay-beneficiari.self_declaration_text"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-payment",
+            "mongodb_collections": [
+                "idpay-beneficiari.reward_rule"
+            ],
+            "postgresql_tables": [
+                "idpay-database.idpay-pagamenti.transaction",
+                "idpay-database.idpay-pagamenti.transaction_outbox"
+            ]
+        },
+        {
+            "repository": "pagopa/idpay-payment-instrument",
+            "mongodb_collections": [
+                "idpay-beneficiari.payment_instrument",
+                "idpay-beneficiari.payment_instrument_code"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-portal-merchants-frontend",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-portal-merchants-operator-frontend",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-portal-users-frontend",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-portal-welfare-frontend",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-product-catalog-portal",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-portal-welfare-backend-initiative",
+            "mongodb_collections": [
+                "idpay-iniziative.initiative",
+                "idpay-iniziative.config_mcc",
+                "idpay-iniziative.config_trx_rule"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-portal-welfare-backend-role-permission",
+            "mongodb_collections": [
+                "idpay-iniziative.portal_consent",
+                "idpay-iniziative.role_permission"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-ranker",
+            "mongodb_collections": [
+                "idpay-beneficiari.initiative_counters",
+                "idpay-beneficiari.beneficiary_rule",
+                "idpay-beneficiari.onboarding_citizen"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-recovery-error-topic",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-reward-calculator",
+            "mongodb_collections": [
+                "idpay-beneficiari.reward_rule",
+                "idpay-pagamenti.transactions_processed",
+                "idpay-pagamenti.user_initiative_counters",
+                "idpay-beneficiari.onboarding_families",
+                "idpay-pagamenti.transaction"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/mcshared-datavault",
+            "mongodb_collections": [
+                "idpay-beneficiari.data_vault"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-timeline",
+            "mongodb_collections": [
+                "idpay-beneficiari.timeline"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/idpay-transactions",
+            "mongodb_collections": [],
+            "postgresql_tables": [
+                "idpay-database.idpay-rimborsi.reward_batches",
+                "idpay-database.idpay-rimborsi.reward_transactions",
+                "idpay-database.idpay-rimborsi.reports"
+            ]
+        },
+        {
+            "repository": "pagopa/idpay-wallet",
+            "mongodb_collections": [
+                "idpay-beneficiari.wallet"
+            ],
+            "postgresql_tables": []
+        },
+        {
+            "repository": "pagopa/keycloak-extension-oid4vp",
+            "mongodb_collections": [],
+            "postgresql_tables": []
+        }
+    ]
+}

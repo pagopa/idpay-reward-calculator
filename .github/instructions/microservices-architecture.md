@@ -12,6 +12,19 @@ In PR la review **DEVE** segnalare solo problemi introdotti o aggravati dal diff
 
 Questa policy affianca quelle di retrocompatibilita, sicurezza e operativita. Una correzione architetturale **NON DEVE** introdurre una migrazione incompatibile senza un piano esplicito.
 
+## Inventario dei data store
+
+Il file `data-stores.json`, nella stessa cartella di questa policy, elenca per ogni repository del progetto di appartenenza le collezioni MongoDB (`mongodb_collections`, formato `database.collezione`) e le tabelle PostgreSQL (`postgresql_tables`, formato `database.schema.tabella`) che vi sono adoperate. E sincronizzato dal repository centrale delle policy e **NON DEVE** essere modificato localmente.
+
+La verifica del pattern Database-per-Service (`MS-DB-OWNERSHIP`, `MS-DB-ACCESS`, `MS-DB-INTEGRATION`) **DEVE** usare l'inventario come fonte primaria per individuare i dati usati dagli altri servizi:
+
+- Individuare la voce del repository in esame tramite il campo `repository` (`owner/nome`) e confrontare con essa le collezioni e le tabelle lette, scritte, migrate o referenziate dal codice modificato.
+- Un dato toccato dal diff che l'inventario attribuisce soltanto ad altri repository e un indizio concreto di accesso ai dati privati di un altro servizio (`MS-DB-ACCESS`) o di integrazione tramite schema condiviso (`MS-DB-INTEGRATION`), da confermare con il percorso nel codice.
+- Un dato attribuito a piu repository indica una condivisione da verificare: la review **DEVE** stabilire il proprietario e se gli altri repository ne sono versioni, worker o migrator dello stesso servizio (`MS-DB-OWNERSHIP`). Una condivisione preesistente non va imputata alla PR, salvo che il diff la introduca o la aggravi, ad esempio aggiungendo scritture o migrazioni.
+- Un dato toccato dal diff assente dalla voce del repository, o un repository assente dall'inventario, **DEVE** essere segnalato come `[NON-VERIFICABILE]`, chiedendo di confermarne il proprietario e di aggiornare l'inventario nel repository centrale.
+
+L'inventario descrive l'uso dichiarato dei dati, non la loro proprieta, i privilegi effettivi o la modalita di accesso. Da solo **NON DEVE** fondare una `[VIOLAZIONE]`, che richiede comunque l'evidenza nel codice; un inventario incompleto o non aggiornato non prova l'assenza di accessi trasversali. Se il file manca o non e leggibile, la review **DEVE** dichiararlo come limite e procedere con le altre evidenze.
+
 ## MS-DB-OWNERSHIP: proprieta esclusiva dei dati
 
 Ogni insieme di dati persistenti di business (tabelle, collezioni e relativi oggetti di schema) **DEVE** avere un solo microservizio proprietario, responsabile di significato, scritture, regole di accesso e migrazioni. Il confine **DEVE** essere ricostruibile da codice e configurazione e, per confini nuovi o modificati, essere documentato.
@@ -21,7 +34,7 @@ Ogni insieme di dati persistenti di business (tabelle, collezioni e relativi ogg
 - Repliche, versioni coesistenti, worker e migrator appartenenti allo stesso servizio **POSSONO** condividere i suoi dati. La loro appartenenza **DEVE** essere verificata tramite responsabilita e ciclo di vita, non desunta solo dal nome del deployment.
 - Identificativi del proprietario **POSSONO** essere memorizzati da altri servizi come riferimenti logici, senza accesso al suo database o vincoli referenziali verso il suo schema.
 
-Evidenze pertinenti: operazioni di scrittura, repository, mapping, changelog, job, manifest e documenti di ownership. Due connection string simili o una entity con lo stesso nome non provano da sole una proprieta condivisa.
+Evidenze pertinenti: inventario `data-stores.json`, operazioni di scrittura, repository, mapping, changelog, job, manifest e documenti di ownership. Due connection string simili o una entity con lo stesso nome non provano da sole una proprieta condivisa.
 
 ## MS-DB-ACCESS: isolamento logico e autorizzativo
 
@@ -81,7 +94,7 @@ Esempio di prova mirata: una transizione vietata viene rifiutata sia dal caso d'
 Per i confini o le regole interessati dalla modifica **DEVONO** essere disponibili evidenze proporzionate al rischio:
 
 - Ownership dei dati e decisioni architetturali, con motivazioni delle eventuali deroghe e responsabile della loro revisione.
-- Mapping tra servizi, identita di runtime, storage, migrazioni e privilegi effettivi; test o verifiche che un servizio non possa accedere ai dati privati di un altro.
+- Mapping tra servizi, identita di runtime, storage, migrazioni e privilegi effettivi, a partire dall'inventario `data-stores.json`; test o verifiche che un servizio non possa accedere ai dati privati di un altro.
 - Test di contratto e integrazione per API/eventi/proiezioni coinvolti; verifiche di consistenza, fallimenti e rollout quando cambiano i confini.
 - Test delle invarianti e delle transizioni valide/non valide, con percorsi alternativi e concorrenza quando pertinenti.
 
