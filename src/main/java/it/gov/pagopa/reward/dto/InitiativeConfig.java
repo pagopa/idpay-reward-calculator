@@ -34,5 +34,6 @@ public class InitiativeConfig {
     private InitiativeRewardType initiativeRewardType;
     private InitiativeGeneralDTO.BeneficiaryTypeEnum beneficiaryType;
     private Integer voucherDurationDays;
+    private String pdfVoucherTemplate;
 
 }
