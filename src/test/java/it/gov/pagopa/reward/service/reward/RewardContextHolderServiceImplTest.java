@@ -146,6 +146,7 @@ class RewardContextHolderServiceImplTest {
                 .initiativeRewardType(InitiativeRewardType.REFUND)
                 .beneficiaryType(InitiativeGeneralDTO.BeneficiaryTypeEnum.PF)
                 .voucherDurationDays(30)
+                .pdfVoucherTemplate("TEMPLATE")
                 .build();
 
 
