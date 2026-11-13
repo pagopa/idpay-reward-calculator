@@ -3,6 +3,7 @@ package it.gov.pagopa.reward.test.fakers;
 import com.github.javafaker.service.FakeValuesService;
 import com.github.javafaker.service.RandomService;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.reward.dto.build.InitiativeAdditionalDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.reward.InitiativeRewardRule;
@@ -76,9 +77,16 @@ public final class InitiativeReward2BuildDTOFaker {
                 null,
                 LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now(),
-                VOUCHER_DURATION_DAYS
+                VOUCHER_DURATION_DAYS,
+                "TEMPLATE"
         );
         out.general(initiativeGeneral);
+
+
+        InitiativeAdditionalDTO initiativeAdditional = new InitiativeAdditionalDTO(
+                "https://www.example.com/logo.png"
+        );
+        out.additional(initiativeAdditional);
 
         InitiativeTrxConditions trxRule = new InitiativeTrxConditions();
         out.trxRule(trxRule);
@@ -140,9 +148,15 @@ public final class InitiativeReward2BuildDTOFaker {
                 LocalDate.now(),
                 LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now(),
-                VOUCHER_DURATION_DAYS
+                VOUCHER_DURATION_DAYS,
+                "TEMPLATE"
         );
         out.setGeneral(initiativeGeneral);
+
+        InitiativeAdditionalDTO initiativeAdditional = new InitiativeAdditionalDTO(
+                "https://www.example.com/logo.png"
+        );
+        out.setAdditional(initiativeAdditional);
 
         out.setTrxRule(new InitiativeTrxConditions());
         out.getTrxRule().setRewardLimits(List.of(new RewardLimitsDTO(frequency,700_00L)));

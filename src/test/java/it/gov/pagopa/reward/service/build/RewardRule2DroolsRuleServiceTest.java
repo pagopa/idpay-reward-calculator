@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.command.Command;
 import org.kie.internal.command.CommandFactory;
-import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
@@ -33,6 +32,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.mockito.Mockito.mock;
 
 /*
  ******************
@@ -57,7 +58,7 @@ public class RewardRule2DroolsRuleServiceTest {
     public static RewardRule2DroolsRuleService buildRewardRule2DroolsRule(boolean executeOnlineBuildCheck) {
         return new RewardRule2DroolsRuleServiceImpl(
                 executeOnlineBuildCheck,
-                new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)),
+                new KieContainerBuilderServiceImpl(mock(DroolsRuleRepository.class)),
                 new TrxCondition2DroolsRuleTransformerFacadeImpl(new TrxCondition2DroolsConditionTransformerFacadeImpl()),
                 new TrxConsequence2DroolsRuleTransformerFacadeImpl(new TrxConsequence2DroolsRewardExpressionTransformerFacadeImpl()),
                 new InitiativeReward2BuildDTO2ConfigMapper()
@@ -326,6 +327,8 @@ public class RewardRule2DroolsRuleServiceTest {
                 .rewardRule(dto.getRewardRule())
                 .initiativeRewardType(dto.getInitiativeRewardType())
                 .voucherDurationDays(dto.getGeneral().getVoucherDurationDays())
+                .pdfVoucherTemplate(dto.getGeneral().getPdfVoucherTemplate())
+                .logoURL(dto.getAdditional().getLogoURL())
                 .build());
 
         expected.setRuleVersion("20230404");
@@ -336,7 +339,7 @@ public class RewardRule2DroolsRuleServiceTest {
 
     private KieBase buildRule(DroolsRule dr) {
         try {
-            return new KieContainerBuilderServiceImpl(Mockito.mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();
+            return new KieContainerBuilderServiceImpl(mock(DroolsRuleRepository.class)).build(Flux.just(dr)).block();
         } catch (RuntimeException e) {
             System.out.printf("Something gone wrong building the rule: %s%n", dr.getRule());
             throw e;
