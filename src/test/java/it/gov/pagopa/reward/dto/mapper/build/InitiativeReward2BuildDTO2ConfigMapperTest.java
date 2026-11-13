@@ -2,6 +2,7 @@ package it.gov.pagopa.reward.dto.mapper.build;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.reward.dto.InitiativeConfig;
+import it.gov.pagopa.reward.dto.build.InitiativeAdditionalDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeGeneralDTO;
 import it.gov.pagopa.reward.dto.build.InitiativeReward2BuildDTO;
 import it.gov.pagopa.reward.dto.rule.trx.InitiativeTrxConditions;
@@ -42,6 +43,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertSame(initiative.getInitiativeRewardType(), result.getInitiativeRewardType());
         Assertions.assertEquals(InitiativeReward2BuildDTOFaker.VOUCHER_DURATION_DAYS, result.getVoucherDurationDays());
         Assertions.assertEquals(initiative.getGeneral().getPdfVoucherTemplate(), result.getPdfVoucherTemplate());
+        Assertions.assertEquals(initiative.getAdditional().getLogoURL(), result.getLogoURL());
 
         TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
 
@@ -193,6 +195,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertTrue(result.isYearlyThreshold());
 
     }
+
     @Test
     void mapperAllFrequencyType() {
         // Given
@@ -255,10 +258,10 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
                 1,
                 RewardLimitsDTO.RewardLimitFrequency.DAILY);
 
-        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
         InitiativeGeneralDTO general = initiative.getGeneral();
         general.setPdfVoucherTemplate(null);
 
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
         // When
         InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
 
@@ -266,6 +269,50 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertNull(result.getPdfVoucherTemplate());
 
         TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "pdfVoucherTemplate");
+
+    }
+
+    @Test
+    void mapper_whenLogoURLNull() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
+
+        InitiativeAdditionalDTO additional = initiative.getAdditional();
+        additional.setLogoURL(null);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNull(result.getLogoURL());
+
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "logoURL");
+
+    }
+
+    @Test
+    void mapper_whenAdditionalNull() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
+
+        initiative.setAdditional(null);
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNull(result.getLogoURL());
+
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "logoURL");
 
     }
 }

@@ -35,5 +35,6 @@ public class InitiativeConfig {
     private InitiativeGeneralDTO.BeneficiaryTypeEnum beneficiaryType;
     private Integer voucherDurationDays;
     private String pdfVoucherTemplate;
+    private String logoURL;
 
 }
