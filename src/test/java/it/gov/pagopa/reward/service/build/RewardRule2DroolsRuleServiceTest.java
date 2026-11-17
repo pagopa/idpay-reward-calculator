@@ -328,7 +328,7 @@ public class RewardRule2DroolsRuleServiceTest {
                 .initiativeRewardType(dto.getInitiativeRewardType())
                 .voucherDurationDays(dto.getGeneral().getVoucherDurationDays())
                 .pdfVoucherTemplate(dto.getGeneral().getPdfVoucherTemplate())
-                .logoURL(dto.getAdditional().getLogoURL())
+                .pdfLogoURL(dto.getGeneral().getPdfLogoURL())
                 .build());
 
         expected.setRuleVersion("20230404");

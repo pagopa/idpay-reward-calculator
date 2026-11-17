@@ -95,4 +95,7 @@ public class InitiativeGeneralDTO {
   @JsonProperty("pdfVoucherTemplate")
   private String pdfVoucherTemplate;
 
+  @JsonProperty("pdfLogoURL")
+  private String pdfLogoURL;
+
 }
