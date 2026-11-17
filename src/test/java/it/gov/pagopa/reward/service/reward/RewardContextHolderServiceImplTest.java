@@ -156,7 +156,7 @@ class RewardContextHolderServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "logoURL");
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "pdfLogoURL");
 
         checkReadiness(ReadinessState.ACCEPTING_TRAFFIC);
     }
