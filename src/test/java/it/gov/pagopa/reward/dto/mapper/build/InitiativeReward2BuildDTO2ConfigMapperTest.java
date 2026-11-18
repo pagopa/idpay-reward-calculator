@@ -41,6 +41,8 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertSame(initiative.getRewardRule(), result.getRewardRule());
         Assertions.assertSame(initiative.getInitiativeRewardType(), result.getInitiativeRewardType());
         Assertions.assertEquals(InitiativeReward2BuildDTOFaker.VOUCHER_DURATION_DAYS, result.getVoucherDurationDays());
+        Assertions.assertEquals(initiative.getGeneral().getPdfVoucherTemplate(), result.getPdfVoucherTemplate());
+        Assertions.assertEquals(initiative.getGeneral().getPdfLogoURL(), result.getPdfLogoURL());
 
         TestUtils.checkNotNullFields(result, "productTypeBudgetCents");
 
@@ -192,6 +194,7 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
         Assertions.assertTrue(result.isYearlyThreshold());
 
     }
+
     @Test
     void mapperAllFrequencyType() {
         // Given
@@ -245,5 +248,49 @@ class InitiativeReward2BuildDTO2ConfigMapperTest {
 
         // Then
         Assertions.assertEquals("Frequency cannot be null", actualException.getMessage());
+    }
+
+    @Test
+    void mapper_whenPdfVoucherTemplateNull() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
+
+        InitiativeGeneralDTO general = initiative.getGeneral();
+        general.setPdfVoucherTemplate(null);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNull(result.getPdfVoucherTemplate());
+
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "pdfVoucherTemplate");
+
+    }
+
+    @Test
+    void mapper_whenLogoURLNull() {
+        // Given
+        InitiativeReward2BuildDTO initiative = InitiativeReward2BuildDTOFaker.mockInstanceWithFrequencyType(
+                1,
+                RewardLimitsDTO.RewardLimitFrequency.DAILY);
+
+        InitiativeGeneralDTO general = initiative.getGeneral();
+        general.setPdfLogoURL(null);
+
+        InitiativeReward2BuildDTO2ConfigMapper initiativeReward2BuildDTO2ConfigMapper = new InitiativeReward2BuildDTO2ConfigMapper();
+
+
+        // When
+        InitiativeConfig result = initiativeReward2BuildDTO2ConfigMapper.apply(initiative);
+
+        // Then
+        Assertions.assertNull(result.getPdfLogoURL());
+
+        TestUtils.checkNotNullFields(result, "productTypeBudgetCents", "pdfLogoURL");
+
     }
 }

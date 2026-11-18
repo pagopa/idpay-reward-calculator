@@ -76,7 +76,9 @@ public final class InitiativeReward2BuildDTOFaker {
                 null,
                 LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now(),
-                VOUCHER_DURATION_DAYS
+                VOUCHER_DURATION_DAYS,
+                "TEMPLATE",
+                "LOGO_URL"
         );
         out.general(initiativeGeneral);
 
@@ -140,7 +142,9 @@ public final class InitiativeReward2BuildDTOFaker {
                 LocalDate.now(),
                 LocalDate.of(1970, Month.JANUARY, 1),
                 LocalDate.now(),
-                VOUCHER_DURATION_DAYS
+                VOUCHER_DURATION_DAYS,
+                "TEMPLATE",
+                "LOGO_URL"
         );
         out.setGeneral(initiativeGeneral);
 
