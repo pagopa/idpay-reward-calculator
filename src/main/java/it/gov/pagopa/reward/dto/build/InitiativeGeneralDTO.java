@@ -92,4 +92,10 @@ public class InitiativeGeneralDTO {
   @JsonProperty("voucherDurationDays")
   private Integer voucherDurationDays;
 
+  @JsonProperty("pdfVoucherTemplate")
+  private String pdfVoucherTemplate;
+
+  @JsonProperty("pdfLogoURL")
+  private String pdfLogoURL;
+
 }
